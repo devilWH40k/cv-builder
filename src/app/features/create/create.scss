@@ -1,0 +1,39 @@
+@use '../../../styles/tokens' as tokens;
+
+main {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: tokens.$spacing-6;
+  padding: tokens.$spacing-6;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  color: tokens.$color-primary;
+  font-size: tokens.$font-size-4xl;
+  line-height: tokens.$line-height-tight;
+}
+
+p {
+  margin: 0;
+  color: tokens.$text-secondary;
+}
+
+a {
+  padding: tokens.$spacing-3;
+  color: tokens.$color-primary;
+  border-radius: tokens.$radius-sm;
+
+  &:hover {
+    color: tokens.$color-primary-hover;
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$border-color-focus;
+    outline-offset: tokens.$spacing-1;
+  }
+}

@@ -1,0 +1,95 @@
+@use 'styles/tokens' as tokens;
+
+.home {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: tokens.$spacing-10;
+  padding: tokens.$spacing-16 tokens.$spacing-6;
+  text-align: center;
+  overflow: hidden;
+}
+
+h1 {
+  margin: 0;
+  color: tokens.$color-primary;
+  font-size: clamp(tokens.$font-size-2xl, 4vw, tokens.$font-size-4xl);
+  font-weight: tokens.$font-weight-medium;
+  line-height: tokens.$line-height-tight;
+}
+
+.create-link {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: tokens.$spacing-16;
+  height: tokens.$spacing-16;
+  border: 2px solid tokens.$color-primary;
+  border-radius: tokens.$radius-full;
+  color: tokens.$color-primary;
+  background: tokens.$color-secondary;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background tokens.$transition-normal, border-color tokens.$transition-normal;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border: 2px solid tokens.$color-secondary-active;
+    border-radius: inherit;
+    box-shadow: 0 0 tokens.$spacing-5 tokens.$color-secondary;
+    pointer-events: none;
+    animation: glow-ring 3s ease-out infinite;
+  }
+
+  &::after {
+    animation-delay: -1.5s;
+  }
+
+  &:hover {
+    background: tokens.$color-secondary-hover;
+    border-color: tokens.$color-primary-hover;
+  }
+
+  &:active {
+    background: tokens.$color-secondary-active;
+  }
+
+  &:focus-visible {
+    outline: 3px solid tokens.$border-color-focus;
+    outline-offset: tokens.$spacing-2;
+  }
+}
+
+lucide-icon {
+  display: flex;
+}
+
+@keyframes glow-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  to {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .create-link {
+    transition: none;
+
+    &::before,
+    &::after {
+      animation: none;
+      opacity: 0;
+    }
+  }
+}

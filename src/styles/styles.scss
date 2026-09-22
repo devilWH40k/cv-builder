@@ -1,1 +1,9 @@
-/* You can add global styles to this file, and also import other style files */
+@use './tokens' as tokens;
+@use './reset';
+
+body {
+  font-family: tokens.$font-family-base;
+  color: tokens.$text-primary;
+  background: tokens.$background-surface;
+  line-height: tokens.$line-height-normal;
+}
