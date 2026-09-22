@@ -1,0 +1,211 @@
+// ==========================================================================
+// Design Tokens
+// ==========================================================================
+
+// --------------------------------------------------------------------------
+// Brand colors
+// --------------------------------------------------------------------------
+
+$color-primary: #5465ff;
+$color-primary-hover: #4353e6;
+$color-primary-active: #3544cc;
+$color-primary-light: #eef0ff;
+
+$color-secondary: #d1faff;
+$color-secondary-hover: #b8f6fc;
+$color-secondary-active: #9ceff7;
+
+// --------------------------------------------------------------------------
+// Neutral colors
+// --------------------------------------------------------------------------
+
+$color-white: #ffffff;
+$color-black: #111827;
+
+$color-gray-50: #f8fafc;
+$color-gray-100: #f1f5f9;
+$color-gray-200: #e2e8f0;
+$color-gray-300: #cbd5e1;
+$color-gray-400: #94a3b8;
+$color-gray-500: #64748b;
+$color-gray-600: #475569;
+$color-gray-700: #334155;
+$color-gray-800: #1e293b;
+$color-gray-900: #0f172a;
+
+// --------------------------------------------------------------------------
+// Semantic colors
+// --------------------------------------------------------------------------
+
+$color-success: #16a34a;
+$color-success-light: #dcfce7;
+
+$color-warning: #d97706;
+$color-warning-light: #fef3c7;
+
+$color-danger: #dc2626;
+$color-danger-hover: #b91c1c;
+$color-danger-light: #fee2e2;
+
+$color-info: #0284c7;
+$color-info-light: #e0f2fe;
+
+// --------------------------------------------------------------------------
+// Backgrounds
+// --------------------------------------------------------------------------
+
+$background-app: $color-gray-50;
+$background-surface: $color-white;
+$background-subtle: $color-gray-100;
+$background-primary-subtle: $color-primary-light;
+$background-secondary: $color-secondary;
+
+// --------------------------------------------------------------------------
+// Text
+// --------------------------------------------------------------------------
+
+$text-primary: $color-gray-900;
+$text-secondary: $color-gray-600;
+$text-muted: $color-gray-500;
+$text-disabled: $color-gray-400;
+$text-on-primary: $color-white;
+$text-danger: $color-danger;
+$text-success: $color-success;
+
+// --------------------------------------------------------------------------
+// Borders
+// --------------------------------------------------------------------------
+
+$border-color: $color-gray-200;
+$border-color-strong: $color-gray-300;
+$border-color-focus: $color-primary;
+$border-color-danger: $color-danger;
+
+// --------------------------------------------------------------------------
+// Typography
+// --------------------------------------------------------------------------
+
+$font-family-base:
+  'Inter',
+  -apple-system,
+  BlinkMacSystemFont,
+  'Segoe UI',
+  sans-serif;
+
+$font-size-xs: 0.75rem;    // 12px
+$font-size-sm: 0.875rem;   // 14px
+$font-size-md: 1rem;       // 16px
+$font-size-lg: 1.125rem;   // 18px
+$font-size-xl: 1.25rem;    // 20px
+$font-size-2xl: 1.5rem;    // 24px
+$font-size-3xl: 1.75rem;   // 28px
+$font-size-4xl: 2rem;      // 32px
+
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// --------------------------------------------------------------------------
+// Spacing
+// --------------------------------------------------------------------------
+// Based on a 4px spacing system.
+
+$spacing-0: 0;
+$spacing-1: 0.25rem;  // 4px
+$spacing-2: 0.5rem;   // 8px
+$spacing-3: 0.75rem;  // 12px
+$spacing-4: 1rem;     // 16px
+$spacing-5: 1.25rem;  // 20px
+$spacing-6: 1.5rem;   // 24px
+$spacing-8: 2rem;     // 32px
+$spacing-10: 2.5rem;  // 40px
+$spacing-12: 3rem;    // 48px
+$spacing-16: 4rem;    // 64px;
+
+// --------------------------------------------------------------------------
+// Border radius
+// --------------------------------------------------------------------------
+
+$radius-sm: 0.25rem;   // 4px
+$radius-md: 0.5rem;    // 8px
+$radius-lg: 0.75rem;   // 12px
+$radius-xl: 1rem;      // 16px
+$radius-full: 9999px;
+
+// --------------------------------------------------------------------------
+// Shadows
+// --------------------------------------------------------------------------
+
+$shadow-xs: 0 1px 2px rgb(15 23 42 / 0.04);
+
+$shadow-sm:
+  0 1px 3px rgb(15 23 42 / 0.08),
+  0 1px 2px rgb(15 23 42 / 0.04);
+
+$shadow-md:
+  0 4px 12px rgb(15 23 42 / 0.08);
+
+$shadow-lg:
+  0 10px 30px rgb(15 23 42 / 0.1);
+
+// --------------------------------------------------------------------------
+// Form controls
+// --------------------------------------------------------------------------
+
+$input-height: 2.75rem; // 44px
+$input-padding-x: $spacing-3;
+$input-border: $border-color;
+$input-border-focus: $color-primary;
+$input-radius: $radius-md;
+
+// --------------------------------------------------------------------------
+// Buttons
+// --------------------------------------------------------------------------
+
+$button-height-sm: 2rem;     // 32px
+$button-height-md: 2.5rem;   // 40px
+$button-height-lg: 2.75rem;  // 44px
+
+$button-radius: $radius-md;
+
+// --------------------------------------------------------------------------
+// Layout
+// --------------------------------------------------------------------------
+
+$content-max-width: 90rem; // 1440px
+$sidebar-width: 17.5rem;   // 280px
+$header-height: 4rem;      // 64px
+
+// --------------------------------------------------------------------------
+// Breakpoints
+// --------------------------------------------------------------------------
+
+$breakpoint-sm: 36rem;   // 576px
+$breakpoint-md: 48rem;   // 768px
+$breakpoint-lg: 64rem;   // 1024px
+$breakpoint-xl: 80rem;   // 1280px
+$breakpoint-2xl: 96rem;  // 1536px
+
+// --------------------------------------------------------------------------
+// Z-index
+// --------------------------------------------------------------------------
+
+$z-dropdown: 100;
+$z-sticky: 200;
+$z-overlay: 300;
+$z-modal: 400;
+$z-toast: 500;
+$z-tooltip: 600;
+
+// --------------------------------------------------------------------------
+// Transitions
+// --------------------------------------------------------------------------
+
+$transition-fast: 120ms ease;
+$transition-normal: 200ms ease;
+$transition-slow: 300ms ease;
