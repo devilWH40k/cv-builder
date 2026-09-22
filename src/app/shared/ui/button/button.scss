@@ -1,6 +1,10 @@
 @use '../../../../styles/tokens' as tokens;
 
 button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: tokens.$spacing-2;
   min-height: tokens.$button-height-lg;
   padding: tokens.$spacing-2 tokens.$spacing-8;
   border: 0;
@@ -27,6 +31,22 @@ button {
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+}
+
+button.monochrome {
+  background: #000;
+  color: #fff;
+  border: 1px solid #000;
+
+  &:hover:not(:disabled),
+  &:active:not(:disabled) {
+    background: #fff;
+    color: #000;
+  }
+
+  &:focus-visible {
+    outline-color: #000;
   }
 }
 

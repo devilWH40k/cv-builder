@@ -1,0 +1,120 @@
+@use '../../../styles/tokens' as tokens;
+@use '../../shared/ui/button/variants' as buttons;
+
+:host {
+  display: block;
+  color: #000;
+  background: #fff;
+}
+
+main {
+  max-width: tokens.$content-max-width;
+  margin-inline: auto;
+  padding: tokens.$spacing-8 tokens.$spacing-4;
+}
+
+.page-title {
+  color: tokens.$color-primary;
+  margin-bottom: tokens.$spacing-8;
+  text-align: center;
+  font-size: tokens.$font-size-4xl;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.document-viewport {
+  overflow-x: auto;
+  padding: tokens.$spacing-4;
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
+// Physical document dimensions are independent of application UI sizing.
+.cv-document {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 16mm;
+  margin-inline: auto;
+  color: #000;
+  background: #fff;
+  box-shadow: tokens.$shadow-md;
+}
+
+.cv-header {
+  display: flex;
+  align-items: center;
+  gap: 8mm;
+}
+
+.portrait {
+  flex-shrink: 0;
+  width: 40mm;
+  height: 40mm;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.cv-info {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+h2 {
+  margin: 0;
+  font-size: 24pt;
+  font-weight: tokens.$font-weight-bold;
+  line-height: tokens.$line-height-tight;
+}
+
+.position {
+  margin-top: 3mm;
+  font-size: 13pt;
+  font-weight: tokens.$font-weight-medium;
+}
+
+.description {
+  margin-top: 4mm;
+  font-size: 11pt;
+  white-space: pre-wrap;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: tokens.$spacing-6;
+  margin-top: tokens.$spacing-8;
+}
+
+a {
+  @include buttons.secondary;
+}
+
+@media print {
+  main {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .page-title,
+  .actions {
+    display: none;
+  }
+
+  .document-viewport {
+    overflow: visible;
+    padding: 0;
+  }
+
+  .cv-document {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+}

@@ -1,0 +1,27 @@
+<main aria-labelledby="preview-title">
+  <h1 id="preview-title" class="page-title">Your CV Preview</h1>
+  @if (info(); as cv) {
+    <div class="document-viewport" role="region" aria-label="A4 CV preview" tabindex="0">
+      <article class="cv-document" aria-label="CV">
+        <header class="cv-header">
+          @if (photoUrl(); as url) {
+            <img class="portrait" [src]="url" [alt]="cv.name + ' — portrait'"
+              (error)="photoUrl.set(null)" />
+          }
+          <div class="cv-info">
+            <h2>{{ cv.name }}</h2>
+            <p class="position">{{ cv.positionTitle }}</p>
+            <p class="description">{{ cv.description }}</p>
+          </div>
+        </header>
+      </article>
+    </div>
+    <div class="actions">
+      <a routerLink="/create">Edit CV info</a>
+      <app-button (click)="export()">
+        <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
+        Export
+      </app-button>
+    </div>
+  }
+</main>
