@@ -1,0 +1,26 @@
+<div class="field" [class.invalid]="invalid()" [class.success]="success()">
+  <div class="photo-preview">
+    @if (previewUrl(); as url) {
+    <img [src]="url" alt="Selected photo preview" (error)="previewUrl.set(null)" />
+    } @else {
+    <lucide-icon [img]="UserIcon" [size]="24" aria-hidden="true" />
+    }
+  </div>
+  <div class="control-wrap upload">
+    <input class="file-input" type="file" [id]="inputId()" accept=".jpg,.jpeg,.png" [disabled]="disabled()"
+      [attr.aria-required]="required()" [attr.aria-invalid]="invalid()"
+      [attr.aria-describedby]="inputId() + '-hint ' + inputId() + '-error'" (change)="selectFile($event)"
+      (blur)="control().markAsTouched()" />
+    <div class="control upload-display">
+      <lucide-icon [img]="UploadIcon" [size]="20" aria-hidden="true" />
+      <div class="upload-text">
+        <label [for]="inputId()">{{ label() }}{{ required() ? ' *' : '' }}</label>
+        <span class="filename">{{ value()?.name }}</span>
+      </div>
+    </div>
+    <p class="hint" [id]="inputId() + '-hint'">JPG, JPEG or PNG</p>
+  </div>
+  <div class="error" [id]="inputId() + '-error'" aria-live="polite">
+    <ng-content />
+  </div>
+</div>

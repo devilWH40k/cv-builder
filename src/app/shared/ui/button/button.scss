@@ -1,0 +1,37 @@
+@use '../../../../styles/tokens' as tokens;
+
+button {
+  min-height: tokens.$button-height-lg;
+  padding: tokens.$spacing-2 tokens.$spacing-8;
+  border: 0;
+  border-radius: tokens.$button-radius;
+  background: tokens.$color-primary;
+  color: tokens.$text-on-primary;
+  font-weight: tokens.$font-weight-medium;
+  cursor: pointer;
+  transition: background tokens.$transition-normal;
+
+  &:hover:not(:disabled) {
+    background: tokens.$color-primary-hover;
+  }
+
+  &:active:not(:disabled) {
+    background: tokens.$color-primary-active;
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$border-color-focus;
+    outline-offset: tokens.$spacing-1;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button {
+    transition: none;
+  }
+}

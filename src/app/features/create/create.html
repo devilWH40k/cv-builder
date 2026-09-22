@@ -1,5 +1,36 @@
 <main aria-labelledby="create-title">
-  <h1 id="create-title">Create your CV</h1>
-  <p>Your CV editor is coming soon.</p>
-  <a routerLink="/">Back to home</a>
+  <h1 id="create-title">CV Info</h1>
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <app-file-upload inputId="photo" label="Upload a photo" [control]="form.controls.photo">
+      @if (form.controls.photo.touched && form.controls.photo.invalid) {
+        <span>Please choose a JPG, JPEG or PNG image.</span>
+      }
+    </app-file-upload>
+
+    <app-input inputId="name" label="Name" autocomplete="name"
+      [control]="form.controls.name" [required]="true">
+      @if (form.controls.name.touched && form.controls.name.invalid) {
+        <span>Please enter your name.</span>
+      }
+    </app-input>
+
+    <app-input inputId="position-title" label="Position title" autocomplete="organization-title"
+      [control]="form.controls.positionTitle" [required]="true">
+      @if (form.controls.positionTitle.touched && form.controls.positionTitle.invalid) {
+        <span>Please enter your position title.</span>
+      }
+    </app-input>
+
+    <app-textarea inputId="description" label="Short description"
+      [control]="form.controls.description" [required]="true">
+      @if (form.controls.description.touched && form.controls.description.invalid) {
+        <span>Please enter a short description.</span>
+      }
+    </app-textarea>
+
+    <div class="actions">
+      <app-button type="submit">Create</app-button>
+      <a routerLink="/">Back to home</a>
+    </div>
+  </form>
 </main>

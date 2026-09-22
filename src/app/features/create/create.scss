@@ -2,25 +2,37 @@
 
 main {
   min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: tokens.$spacing-6;
+  max-width: tokens.$content-max-width;
+  margin-inline: auto;
   padding: tokens.$spacing-6;
-  text-align: center;
 }
 
 h1 {
-  margin: 0;
+  margin: 0 0 tokens.$spacing-8;
+  text-align: center;
   color: tokens.$color-primary;
   font-size: tokens.$font-size-4xl;
   line-height: tokens.$line-height-tight;
 }
 
-p {
-  margin: 0;
-  color: tokens.$text-secondary;
+form {
+  width: 100%;
+  max-width: tokens.$breakpoint-sm;
+  margin-inline: auto;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: tokens.$spacing-6;
+  margin-top: tokens.$spacing-4;
+}
+
+@media (min-width: tokens.$breakpoint-md) {
+  main {
+    padding: tokens.$spacing-12 tokens.$spacing-16;
+  }
 }
 
 a {

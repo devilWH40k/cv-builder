@@ -19,7 +19,7 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render the home page and navigate to the editor placeholder', async () => {
+  it('should render the home page and navigate to the CV form', async () => {
     const harness = await RouterTestingHarness.create('/');
     expect(harness.routeNativeElement?.querySelector('h1')?.textContent)
       .toBe('Create your new CV');
@@ -32,12 +32,13 @@ describe('App', () => {
     harness.detectChanges();
 
     expect(TestBed.inject(Router).url).toBe('/create');
-    expect(harness.routeNativeElement?.textContent).toContain('Your CV editor is coming soon.');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('CV Info');
+    expect(harness.routeNativeElement?.querySelector('form')).not.toBeNull();
   });
 
   it('should open /create directly and navigate back home', async () => {
     const harness = await RouterTestingHarness.create('/create');
-    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('Create your CV');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('CV Info');
 
     harness.routeNativeElement?.querySelector<HTMLAnchorElement>('a')!.click();
     await harness.fixture.whenStable();

@@ -1,0 +1,16 @@
+<div class="field" [class.invalid]="invalid()" [class.success]="success()">
+  <div class="control-wrap">
+    <textarea class="control" [id]="inputId()" [formControl]="control()" [rows]="rows()"
+      [required]="required()" placeholder=" " [attr.aria-invalid]="invalid()"
+      [attr.aria-describedby]="inputId() + '-error'"></textarea>
+    <label [for]="inputId()">{{ label() }}{{ required() ? ' *' : '' }}</label>
+    @if (success()) {
+      <span class="success-icon" aria-hidden="true">
+        <lucide-icon [img]="CheckIcon" [size]="18" />
+      </span>
+    }
+  </div>
+  <div class="error" [id]="inputId() + '-error'" aria-live="polite">
+    <ng-content />
+  </div>
+</div>

@@ -1,0 +1,117 @@
+@use '../form-field/field';
+@use '../../../../styles/tokens' as tokens;
+
+.file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.upload-display {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-3;
+  padding-right: tokens.$spacing-3;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: tokens.$spacing-12 minmax(0, 1fr);
+  column-gap: tokens.$spacing-3;
+  padding-top: 0;
+}
+
+.photo-preview {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: tokens.$spacing-12;
+  height: tokens.$spacing-12;
+  overflow: hidden;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-full;
+  background: tokens.$background-secondary;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.upload-text {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-2;
+  flex: 1;
+  min-width: 0;
+}
+
+.hint,
+.error {
+  grid-column: 2;
+}
+
+@media (min-width: tokens.$breakpoint-sm) {
+  .field {
+    grid-template-columns: tokens.$spacing-16 minmax(0, 1fr);
+    column-gap: tokens.$spacing-4;
+  }
+
+  .photo-preview {
+    width: tokens.$spacing-16;
+    height: tokens.$spacing-16;
+  }
+}
+
+.upload label,
+.upload:focus-within label {
+  position: static;
+  display: block;
+  flex-shrink: 1;
+  max-width: 100%;
+  color: tokens.$color-primary;
+  font-size: tokens.$font-size-md;
+  transform: none;
+  transition: none;
+  pointer-events: auto;
+}
+
+.filename {
+  display: block;
+  min-width: 0;
+  font-size: tokens.$font-size-xs;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+lucide-icon {
+  display: flex;
+  flex-shrink: 0;
+  color: tokens.$color-primary;
+}
+
+.file-input:focus-visible + .control {
+  outline: 2px solid tokens.$border-color-focus;
+  outline-offset: 2px;
+}
+
+.file-input:disabled {
+  cursor: not-allowed;
+}
+
+.file-input:disabled + .control {
+  background: tokens.$background-subtle;
+  color: tokens.$text-disabled;
+}
+
+.hint {
+  margin-top: tokens.$spacing-1;
+  color: tokens.$text-muted;
+  font-size: tokens.$font-size-xs;
+}

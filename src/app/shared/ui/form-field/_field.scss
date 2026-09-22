@@ -1,0 +1,95 @@
+@use '../../../../styles/tokens' as tokens;
+
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.field {
+  padding-top: tokens.$spacing-4;
+}
+
+.control-wrap {
+  position: relative;
+}
+
+.control {
+  display: block;
+  width: 100%;
+  min-height: tokens.$input-height;
+  padding: tokens.$spacing-2 tokens.$spacing-10 tokens.$spacing-2 tokens.$input-padding-x;
+  border: 1px solid tokens.$input-border;
+  border-radius: tokens.$input-radius;
+  background: tokens.$background-surface;
+  color: tokens.$text-primary;
+  line-height: tokens.$line-height-normal;
+  transition: border-color tokens.$transition-normal;
+
+  &:focus-visible {
+    outline: 2px solid tokens.$border-color-focus;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    background: tokens.$background-subtle;
+    color: tokens.$text-disabled;
+    cursor: not-allowed;
+  }
+}
+
+label {
+  position: absolute;
+  top: tokens.$spacing-2;
+  left: tokens.$input-padding-x;
+  max-width: calc(100% - #{tokens.$spacing-12});
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: tokens.$text-secondary;
+  transform-origin: left center;
+  transition: transform tokens.$transition-normal, color tokens.$transition-normal;
+  pointer-events: none;
+}
+
+.control:focus ~ label,
+.control:is(input, textarea):not(:placeholder-shown) ~ label,
+.filled label,
+.control-wrap:focus-within label {
+  transform: translateY(-#{tokens.$spacing-8}) scale(0.875);
+  color: tokens.$color-primary;
+}
+
+.success .control {
+  border-color: tokens.$color-success;
+}
+
+.invalid .control {
+  border-color: tokens.$color-danger;
+}
+
+.success-icon {
+  position: absolute;
+  top: tokens.$spacing-3;
+  right: tokens.$spacing-3;
+  display: flex;
+  color: tokens.$color-success;
+  pointer-events: none;
+}
+
+// Two lines are always reserved; longer projected messages scroll within this space.
+.error {
+  height: tokens.$spacing-8;
+  padding-top: tokens.$spacing-1;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  color: tokens.$text-danger;
+  font-size: tokens.$font-size-xs;
+  line-height: tokens.$line-height-normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control,
+  label {
+    transition: none;
+  }
+}
