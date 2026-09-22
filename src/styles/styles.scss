@@ -7,3 +7,16 @@ body {
   background: tokens.$background-surface;
   line-height: tokens.$line-height-normal;
 }
+
+@page {
+  size: A4 portrait;
+  margin: 16mm;
+}
+
+@media print {
+  body {
+    min-height: 0;
+    color: #000;
+    background: #fff;
+  }
+}

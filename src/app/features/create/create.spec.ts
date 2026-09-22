@@ -1,7 +1,8 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { Create } from './create';
+import { CvDraft } from '../cv/cv-draft';
 
 describe('CV form', () => {
   let fixture: ComponentFixture<Create>;
@@ -12,6 +13,7 @@ describe('CV form', () => {
       imports: [Create],
       providers: [provideZonelessChangeDetection(), provideRouter([])]
     }).compileComponents();
+    spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
     fixture = TestBed.createComponent(Create);
     page = fixture.nativeElement;
     fixture.detectChanges();
@@ -42,20 +44,18 @@ describe('CV form', () => {
     expect(page.querySelectorAll('.invalid, .success').length).toBe(0);
     const fields = Array.from(page.querySelectorAll<HTMLElement>('.field'));
     const heights = fields.map((field) => field.getBoundingClientRect().height);
-    const log = spyOn(console, 'log');
 
     submit();
     await fixture.whenStable();
 
-    expect(log).not.toHaveBeenCalled();
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
     expect(page.querySelectorAll('.invalid').length).toBe(3);
     expect(page.querySelector('#name')?.getAttribute('aria-invalid')).toBe('true');
     expect(page.querySelector('#name-error')?.textContent).toContain('Please enter your name.');
     expect(fields.map((field) => field.getBoundingClientRect().height)).toEqual(heights);
   });
 
-  it('shows success marks and logs the entered data on Create', async () => {
-    const log = spyOn(console, 'log');
+  it('shows success marks and opens the preview with the entered data on Create', async () => {
     enterText('name', 'Alex Morgan');
     enterText('position-title', 'Designer');
     enterText('description', 'I design accessible applications.');
@@ -64,7 +64,8 @@ describe('CV form', () => {
     expect(page.querySelectorAll('.success-icon').length).toBe(3);
     expect(page.querySelector('#name')?.getAttribute('aria-invalid')).toBe('false');
     submit();
-    expect(log).toHaveBeenCalledOnceWith('CV info', {
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledOnceWith(['/preview']);
+    expect(TestBed.inject(CvDraft).current()).toEqual({
       name: 'Alex Morgan',
       positionTitle: 'Designer',
       description: 'I design accessible applications.',
@@ -73,14 +74,13 @@ describe('CV form', () => {
   });
 
   it('rejects whitespace-only required fields', async () => {
-    const log = spyOn(console, 'log');
     enterText('name', '   ');
     enterText('position-title', '   ');
     enterText('description', '\n  ');
     submit();
     await fixture.whenStable();
     expect(page.querySelectorAll('.invalid').length).toBe(3);
-    expect(log).not.toHaveBeenCalled();
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
   });
 
   for (const [name, type] of [
