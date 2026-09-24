@@ -89,6 +89,53 @@ h2 {
   margin-top: tokens.$spacing-8;
 }
 
+.cv-languages,
+.cv-technologies {
+  width: 100%;
+  margin-top: 8mm;
+  overflow-wrap: anywhere;
+
+  h3 {
+    margin: 0 0 3mm;
+    font-size: 13pt;
+    font-weight: tokens.$font-weight-bold;
+    break-after: avoid;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    margin-bottom: 2mm;
+    font-size: 11pt;
+    break-inside: avoid;
+  }
+}
+
+.cv-technologies {
+  ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3mm;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 9mm;
+    margin: 0;
+    padding: 2mm;
+    border: 1px solid currentColor;
+    border-radius: tokens.$radius-md;
+    font-size: 9pt;
+    text-align: center;
+  }
+}
+
 a {
   @include buttons.secondary;
 }
@@ -117,4 +164,20 @@ a {
     padding: 0;
     box-shadow: none;
   }
+}
+
+.cv-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 32%); gap: 8mm; }
+.cv-main, .cv-sidebar { min-width: 0; }
+.cv-experience {
+  margin-top: 8mm;
+  overflow-wrap: anywhere;
+  h3 { margin: 0 0 3mm; font-size: 13pt; break-after: avoid; }
+  h4 { margin: 0 0 2mm; font-size: 14pt; break-after: avoid; }
+}
+.experience-entry { margin-bottom: 7mm; }
+.period { margin: 0 0 3mm; font-size: 10pt; color: tokens.$text-secondary; }
+.project-description { font-size: 11pt; line-height: tokens.$line-height-normal; }
+.experience-technologies {
+  display: flex; flex-wrap: wrap; gap: 2mm; margin: 4mm 0 0; padding: 0; list-style: none;
+  li { border: 1px solid currentColor; border-radius: tokens.$radius-sm; padding: 1mm 2mm; font-size: 9pt; break-inside: avoid; }
 }

@@ -69,7 +69,10 @@ describe('CV form', () => {
       name: 'Alex Morgan',
       positionTitle: 'Designer',
       description: 'I design accessible applications.',
-      photo: null
+      photo: null,
+      languages: [],
+      experiences: [],
+      technologies: []
     });
   });
 
@@ -81,6 +84,121 @@ describe('CV form', () => {
     await fixture.whenStable();
     expect(page.querySelectorAll('.invalid').length).toBe(3);
     expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+  });
+
+  it('searches tools, groups selected chips in the parent, and synchronizes removal', async () => {
+    const selector = page.querySelector<HTMLElement>('app-multi-select')!;
+    selector.querySelector('summary')!.click();
+    const search = selector.querySelector<HTMLInputElement>('input[type="search"]')!;
+    function filter(query: string): void {
+      search.value = query;
+      search.dispatchEvent(new Event('input'));
+    }
+    filter('  vUe  ');
+    await fixture.whenStable();
+    expect(selector.querySelectorAll('.option').length).toBe(1);
+    selector.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.form.controls.technologies.value).toEqual(['Vue']);
+    expect(selector.querySelector('.skill-chip')).toBeNull();
+    expect(page.querySelector('.skill-group h4')?.textContent).toBe('Frontend');
+    expect(page.querySelector('.skill-chip')?.textContent).toContain('Vue');
+
+    filter('mongo');
+    await fixture.whenStable();
+    selector.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click();
+    await fixture.whenStable();
+    expect(page.querySelectorAll('.skill-group').length).toBe(2);
+    expect(fixture.componentInstance.form.controls.technologies.value).toEqual(['Vue', 'MongoDB']);
+
+    page.querySelector<HTMLButtonElement>('[aria-label="Remove MongoDB"]')!.click();
+    await fixture.whenStable();
+    expect(selector.querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked).toBeFalse();
+    expect(page.querySelectorAll('.skill-group').length).toBe(1);
+
+    filter('no-such-tool');
+    await fixture.whenStable();
+    expect(selector.querySelector('[role="status"]')?.textContent).toContain('No matching');
+    expect(page.querySelector('.skill-chip')?.textContent).toContain('Vue');
+
+    filter('vue');
+    await fixture.whenStable();
+    selector.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click();
+    await fixture.whenStable();
+    expect(page.querySelectorAll('.skill-chip').length).toBe(0);
+    search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(selector.querySelector('details')!.open).toBeFalse();
+    expect(document.activeElement).toBe(selector.querySelector('summary'));
+  });
+
+  it('updates multi-select selection after disabling and resetting the form', async () => {
+    const control = fixture.componentInstance.form.controls.technologies;
+    control.setValue(['Vue']);
+    fixture.componentInstance.form.disable();
+    await fixture.whenStable();
+    expect(page.querySelector<HTMLInputElement>('app-multi-select input[type="search"]')!.disabled).toBeTrue();
+    expect(page.querySelector<HTMLFieldSetElement>('app-multi-select fieldset')!.disabled).toBeTrue();
+    fixture.componentInstance.form.enable();
+    fixture.componentInstance.form.reset();
+    await fixture.whenStable();
+    expect(page.querySelectorAll('app-multi-select input:checked').length).toBe(0);
+    expect(page.querySelectorAll('.skill-chip').length).toBe(0);
+  });
+
+  it('requires both selections in every added row and allows removing an incomplete row', async () => {
+    enterText('name', 'Alex Morgan');
+    enterText('position-title', 'Designer');
+    enterText('description', 'Accessible applications.');
+    const add = page.querySelector<HTMLButtonElement>('[aria-label="Add language"]')!;
+    add.click();
+    await fixture.whenStable();
+    expect(page.querySelectorAll('select').length).toBe(2);
+    expect(page.querySelectorAll('app-select .invalid').length).toBe(0);
+
+    submit();
+    await fixture.whenStable();
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+    expect(page.querySelectorAll('app-select .invalid').length).toBe(2);
+
+    const language = page.querySelector<HTMLSelectElement>('#language-0')!;
+    language.value = 'Ukrainian';
+    language.dispatchEvent(new Event('change'));
+    submit();
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+
+    const level = page.querySelector<HTMLSelectElement>('#level-0')!;
+    level.value = 'Native';
+    level.dispatchEvent(new Event('change'));
+    add.click();
+    await fixture.whenStable();
+    expect(page.querySelectorAll('select').length).toBe(4);
+    submit();
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+
+    page.querySelector<HTMLButtonElement>('[aria-label="Remove language 2"]')!.click();
+    await fixture.whenStable();
+    submit();
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledOnceWith(['/preview']);
+    expect(TestBed.inject(CvDraft).current()?.languages).toEqual([
+      { language: 'Ukrainian', level: 'Native' }
+    ]);
+  });
+
+  it('allows removing every language and keeps remaining rows intact', async () => {
+    const add = page.querySelector<HTMLButtonElement>('[aria-label="Add language"]')!;
+    add.click();
+    add.click();
+    await fixture.whenStable();
+    const languages = fixture.componentInstance.form.controls.languages;
+    languages.at(1).setValue({ language: 'English', level: 'B2 — Upper-Intermediate' });
+    page.querySelector<HTMLButtonElement>('[aria-label="Remove language 1"]')!.click();
+    await fixture.whenStable();
+    expect(page.querySelector<HTMLSelectElement>('#language-0')?.value).toBe('English');
+    expect(page.querySelector<HTMLSelectElement>('#level-0')?.value).toBe('B2 — Upper-Intermediate');
+    page.querySelector<HTMLButtonElement>('[aria-label="Remove language 1"]')!.click();
+    await fixture.whenStable();
+    expect(page.querySelectorAll('select').length).toBe(0);
+    expect(languages.valid).toBeTrue();
   });
 
   for (const [name, type] of [
@@ -189,4 +307,33 @@ describe('CV form', () => {
     expect(page.querySelector('.photo-preview img')).toBeNull();
     expect(page.querySelector('.photo-preview lucide-icon')).not.toBeNull();
   });
+  it('adds experience, validates company, updates rich text, and removes incomplete entries', async () => {
+    enterText('name', 'Alex Morgan');
+    enterText('position-title', 'Developer');
+    enterText('description', 'Building applications.');
+    const add = page.querySelector<HTMLButtonElement>('[aria-label="Add experience"]')!;
+    add.click();
+    await fixture.whenStable();
+    submit();
+    await fixture.whenStable();
+    expect(page.querySelector('#company-0-error')?.textContent).toContain('Please enter a company.');
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+    enterText('company-0', 'FINBIT');
+    const editor = page.querySelector<HTMLElement>('[contenteditable="true"]')!;
+    expect(editor).not.toBeNull();
+    editor.focus();
+    page.querySelector<HTMLButtonElement>('[aria-label="Bold"]')!.click();
+    document.execCommand('insertText', false, 'Built accessible forms.');
+    await fixture.whenStable();
+    expect(fixture.componentInstance.form.controls.experiences.at(0).controls.description.value)
+      .toContain('<strong>Built accessible forms.</strong>');
+    add.click();
+    await fixture.whenStable();
+    page.querySelector<HTMLButtonElement>('[aria-label="Remove experience 2"]')!.click();
+    await fixture.whenStable();
+    submit();
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledOnceWith(['/preview']);
+    expect(TestBed.inject(CvDraft).current()?.experiences[0].company).toBe('FINBIT');
+  });
+
 });

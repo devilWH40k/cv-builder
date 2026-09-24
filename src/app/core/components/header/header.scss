@@ -1,0 +1,42 @@
+@use 'styles/tokens' as tokens;
+
+:host {
+  display: block;
+  flex-shrink: 0;
+}
+
+.app-header {
+  background: tokens.$color-primary;
+  color: tokens.$text-on-primary;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  min-height: tokens.$header-height;
+  max-width: tokens.$content-max-width;
+  margin-inline: auto;
+  padding: tokens.$spacing-3 tokens.$spacing-6;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-3;
+  font-size: tokens.$font-size-xl;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+img {
+  display: block;
+  flex-shrink: 0;
+  width: tokens.$spacing-10;
+  height: tokens.$spacing-10;
+  object-fit: contain;
+}
+
+@media print {
+  :host {
+    display: none;
+  }
+}

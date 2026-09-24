@@ -1,0 +1,95 @@
+@use '../../../../styles/tokens' as tokens;
+
+:host {
+  display: block;
+  min-width: 0;
+  color: tokens.$text-primary;
+}
+
+details {
+  border: 1px solid tokens.$input-border;
+  border-radius: tokens.$input-radius;
+  background: tokens.$background-surface;
+}
+
+summary {
+  min-height: tokens.$input-height;
+  padding: tokens.$spacing-3;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.count {
+  margin-left: tokens.$spacing-2;
+  color: tokens.$text-muted;
+  font-size: tokens.$font-size-sm;
+}
+
+.panel {
+  border-top: 1px solid tokens.$border-color;
+  padding: tokens.$spacing-3;
+}
+
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-2;
+  margin-bottom: tokens.$spacing-3;
+
+  input {
+    width: 100%;
+    min-width: 0;
+    min-height: tokens.$input-height;
+    padding: tokens.$spacing-2 tokens.$spacing-3;
+    border: 1px solid tokens.$input-border;
+    border-radius: tokens.$input-radius;
+    background: tokens.$background-surface;
+    color: tokens.$text-primary;
+  }
+}
+
+.options {
+  max-height: tokens.$sidebar-width;
+  overflow-y: auto;
+}
+
+fieldset {
+  margin: 0 0 tokens.$spacing-3;
+  padding: 0;
+  border: 0;
+}
+
+legend {
+  padding: tokens.$spacing-2 0;
+  font-size: tokens.$font-size-sm;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-3;
+  min-height: tokens.$input-height;
+  padding: tokens.$spacing-2;
+  border-radius: tokens.$radius-sm;
+  cursor: pointer;
+
+  &:hover {
+    background: tokens.$background-subtle;
+  }
+
+  input {
+    accent-color: tokens.$color-primary;
+  }
+}
+
+summary:focus-visible,
+input:focus-visible {
+  outline: 2px solid tokens.$border-color-focus;
+  outline-offset: 2px;
+}
+
+fieldset:disabled .option {
+  color: tokens.$text-disabled;
+  cursor: not-allowed;
+}

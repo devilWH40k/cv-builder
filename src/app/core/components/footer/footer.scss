@@ -1,0 +1,28 @@
+@use 'styles/tokens' as tokens;
+
+:host {
+  display: block;
+  flex-shrink: 0;
+}
+
+.app-footer {
+  background: tokens.$color-primary;
+  color: tokens.$text-on-primary;
+  font-size: tokens.$font-size-sm;
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$spacing-4;
+  max-width: tokens.$content-max-width;
+  margin-inline: auto;
+  padding: tokens.$spacing-4 tokens.$spacing-6;
+}
+
+@media print {
+  :host {
+    display: none;
+  }
+}
