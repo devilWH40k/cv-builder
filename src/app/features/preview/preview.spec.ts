@@ -13,7 +13,8 @@ describe('CV preview', () => {
     description: 'Building accessible applications.\nFive years of experience.',
     photo: null,
     languages: [],
-    technologies: []
+    experiences: [],
+      technologies: []
   };
 
   beforeEach(() => {
@@ -153,4 +154,24 @@ describe('CV preview', () => {
     expect(harness.routeNativeElement!.querySelector('.cv-languages')).toBeNull();
     expect(harness.routeNativeElement!.querySelector('.cv-technologies li')?.textContent).toBe('Vue');
   });
+  it('renders experience beside languages and restores rich text and periods when editing', async () => {
+    const experiences = [{ company: 'FINBIT', position: 'Full Stack Developer',
+      startDate: '2023-06', endDate: '', isCurrent: true, technologies: ['Angular'],
+      description: '<p>A banking platform.</p><ul><li><p>Built <strong>accessible</strong> forms.</p></li></ul><p></p>' }];
+    TestBed.inject(CvDraft).save({ ...info, experiences, languages: [{ language: 'English', level: 'Native' }] });
+    const harness = await RouterTestingHarness.create('/preview');
+    const page = harness.routeNativeElement!;
+    const section = page.querySelector('.cv-experience')!;
+    expect(section.querySelector('h4')?.textContent).toContain('FINBIT | Full Stack Developer');
+    expect(section.querySelector('.period')?.textContent).toContain('June 2023');
+    expect(section.querySelector('.period')?.textContent).toContain('Present');
+    expect(section.querySelector('.project-description strong')?.textContent).toBe('accessible');
+    expect(section.querySelector('.experience-technologies')?.textContent).toContain('Angular');
+    expect(section.getBoundingClientRect().right)
+      .toBeLessThan(page.querySelector('.cv-languages')!.getBoundingClientRect().left);
+    const create = await harness.navigateByUrl('/create', Create);
+    expect(create.form.controls.experiences.getRawValue()).toEqual(experiences);
+    expect(harness.routeNativeElement?.querySelector('[contenteditable]')?.textContent).toContain('banking platform');
+  });
+
 });

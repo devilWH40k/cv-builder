@@ -31,6 +31,20 @@
       </app-textarea>
     </section>
 
+    <section aria-labelledby="experience-title">
+      <div class="section-heading">
+        <h3 id="experience-title">Experience</h3>
+        <button class="icon-button" type="button" aria-label="Add experience" (click)="addExperience()">
+          <lucide-icon [img]="PlusIcon" [size]="18" aria-hidden="true" />
+        </button>
+      </div>
+      @for (row of form.controls.experiences.controls; track row; let index = $index) {
+        <app-experience-entry [form]="row" [index]="index" (remove)="removeExperience(index)" />
+      } @empty {
+        <p>No work experience added yet. Use the plus button to add an entry.</p>
+      }
+    </section>
+
     <section aria-labelledby="languages-title">
       <div class="section-heading">
         <h3 id="languages-title">Languages</h3>

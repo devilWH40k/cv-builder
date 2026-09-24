@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { CvLanguage } from './languages';
+import { CvExperience } from './experience';
 
 export interface CvInfo {
   readonly name: string;
@@ -8,6 +9,7 @@ export interface CvInfo {
   readonly photo: File | null;
   readonly languages: readonly CvLanguage[];
   readonly technologies: readonly string[];
+  readonly experiences: readonly CvExperience[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -19,7 +21,10 @@ export class CvDraft {
     this.info.set({
       ...info,
       languages: info.languages.map((language) => ({ ...language })),
-      technologies: [...info.technologies]
+      technologies: [...info.technologies],
+      experiences: info.experiences.map((experience) => ({
+        ...experience, technologies: [...experience.technologies]
+      }))
     });
   }
 }

@@ -14,26 +14,53 @@
             <p class="description">{{ cv.description }}</p>
           </div>
         </header>
-        @if (cv.languages.length) {
-          <section class="cv-languages" aria-labelledby="cv-languages-title">
-            <h3 id="cv-languages-title">Languages:</h3>
-            <ul>
-              @for (language of cv.languages; track $index) {
-                <li>{{ language.language }} - {{ shortLevel(language.level) }}</li>
-              }
-            </ul>
-          </section>
-        }
-        @if (cv.technologies.length) {
-          <section class="cv-technologies" aria-labelledby="cv-technologies-title">
-            <h3 id="cv-technologies-title">Tools/Technologies</h3>
-            <ul>
-              @for (technology of cv.technologies; track technology) {
-                <li>{{ technology }}</li>
-              }
-            </ul>
-          </section>
-        }
+        <div class="cv-body">
+          <div class="cv-main">
+            @if (cv.experiences.length) {
+              <section class="cv-experience" aria-labelledby="cv-experience-title">
+                <h3 id="cv-experience-title">Experience:</h3>
+                @for (experience of cv.experiences; track $index) {
+                  <article class="experience-entry">
+                    <h4>{{ experience.company }}@if (experience.position) { | {{ experience.position }}}</h4>
+                    @if (experience.startDate || experience.endDate || experience.isCurrent) {
+                      <p class="period">{{ formatDate(experience.startDate) }}@if (experience.startDate && (experience.endDate || experience.isCurrent)) { &ndash; }{{ experience.isCurrent ? 'Present' : formatDate(experience.endDate) }}</p>
+                    }
+                    <div class="project-description" [innerHTML]="experience.description"></div>
+                    @if (experience.technologies.length) {
+                      <ul class="experience-technologies" aria-label="Used technologies">
+                        @for (technology of experience.technologies; track technology) {
+                          <li>{{ technology }}</li>
+                        }
+                      </ul>
+                    }
+                  </article>
+                }
+              </section>
+            }
+          </div>
+          <aside class="cv-sidebar">
+            @if (cv.languages.length) {
+              <section class="cv-languages" aria-labelledby="cv-languages-title">
+                <h3 id="cv-languages-title">Languages:</h3>
+                <ul>
+                  @for (language of cv.languages; track $index) {
+                    <li>{{ language.language }} - {{ shortLevel(language.level) }}</li>
+                  }
+                </ul>
+              </section>
+            }
+            @if (cv.technologies.length) {
+              <section class="cv-technologies" aria-labelledby="cv-technologies-title">
+                <h3 id="cv-technologies-title">Tools/Technologies</h3>
+                <ul>
+                  @for (technology of cv.technologies; track technology) {
+                    <li>{{ technology }}</li>
+                  }
+                </ul>
+              </section>
+            }
+          </aside>
+        </div>
       </article>
     </div>
     <div class="actions">

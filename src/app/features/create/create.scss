@@ -2,7 +2,6 @@
 @use '../../shared/ui/button/variants' as buttons;
 
 main {
-  min-height: 100svh;
   max-width: tokens.$content-max-width;
   margin-inline: auto;
   padding: tokens.$spacing-6;

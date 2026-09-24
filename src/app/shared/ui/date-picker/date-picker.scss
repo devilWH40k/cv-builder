@@ -1,0 +1,94 @@
+@use '../../../../styles/tokens' as tokens;
+@use '../button/variants' as buttons;
+:host {
+  display: block;
+  min-width: 0;
+}
+.field {
+  margin-bottom: tokens.$spacing-4;
+}
+.field > span {
+  display: block;
+  margin-bottom: tokens.$spacing-2;
+  color: tokens.$text-secondary;
+  font-size: tokens.$font-size-sm;
+}
+details {
+  position: relative;
+}
+summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$spacing-2;
+  min-height: tokens.$input-height;
+  padding: tokens.$spacing-2 tokens.$input-padding-x;
+  border: 1px solid tokens.$input-border;
+  border-radius: tokens.$input-radius;
+  cursor: pointer;
+  &::-webkit-details-marker {
+    display: none;
+  }
+  &:focus-visible {
+    outline: 2px solid tokens.$border-color-focus;
+    outline-offset: 2px;
+  }
+  &[aria-disabled='true'] {
+    color: tokens.$text-disabled;
+    background: tokens.$background-subtle;
+    cursor: not-allowed;
+  }
+}
+.invalid summary {
+  border-color: tokens.$color-danger;
+}
+.calendar {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: tokens.$z-dropdown;
+  width: min(19rem, 80vw);
+  min-width: 0;
+  margin: tokens.$spacing-1 0 0;
+  padding: tokens.$spacing-3;
+  background: tokens.$background-surface;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md;
+  box-shadow: tokens.$shadow-md;
+}
+button {
+  @include buttons.ghost;
+}
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: tokens.$spacing-2;
+}
+.navigation button {
+  padding: tokens.$spacing-2;
+}
+.cells {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: tokens.$spacing-1;
+}
+.days {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.cells button {
+  padding: tokens.$spacing-1;
+  min-height: tokens.$button-height-md;
+}
+.cells button[aria-pressed='true'] {
+  background: tokens.$color-primary;
+  color: tokens.$text-on-primary;
+}
+.weekday {
+  text-align: center;
+  font-size: tokens.$font-size-xs;
+  color: tokens.$text-muted;
+}
+.clear {
+  margin-top: tokens.$spacing-2;
+}

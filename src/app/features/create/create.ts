@@ -7,7 +7,8 @@ import { Input } from '../../shared/ui/input/input';
 import { Textarea } from '../../shared/ui/textarea/textarea';
 import { FileUpload } from '../../shared/ui/file-upload/file-upload';
 import { Button } from '../../shared/ui/button/button';
-import { createCvForm, createLanguageForm } from './cv-form';
+import { createCvForm, createExperienceForm, createLanguageForm } from './cv-form';
+import { ExperienceEntry } from './experience-entry/experience-entry';
 import { CvDraft } from '../cv/cv-draft';
 import { LANGUAGES, LANGUAGE_LEVELS } from '../cv/languages';
 import { Select } from '../../shared/ui/select/select';
@@ -17,7 +18,7 @@ import { TECHNOLOGY_GROUPS } from '../cv/technologies';
 
 @Component({
   selector: 'app-create',
-  imports: [RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, MultiSelect, LucideAngularModule],
+  imports: [RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, MultiSelect, LucideAngularModule, ExperienceEntry],
   templateUrl: './create.html',
   styleUrl: './create.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -50,8 +51,20 @@ export class Create {
       for (const language of info.languages) {
         this.form.controls.languages.push(createLanguageForm(language));
       }
-      this.form.setValue({ ...info, languages: [...info.languages] });
+      for (const experience of info.experiences) {
+        this.form.controls.experiences.push(createExperienceForm(experience));
+      }
+      this.form.setValue({ ...info, languages: [...info.languages], experiences: [...info.experiences] });
     }
+  }
+
+  protected addExperience(): void {
+    this.form.controls.experiences.push(createExperienceForm());
+  }
+
+  protected removeExperience(index: number): void {
+    this.form.controls.experiences.removeAt(index);
+    this.form.markAsDirty();
   }
 
   protected addLanguage(): void {

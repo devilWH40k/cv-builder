@@ -1,0 +1,153 @@
+@use '../../../../styles/tokens' as tokens;
+@use '../../../shared/ui/button/variants' as buttons;
+
+:host {
+  display: block;
+  min-width: 0;
+  margin-bottom: tokens.$spacing-6;
+}
+
+.entry {
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  padding: tokens.$spacing-5;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+h4 {
+  margin: 0;
+  font-size: tokens.$font-size-md;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+button {
+  @include buttons.ghost;
+}
+
+.remove {
+  color: tokens.$color-danger;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: tokens.$spacing-4;
+}
+
+.period {
+  border: 0;
+  padding: 0;
+  margin: 0 0 tokens.$spacing-4;
+  min-width: 0;
+}
+
+legend {
+  margin-bottom: tokens.$spacing-3;
+  font-weight: tokens.$font-weight-medium;
+}
+
+.precision {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: tokens.$spacing-3;
+  margin-bottom: tokens.$spacing-4;
+  font-size: tokens.$font-size-sm;
+  color: tokens.$text-secondary;
+}
+
+select {
+  min-height: tokens.$input-height;
+  padding: tokens.$spacing-2 tokens.$spacing-3;
+  border: 1px solid tokens.$input-border;
+  border-radius: tokens.$input-radius;
+  color: tokens.$text-primary;
+  background: tokens.$background-surface;
+}
+
+select:focus-visible, input:focus-visible {
+  outline: 2px solid tokens.$border-color-focus;
+  outline-offset: 2px;
+}
+
+.current {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-2;
+  font-size: tokens.$font-size-sm;
+  min-height: tokens.$button-height-md;
+}
+
+.error {
+  color: tokens.$text-danger;
+  font-size: tokens.$font-size-sm;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$spacing-2;
+  padding: 0;
+  margin: 0;
+  margin-top: tokens.$spacing-2;
+  list-style: none;
+}
+
+.chips li {
+  display: flex;
+  align-items: center;
+  padding-left: tokens.$spacing-3;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-full;
+  background: tokens.$background-subtle;
+  font-size: tokens.$font-size-sm;
+  overflow-wrap: anywhere;
+}
+
+.chips button {
+  padding: tokens.$spacing-1;
+  min-height: tokens.$button-height-sm;
+  color: tokens.$color-danger;
+}
+
+.editor-field {
+  margin-top: tokens.$spacing-4;
+  --ate-primary: #{
+    tokens.$color-primary
+  }
+  ;
+  --ate-border-radius: #{
+    tokens.$radius-md
+  }
+  ;
+}
+
+.editor-field > p {
+  margin: 0 0 tokens.$spacing-2;
+  color: tokens.$text-secondary;
+  font-size: tokens.$font-size-sm;
+}
+
+@media (max-width: tokens.$breakpoint-sm) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+
+.formatting {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$spacing-1;
+  margin-bottom: tokens.$spacing-2;
+}
+
+.formatting button {
+  width: tokens.$button-height-md;
+  padding: tokens.$spacing-2;
+}

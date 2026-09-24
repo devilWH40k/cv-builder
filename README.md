@@ -26,6 +26,12 @@ For a complete list of available schematics (such as `components`, `directives`,
 ng generate --help
 ```
 
+## App version
+
+Set `appVersion` in `src/environments/environment.ts` to change the version shown
+in the footer. The same value is used for development and production builds.
+The footer year comes from the current date.
+
 ## Building
 
 To build the project run:

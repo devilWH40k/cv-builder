@@ -1,0 +1,26 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.app-content {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+router-outlet {
+  display: none;
+}
+
+@media print {
+  :host {
+    display: block;
+    min-height: 0;
+  }
+
+  .app-content {
+    display: block;
+  }
+}

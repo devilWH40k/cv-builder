@@ -12,7 +12,7 @@ export const routes: Routes = [
   {
     path: 'create',
     title: 'Create your CV | CV Builder',
-    loadComponent: () => import('./features/create/create').then((m) => m.Create)
+    loadChildren: () => import('./features/create/create.routes').then((m) => m.CREATE_ROUTES)
   },
   {
     path: 'preview',

@@ -71,6 +71,7 @@ describe('CV form', () => {
       description: 'I design accessible applications.',
       photo: null,
       languages: [],
+      experiences: [],
       technologies: []
     });
   });
@@ -306,4 +307,33 @@ describe('CV form', () => {
     expect(page.querySelector('.photo-preview img')).toBeNull();
     expect(page.querySelector('.photo-preview lucide-icon')).not.toBeNull();
   });
+  it('adds experience, validates company, updates rich text, and removes incomplete entries', async () => {
+    enterText('name', 'Alex Morgan');
+    enterText('position-title', 'Developer');
+    enterText('description', 'Building applications.');
+    const add = page.querySelector<HTMLButtonElement>('[aria-label="Add experience"]')!;
+    add.click();
+    await fixture.whenStable();
+    submit();
+    await fixture.whenStable();
+    expect(page.querySelector('#company-0-error')?.textContent).toContain('Please enter a company.');
+    expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
+    enterText('company-0', 'FINBIT');
+    const editor = page.querySelector<HTMLElement>('[contenteditable="true"]')!;
+    expect(editor).not.toBeNull();
+    editor.focus();
+    page.querySelector<HTMLButtonElement>('[aria-label="Bold"]')!.click();
+    document.execCommand('insertText', false, 'Built accessible forms.');
+    await fixture.whenStable();
+    expect(fixture.componentInstance.form.controls.experiences.at(0).controls.description.value)
+      .toContain('<strong>Built accessible forms.</strong>');
+    add.click();
+    await fixture.whenStable();
+    page.querySelector<HTMLButtonElement>('[aria-label="Remove experience 2"]')!.click();
+    await fixture.whenStable();
+    submit();
+    expect(TestBed.inject(Router).navigate).toHaveBeenCalledOnceWith(['/preview']);
+    expect(TestBed.inject(CvDraft).current()?.experiences[0].company).toBe('FINBIT');
+  });
+
 });
