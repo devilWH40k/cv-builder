@@ -1,0 +1,19 @@
+<div class="field" [class.invalid]="invalid()" [class.success]="success()">
+  <div class="control-wrap" [class.filled]="value()">
+    <select class="control" [id]="inputId()" [formControl]="control()"
+      [required]="required()" [attr.aria-invalid]="invalid()"
+      [attr.aria-describedby]="inputId() + '-error'">
+      <option value="" disabled></option>
+      @for (option of options(); track option) {
+        <option [value]="option">{{ option }}</option>
+      }
+    </select>
+    <label [for]="inputId()">{{ label() }}{{ required() ? ' *' : '' }}</label>
+    <span class="select-icon" aria-hidden="true">
+      <lucide-icon [img]="ChevronDownIcon" [size]="18" />
+    </span>
+  </div>
+  <div class="error" [id]="inputId() + '-error'" aria-live="polite">
+    <ng-content />
+  </div>
+</div>

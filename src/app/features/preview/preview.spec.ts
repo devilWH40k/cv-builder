@@ -11,7 +11,9 @@ describe('CV preview', () => {
     name: 'Alex Morgan',
     positionTitle: 'Full Stack Developer',
     description: 'Building accessible applications.\nFive years of experience.',
-    photo: null
+    photo: null,
+    languages: [],
+    technologies: []
   };
 
   beforeEach(() => {
@@ -41,6 +43,8 @@ describe('CV preview', () => {
     expect(page.querySelector('.position')?.textContent).toBe(info.positionTitle);
     expect(page.querySelector('.description')?.textContent).toBe(info.description);
     expect(page.querySelector('.portrait')).toBeNull();
+    expect(page.querySelector('.cv-languages')).toBeNull();
+    expect(page.querySelector('.cv-technologies')).toBeNull();
     const document = page.querySelector<HTMLElement>('.cv-document')!;
     const bounds = document.getBoundingClientRect();
     expect(bounds.width).toBeCloseTo(210 * 96 / 25.4, 0);
@@ -83,11 +87,70 @@ describe('CV preview', () => {
     expect(revoke).toHaveBeenCalledWith(url);
   });
 
+  it('places languages below the header on the right and restores them when editing', async () => {
+    const languages = [
+      { language: 'Ukrainian', level: 'Native' },
+      { language: 'English', level: 'B2 — Upper-Intermediate' }
+    ];
+    TestBed.inject(CvDraft).save({ ...info, languages });
+    const harness = await RouterTestingHarness.create('/preview');
+    const page = harness.routeNativeElement!;
+    const section = page.querySelector<HTMLElement>('.cv-languages')!;
+    expect(section.querySelector('h3')?.textContent).toBe('Languages:');
+    expect(Array.from(section.querySelectorAll('li'), (item) => item.textContent)).toEqual([
+      'Ukrainian - Native', 'English - B2'
+    ]);
+    const documentBounds = page.querySelector('.cv-document')!.getBoundingClientRect();
+    expect(section.getBoundingClientRect().left)
+      .toBeGreaterThan(documentBounds.left + documentBounds.width / 2);
+    expect(section.getBoundingClientRect().top)
+      .toBeGreaterThan(page.querySelector('.cv-header')!.getBoundingClientRect().bottom);
+
+    const create = await harness.navigateByUrl('/create', Create);
+    expect(create.form.controls.languages.getRawValue()).toEqual(languages);
+    expect(harness.routeNativeElement?.querySelectorAll('select').length).toBe(4);
+    harness.routeNativeElement?.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(CvDraft).current()?.languages).toEqual(languages);
+  });
+
   it('keeps long text inside the document and preserves description line breaks', async () => {
     TestBed.inject(CvDraft).save({ ...info, name: 'A'.repeat(160) });
     const harness = await RouterTestingHarness.create('/preview');
     const document = harness.routeNativeElement!.querySelector<HTMLElement>('.cv-document')!;
     expect(document.scrollWidth).toBe(document.clientWidth);
     expect(getComputedStyle(document.querySelector('.description')!).whiteSpace).toBe('pre-wrap');
+  });
+
+  it('shows tools below languages in two columns and preserves them through editing', async () => {
+    const technologies = ['Vue', 'MongoDB', 'Angular Material'];
+    TestBed.inject(CvDraft).save({
+      ...info, technologies, languages: [{ language: 'English', level: 'B2 — Upper-Intermediate' }]
+    });
+    const harness = await RouterTestingHarness.create('/preview');
+    const page = harness.routeNativeElement!;
+    const tools = page.querySelector<HTMLElement>('.cv-technologies')!;
+    expect(Array.from(tools.querySelectorAll('li'), (item) => item.textContent)).toEqual(technologies);
+    const languages = page.querySelector('.cv-languages')!.getBoundingClientRect();
+    expect(tools.getBoundingClientRect().top).toBeGreaterThan(languages.bottom);
+    expect(tools.getBoundingClientRect().left).toBeCloseTo(languages.left);
+    const cards = tools.querySelectorAll('li');
+    expect(cards[0].getBoundingClientRect().top).toBe(cards[1].getBoundingClientRect().top);
+    expect(cards[2].getBoundingClientRect().top).toBeGreaterThan(cards[0].getBoundingClientRect().top);
+
+    const create = await harness.navigateByUrl('/create', Create);
+    expect(create.form.controls.technologies.value).toEqual(technologies);
+    expect(harness.routeNativeElement!.querySelectorAll('.skill-chip').length).toBe(3);
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('[aria-label="Remove Vue"]')!.click();
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(CvDraft).current()?.technologies).toEqual(['MongoDB', 'Angular Material']);
+  });
+
+  it('shows tools when no languages are selected', async () => {
+    TestBed.inject(CvDraft).save({ ...info, technologies: ['Vue'] });
+    const harness = await RouterTestingHarness.create('/preview');
+    expect(harness.routeNativeElement!.querySelector('.cv-languages')).toBeNull();
+    expect(harness.routeNativeElement!.querySelector('.cv-technologies li')?.textContent).toBe('Vue');
   });
 });

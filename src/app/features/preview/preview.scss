@@ -89,6 +89,54 @@ h2 {
   margin-top: tokens.$spacing-8;
 }
 
+.cv-languages,
+.cv-technologies {
+  width: 32%;
+  margin-top: 8mm;
+  margin-left: auto;
+  overflow-wrap: anywhere;
+
+  h3 {
+    margin: 0 0 3mm;
+    font-size: 13pt;
+    font-weight: tokens.$font-weight-bold;
+    break-after: avoid;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    margin-bottom: 2mm;
+    font-size: 11pt;
+    break-inside: avoid;
+  }
+}
+
+.cv-technologies {
+  ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3mm;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 9mm;
+    margin: 0;
+    padding: 2mm;
+    border: 1px solid currentColor;
+    border-radius: tokens.$radius-md;
+    font-size: 9pt;
+    text-align: center;
+  }
+}
+
 a {
   @include buttons.secondary;
 }

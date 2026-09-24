@@ -1,0 +1,16 @@
+@use '../form-field/field';
+@use '../../../../styles/tokens' as tokens;
+
+select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.select-icon {
+  position: absolute;
+  top: tokens.$spacing-3;
+  right: tokens.$spacing-3;
+  display: flex;
+  color: tokens.$text-primary;
+  pointer-events: none;
+}

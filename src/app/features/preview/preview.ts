@@ -32,4 +32,8 @@ export class Preview {
   protected export(): void {
     window.print();
   }
+
+  protected shortLevel(level: string): string {
+    return level.split(' — ')[0];
+  }
 }

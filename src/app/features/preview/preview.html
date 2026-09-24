@@ -14,6 +14,26 @@
             <p class="description">{{ cv.description }}</p>
           </div>
         </header>
+        @if (cv.languages.length) {
+          <section class="cv-languages" aria-labelledby="cv-languages-title">
+            <h3 id="cv-languages-title">Languages:</h3>
+            <ul>
+              @for (language of cv.languages; track $index) {
+                <li>{{ language.language }} - {{ shortLevel(language.level) }}</li>
+              }
+            </ul>
+          </section>
+        }
+        @if (cv.technologies.length) {
+          <section class="cv-technologies" aria-labelledby="cv-technologies-title">
+            <h3 id="cv-technologies-title">Tools/Technologies</h3>
+            <ul>
+              @for (technology of cv.technologies; track technology) {
+                <li>{{ technology }}</li>
+              }
+            </ul>
+          </section>
+        }
       </article>
     </div>
     <div class="actions">

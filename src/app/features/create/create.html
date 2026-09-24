@@ -1,32 +1,88 @@
 <main aria-labelledby="create-title">
   <h1 id="create-title">CV Info</h1>
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-    <app-file-upload inputId="photo" label="Upload a photo" [control]="form.controls.photo">
-      @if (form.controls.photo.touched && form.controls.photo.invalid) {
-        <span>Please choose a JPG, JPEG or PNG image.</span>
-      }
-    </app-file-upload>
+    <section aria-labelledby="general-info-title">
+      <h3 id="general-info-title">General Info</h3>
+      <app-file-upload inputId="photo" label="Upload a photo" [control]="form.controls.photo">
+        @if (form.controls.photo.touched && form.controls.photo.invalid) {
+          <span>Please choose a JPG, JPEG or PNG image.</span>
+        }
+      </app-file-upload>
 
-    <app-input inputId="name" label="Name" autocomplete="name"
-      [control]="form.controls.name" [required]="true">
-      @if (form.controls.name.touched && form.controls.name.invalid) {
-        <span>Please enter your name.</span>
-      }
-    </app-input>
+      <app-input inputId="name" label="Name" autocomplete="name"
+        [control]="form.controls.name" [required]="true">
+        @if (form.controls.name.touched && form.controls.name.invalid) {
+          <span>Please enter your name.</span>
+        }
+      </app-input>
 
-    <app-input inputId="position-title" label="Position title" autocomplete="organization-title"
-      [control]="form.controls.positionTitle" [required]="true">
-      @if (form.controls.positionTitle.touched && form.controls.positionTitle.invalid) {
-        <span>Please enter your position title.</span>
-      }
-    </app-input>
+      <app-input inputId="position-title" label="Position title" autocomplete="organization-title"
+        [control]="form.controls.positionTitle" [required]="true">
+        @if (form.controls.positionTitle.touched && form.controls.positionTitle.invalid) {
+          <span>Please enter your position title.</span>
+        }
+      </app-input>
 
-    <app-textarea inputId="description" label="Short description"
-      [control]="form.controls.description" [required]="true">
-      @if (form.controls.description.touched && form.controls.description.invalid) {
-        <span>Please enter a short description.</span>
+      <app-textarea inputId="description" label="Short description"
+        [control]="form.controls.description" [required]="true">
+        @if (form.controls.description.touched && form.controls.description.invalid) {
+          <span>Please enter a short description.</span>
+        }
+      </app-textarea>
+    </section>
+
+    <section aria-labelledby="languages-title">
+      <div class="section-heading">
+        <h3 id="languages-title">Languages</h3>
+        <button class="icon-button" type="button" aria-label="Add language" (click)="addLanguage()">
+          <lucide-icon [img]="PlusIcon" [size]="18" aria-hidden="true" />
+        </button>
+      </div>
+      @for (row of form.controls.languages.controls; track row; let index = $index) {
+        <div class="language-row">
+          <app-select [inputId]="'language-' + index" label="Language"
+            [control]="row.controls.language" [options]="languageOptions" [required]="true">
+            @if (row.controls.language.touched && row.controls.language.invalid) {
+              <span>Please choose a language.</span>
+            }
+          </app-select>
+          <app-select [inputId]="'level-' + index" label="Level"
+            [control]="row.controls.level" [options]="levelOptions" [required]="true">
+            @if (row.controls.level.touched && row.controls.level.invalid) {
+              <span>Please choose a level.</span>
+            }
+          </app-select>
+          <button class="icon-button remove-language" type="button"
+            [attr.aria-label]="'Remove language ' + (index + 1)" (click)="removeLanguage(index)">
+            <lucide-icon [img]="XIcon" [size]="18" aria-hidden="true" />
+          </button>
+        </div>
       }
-    </app-textarea>
+    </section>
+
+    <section aria-labelledby="technologies-title">
+      <h3 id="technologies-title">Tools/Technologies</h3>
+      <app-multi-select inputId="technologies" label="Tools and technologies"
+        [control]="form.controls.technologies" [groups]="technologyGroups" />
+      <div class="selected-technologies">
+        @for (group of selectedTechnologyGroups(); track group.label) {
+          <div class="skill-group">
+            <h4>{{ group.label }}</h4>
+            <ul>
+              @for (technology of group.options; track technology) {
+                <li class="skill-chip">
+                  <span>{{ technology }}</span>
+                  <button type="button" [attr.aria-label]="'Remove ' + technology"
+                    (click)="removeTechnology(technology)">
+                    <lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" />
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </div>
+    </section>
 
     <div class="actions">
       <app-button type="submit">Create</app-button>

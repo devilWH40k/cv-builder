@@ -1,5 +1,17 @@
 @use '../../../../styles/tokens' as tokens;
 
+@mixin ghost {
+  @include secondary;
+  & {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  &:hover {
+    border-color: transparent;
+  }
+}
+
 @mixin secondary {
   display: inline-flex;
   align-items: center;
