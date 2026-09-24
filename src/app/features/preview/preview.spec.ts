@@ -23,6 +23,26 @@ describe('CV preview', () => {
     });
   });
 
+  it('scrolls to the top each time the preview opens', async () => {
+    TestBed.inject(CvDraft).save(info);
+    const scroll = spyOn(window, 'scrollTo');
+    const harness = await RouterTestingHarness.create('/preview');
+    await harness.fixture.whenStable();
+    expect(scroll.calls.count()).toBe(1);
+    expect(scroll.calls.mostRecent()).toEqual(jasmine.objectContaining({
+      args: [{ top: 0, left: 0, behavior: 'instant' }]
+    }));
+    scroll.calls.reset();
+    await harness.navigateByUrl('/create', Create);
+    await harness.fixture.whenStable();
+    expect(scroll).not.toHaveBeenCalled();
+    await harness.navigateByUrl('/preview');
+    await harness.fixture.whenStable();
+    expect(scroll.calls.count()).toBe(1);
+    expect(scroll.calls.mostRecent()).toEqual(jasmine.objectContaining({
+      args: [{ top: 0, left: 0, behavior: 'instant' }]
+    }));
+  });
   it('redirects to the form when no draft exists', async () => {
     const harness = await RouterTestingHarness.create('/preview');
     expect(TestBed.inject(Router).url).toBe('/create');
@@ -54,7 +74,7 @@ describe('CV preview', () => {
     expect(getComputedStyle(document).backgroundColor).toBe('rgb(255, 255, 255)');
 
     const print = spyOn(window, 'print');
-    page.querySelector<HTMLButtonElement>('button')!.click();
+    Array.from(page.querySelectorAll<HTMLButtonElement>('button')).find((button) => button.textContent?.includes('Export'))!.click();
     expect(print).toHaveBeenCalledTimes(1);
 
     page.querySelector<HTMLAnchorElement>('a')!.click();

@@ -15,7 +15,16 @@ export interface CvInfo {
 @Injectable({ providedIn: 'root' })
 export class CvDraft {
   private readonly info = signal<CvInfo | null>(null);
+  private readonly sessionId = signal(0);
+  readonly session = this.sessionId.asReadonly();
   readonly current = this.info.asReadonly();
+  readonly savedId = signal<string | null>(null);
+
+  reset(): void {
+    this.sessionId.update((id) => id + 1);
+    this.info.set(null);
+    this.savedId.set(null);
+  }
 
   save(info: CvInfo): void {
     this.info.set({

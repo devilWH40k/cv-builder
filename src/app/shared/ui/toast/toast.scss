@@ -1,0 +1,57 @@
+﻿@use 'styles/tokens' as tokens;
+@use '../button/variants' as buttons;
+
+:host {
+  position: fixed;
+  right: max(tokens.$spacing-6, env(safe-area-inset-right));
+  bottom: max(tokens.$spacing-6, env(safe-area-inset-bottom));
+  z-index: tokens.$z-toast;
+  width: min(24rem, calc(100vw - #{tokens.$spacing-12}));
+  pointer-events: none;
+}
+
+.toast-stack {
+  display: grid;
+  gap: tokens.$spacing-3;
+  max-height: 70dvh;
+  overflow-y: auto;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: tokens.$spacing-3;
+  padding: tokens.$spacing-4;
+  border: 1px solid tokens.$border-color;
+  border-left: tokens.$spacing-1 solid var(--toast-accent);
+  border-radius: tokens.$radius-md;
+  background: tokens.$background-surface;
+  color: tokens.$text-primary;
+  box-shadow: tokens.$shadow-md;
+  pointer-events: auto;
+}
+
+.success { --toast-accent: #{tokens.$color-success}; background: tokens.$color-success-light; }
+.danger { --toast-accent: #{tokens.$color-danger}; background: tokens.$color-danger-light; }
+.alert { --toast-accent: #{tokens.$color-warning}; background: tokens.$color-warning-light; }
+
+.theme-icon { color: var(--toast-accent); flex-shrink: 0; }
+.content { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+strong { font-size: tokens.$font-size-sm; font-weight: tokens.$font-weight-semibold; }
+p { margin: tokens.$spacing-1 0 0; font-size: tokens.$font-size-sm; }
+lucide-icon { display: flex; }
+
+button {
+  @include buttons.ghost;
+  & {
+    flex-shrink: 0;
+    width: tokens.$button-height-sm;
+    min-height: tokens.$button-height-sm;
+    padding: 0;
+  }
+}
+
+@media print {
+  :host { display: none; }
+}
+

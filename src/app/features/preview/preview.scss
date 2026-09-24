@@ -21,7 +21,16 @@ main {
   font-weight: tokens.$font-weight-semibold;
 }
 
+.preview-layout {
+  display: grid;
+  grid-template-columns: minmax(0, calc(210mm + #{tokens.$spacing-8})) 13rem;
+  justify-content: center;
+  align-items: start;
+  gap: tokens.$spacing-2;
+}
+
 .document-viewport {
+  min-width: 0;
   overflow-x: auto;
   padding: tokens.$spacing-4;
 
@@ -81,14 +90,28 @@ h2 {
 }
 
 .actions {
+  --button-width: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: tokens.$spacing-6;
-  margin-top: tokens.$spacing-8;
+  flex-direction: column;
+  align-items: stretch;
+  gap: tokens.$spacing-4;
+  margin-top: tokens.$spacing-4;
+  padding-left: tokens.$spacing-4;
+  border-left: 1px solid tokens.$border-color;
 }
 
+@media (max-width: tokens.$breakpoint-md) {
+  .preview-layout { grid-template-columns: minmax(0, 1fr); }
+  .actions {
+    grid-row: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    align-items: start;
+    padding: 0 0 tokens.$spacing-4;
+    border-left: 0;
+    border-bottom: 1px solid tokens.$border-color;
+  }
+}
 .cv-languages,
 .cv-technologies {
   width: 100%;
@@ -151,6 +174,8 @@ a {
   .actions {
     display: none;
   }
+
+  .preview-layout { display: block; }
 
   .document-viewport {
     overflow: visible;

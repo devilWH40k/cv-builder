@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { SaveCvButton } from '../cv/save-cv-button';
+import { SavedCvs } from '../cv/saved-cvs';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, PendingTasks, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { startWith } from 'rxjs';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Input } from '../../shared/ui/input/input';
 import { Textarea } from '../../shared/ui/textarea/textarea';
@@ -9,7 +11,7 @@ import { FileUpload } from '../../shared/ui/file-upload/file-upload';
 import { Button } from '../../shared/ui/button/button';
 import { createCvForm, createExperienceForm, createLanguageForm } from './cv-form';
 import { ExperienceEntry } from './experience-entry/experience-entry';
-import { CvDraft } from '../cv/cv-draft';
+import { CvDraft, CvInfo } from '../cv/cv-draft';
 import { LANGUAGES, LANGUAGE_LEVELS } from '../cv/languages';
 import { Select } from '../../shared/ui/select/select';
 import { LucideAngularModule, Plus, X } from 'lucide-angular';
@@ -18,7 +20,7 @@ import { TECHNOLOGY_GROUPS } from '../cv/technologies';
 
 @Component({
   selector: 'app-create',
-  imports: [RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, MultiSelect, LucideAngularModule, ExperienceEntry],
+  imports: [SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, MultiSelect, LucideAngularModule, ExperienceEntry],
   templateUrl: './create.html',
   styleUrl: './create.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -45,17 +47,52 @@ export class Create {
     })).filter((group) => group.options.length > 0);
   });
 
+  private readonly saved = inject(SavedCvs);
+  private readonly destroyRef = inject(DestroyRef);
+  protected readonly loading = signal(false);
+  protected readonly loadError = signal('');
+  protected readonly snapshot = () => this.form.getRawValue();
+
   constructor() {
-    const info = this.draft.current();
-    if (info) {
-      for (const language of info.languages) {
-        this.form.controls.languages.push(createLanguageForm(language));
-      }
-      for (const experience of info.experiences) {
-        this.form.controls.experiences.push(createExperienceForm(experience));
-      }
-      this.form.setValue({ ...info, languages: [...info.languages], experiences: [...info.experiences] });
+    const id = inject(ActivatedRoute).snapshot.queryParamMap.get('id');
+    if (id && id !== this.draft.savedId()) {
+      this.draft.reset();
+      this.loading.set(true);
+      inject(PendingTasks).run(() => this.loadSaved(id));
+    } else {
+      this.populate(this.draft.current());
     }
+  }
+
+  private async loadSaved(id: string): Promise<void> {
+    try {
+      const info = await this.saved.load(id);
+      if (this.destroyRef.destroyed) return;
+      if (info) {
+        this.draft.save(info);
+        this.draft.savedId.set(id);
+        this.populate(info);
+      } else {
+        this.loadError.set('This saved CV could not be found.');
+      }
+    } catch {
+      if (!this.destroyRef.destroyed) {
+        this.loadError.set('This saved CV could not be opened. Browser storage may be unavailable.');
+      }
+    } finally {
+      if (!this.destroyRef.destroyed) this.loading.set(false);
+    }
+  }
+
+  private populate(info: CvInfo | null): void {
+    if (!info) return;
+    for (const language of info.languages) {
+      this.form.controls.languages.push(createLanguageForm(language));
+    }
+    for (const experience of info.experiences) {
+      this.form.controls.experiences.push(createExperienceForm(experience));
+    }
+    this.form.setValue({ ...info, languages: [...info.languages], experiences: [...info.experiences] });
   }
 
   protected addExperience(): void {

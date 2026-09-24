@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { SaveCvButton } from '../cv/save-cv-button';
+import { afterNextRender, ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Download, LucideAngularModule } from 'lucide-angular';
 import { Button } from '../../shared/ui/button/button';
@@ -7,7 +8,7 @@ import { formatCalendarDate } from '../../shared/ui/date-picker/date-value';
 
 @Component({
   selector: 'app-preview',
-  imports: [RouterLink, Button, LucideAngularModule],
+  imports: [SaveCvButton, RouterLink, Button, LucideAngularModule],
   templateUrl: './preview.html',
   styleUrl: './preview.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -19,6 +20,7 @@ export class Preview {
   protected readonly formatDate = formatCalendarDate;
 
   constructor() {
+    afterNextRender(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
     effect((onCleanup) => {
       const photo = this.info()?.photo;
       if (!photo) {

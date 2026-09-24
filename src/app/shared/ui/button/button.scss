@@ -1,6 +1,7 @@
 @use '../../../../styles/tokens' as tokens;
 
 button {
+  width: var(--button-width, auto);
   display: inline-flex;
   align-items: center;
   justify-content: center;
