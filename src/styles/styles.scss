@@ -27,3 +27,9 @@ body {
   a { color: inherit; text-decoration: underline; }
   img, table { max-width: 100%; }
 }
+
+@media screen {
+  body:has(app-responsive-drawer dialog:modal) {
+    overflow: hidden;
+  }
+}

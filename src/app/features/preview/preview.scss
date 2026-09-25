@@ -21,7 +21,16 @@ main {
   font-weight: tokens.$font-weight-semibold;
 }
 
+.preview-layout {
+  display: grid;
+  grid-template-columns: tokens.$sidebar-width minmax(0, calc(210mm + #{tokens.$spacing-8})) 13rem;
+  justify-content: center;
+  align-items: start;
+  gap: tokens.$spacing-2;
+}
+
 .document-viewport {
+  min-width: 0;
   overflow-x: auto;
   padding: tokens.$spacing-4;
 
@@ -31,7 +40,6 @@ main {
   }
 }
 
-// Physical document dimensions are independent of application UI sizing.
 .cv-document {
   width: 210mm;
   min-height: 297mm;
@@ -81,14 +89,20 @@ h2 {
 }
 
 .actions {
+  --button-width: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: tokens.$spacing-6;
-  margin-top: tokens.$spacing-8;
+  flex-direction: column;
+  align-items: stretch;
+  gap: tokens.$spacing-4;
+  margin-top: tokens.$spacing-4;
+  padding-left: tokens.$spacing-4;
+  border-left: 1px solid tokens.$border-color;
 }
 
+@media (max-width: tokens.$breakpoint-xl) {
+  .preview-layout { grid-template-columns: minmax(0, 1fr); }
+  .actions { padding: 0; border: 0; }
+}
 .cv-languages,
 .cv-technologies {
   width: 100%;
@@ -115,7 +129,7 @@ h2 {
   }
 }
 
-.cv-technologies {
+.cv-technologies.technology-blocks {
   ul {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -148,9 +162,12 @@ a {
   }
 
   .page-title,
+  app-responsive-drawer,
   .actions {
     display: none;
   }
+
+  .preview-layout { display: block; }
 
   .document-viewport {
     overflow: visible;
@@ -168,6 +185,12 @@ a {
 
 .cv-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 32%); gap: 8mm; }
 .cv-main, .cv-sidebar { min-width: 0; }
+.cv-body.sidebar-left {
+  grid-template-columns: minmax(0, 32%) minmax(0, 1fr);
+  .cv-sidebar { grid-column: 1; grid-row: 1; }
+  .cv-main { grid-column: 2; grid-row: 1; }
+}
+.technologies-inline { margin: 0 0 3mm; font-size: 10pt; }
 .cv-experience {
   margin-top: 8mm;
   overflow-wrap: anywhere;

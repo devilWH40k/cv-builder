@@ -1,0 +1,38 @@
+<section aria-labelledby="structure-title">
+  <h2 id="structure-title">Structure</h2>
+  <div class="options">
+    <fieldset>
+      <legend>Languages/Tech position</legend>
+      <div class="radio-row">
+        <app-radio name="sidebar-position" value="left" label="Left"
+          [checked]="structure().sidebarPosition === 'left'"
+          (selected)="update({ sidebarPosition: 'left' })" />
+        <app-radio name="sidebar-position" value="right" label="Right"
+          [checked]="structure().sidebarPosition === 'right'"
+          (selected)="update({ sidebarPosition: 'right' })" />
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Technologies</legend>
+      <div class="radio-row">
+        <app-radio name="sidebar-technologies-view" value="blocks" label="Blocks"
+          [checked]="structure().sidebarTechnologiesView === 'blocks'"
+          (selected)="update({ sidebarTechnologiesView: 'blocks' })" />
+        <app-radio name="sidebar-technologies-view" value="list" label="List"
+          [checked]="structure().sidebarTechnologiesView !== 'blocks'"
+          (selected)="update({ sidebarTechnologiesView: 'list' })" />
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Used technologies view</legend>
+      <div class="radio-row">
+        <app-radio name="technologies-view" value="blocks" label="Blocks"
+          [checked]="structure().technologiesView === 'blocks'"
+          (selected)="update({ technologiesView: 'blocks' })" />
+        <app-radio name="technologies-view" value="comma-separated" label="Comma separated"
+          [checked]="structure().technologiesView === 'comma-separated'"
+          (selected)="update({ technologiesView: 'comma-separated' })" />
+      </div>
+    </fieldset>
+  </div>
+</section>

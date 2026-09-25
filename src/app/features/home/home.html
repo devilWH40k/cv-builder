@@ -1,6 +1,51 @@
 <main class="home" aria-labelledby="home-title">
   <h1 id="home-title">Create your new CV</h1>
-  <a class="create-link" routerLink="/create" aria-label="Create a new CV">
+  <a class="create-link" routerLink="/create" (click)="startNew()" aria-label="Create a new CV">
     <lucide-icon [img]="PlusIcon" [size]="48" [strokeWidth]="1.5" aria-hidden="true" />
   </a>
+  <section class="saved-cvs" aria-labelledby="saved-title">
+    <h2 id="saved-title">Your CVs</h2>
+    <p class="storage" title="Browser estimates for all storage used by this site. The quota can change.">
+      @if (saved.storageEstimate(); as estimate) {
+      {{ estimate.usedMb }} MB used / {{ estimate.quotaGb }} GB quota (estimated site storage)
+      } @else {
+      Storage estimate unavailable
+      }
+    </p>
+    @if (saved.migrationWarning()) {
+    <p role="alert">{{ saved.migrationWarning() }}</p>
+    }
+    @if (saved.loading()) { <p role="status">Loading saved CVs…</p> }
+    @if (saved.error()) {
+    <p role="alert">{{ saved.error() }}</p>
+    }
+    @if (deleteError()) { <p role="alert">{{ deleteError() }}</p> }
+    <div class="cv-grid">
+      @for (cv of saved.all(); track cv.id) {
+      <article class="saved-card">
+        <a class="cv-card" routerLink="/create" (click)="startNew()" [queryParams]="{ id: cv.id }"
+          [attr.aria-label]="'Edit ' + (cv.info.name || 'Untitled CV')">
+          <div class="mini-document" aria-hidden="true">
+            <lucide-icon [img]="FileIcon" [size]="24" />
+            <strong>{{ cv.info.name || 'Untitled CV' }}</strong>
+            <span>{{ cv.info.positionTitle }}</span>
+            <p>{{ cv.info.description }}</p>
+            @for (experience of cv.info.experiences.slice(0, 2); track $index) {
+            <b>{{ experience.company }}</b>
+            <span>{{ experience.position }}</span>
+            }
+            <small>{{ cv.info.technologies.join(' · ') }}</small>
+          </div>
+          <span class="cv-caption">{{ cv.info.name || 'Untitled CV' }}</span>
+        </a>
+        <button class="delete-cv" type="button" [disabled]="deletingIds().includes(cv.id)" (click)="deleteCv(cv.id)"
+          [attr.aria-label]="'Delete ' + (cv.info.name || 'Untitled CV')">
+          <lucide-icon [img]="DeleteIcon" [size]="18" aria-hidden="true" />
+        </button>
+      </article>
+      } @empty {
+      @if (!saved.error() && !saved.loading()) { <p>No saved CVs yet. Create a CV and choose Save to keep it here.</p> }
+      }
+    </div>
+  </section>
 </main>

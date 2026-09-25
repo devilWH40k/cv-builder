@@ -1,0 +1,5 @@
+<label [class.disabled]="disabled()">
+  <span>{{ label() }}</span>
+  <input type="radio" [name]="name()" [value]="value()" [checked]="checked()"
+    [disabled]="disabled()" (change)="selected.emit()" />
+</label>
