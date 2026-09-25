@@ -1,4 +1,6 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
+import { CvDraft } from './features/cv/cv-draft';
 
 export const routes: Routes = [
   {
@@ -10,6 +12,12 @@ export const routes: Routes = [
   {
     path: 'create',
     title: 'Create your CV | CV Builder',
-    loadComponent: () => import('./features/create/create').then((m) => m.Create)
+    loadChildren: () => import('./features/create/create.routes').then((m) => m.CREATE_ROUTES)
+  },
+  {
+    path: 'preview',
+    title: 'Your CV Preview | CV Builder',
+    canActivate: [() => inject(CvDraft).current() ? true : inject(Router).createUrlTree(['/create'])],
+    loadComponent: () => import('./features/preview/preview').then((m) => m.Preview)
   }
 ];

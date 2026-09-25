@@ -1,7 +1,11 @@
 @use 'styles/tokens' as tokens;
+@use '../../shared/ui/button/variants' as buttons;
+
+:host {
+  display: grid;
+}
 
 .home {
-  min-height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -91,5 +95,85 @@ lucide-icon {
       animation: none;
       opacity: 0;
     }
+  }
+}
+.saved-cvs {
+  width: 100%;
+  max-width: tokens.$breakpoint-lg;
+}
+h2 {
+  margin: 0;
+  color: tokens.$color-primary;
+  font-size: clamp(tokens.$font-size-2xl, 4vw, tokens.$font-size-4xl);
+  font-weight: tokens.$font-weight-medium;
+}
+.storage {
+  color: tokens.$text-muted;
+  font-size: tokens.$font-size-sm;
+  margin: tokens.$spacing-3 0 tokens.$spacing-6;
+}
+.cv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: tokens.$spacing-6;
+}
+.cv-card {
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$spacing-3;
+  padding: tokens.$spacing-4;
+  color: tokens.$text-primary;
+  text-decoration: none;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$background-subtle;
+  min-width: 0;
+  &:hover { border-color: tokens.$color-primary; }
+  &:focus-visible { outline: 3px solid tokens.$border-color-focus; outline-offset: tokens.$spacing-1; }
+}
+.mini-document {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: tokens.$spacing-2;
+  width: 100%;
+  max-width: 15rem;
+  aspect-ratio: 210 / 297;
+  margin-inline: auto;
+  padding: tokens.$spacing-4;
+  background: tokens.$background-surface;
+  box-shadow: tokens.$shadow-xs;
+  text-align: left;
+  font-size: tokens.$font-size-xs;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  p { margin: tokens.$spacing-2 0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  strong { font-size: tokens.$font-size-sm; }
+}
+.cv-caption { font-weight: tokens.$font-weight-medium; overflow-wrap: anywhere; }
+
+.saved-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$spacing-2;
+  min-width: 0;
+  .cv-card { flex: 1; }
+}
+.delete-cv {
+  @include buttons.ghost;
+  & {
+    position: absolute;
+    top: tokens.$spacing-2;
+    right: tokens.$spacing-2;
+    width: tokens.$button-height-md;
+    height: tokens.$button-height-md;
+    padding: 0;
+    background: tokens.$background-surface;
+    color: tokens.$color-danger;
+  }
+  &:hover {
+    color: tokens.$color-danger-hover;
+    background: tokens.$color-danger-light;
   }
 }

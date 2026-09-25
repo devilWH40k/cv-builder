@@ -1,0 +1,67 @@
+<div class="entry">
+  <div class="heading">
+    <h4>Experience {{ index() + 1 }}</h4>
+    <button class="remove" type="button" [attr.aria-label]="'Remove experience ' + (index() + 1)"
+      (click)="remove.emit()">
+      <lucide-icon [img]="XIcon" [size]="18" aria-hidden="true" />
+    </button>
+  </div>
+  <div class="columns">
+    <app-input [inputId]="'company-' + index()" label="Company/Project" autocomplete="organization"
+      [control]="form().controls.company" [required]="true">
+      @if (form().controls.company.touched && form().controls.company.invalid) {
+      <span>Please enter a company or project.</span>
+      }
+    </app-input>
+    <app-input [inputId]="'experience-position-' + index()" label="Position (optional)"
+      autocomplete="organization-title" [control]="form().controls.position" />
+  </div>
+  <fieldset class="period">
+    <legend>Period</legend>
+    <label class="precision" [for]="'date-format-' + index()">Date format
+      <select [id]="'date-format-' + index()" [value]="dateMode()" (change)="changeMode($event)">
+        <option value="year">Year</option>
+        <option value="month-year">Month and year</option>
+        <option value="day-month-year">Day, month and year</option>
+      </select>
+    </label>
+    <div class="columns">
+      <app-date-picker [inputId]="'start-date-' + index()" label="Start date" [control]="form().controls.startDate"
+        [mode]="dateMode()" [startViewMode]="dateMode() === 'year' ? 'year' : 'month'" />
+      @if (!form().controls.isCurrent.value) {
+      <app-date-picker [inputId]="'end-date-' + index()" label="End date" [control]="form().controls.endDate"
+        [mode]="dateMode()" [startFromDate]="parseDate(form().controls.startDate.value)"
+        [startViewMode]="dateMode() === 'year' ? 'year' : 'month'" />
+      }
+    </div>
+    <label class="current"><input type="checkbox" [formControl]="form().controls.isCurrent" /> I currently work
+      here</label>
+    @if (form().touched && form().hasError('dateOrder')) {
+    <p class="error" role="alert">End date must be on or after the start date.</p>
+    }
+    @if (form().touched && form().hasError('invalidDate')) {
+    <p class="error" role="alert">Please select a valid date.</p>
+    }
+  </fieldset>
+  <app-multi-select [inputId]="'experience-technologies-' + index()" label="Used technologies"
+    [control]="form().controls.technologies" [groups]="technologyGroups" />
+  <ul class="chips" aria-label="Selected technologies">
+    @for (technology of form().controls.technologies.value; track technology) {
+    <li>{{ technology }}<button type="button" [attr.aria-label]="'Remove ' + technology"
+        (click)="removeTechnology(technology)"><lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" /></button>
+    </li>
+    }
+  </ul>
+  <div class="editor-field">
+    <p [id]="'project-description-label-' + index()">Project description</p>
+    <div class="formatting" role="group" aria-label="Project description formatting">
+      @for (action of formatting; track action.command) {
+      <button type="button" [attr.aria-label]="action.label" [title]="action.label"
+        [disabled]="form().controls.description.disabled" (click)="format(action.command)">
+        <lucide-icon [img]="action.icon" [size]="18" aria-hidden="true" />
+      </button>
+      }
+    </div>
+    <angular-tiptap-editor [formControl]="form().controls.description" [config]="editorConfig()" />
+  </div>
+</div>

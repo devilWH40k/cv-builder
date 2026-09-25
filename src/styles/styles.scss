@@ -7,3 +7,29 @@ body {
   background: tokens.$background-surface;
   line-height: tokens.$line-height-normal;
 }
+
+@page {
+  size: A4 portrait;
+  margin: 16mm;
+}
+
+@media print {
+  body {
+    min-height: 0;
+    color: #000;
+    background: #fff;
+  }
+}
+
+.cv-document .project-description {
+  p + p, ul, ol { margin-top: 3mm; }
+  li + li { margin-top: 2mm; }
+  a { color: inherit; text-decoration: underline; }
+  img, table { max-width: 100%; }
+}
+
+@media screen {
+  body:has(app-responsive-drawer dialog:modal) {
+    overflow: hidden;
+  }
+}

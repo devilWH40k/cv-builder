@@ -27,7 +27,9 @@
               }
             ],
             "styles": [
-              "src/styles/styles.scss"
+              "src/styles/styles.scss",
+              "node_modules/@fontsource/material-symbols-outlined/index.css",
+              "node_modules/@flogeez/angular-tiptap-editor/styles/index.css"
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
@@ -79,7 +81,9 @@
           "options": {
             "tsConfig": "tsconfig.spec.json",
             "stylePreprocessorOptions": {
-              "includePaths": ["src"]
+              "includePaths": [
+                "src"
+              ]
             },
             "inlineStyleLanguage": "scss",
             "assets": [

@@ -1,0 +1,35 @@
+<div class="field" [class.invalid]="invalid()">
+  <span [id]="inputId() + '-label'">{{ label() }}</span>
+  <details #panel (focusout)="leave($event, panel)"
+    (keydown.escape)="$event.preventDefault(); $event.stopPropagation(); close(panel, trigger)">
+    <summary #trigger [id]="inputId()" [attr.aria-labelledby]="inputId() + '-label ' + inputId() + '-value'"
+      [attr.aria-disabled]="disabled()" [attr.tabindex]="disabled() ? -1 : 0"
+      [attr.aria-invalid]="invalid()" (click)="toggle($event, panel)">
+      <span [id]="inputId() + '-value'">{{ displayValue() || 'Choose date' }}</span>
+      <lucide-icon [img]="CalendarIcon" [size]="18" aria-hidden="true" />
+    </summary>
+    <fieldset class="calendar" [disabled]="disabled()" [attr.aria-label]="label()">
+      <div class="navigation">
+        <button type="button" aria-label="Previous period" (click)="navigate(-1)">
+          <lucide-icon [img]="PreviousIcon" [size]="18" />
+        </button>
+        <button type="button" (click)="zoomOut()" aria-label="Choose month or year">{{ heading() }}</button>
+        <button type="button" aria-label="Next period" (click)="navigate(1)">
+          <lucide-icon [img]="NextIcon" [size]="18" />
+        </button>
+      </div>
+      <div class="cells" [class.days]="view() === 'day'">
+        @if (view() === 'day') {
+          @for (day of weekdays; track $index) { <span class="weekday">{{ day }}</span> }
+        }
+        @for (cell of cells(); track cell.value) {
+          @if (cell.label) {
+            <button type="button" [attr.aria-pressed]="isSelected(cell.value)"
+              (click)="select(cell.value, panel, trigger)">{{ cell.label }}</button>
+          } @else { <span></span> }
+        }
+      </div>
+      <button type="button" class="clear" (click)="clear(panel, trigger)">Clear date</button>
+    </fieldset>
+  </details>
+</div>

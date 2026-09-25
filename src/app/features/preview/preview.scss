@@ -1,0 +1,206 @@
+@use '../../../styles/tokens' as tokens;
+@use '../../shared/ui/button/variants' as buttons;
+
+:host {
+  display: block;
+  color: #000;
+  background: #fff;
+}
+
+main {
+  max-width: tokens.$content-max-width;
+  margin-inline: auto;
+  padding: tokens.$spacing-8 tokens.$spacing-4;
+}
+
+.page-title {
+  color: tokens.$color-primary;
+  margin-bottom: tokens.$spacing-8;
+  text-align: center;
+  font-size: tokens.$font-size-4xl;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.preview-layout {
+  display: grid;
+  grid-template-columns: tokens.$sidebar-width minmax(0, calc(210mm + #{tokens.$spacing-8})) 13rem;
+  justify-content: center;
+  align-items: start;
+  gap: tokens.$spacing-2;
+}
+
+.document-viewport {
+  min-width: 0;
+  overflow-x: auto;
+  padding: tokens.$spacing-4;
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
+.cv-document {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 16mm;
+  margin-inline: auto;
+  color: #000;
+  background: #fff;
+  box-shadow: tokens.$shadow-md;
+}
+
+.cv-header {
+  display: flex;
+  align-items: center;
+  gap: 8mm;
+}
+
+.portrait {
+  flex-shrink: 0;
+  width: 40mm;
+  height: 40mm;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.cv-info {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+h2 {
+  margin: 0;
+  font-size: 24pt;
+  font-weight: tokens.$font-weight-bold;
+  line-height: tokens.$line-height-tight;
+}
+
+.position {
+  margin-top: 3mm;
+  font-size: 13pt;
+  font-weight: tokens.$font-weight-medium;
+}
+
+.description {
+  margin-top: 4mm;
+  font-size: 11pt;
+  white-space: pre-wrap;
+}
+
+.actions {
+  --button-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: tokens.$spacing-4;
+  margin-top: tokens.$spacing-4;
+  padding-left: tokens.$spacing-4;
+  border-left: 1px solid tokens.$border-color;
+}
+
+@media (max-width: tokens.$breakpoint-xl) {
+  .preview-layout { grid-template-columns: minmax(0, 1fr); }
+  .actions { padding: 0; border: 0; }
+}
+.cv-languages,
+.cv-technologies {
+  width: 100%;
+  margin-top: 8mm;
+  overflow-wrap: anywhere;
+
+  h3 {
+    margin: 0 0 3mm;
+    font-size: 13pt;
+    font-weight: tokens.$font-weight-bold;
+    break-after: avoid;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    margin-bottom: 2mm;
+    font-size: 11pt;
+    break-inside: avoid;
+  }
+}
+
+.cv-technologies.technology-blocks {
+  ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 3mm;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 9mm;
+    margin: 0;
+    padding: 2mm;
+    border: 1px solid currentColor;
+    border-radius: tokens.$radius-md;
+    font-size: 9pt;
+    text-align: center;
+  }
+}
+
+a {
+  @include buttons.secondary;
+}
+
+@media print {
+  main {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .page-title,
+  app-responsive-drawer,
+  .actions {
+    display: none;
+  }
+
+  .preview-layout { display: block; }
+
+  .document-viewport {
+    overflow: visible;
+    padding: 0;
+  }
+
+  .cv-document {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+}
+
+.cv-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 32%); gap: 8mm; }
+.cv-main, .cv-sidebar { min-width: 0; }
+.cv-body.sidebar-left {
+  grid-template-columns: minmax(0, 32%) minmax(0, 1fr);
+  .cv-sidebar { grid-column: 1; grid-row: 1; }
+  .cv-main { grid-column: 2; grid-row: 1; }
+}
+.technologies-inline { margin: 0 0 3mm; font-size: 10pt; }
+.cv-experience {
+  margin-top: 8mm;
+  overflow-wrap: anywhere;
+  h3 { margin: 0 0 3mm; font-size: 13pt; break-after: avoid; }
+  h4 { margin: 0 0 2mm; font-size: 14pt; break-after: avoid; }
+}
+.experience-entry { margin-bottom: 7mm; }
+.period { margin: 0 0 3mm; font-size: 10pt; color: tokens.$text-secondary; }
+.project-description { font-size: 11pt; line-height: tokens.$line-height-normal; }
+.experience-technologies {
+  display: flex; flex-wrap: wrap; gap: 2mm; margin: 4mm 0 0; padding: 0; list-style: none;
+  li { border: 1px solid currentColor; border-radius: tokens.$radius-sm; padding: 1mm 2mm; font-size: 9pt; break-inside: avoid; }
+}

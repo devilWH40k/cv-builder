@@ -1,0 +1,29 @@
+<details #panel (keydown.escape)="close($event, panel, trigger)">
+  <summary #trigger [id]="inputId()">
+    {{ label() }}
+    <span class="count">{{ value().length }} selected</span>
+  </summary>
+  <div class="panel">
+    <div class="search-wrap">
+      <lucide-icon [img]="SearchIcon" [size]="18" aria-hidden="true" />
+      <input #search type="search" [id]="inputId() + '-search'"
+        [attr.aria-label]="'Search ' + label()" placeholder="Search tools and technologies"
+        [value]="query()" (input)="query.set(search.value)" [disabled]="disabled()" />
+    </div>
+    <div class="options" [attr.aria-labelledby]="inputId()">
+      @for (group of filteredGroups(); track group.label) {
+        <fieldset [disabled]="disabled()">
+          <legend>{{ group.label }}</legend>
+          @for (option of group.options; track option) {
+            <label class="option">
+              <input type="checkbox" [checked]="value().includes(option)" (change)="toggle(option)" />
+              <span>{{ option }}</span>
+            </label>
+          }
+        </fieldset>
+      } @empty {
+        <p role="status">No matching options.</p>
+      }
+    </div>
+  </div>
+</details>

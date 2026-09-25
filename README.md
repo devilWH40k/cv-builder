@@ -26,6 +26,12 @@ For a complete list of available schematics (such as `components`, `directives`,
 ng generate --help
 ```
 
+## App version
+
+Set `appVersion` in `src/environments/environment.ts` to change the version shown
+in the footer. The same value is used for development and production builds.
+The footer year comes from the current date.
+
 ## Building
 
 To build the project run:
@@ -57,3 +63,24 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Saved CV storage
+
+CV snapshots are stored locally in the browser's IndexedDB database, named
+`cv-builder`. Photos are stored as files rather than base64 strings. Save, load,
+and delete operations wait for their database transactions to complete.
+
+Existing records under `cv-builder.saved-cvs.v1` in local storage are migrated
+automatically. The original data is removed only after a successful transaction;
+failed migrations retain the source and display a message. A migration marker
+prevents old records from being reimported after deletion.
+
+The home page displays estimated usage in MB and quota in GB from
+`navigator.storage.estimate()`, when supported. These are estimates for the
+whole site, not just its CV records; the browser controls the quota. If the API
+is unavailable or fails, saving remains available and the estimate is marked
+unavailable. Data stays in this browser profile and is removed if site data is cleared.
+
+## Notifications and save feedback
+
+See [Toast notifications and save feedback](docs/TOASTS.md).

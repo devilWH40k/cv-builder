@@ -1,0 +1,47 @@
+@use '../../../../styles/tokens' as tokens;
+
+@mixin ghost {
+  @include secondary;
+  & {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  &:hover {
+    border-color: transparent;
+  }
+}
+
+@mixin secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: tokens.$button-height-lg;
+  padding: tokens.$spacing-2 tokens.$spacing-8;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$button-radius;
+  background: tokens.$background-surface;
+  color: tokens.$text-primary;
+  font-weight: tokens.$font-weight-medium;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background tokens.$transition-normal, border-color tokens.$transition-normal;
+
+  &:hover {
+    background: tokens.$background-subtle;
+    border-color: tokens.$border-color-strong;
+  }
+
+  &:active {
+    background: tokens.$color-gray-200;
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$border-color-focus;
+    outline-offset: tokens.$spacing-1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}

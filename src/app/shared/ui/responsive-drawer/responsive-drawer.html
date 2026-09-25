@@ -1,0 +1,16 @@
+<button class="drawer-trigger" [class.on-right]="side() === 'right'" type="button" [attr.aria-label]="'Open ' + label()"
+  [attr.title]="label()" aria-haspopup="dialog" [attr.aria-controls]="panelId()"
+  [attr.aria-expanded]="opened()" (click)="open()">
+  <lucide-icon [img]="side() === 'left' ? StructureIcon : ActionsIcon" [size]="24" aria-hidden="true" />
+</button>
+<dialog #panel [id]="panelId()" [open]="!compact()" [attr.aria-label]="label()" [attr.role]="compact() ? 'dialog' : 'region'"
+  [class.from-right]="side() === 'right'" (click)="dismissBackdrop($event)"
+  (cancel)="close()" (close)="opened.set(false)">
+  <header class="drawer-header">
+    <span>{{ label() }}</span>
+    <button type="button" autofocus [attr.aria-label]="'Close ' + label()" (click)="close()">
+      <lucide-icon [img]="CloseIcon" [size]="20" aria-hidden="true" />
+    </button>
+  </header>
+  <ng-content />
+</dialog>

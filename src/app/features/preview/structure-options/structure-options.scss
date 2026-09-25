@@ -1,0 +1,46 @@
+@use '../../../../styles/tokens' as tokens;
+
+:host {
+  display: block;
+  min-width: 0;
+  margin-top: tokens.$spacing-4;
+}
+
+section {
+  padding: tokens.$spacing-4;
+  border-radius: tokens.$radius-lg;
+  color: tokens.$text-on-primary;
+  background: tokens.$color-primary;
+}
+
+h2 {
+  margin: 0 0 tokens.$spacing-4;
+  font-size: tokens.$font-size-lg;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: tokens.$spacing-4;
+}
+
+fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: tokens.$font-size-sm;
+}
+
+legend {
+  margin-bottom: tokens.$spacing-2;
+  padding: 0;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+.radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$spacing-4;
+}
