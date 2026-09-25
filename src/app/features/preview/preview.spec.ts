@@ -18,9 +18,143 @@ describe('CV preview', () => {
   };
 
   beforeEach(() => {
+    const matchMedia = window.matchMedia.bind(window);
+    spyOn(window, 'matchMedia').and.callFake((query) => {
+      const media = matchMedia(query);
+      Object.defineProperty(media, 'matches', { value: false, configurable: true });
+      return media;
+    });
     TestBed.configureTestingModule({
       providers: [provideZonelessChangeDetection(), provideRouter(routes)]
     });
+  });
+
+
+  it('changes structure, places comma-separated tools below the period, and preserves choices when editing', async () => {
+    const draft = TestBed.inject(CvDraft);
+    draft.save({ ...info, languages: [{ language: 'English', level: 'Native' }],
+      technologies: ['Angular'], experiences: [{
+        company: 'Example', position: 'Developer', startDate: '2023', endDate: '',
+        isCurrent: true, technologies: ['Angular', 'TypeScript'], description: '<p>Built applications.</p>'
+      }] });
+    const harness = await RouterTestingHarness.create('/preview');
+    const page = harness.routeNativeElement!;
+    const choose = async (value: string) => {
+      page.querySelector<HTMLInputElement>(`input${value === 'blocks' ? '[name="technologies-view"]' : ''}[value="${value}"]`)!.click();
+      await harness.fixture.whenStable();
+    };
+    expect(page.querySelector<HTMLInputElement>('input[value="right"]')!.checked).toBeTrue();
+    expect(page.querySelector<HTMLInputElement>('input[name="technologies-view"][value="blocks"]')!.checked).toBeTrue();
+    await choose('left');
+    const sidebar = page.querySelector('.cv-sidebar')!.getBoundingClientRect();
+    expect(sidebar.right).toBeLessThan(page.querySelector('.cv-main')!.getBoundingClientRect().left);
+    await choose('comma-separated');
+    const period = page.querySelector('.period')!;
+    expect(period.nextElementSibling?.textContent?.trim()).toBe('Angular, TypeScript');
+    expect(period.nextElementSibling?.nextElementSibling?.className).toBe('project-description');
+    expect(page.querySelector('.experience-technologies')).toBeNull();
+    expect(page.querySelector('.cv-technologies li')?.textContent).toBe('Angular');
+    await choose('blocks');
+    expect(page.querySelector('.technologies-inline')).toBeNull();
+    expect(page.querySelectorAll('.experience-technologies li').length).toBe(2);
+    await choose('right');
+    expect(page.querySelector('.cv-sidebar')!.getBoundingClientRect().left)
+      .toBeGreaterThan(page.querySelector('.cv-main')!.getBoundingClientRect().right);
+    await choose('left');
+    await choose('comma-separated');
+    await harness.navigateByUrl('/create', Create);
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await harness.fixture.whenStable();
+    expect(draft.current()?.structure).toEqual({ sidebarPosition: 'left', technologiesView: 'comma-separated', sidebarTechnologiesView: 'list' });
+    expect(harness.routeNativeElement!.querySelector<HTMLInputElement>('input[value="left"]')!.checked).toBeTrue();
+    expect(harness.routeNativeElement!.querySelector('.technologies-inline')?.textContent?.trim()).toBe('Angular, TypeScript');
+  });
+
+  it('shows icon menus on smaller screens and inline panels on desktop', async () => {
+    TestBed.inject(CvDraft).save(info);
+    const harness = await RouterTestingHarness.create('/preview');
+    const frame = document.createElement('iframe');
+    frame.style.height = '1600px';
+    document.body.append(frame);
+    try {
+      const target = frame.contentDocument!;
+      for (const style of document.querySelectorAll('style, link[rel="stylesheet"]')) {
+        target.head.append(style.cloneNode(true));
+      }
+      target.body.append(harness.routeNativeElement!.cloneNode(true));
+      for (const width of [375, 900, 1440]) {
+        frame.style.width = `${width}px`;
+        const desktop = width === 1440;
+        for (const panel of target.querySelectorAll('dialog')) panel.toggleAttribute('open', desktop);
+        expect(target.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+        const left = target.querySelector('#structure-panel')!;
+        const right = target.querySelector('#actions-panel')!;
+        const triggers = target.querySelectorAll<HTMLElement>('.drawer-trigger');
+        const viewport = target.querySelector('.document-viewport')!.getBoundingClientRect();
+        if (desktop) {
+          expect(left.getBoundingClientRect().right).toBeLessThanOrEqual(viewport.left);
+          expect(right.getBoundingClientRect().left).toBeGreaterThanOrEqual(viewport.right);
+          expect(frame.contentWindow!.getComputedStyle(triggers[0]).display).toBe('none');
+        } else {
+          expect(frame.contentWindow!.getComputedStyle(left).display).toBe('none');
+          expect(frame.contentWindow!.getComputedStyle(right).display).toBe('none');
+          expect(triggers[0].getBoundingClientRect().left).toBe(0);
+          expect(triggers[1].getBoundingClientRect().right).toBe(width);
+          for (const trigger of triggers) {
+            expect(frame.contentWindow!.getComputedStyle(trigger).position).toBe('fixed');
+            const bounds = trigger.getBoundingClientRect();
+            expect(bounds.top + bounds.height / 2).toBe(frame.contentWindow!.innerHeight / 2);
+          }
+          for (const panel of [left, right]) {
+            panel.setAttribute('open', '');
+            for (const animation of panel.getAnimations()) animation.finish();
+            const bounds = panel.getBoundingClientRect();
+            expect(bounds.left).toBeGreaterThanOrEqual(0);
+            expect(bounds.right).toBeLessThanOrEqual(width);
+            expect(bounds.top).toBe(0);
+            panel.removeAttribute('open');
+          }
+        }
+      }
+    } finally {
+      frame.remove();
+    }
+  });
+
+  it('updates the CV from the mobile menu and closes actions before exporting', async () => {
+    const media = window.matchMedia('(max-width: 80rem)');
+    Object.defineProperty(media, 'matches', { value: true, configurable: true });
+    (window.matchMedia as jasmine.Spy).and.returnValue(media);
+    TestBed.inject(CvDraft).save(info);
+    const harness = await RouterTestingHarness.create('/preview');
+    await harness.fixture.whenStable();
+    const page = harness.routeNativeElement!;
+    page.querySelector<HTMLButtonElement>('[aria-label="Open Structure"]')!.click();
+    await harness.fixture.whenStable();
+    expect(page.querySelector('#structure-panel')!.matches(':modal')).toBeTrue();
+    page.querySelector<HTMLInputElement>('input[value="left"]')!.click();
+    await harness.fixture.whenStable();
+    expect(page.querySelector('.cv-body')!.classList.contains('sidebar-left')).toBeTrue();
+    page.querySelector<HTMLButtonElement>('[aria-label="Close Structure"]')!.click();
+    await harness.fixture.whenStable();
+    page.querySelector<HTMLButtonElement>('[aria-label="Open CV actions"]')!.click();
+    await harness.fixture.whenStable();
+    expect(page.querySelector('#actions-panel')!.matches(':modal')).toBeTrue();
+    const print = spyOn(window, 'print').and.callFake(() => {
+      expect(page.querySelector<HTMLDialogElement>('#actions-panel')!.open).toBeFalse();
+    });
+    page.querySelector<HTMLButtonElement>('.actions app-button button')!.click();
+    expect(print).toHaveBeenCalledTimes(1);
+  });
+
+  it('omits empty technology lines in comma-separated view', async () => {
+    TestBed.inject(CvDraft).save({ ...info,
+      structure: { sidebarPosition: 'left', technologiesView: 'comma-separated' },
+      experiences: [{ company: 'Example', position: '', startDate: '', endDate: '',
+        isCurrent: false, technologies: [], description: '<p>Work</p>' }] });
+    const harness = await RouterTestingHarness.create('/preview');
+    expect(harness.routeNativeElement!.querySelector('.technologies-inline')).toBeNull();
+    expect(harness.routeNativeElement!.querySelector('.experience-technologies')).toBeNull();
   });
 
   it('scrolls to the top each time the preview opens', async () => {
@@ -60,7 +194,7 @@ describe('CV preview', () => {
     const page = harness.routeNativeElement!;
     expect(TestBed.inject(Router).url).toBe('/preview');
     expect(page.querySelector('h1')?.textContent).toBe('Your CV Preview');
-    expect(page.querySelector('h2')?.textContent).toBe(info.name);
+    expect(page.querySelector('.cv-document h2')?.textContent).toBe(info.name);
     expect(page.querySelector('.position')?.textContent).toBe(info.positionTitle);
     expect(page.querySelector('.description')?.textContent).toBe(info.description);
     expect(page.querySelector('.portrait')).toBeNull();
@@ -146,7 +280,7 @@ describe('CV preview', () => {
   it('shows tools below languages in two columns and preserves them through editing', async () => {
     const technologies = ['Vue', 'MongoDB', 'Angular Material'];
     TestBed.inject(CvDraft).save({
-      ...info, technologies, languages: [{ language: 'English', level: 'B2 — Upper-Intermediate' }]
+      ...info, technologies, structure: { sidebarPosition: 'right', technologiesView: 'blocks', sidebarTechnologiesView: 'blocks' }, languages: [{ language: 'English', level: 'B2 — Upper-Intermediate' }]
     });
     const harness = await RouterTestingHarness.create('/preview');
     const page = harness.routeNativeElement!;
@@ -166,6 +300,33 @@ describe('CV preview', () => {
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(CvDraft).current()?.technologies).toEqual(['MongoDB', 'Angular Material']);
+    expect(TestBed.inject(CvDraft).current()?.structure?.sidebarTechnologiesView).toBe('blocks');
+  });
+
+  it('defaults older CVs to a bullet-free technology list and switches views independently', async () => {
+    TestBed.inject(CvDraft).save({ ...info, technologies: ['Angular', 'TypeScript'],
+      structure: { sidebarPosition: 'right', technologiesView: 'blocks' } });
+    const harness = await RouterTestingHarness.create('/preview');
+    const page = harness.routeNativeElement!;
+    const section = page.querySelector('.cv-technologies')!;
+    const list = page.querySelector<HTMLInputElement>('input[name="sidebar-technologies-view"][value="list"]')!;
+    const blocks = page.querySelector<HTMLInputElement>('input[name="sidebar-technologies-view"][value="blocks"]')!;
+    const items = section.querySelectorAll('li');
+    expect(list.checked).toBeTrue();
+    expect(getComputedStyle(section.querySelector('ul')!).listStyleType).toBe('none');
+    expect(items[1].getBoundingClientRect().top).toBeGreaterThan(items[0].getBoundingClientRect().top);
+    expect(getComputedStyle(items[0]).borderStyle).toBe('none');
+    blocks.closest('label')!.click();
+    await harness.fixture.whenStable();
+    expect(blocks.checked).toBeTrue();
+    expect(list.checked).toBeFalse();
+    expect(items[0].getBoundingClientRect().top).toBe(items[1].getBoundingClientRect().top);
+    expect(getComputedStyle(items[0]).borderStyle).toBe('solid');
+    expect(page.querySelector<HTMLInputElement>('input[name="technologies-view"][value="blocks"]')!.checked).toBeTrue();
+    list.closest('label')!.click();
+    await harness.fixture.whenStable();
+    expect(items[1].getBoundingClientRect().top).toBeGreaterThan(items[0].getBoundingClientRect().top);
+    expect(TestBed.inject(CvDraft).current()?.structure?.sidebarTechnologiesView).toBe('list');
   });
 
   it('shows tools when no languages are selected', async () => {

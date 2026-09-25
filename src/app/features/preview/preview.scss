@@ -23,7 +23,7 @@ main {
 
 .preview-layout {
   display: grid;
-  grid-template-columns: minmax(0, calc(210mm + #{tokens.$spacing-8})) 13rem;
+  grid-template-columns: tokens.$sidebar-width minmax(0, calc(210mm + #{tokens.$spacing-8})) 13rem;
   justify-content: center;
   align-items: start;
   gap: tokens.$spacing-2;
@@ -40,7 +40,6 @@ main {
   }
 }
 
-// Physical document dimensions are independent of application UI sizing.
 .cv-document {
   width: 210mm;
   min-height: 297mm;
@@ -100,17 +99,9 @@ h2 {
   border-left: 1px solid tokens.$border-color;
 }
 
-@media (max-width: tokens.$breakpoint-md) {
+@media (max-width: tokens.$breakpoint-xl) {
   .preview-layout { grid-template-columns: minmax(0, 1fr); }
-  .actions {
-    grid-row: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
-    align-items: start;
-    padding: 0 0 tokens.$spacing-4;
-    border-left: 0;
-    border-bottom: 1px solid tokens.$border-color;
-  }
+  .actions { padding: 0; border: 0; }
 }
 .cv-languages,
 .cv-technologies {
@@ -138,7 +129,7 @@ h2 {
   }
 }
 
-.cv-technologies {
+.cv-technologies.technology-blocks {
   ul {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -171,6 +162,7 @@ a {
   }
 
   .page-title,
+  app-responsive-drawer,
   .actions {
     display: none;
   }
@@ -193,6 +185,12 @@ a {
 
 .cv-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 32%); gap: 8mm; }
 .cv-main, .cv-sidebar { min-width: 0; }
+.cv-body.sidebar-left {
+  grid-template-columns: minmax(0, 32%) minmax(0, 1fr);
+  .cv-sidebar { grid-column: 1; grid-row: 1; }
+  .cv-main { grid-column: 2; grid-row: 1; }
+}
+.technologies-inline { margin: 0 0 3mm; font-size: 10pt; }
 .cv-experience {
   margin-top: 8mm;
   overflow-wrap: anywhere;

@@ -1,0 +1,90 @@
+@use '../../../../styles/tokens' as tokens;
+@use '../button/variants' as buttons;
+
+:host { display: block; min-width: 0; }
+
+button {
+  @include buttons.secondary;
+  & {
+    padding: tokens.$spacing-2;
+    width: tokens.$input-height;
+    color: tokens.$color-primary;
+  }
+}
+
+.drawer-trigger, .drawer-header { display: none; }
+
+dialog {
+  position: static;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: tokens.$text-primary;
+  background: tokens.$background-surface;
+}
+
+@media (max-width: tokens.$breakpoint-xl) {
+  :host { display: contents; }
+
+  .drawer-trigger {
+    display: inline-flex;
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    z-index: tokens.$z-sticky;
+    border-radius: 0 tokens.$radius-md tokens.$radius-md 0;
+    box-shadow: tokens.$shadow-sm;
+
+    &.on-right {
+      right: 0;
+      left: auto;
+      border-radius: tokens.$radius-md 0 0 tokens.$radius-md;
+    }
+  }
+  .drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: tokens.$spacing-4;
+    font-weight: tokens.$font-weight-semibold;
+  }
+
+  dialog {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(calc(100% - #{tokens.$spacing-8}), 22rem);
+    height: 100dvh;
+    padding: tokens.$spacing-4;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    box-shadow: tokens.$shadow-lg;
+  }
+
+  dialog[open] { animation: slide-left 200ms ease; }
+  dialog.from-right {
+    inset: 0 0 0 auto;
+    &[open] { animation-name: slide-right; }
+  }
+  dialog::backdrop { background: rgba(tokens.$color-gray-900, 0.4); }
+}
+
+@keyframes slide-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+@keyframes slide-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog[open], dialog.from-right[open] { animation: none; }
+}
+
+@media print {
+  :host { display: none; }
+}

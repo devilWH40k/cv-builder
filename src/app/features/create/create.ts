@@ -51,7 +51,10 @@ export class Create {
   private readonly destroyRef = inject(DestroyRef);
   protected readonly loading = signal(false);
   protected readonly loadError = signal('');
-  protected readonly snapshot = () => this.form.getRawValue();
+  protected readonly snapshot = (): CvInfo => {
+    const structure = this.draft.current()?.structure;
+    return { ...this.form.getRawValue(), ...(structure ? { structure } : {}) };
+  };
 
   constructor() {
     const id = inject(ActivatedRoute).snapshot.queryParamMap.get('id');
@@ -92,7 +95,8 @@ export class Create {
     for (const experience of info.experiences) {
       this.form.controls.experiences.push(createExperienceForm(experience));
     }
-    this.form.setValue({ ...info, languages: [...info.languages], experiences: [...info.experiences] });
+    const { structure, ...fields } = info;
+    this.form.setValue({ ...fields, languages: [...info.languages], experiences: [...info.experiences] });
   }
 
   protected addExperience(): void {
@@ -124,7 +128,7 @@ export class Create {
     if (this.form.invalid) {
       return;
     }
-    this.draft.save(this.form.getRawValue());
+    this.draft.save(this.snapshot());
     void this.router.navigate(['/preview']);
   }
 }
