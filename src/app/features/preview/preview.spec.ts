@@ -347,7 +347,7 @@ describe('CV preview', () => {
     expect(section.querySelector('.period')?.textContent).toContain('June 2023');
     expect(section.querySelector('.period')?.textContent).toContain('Present');
     expect(section.querySelector('.project-description strong')?.textContent).toBe('accessible');
-    expect(section.querySelector('.experience-technologies')?.textContent).toContain('Angular');
+    expect(section.querySelector('.experience-technologies img')?.getAttribute('alt')).toBe('Angular');
     expect(section.getBoundingClientRect().right)
       .toBeLessThan(page.querySelector('.cv-languages')!.getBoundingClientRect().left);
     const create = await harness.navigateByUrl('/create', Create);

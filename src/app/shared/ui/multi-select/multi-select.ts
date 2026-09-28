@@ -16,6 +16,7 @@ export interface MultiSelectGroup {
 })
 export class MultiSelect extends FormField<readonly string[]> {
   readonly groups = input.required<readonly MultiSelectGroup[]>();
+  readonly optionIcons = input<Readonly<Record<string, string | undefined>>>({});
   protected readonly query = signal('');
   protected readonly SearchIcon = Search;
   protected readonly filteredGroups = computed(() => {
