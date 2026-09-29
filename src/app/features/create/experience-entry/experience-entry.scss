@@ -151,3 +151,9 @@ select:focus-visible, input:focus-visible {
   width: tokens.$button-height-md;
   padding: tokens.$spacing-2;
 }
+
+.technology-icon {
+  flex-shrink: 0;
+  object-fit: contain;
+  margin-right: tokens.$spacing-2;
+}

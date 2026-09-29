@@ -1,5 +1,8 @@
 @use './tokens' as tokens;
 @use './reset';
+@use './themes/basic';
+@use './themes/dark-blue';
+@use './themes/dark';
 
 body {
   font-family: tokens.$font-family-base;

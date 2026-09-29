@@ -1,0 +1,45 @@
+<dialog #dialog class="photo-preview-dialog" aria-labelledby="photo-preview-title"
+  aria-describedby="photo-preview-help" (cancel)="$event.preventDefault(); cancel()">
+  <h2 id="photo-preview-title">Photo preview</h2>
+  <p id="photo-preview-help">Drag the circle to frame your photo. Use the arrow keys to fine-tune it.</p>
+  <div class="workspace">
+    <div class="photo-stage">
+      <img #image class="source-photo" [attr.src]="source() || null" alt="Photo to crop"
+        draggable="false" (load)="loaded()" (error)="failed()" />
+      @if (ready()) {
+        <button type="button" class="crop-circle" aria-label="Move photo crop with arrow keys"
+          [disabled]="saving()" [style.left.%]="crop().x / dimensions().width * 100"
+          [style.top.%]="crop().y / dimensions().height * 100"
+          [style.width.%]="crop().size / dimensions().width * 100"
+          [style.height.%]="crop().size / dimensions().height * 100"
+          (pointerdown)="startDrag($event)" (pointermove)="moveDrag($event)"
+          (pointerup)="stopDrag()" (pointercancel)="stopDrag()" (lostpointercapture)="stopDrag()"
+          (keydown)="moveWithKeyboard($event)"></button>
+      }
+    </div>
+    @if (ready()) {
+      <div class="preview">
+        <div class="portrait">
+          <img [src]="source()" alt="How your photo will look on the CV" draggable="false"
+            [style.width.%]="dimensions().width / crop().size * 100"
+            [style.left.%]="-crop().x / crop().size * 100"
+            [style.top.%]="-crop().y / crop().size * 100" />
+        </div>
+        <span>CV preview</span>
+      </div>
+    }
+  </div>
+  @if (ready()) {
+    <label class="size-control">Circle size
+      <input type="range" min="20" max="100" [value]="crop().size / maximumSize() * 100"
+        [disabled]="saving()" (input)="resize($event)" />
+    </label>
+  } @else if (!loadFailed()) {
+    <p role="status">Loading photo…</p>
+  }
+  <footer>
+    <button type="button" class="cancel" (click)="cancel()">Cancel</button>
+    <app-button [disabled]="!ready() || saving()" (click)="apply()">{{ saving() ? 'Applying…' : 'Apply' }}</app-button>
+  </footer>
+  <app-toasts />
+</dialog>

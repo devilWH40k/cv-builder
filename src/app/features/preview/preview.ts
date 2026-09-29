@@ -1,4 +1,5 @@
 import { SaveCvButton } from '../cv/save-cv-button';
+import { USED_TECHNOLOGY_ICONS } from '../cv/used-technologies';
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Download, LucideAngularModule } from 'lucide-angular';
@@ -20,6 +21,7 @@ export class Preview {
   protected readonly info = this.draft.current;
   protected readonly structure = computed(() => ({ ...DEFAULT_CV_STRUCTURE, ...this.info()?.structure }));
   protected readonly photoUrl = signal<string | null>(null);
+  protected readonly technologyIcons = USED_TECHNOLOGY_ICONS;
   protected readonly DownloadIcon = Download;
   protected readonly formatDate = formatCalendarDate;
 

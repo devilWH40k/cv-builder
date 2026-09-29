@@ -6,7 +6,7 @@ import { Input } from '../../../shared/ui/input/input';
 import { MultiSelect } from '../../../shared/ui/multi-select/multi-select';
 import { DatePicker } from '../../../shared/ui/date-picker/date-picker';
 import { DateMode, parseCalendarDate } from '../../../shared/ui/date-picker/date-value';
-import { TECHNOLOGY_GROUPS } from '../../cv/technologies';
+import { USED_TECHNOLOGY_GROUPS, USED_TECHNOLOGY_ICONS } from '../../cv/used-technologies';
 import { createExperienceForm } from '../cv-form';
 
 @Component({
@@ -32,7 +32,8 @@ export class ExperienceEntry {
     { label: 'Redo', icon: Redo2, command: 'redo' }
   ] as const;
   protected readonly XIcon = X;
-  protected readonly technologyGroups = TECHNOLOGY_GROUPS;
+  protected readonly technologyGroups = USED_TECHNOLOGY_GROUPS;
+  protected readonly technologyIcons = USED_TECHNOLOGY_ICONS;
   protected readonly dateMode = signal<DateMode>('month-year');
   protected readonly parseDate = parseCalendarDate;
   protected readonly editorConfig = computed<AteEditorConfig>(() => ({

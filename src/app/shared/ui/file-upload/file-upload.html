@@ -23,4 +23,6 @@
   <div class="error" [id]="inputId() + '-error'" aria-live="polite">
     <ng-content />
   </div>
-</div>
+</div>@if (pendingPhoto(); as file) {
+  <app-photo-preview [file]="file" (cancelled)="pendingPhoto.set(null)" (applied)="applyPhoto($event)" />
+}

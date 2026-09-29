@@ -202,5 +202,10 @@ a {
 .project-description { font-size: 11pt; line-height: tokens.$line-height-normal; }
 .experience-technologies {
   display: flex; flex-wrap: wrap; gap: 2mm; margin: 4mm 0 0; padding: 0; list-style: none;
-  li { border: 1px solid currentColor; border-radius: tokens.$radius-sm; padding: 1mm 2mm; font-size: 9pt; break-inside: avoid; }
+  li { display: flex; align-items: center; break-inside: avoid; }
+}
+
+.experience-technologies img {
+  flex-shrink: 0;
+  object-fit: contain;
 }

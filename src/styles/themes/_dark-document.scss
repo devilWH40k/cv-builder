@@ -1,0 +1,44 @@
+﻿@use '../tokens' as tokens;
+
+$accent: #36d4f7;
+$accent-light: #aff1ff;
+$text: #f8fafc;
+$muted: #a3aab9;
+
+@mixin document($background) {
+  color: $text;
+  background: $background;
+  color-scheme: dark;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+
+  .cv-info h2 {
+    color: $accent;
+    background: linear-gradient(99.6deg, $accent -0.93%, $accent-light 64.12%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    width: fit-content;
+  }
+
+  .position,
+  .period { color: $muted; }
+
+  .portrait { border: 1mm solid rgba($accent-light, 0.6); }
+
+  .cv-technologies.technology-blocks li {
+    color: $accent;
+    border-color: $accent;
+    background: rgba($accent, 0.04);
+  }
+
+  .project-description a { color: $accent; }
+
+  @media (forced-colors: active) {
+    .cv-info h2 {
+      background: none;
+      color: CanvasText;
+      -webkit-text-fill-color: currentColor;
+    }
+  }
+}

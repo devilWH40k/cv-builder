@@ -206,17 +206,60 @@ describe('CV form', () => {
     ['photo.JPEG', 'image/jpeg'],
     ['photo.png', 'image/png']
   ]) {
-    it(`accepts ${name} and includes the selected file in form data`, async () => {
+    it(`previews ${name} before changing form data`, async () => {
       const file = new File(['image'], name, { type });
       selectFile(file);
       await fixture.whenStable();
-      expect(fixture.componentInstance.form.controls.photo.value).toBe(file);
+      expect(fixture.componentInstance.form.controls.photo.value).toBeNull();
       expect(fixture.componentInstance.form.controls.photo.valid).toBeTrue();
-      expect(page.querySelector('app-file-upload .success')).not.toBeNull();
-      expect(page.querySelector('.filename')?.textContent).toBe(name);
+      expect(page.querySelector('app-photo-preview dialog')).not.toBeNull();
+      expect(page.querySelector('.filename')?.textContent).toBe('');
     });
   }
 
+  it('keeps the previous photo on Cancel and commits only the applied crop', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 100;
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve));
+    const oldPhoto = new File([blob!], 'old.png', { type: 'image/png' });
+    const newPhoto = new File([blob!], 'new.png', { type: 'image/png' });
+    const control = fixture.componentInstance.form.controls.photo;
+    control.setValue(oldPhoto);
+    selectFile(newPhoto);
+    await fixture.whenStable();
+    expect(control.value).toBe(oldPhoto);
+    expect(control.pristine).toBeTrue();
+    page.querySelector<HTMLButtonElement>('app-photo-preview .cancel')!.click();
+    await fixture.whenStable();
+    expect(control.value).toBe(oldPhoto);
+    expect(page.querySelector('app-photo-preview')).toBeNull();
+
+    selectFile(newPhoto);
+    await fixture.whenStable();
+    const image = page.querySelector<HTMLImageElement>('app-photo-preview .source-photo')!;
+    await image.decode();
+    image.dispatchEvent(new Event('load'));
+    await fixture.whenStable();
+    const changed = new Promise<File | null>((resolve) => {
+      const subscription = control.valueChanges.subscribe((value) => {
+        subscription.unsubscribe();
+        resolve(value);
+      });
+    });
+    page.querySelector<HTMLButtonElement>('app-photo-preview app-button button')!.click();
+    const cropped = await changed;
+    await fixture.whenStable();
+    expect(cropped?.name).toBe('new.png');
+    expect(cropped).not.toBe(newPhoto);
+    expect(control.dirty).toBeTrue();
+    expect(control.touched).toBeTrue();
+    expect(page.querySelector('app-photo-preview')).toBeNull();
+    const bitmap = await createImageBitmap(cropped!);
+    expect(bitmap.width).toBe(80);
+    expect(bitmap.height).toBe(80);
+    bitmap.close();
+  });
   it('rejects unsupported files without shifting the upload and recovers on replacement', async () => {
     const upload = page.querySelector<HTMLElement>('app-file-upload')!;
     const height = upload.getBoundingClientRect().height;
@@ -226,7 +269,23 @@ describe('CV form', () => {
     expect(page.querySelector('#photo')?.getAttribute('aria-invalid')).toBe('true');
     expect(upload.getBoundingClientRect().height).toBe(height);
 
-    selectFile(new File(['image'], 'photo.png', { type: 'image/png' }));
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 100;
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve));
+    selectFile(new File([blob!], 'photo.png', { type: 'image/png' }));
+    await fixture.whenStable();
+    const image = page.querySelector<HTMLImageElement>('app-photo-preview .source-photo')!;
+    await image.decode();
+    image.dispatchEvent(new Event('load'));
+    await fixture.whenStable();
+    const applied = new Promise<void>((resolve) => {
+      const subscription = fixture.componentInstance.form.controls.photo.valueChanges.subscribe(() => {
+        subscription.unsubscribe();
+        resolve();
+      });
+    });
+    page.querySelector<HTMLButtonElement>('app-photo-preview app-button button')!.click();
+    await applied;
     await fixture.whenStable();
     expect(page.querySelector('#photo-error')?.textContent?.trim()).toBe('');
     expect(page.querySelector('#photo')?.getAttribute('aria-invalid')).toBe('false');
@@ -266,7 +325,7 @@ describe('CV form', () => {
     const height = upload.getBoundingClientRect().height;
     expect(page.querySelector('.photo-preview img')).toBeNull();
 
-    selectFile(file);
+    fixture.componentInstance.form.controls.photo.setValue(file);
     await fixture.whenStable();
     const image = page.querySelector<HTMLImageElement>('.photo-preview img')!;
     await image.decode();
@@ -277,7 +336,7 @@ describe('CV form', () => {
     expect(preview.getBoundingClientRect().right)
       .toBeLessThan(page.querySelector('.upload')!.getBoundingClientRect().left);
 
-    selectFile(new File([bytes], 'replacement.png', { type: 'image/png' }));
+    fixture.componentInstance.form.controls.photo.setValue(new File([bytes], 'replacement.png', { type: 'image/png' }));
     await fixture.whenStable();
     expect(revoke).toHaveBeenCalledWith(firstUrl);
     const secondUrl = page.querySelector<HTMLImageElement>('.photo-preview img')!.src;
@@ -288,7 +347,7 @@ describe('CV form', () => {
     expect(page.querySelector('.photo-preview img')).toBeNull();
     expect(revoke).toHaveBeenCalledWith(secondUrl);
 
-    selectFile(file);
+    fixture.componentInstance.form.controls.photo.setValue(file);
     await fixture.whenStable();
     const lastUrl = page.querySelector<HTMLImageElement>('.photo-preview img')!.src;
     fixture.destroy();

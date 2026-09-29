@@ -1144,3 +1144,17 @@ When making UI decisions, prioritize:
 The application should feel cohesive rather than individually designed screen by screen.
 
 The user should focus primarily on creating their CV, not on understanding the interface.
+
+## CV document themes
+
+CV themes live in src/styles/themes/, with one entry file per theme:
+basic.scss, dark-blue.scss, and dark.scss. They are loaded by
+src/styles/styles.scss and scoped to a theme class on .cv-document.
+The dark variants share _dark-document.scss.
+
+Theme selectors intentionally outrank the preview component's scoped styles.
+Keep theme colors and overrides inside these files; do not theme the surrounding
+editor controls. Dark theme print rules preserve document colors during export.
+
+Available choices are declared in src/app/features/cv/cv-themes.ts.
+The selected theme is stored in CvStructure.theme; older CVs default to Basic.

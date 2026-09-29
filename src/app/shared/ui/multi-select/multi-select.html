@@ -17,6 +17,9 @@
           @for (option of group.options; track option) {
             <label class="option">
               <input type="checkbox" [checked]="value().includes(option)" (change)="toggle(option)" />
+              @if (optionIcons()[option]; as icon) {
+                <img class="option-icon" [src]="icon" alt="" width="20" height="20" />
+              }
               <span>{{ option }}</span>
             </label>
           }
