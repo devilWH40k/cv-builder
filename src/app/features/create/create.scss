@@ -42,12 +42,8 @@ section > h3 {
   margin-bottom: tokens.$spacing-4;
 }
 
-.section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: tokens.$spacing-4;
-}
+.add-entry { display: inline-block; }
+.empty-state { color: tokens.$text-muted; }
 
 a, .mobile-switch, .icon-button, .skill-chip button {
   @include buttons.secondary;
@@ -182,7 +178,6 @@ a, .mobile-switch, .icon-button, .skill-chip button {
   background: tokens.$background-surface;
   gap: tokens.$spacing-3;
 }
-.export-hint { color: tokens.$text-muted; font-size: tokens.$font-size-sm; }
 .mobile-switch { display: none; }
 @media (max-width: tokens.$breakpoint-lg) {
   .mobile-switch {

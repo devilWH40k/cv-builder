@@ -14,7 +14,7 @@
   <div class="editor-pane">
     <app-tabs [tabs]="tabs" [(active)]="activeTab" />
     <div id="info-panel" role="tabpanel" aria-labelledby="info-panel-tab" [hidden]="activeTab() !== 'info'">
-  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <form #cvForm [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <section aria-labelledby="general-info-title">
       <h3 id="general-info-title">General Info</h3>
       <app-file-upload inputId="photo" label="Upload a photo" [control]="form.controls.photo">
@@ -44,27 +44,18 @@
       </app-textarea>
     </section>
 
-    <section aria-labelledby="experience-title">
-      <div class="section-heading">
-        <h3 id="experience-title">Experience</h3>
-        <button class="icon-button" type="button" aria-label="Add experience" (click)="addExperience()">
-          <lucide-icon [img]="PlusIcon" [size]="18" aria-hidden="true" />
-        </button>
-      </div>
+    <app-expand-panel heading="Experience" panelId="experience-panel"
+      [count]="form.controls.experiences.length">
       @for (row of form.controls.experiences.controls; track row; let index = $index) {
       <app-experience-entry [form]="row" [index]="index" (remove)="removeExperience(index)" />
       } @empty {
-      <p>No work experience added yet. Use the plus button to add an entry.</p>
+      <p class="empty-state">Add an experience to boost your CV</p>
       }
-    </section>
+      <app-button class="add-entry" aria-label="Add experience" (click)="addExperience()">Add experience</app-button>
+    </app-expand-panel>
 
-    <section aria-labelledby="languages-title">
-      <div class="section-heading">
-        <h3 id="languages-title">Languages</h3>
-        <button class="icon-button" type="button" aria-label="Add language" (click)="addLanguage()">
-          <lucide-icon [img]="PlusIcon" [size]="18" aria-hidden="true" />
-        </button>
-      </div>
+    <app-expand-panel heading="Languages" panelId="languages-panel"
+      [count]="form.controls.languages.length">
       @for (row of form.controls.languages.controls; track row; let index = $index) {
       <div class="language-row">
         <app-select [inputId]="'language-' + index" label="Language" [control]="row.controls.language"
@@ -84,8 +75,11 @@
           <lucide-icon [img]="XIcon" [size]="18" aria-hidden="true" />
         </button>
       </div>
+      } @empty {
+      <p class="empty-state">Add a language to highlight your communication skills</p>
       }
-    </section>
+      <app-button class="add-entry" aria-label="Add language" (click)="addLanguage()">Add language</app-button>
+    </app-expand-panel>
 
     <section aria-labelledby="technologies-title">
       <h3 id="technologies-title">Tools/Technologies</h3>
@@ -126,14 +120,11 @@
   </div>
   <nav class="actions" aria-label="CV actions">
     <app-save-cv-button [info]="snapshot" />
-    <app-button [disabled]="!canExport()" (click)="submit()">
+    <app-button (click)="submit()">
       <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
       Export
     </app-button>
     <a routerLink="/">Back to home</a>
-    @if (!canExport()) {
-      <span class="export-hint">Complete the required CV info to export.</span>
-    }
   </nav>
   }
 </main>
