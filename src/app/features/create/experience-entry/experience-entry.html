@@ -66,6 +66,7 @@
       </button>
       }
     </div>
-    <angular-tiptap-editor [formControl]="form().controls.description" [config]="editorConfig()" />
+    <angular-tiptap-editor [formControl]="form().controls.description" [config]="editorConfig()"
+      (editorUpdate)="updateDescription()" />
   </div>
 </div>
