@@ -7,6 +7,7 @@ import { Create } from '../create/create';
 import { CvDraft } from '../cv/cv-draft';
 
 describe('CV preview', () => {
+  let print: jasmine.Spy;
   const info = {
     name: 'Alex Morgan',
     positionTitle: 'Full Stack Developer',
@@ -18,6 +19,7 @@ describe('CV preview', () => {
   };
 
   beforeEach(() => {
+    print = spyOn(window, 'print');
     const matchMedia = window.matchMedia.bind(window);
     spyOn(window, 'matchMedia').and.callFake((query) => {
       const media = matchMedia(query);
@@ -63,7 +65,7 @@ describe('CV preview', () => {
     await choose('left');
     await choose('comma-separated');
     await harness.navigateByUrl('/create', Create);
-    harness.routeNativeElement!.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    harness.routeNativeElement!.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await harness.fixture.whenStable();
     expect(draft.current()?.structure).toEqual({ theme: 'basic', sidebarPosition: 'left', technologiesView: 'comma-separated', sidebarTechnologiesView: 'list' });
     expect(harness.routeNativeElement!.querySelector<HTMLInputElement>('input[value="left"]')!.checked).toBeTrue();
@@ -140,7 +142,7 @@ describe('CV preview', () => {
     page.querySelector<HTMLButtonElement>('[aria-label="Open CV actions"]')!.click();
     await harness.fixture.whenStable();
     expect(page.querySelector('#actions-panel')!.matches(':modal')).toBeTrue();
-    const print = spyOn(window, 'print').and.callFake(() => {
+    print.and.callFake(() => {
       expect(page.querySelector<HTMLDialogElement>('#actions-panel')!.open).toBeFalse();
     });
     page.querySelector<HTMLButtonElement>('.actions app-button button')!.click();
@@ -180,20 +182,17 @@ describe('CV preview', () => {
   it('redirects to the form when no draft exists', async () => {
     const harness = await RouterTestingHarness.create('/preview');
     expect(TestBed.inject(Router).url).toBe('/create');
-    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('CV Info');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('Your CV');
   });
 
-  it('shows the submitted information on an A4 document and prints on Export', async () => {
+  it('shows live information in the editor and prints on Export without navigating', async () => {
     const harness = await RouterTestingHarness.create();
     const create = await harness.navigateByUrl('/create', Create);
     create.form.setValue(info);
-    harness.routeNativeElement?.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
     await harness.fixture.whenStable();
-    harness.detectChanges();
-
     const page = harness.routeNativeElement!;
-    expect(TestBed.inject(Router).url).toBe('/preview');
-    expect(page.querySelector('h1')?.textContent).toBe('Your CV Preview');
+    expect(TestBed.inject(Router).url).toBe('/create');
+    expect(page.querySelector('h1')?.textContent).toBe('Your CV');
     expect(page.querySelector('.cv-document h2')?.textContent).toBe(info.name);
     expect(page.querySelector('.position')?.textContent).toBe(info.positionTitle);
     expect(page.querySelector('.description')?.textContent).toBe(info.description);
@@ -201,23 +200,17 @@ describe('CV preview', () => {
     expect(page.querySelector('.cv-languages')).toBeNull();
     expect(page.querySelector('.cv-technologies')).toBeNull();
     const document = page.querySelector<HTMLElement>('.cv-document')!;
-    const bounds = document.getBoundingClientRect();
-    expect(bounds.width).toBeCloseTo(210 * 96 / 25.4, 0);
-    expect(bounds.height).toBeCloseTo(297 * 96 / 25.4, 0);
+    expect(parseFloat(getComputedStyle(document).width)).toBeCloseTo(210 * 96 / 25.4, 0);
+    expect(parseFloat(getComputedStyle(document).minHeight)).toBeCloseTo(297 * 96 / 25.4, 0);
     expect(getComputedStyle(document).color).toBe('rgb(0, 0, 0)');
     expect(getComputedStyle(document).backgroundColor).toBe('rgb(255, 255, 255)');
-
-    const print = spyOn(window, 'print');
-    Array.from(page.querySelectorAll<HTMLButtonElement>('button')).find((button) => button.textContent?.includes('Export'))!.click();
-    expect(print).toHaveBeenCalledTimes(1);
-
-    page.querySelector<HTMLAnchorElement>('a')!.click();
-    await harness.fixture.whenStable();
-    harness.detectChanges();
+    page.querySelector<HTMLButtonElement>('.actions > app-button button')!.click();
+    expect(window.print).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(Router).url).toBe('/create');
-    expect(harness.routeNativeElement?.querySelector<HTMLInputElement>('#name')?.value).toBe(info.name);
-    expect(harness.routeNativeElement?.querySelector<HTMLTextAreaElement>('#description')?.value)
-      .toBe(info.description);
+    expect(page.querySelector<HTMLInputElement>('#name')?.value).toBe(info.name);
+    page.querySelector<HTMLAnchorElement>('a[routerLink="/"]')!.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/');
   });
 
   it('renders a larger circular photo and keeps it available when returning to edit', async () => {
@@ -264,7 +257,7 @@ describe('CV preview', () => {
     const create = await harness.navigateByUrl('/create', Create);
     expect(create.form.controls.languages.getRawValue()).toEqual(languages);
     expect(harness.routeNativeElement?.querySelectorAll('select').length).toBe(4);
-    harness.routeNativeElement?.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    harness.routeNativeElement!.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await harness.fixture.whenStable();
     expect(TestBed.inject(CvDraft).current()?.languages).toEqual(languages);
   });
@@ -297,7 +290,7 @@ describe('CV preview', () => {
     expect(create.form.controls.technologies.value).toEqual(technologies);
     expect(harness.routeNativeElement!.querySelectorAll('.skill-chip').length).toBe(3);
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('[aria-label="Remove Vue"]')!.click();
-    harness.routeNativeElement!.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    harness.routeNativeElement!.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await harness.fixture.whenStable();
     expect(TestBed.inject(CvDraft).current()?.technologies).toEqual(['MongoDB', 'Angular Material']);
     expect(TestBed.inject(CvDraft).current()?.structure?.sidebarTechnologiesView).toBe('blocks');

@@ -1,9 +1,19 @@
 <main aria-labelledby="create-title">
-  <h1 id="create-title">CV Info</h1>
+  <h1 id="create-title">Your CV</h1>
   @if (loadError()) { <p role="alert">{{ loadError() }}</p> }
   @if (loading()) {
     <p role="status">Loading saved CV…</p>
   } @else {
+  <button class="mobile-switch" type="button"
+    [attr.aria-label]="mobilePreview() ? 'Show editor' : 'Show preview'"
+    [title]="mobilePreview() ? 'Show editor' : 'Show preview'"
+    (click)="mobilePreview.set(!mobilePreview())">
+    <lucide-icon [img]="mobilePreview() ? PencilIcon : EyeIcon" [size]="20" aria-hidden="true" />
+  </button>
+  <div class="editor-layout" [class.show-preview]="mobilePreview()">
+  <div class="editor-pane">
+    <app-tabs [tabs]="tabs" [(active)]="activeTab" />
+    <div id="info-panel" role="tabpanel" aria-labelledby="info-panel-tab" [hidden]="activeTab() !== 'info'">
   <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <section aria-labelledby="general-info-title">
       <h3 id="general-info-title">General Info</h3>
@@ -100,11 +110,30 @@
       </div>
     </section>
 
-    <div class="actions">
-      <app-save-cv-button [info]="snapshot" />
-      <app-button type="submit">Create</app-button>
-      <a routerLink="/">Back to home</a>
-    </div>
   </form>
+    </div>
+    <div id="structure-panel" role="tabpanel" aria-labelledby="structure-panel-tab" [hidden]="activeTab() !== 'structure'">
+      <app-structure-options [structure]="structure()" (structureChange)="draft.updateStructure($event)" />
+    </div>
+  </div>
+  <aside class="preview-pane" aria-labelledby="live-preview-title">
+    <div class="preview-heading">
+      <h2 id="live-preview-title">Live preview</h2>
+      <span>A4 document</span>
+    </div>
+    <app-preview [embedded]="true" />
+  </aside>
+  </div>
+  <nav class="actions" aria-label="CV actions">
+    <app-save-cv-button [info]="snapshot" />
+    <app-button [disabled]="!canExport()" (click)="submit()">
+      <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
+      Export
+    </app-button>
+    <a routerLink="/">Back to home</a>
+    @if (!canExport()) {
+      <span class="export-hint">Complete the required CV info to export.</span>
+    }
+  </nav>
   }
 </main>

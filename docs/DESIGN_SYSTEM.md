@@ -750,6 +750,17 @@ The primary desktop editor layout should generally follow:
 └──────────────────────────────┴──────────────────────────────┘
 ```
 
+The create page combines a two-tab editor (CV info and Structure) with a live
+preview on the right, separated by a subtle divider. Form and structure changes
+update the shared draft immediately. Tabs preserve form state and support arrow,
+Home, and End keys. On smaller screens, a toggle switches between editor and
+preview.
+
+Save, Export, and Back to home remain in the bottom action bar. Export is enabled
+only when the CV info form is valid. The embedded preview scales to its available
+width on screen; print styles restore full document sizing and hide editor UI.
+The standalone preview route remains available for existing links.
+
 The editor and CV preview should be visually distinct.
 
 The CV preview should feel like a real document rather than another application card.
