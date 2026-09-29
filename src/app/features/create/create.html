@@ -1,5 +1,10 @@
 <main aria-labelledby="create-title">
-  <h1 id="create-title">Your CV</h1>
+  <div class="page-heading">
+    <a class="icon-button" routerLink="/" aria-label="Back to home" title="Back to home">
+      <lucide-icon [img]="ArrowLeftIcon" [size]="24" aria-hidden="true" />
+    </a>
+    <h1 id="create-title">Your CV</h1>
+  </div>
   @if (loadError()) { <p role="alert">{{ loadError() }}</p> }
   @if (loading()) {
     <p role="status">Loading saved CV…</p>
@@ -124,7 +129,6 @@
       <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
       Export
     </app-button>
-    <a routerLink="/">Back to home</a>
   </nav>
   }
 </main>

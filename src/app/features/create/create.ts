@@ -18,7 +18,7 @@ import { ExpandPanel } from '../../shared/ui/expand-panel/expand-panel';
 import { Tabs } from '../../shared/ui/tabs/tabs';
 import { LANGUAGES, LANGUAGE_LEVELS } from '../cv/languages';
 import { Select } from '../../shared/ui/select/select';
-import { Download, Eye, Pencil, LucideAngularModule, X } from 'lucide-angular';
+import { ArrowLeft, Download, Eye, Pencil, LucideAngularModule, X } from 'lucide-angular';
 import { MultiSelect } from '../../shared/ui/multi-select/multi-select';
 import { TECHNOLOGY_GROUPS } from '../cv/technologies';
 
@@ -38,6 +38,7 @@ export class Create {
     { id: 'structure', label: 'Structure', panelId: 'structure-panel' }
   ];
   protected readonly structure = computed(() => ({ ...DEFAULT_CV_STRUCTURE, ...this.draft.current()?.structure }));
+  protected readonly ArrowLeftIcon = ArrowLeft;
   protected readonly DownloadIcon = Download;
   protected readonly EyeIcon = Eye;
   protected readonly PencilIcon = Pencil;

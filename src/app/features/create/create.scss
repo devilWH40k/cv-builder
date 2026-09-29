@@ -7,8 +7,15 @@ main {
   padding: tokens.$spacing-6;
 }
 
+.page-heading {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-3;
+  margin-bottom: tokens.$spacing-8;
+}
+
 h1 {
-  margin: 0 0 tokens.$spacing-8;
+  margin: 0;
   text-align: left;
   color: tokens.$color-primary;
   font-size: tokens.$font-size-3xl;
@@ -202,7 +209,7 @@ a, .mobile-switch, .icon-button, .skill-chip button {
 }
 @media print {
   main { max-width: none; margin: 0; padding: 0; }
-  h1, .editor-pane, .actions, .mobile-switch, .preview-heading { display: none; }
+  .page-heading, .editor-pane, .actions, .mobile-switch, .preview-heading { display: none; }
   .editor-layout { display: block; }
   .preview-pane { display: block; position: static; padding: 0; border: 0; }
 }
