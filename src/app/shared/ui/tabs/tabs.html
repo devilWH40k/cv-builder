@@ -1,0 +1,8 @@
+<div role="tablist" [attr.aria-label]="label()">
+  @for (tab of tabs(); track tab.id; let index = $index) {
+    <button type="button" role="tab" [id]="tab.panelId + '-tab'"
+      [attr.aria-controls]="tab.panelId" [attr.aria-selected]="active() === tab.id"
+      [tabIndex]="active() === tab.id ? 0 : -1" (click)="active.set(tab.id)"
+      (keydown)="onKeydown($event, index)">{{ tab.label }}</button>
+  }
+</div>

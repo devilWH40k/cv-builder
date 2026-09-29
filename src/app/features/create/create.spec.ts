@@ -14,6 +14,7 @@ describe('CV form', () => {
       providers: [provideZonelessChangeDetection(), provideRouter([])]
     }).compileComponents();
     spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    spyOn(window, 'print');
     fixture = TestBed.createComponent(Create);
     page = fixture.nativeElement;
     fixture.detectChanges();
@@ -21,7 +22,7 @@ describe('CV form', () => {
   });
 
   function submit(): void {
-    page.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    page.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   }
 
   function enterText(id: string, value: string): void {
@@ -55,7 +56,7 @@ describe('CV form', () => {
     expect(fields.map((field) => field.getBoundingClientRect().height)).toEqual(heights);
   });
 
-  it('shows success marks and opens the preview with the entered data on Create', async () => {
+  it('shows success marks, updates the live preview, and exports valid data', async () => {
     enterText('name', 'Alex Morgan');
     enterText('position-title', 'Designer');
     enterText('description', 'I design accessible applications.');
@@ -64,7 +65,7 @@ describe('CV form', () => {
     expect(page.querySelectorAll('.success-icon').length).toBe(3);
     expect(page.querySelector('#name')?.getAttribute('aria-invalid')).toBe('false');
     submit();
-    expect(TestBed.inject(Router).navigate).toHaveBeenCalledOnceWith(['/preview']);
+    expect(window.print).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(CvDraft).current()).toEqual({
       name: 'Alex Morgan',
       positionTitle: 'Designer',
@@ -178,7 +179,7 @@ describe('CV form', () => {
     page.querySelector<HTMLButtonElement>('[aria-label="Remove language 2"]')!.click();
     await fixture.whenStable();
     submit();
-    expect(TestBed.inject(Router).navigate).toHaveBeenCalledOnceWith(['/preview']);
+    expect(window.print).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(CvDraft).current()?.languages).toEqual([
       { language: 'Ukrainian', level: 'Native' }
     ]);
@@ -391,8 +392,62 @@ describe('CV form', () => {
     page.querySelector<HTMLButtonElement>('[aria-label="Remove experience 2"]')!.click();
     await fixture.whenStable();
     submit();
-    expect(TestBed.inject(Router).navigate).toHaveBeenCalledOnceWith(['/preview']);
+    expect(window.print).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(CvDraft).current()?.experiences[0].company).toBe('FINBIT');
   });
 
+});
+
+describe('Combined CV editor', () => {
+  beforeEach(() => TestBed.configureTestingModule({
+    imports: [Create],
+    providers: [provideZonelessChangeDetection(), provideRouter([])]
+  }));
+
+  it('updates preview while invalid and gates export as rows are added and removed', async () => {
+    const fixture = TestBed.createComponent(Create);
+    const page: HTMLElement = fixture.nativeElement;
+    const print = spyOn(window, 'print');
+    await fixture.whenStable();
+    const exportButton = page.querySelector<HTMLButtonElement>('.actions > app-button button')!;
+    expect(exportButton.disabled).toBeTrue();
+    fixture.componentInstance.form.controls.name.setValue('Live name');
+    await fixture.whenStable();
+    expect(page.querySelector('.cv-info h2')?.textContent).toBe('Live name');
+    expect(exportButton.disabled).toBeTrue();
+    exportButton.click();
+    expect(print).not.toHaveBeenCalled();
+    fixture.componentInstance.form.patchValue({ positionTitle: 'Developer', description: 'Summary' });
+    await fixture.whenStable();
+    expect(exportButton.disabled).toBeFalse();
+    page.querySelector<HTMLButtonElement>('[aria-label="Add language"]')!.click();
+    await fixture.whenStable();
+    expect(exportButton.disabled).toBeTrue();
+    page.querySelector<HTMLButtonElement>('[aria-label="Remove language 1"]')!.click();
+    await fixture.whenStable();
+    expect(exportButton.disabled).toBeFalse();
+    exportButton.click();
+    expect(print).toHaveBeenCalledTimes(1);
+  });
+
+  it('switches tabs by keyboard, retains form edits, and previews structure changes', async () => {
+    const fixture = TestBed.createComponent(Create);
+    const page: HTMLElement = fixture.nativeElement;
+    await fixture.whenStable();
+    fixture.componentInstance.form.controls.name.setValue('Retained name');
+    const tabs = page.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    tabs[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    await fixture.whenStable();
+    expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(tabs[1]);
+    expect(page.querySelector<HTMLElement>('#info-panel')!.hidden).toBeTrue();
+    page.querySelector<HTMLInputElement>('input[name="cv-theme"][value="dark"]')!.click();
+    await fixture.whenStable();
+    expect(page.querySelector('.cv-document.theme-dark')).not.toBeNull();
+    tabs[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+    await fixture.whenStable();
+    expect(page.querySelector<HTMLInputElement>('#name')!.value).toBe('Retained name');
+    expect(page.querySelector<HTMLElement>('#structure-panel')!.hidden).toBeTrue();
+    expect(TestBed.inject(CvDraft).current()?.structure?.theme).toBe('dark');
+  });
 });
