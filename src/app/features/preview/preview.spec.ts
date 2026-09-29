@@ -65,7 +65,7 @@ describe('CV preview', () => {
     await harness.navigateByUrl('/create', Create);
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
     await harness.fixture.whenStable();
-    expect(draft.current()?.structure).toEqual({ sidebarPosition: 'left', technologiesView: 'comma-separated', sidebarTechnologiesView: 'list' });
+    expect(draft.current()?.structure).toEqual({ theme: 'basic', sidebarPosition: 'left', technologiesView: 'comma-separated', sidebarTechnologiesView: 'list' });
     expect(harness.routeNativeElement!.querySelector<HTMLInputElement>('input[value="left"]')!.checked).toBeTrue();
     expect(harness.routeNativeElement!.querySelector('.technologies-inline')?.textContent?.trim()).toBe('Angular, TypeScript');
   });

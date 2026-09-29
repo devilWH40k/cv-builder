@@ -1,0 +1,14 @@
+﻿@use './dark-document';
+
+.cv-document.cv-document.theme-dark {
+  @include dark-document.document(#101114);
+}
+
+@media print {
+  html:has(.cv-document.theme-dark),
+  body:has(.cv-document.theme-dark) {
+    background: #101114;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
