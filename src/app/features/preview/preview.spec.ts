@@ -65,7 +65,7 @@ describe('CV preview', () => {
     await harness.navigateByUrl('/create', Create);
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
     await harness.fixture.whenStable();
-    expect(draft.current()?.structure).toEqual({ sidebarPosition: 'left', technologiesView: 'comma-separated', sidebarTechnologiesView: 'list' });
+    expect(draft.current()?.structure).toEqual({ theme: 'basic', sidebarPosition: 'left', technologiesView: 'comma-separated', sidebarTechnologiesView: 'list' });
     expect(harness.routeNativeElement!.querySelector<HTMLInputElement>('input[value="left"]')!.checked).toBeTrue();
     expect(harness.routeNativeElement!.querySelector('.technologies-inline')?.textContent?.trim()).toBe('Angular, TypeScript');
   });
@@ -347,7 +347,7 @@ describe('CV preview', () => {
     expect(section.querySelector('.period')?.textContent).toContain('June 2023');
     expect(section.querySelector('.period')?.textContent).toContain('Present');
     expect(section.querySelector('.project-description strong')?.textContent).toBe('accessible');
-    expect(section.querySelector('.experience-technologies')?.textContent).toContain('Angular');
+    expect(section.querySelector('.experience-technologies img')?.getAttribute('alt')).toBe('Angular');
     expect(section.getBoundingClientRect().right)
       .toBeLessThan(page.querySelector('.cv-languages')!.getBoundingClientRect().left);
     const create = await harness.navigateByUrl('/create', Create);

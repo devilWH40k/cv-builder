@@ -6,7 +6,7 @@
       <app-structure-options [structure]="structure()" (structureChange)="draft.updateStructure($event)" />
     </app-responsive-drawer>
     <div class="document-viewport" role="region" aria-label="A4 CV preview" tabindex="0">
-      <article class="cv-document" aria-label="CV">
+      <article class="cv-document" [class]="'theme-' + (structure().theme ?? 'basic')" aria-label="CV">
         <header class="cv-header">
           @if (photoUrl(); as url) {
           <img class="portrait" [src]="url" [alt]="cv.name + ' — portrait'" (error)="photoUrl.set(null)" />
@@ -38,7 +38,11 @@
                 @if (experience.technologies.length && structure().technologiesView === 'blocks') {
                 <ul class="experience-technologies" aria-label="Used technologies">
                   @for (technology of experience.technologies; track technology) {
-                  <li>{{ technology }}</li>
+                  @if (technologyIcons[technology]; as icon) {
+                  <li [title]="technology">
+                    <img [src]="icon" [alt]="technology" width="24" height="24" />
+                  </li>
+                  }
                   }
                 </ul>
                 }

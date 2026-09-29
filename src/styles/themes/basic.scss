@@ -1,0 +1,6 @@
+﻿@use '../tokens' as tokens;
+
+.cv-document.cv-document.theme-basic {
+  color: #000;
+  background: tokens.$color-white;
+}

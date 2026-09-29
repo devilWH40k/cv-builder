@@ -93,3 +93,8 @@ fieldset:disabled .option {
   color: tokens.$text-disabled;
   cursor: not-allowed;
 }
+
+.option-icon {
+  flex-shrink: 0;
+  object-fit: contain;
+}

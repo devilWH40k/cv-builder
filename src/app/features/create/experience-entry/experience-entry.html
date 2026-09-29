@@ -44,10 +44,14 @@
     }
   </fieldset>
   <app-multi-select [inputId]="'experience-technologies-' + index()" label="Used technologies"
-    [control]="form().controls.technologies" [groups]="technologyGroups" />
+    [control]="form().controls.technologies" [groups]="technologyGroups" [optionIcons]="technologyIcons" />
   <ul class="chips" aria-label="Selected technologies">
     @for (technology of form().controls.technologies.value; track technology) {
-    <li>{{ technology }}<button type="button" [attr.aria-label]="'Remove ' + technology"
+    <li>
+      @if (technologyIcons[technology]; as icon) {
+        <img class="technology-icon" [src]="icon" alt="" width="20" height="20" />
+      }
+      {{ technology }}<button type="button" [attr.aria-label]="'Remove ' + technology"
         (click)="removeTechnology(technology)"><lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" /></button>
     </li>
     }

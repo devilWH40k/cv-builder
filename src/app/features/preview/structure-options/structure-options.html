@@ -2,6 +2,16 @@
   <h2 id="structure-title">Structure</h2>
   <div class="options">
     <fieldset>
+      <legend>Theme</legend>
+      <div class="radio-row">
+        @for (theme of themes; track theme.value) {
+          <app-radio name="cv-theme" [value]="theme.value" [label]="theme.label"
+            [checked]="(structure().theme ?? 'basic') === theme.value"
+            (selected)="update({ theme: theme.value })" />
+        }
+      </div>
+    </fieldset>
+    <fieldset>
       <legend>Languages/Tech position</legend>
       <div class="radio-row">
         <app-radio name="sidebar-position" value="left" label="Left"
