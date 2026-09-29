@@ -4,11 +4,4 @@
   @include dark-document.document(#040a1b);
 }
 
-@media print {
-  html:has(.cv-document.theme-dark-blue),
-  body:has(.cv-document.theme-dark-blue) {
-    background: #040a1b;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-}
+@include dark-document.print-page('theme-dark-blue', #040a1b);

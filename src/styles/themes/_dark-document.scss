@@ -5,6 +5,25 @@ $accent-light: #aff1ff;
 $text: #f8fafc;
 $muted: #a3aab9;
 
+@mixin print-page($theme, $background) {
+  @media print {
+    html:has(.cv-document.#{$theme}),
+    body:has(.cv-document.#{$theme}) {
+      background: $background;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body:has(.cv-document.#{$theme}) {
+      page: #{$theme};
+    }
+
+    @page #{$theme} {
+      background: $background;
+    }
+  }
+}
+
 @mixin document($background) {
   color: $text;
   background: $background;
