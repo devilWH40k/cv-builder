@@ -32,13 +32,13 @@ describe('App', () => {
     harness.detectChanges();
 
     expect(TestBed.inject(Router).url).toBe('/create');
-    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('CV Info');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('Your CV');
     expect(harness.routeNativeElement?.querySelector('form')).not.toBeNull();
   });
 
   it('should open /create directly and navigate back home', async () => {
     const harness = await RouterTestingHarness.create('/create');
-    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('CV Info');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('Your CV');
 
     harness.routeNativeElement?.querySelector<HTMLAnchorElement>('a')!.click();
     await harness.fixture.whenStable();

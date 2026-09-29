@@ -1,12 +1,14 @@
-<main aria-labelledby="preview-title">
-  <h1 id="preview-title" class="page-title">Your CV Preview</h1>
+<div class="preview-root" [class.embedded]="embedded()">
+  @if (!embedded()) { <h1 id="preview-title" class="page-title">Your CV Preview</h1> }
   @if (info(); as cv) {
   <div class="preview-layout">
+    @if (!embedded()) {
     <app-responsive-drawer class="structure-menu" label="Structure" panelId="structure-panel">
       <app-structure-options [structure]="structure()" (structureChange)="draft.updateStructure($event)" />
     </app-responsive-drawer>
-    <div class="document-viewport" role="region" aria-label="A4 CV preview" tabindex="0">
-      <article class="cv-document" [class]="'theme-' + (structure().theme ?? 'basic')" aria-label="CV">
+    }
+    <div #viewport class="document-viewport" role="region" aria-label="A4 CV preview" tabindex="0">
+      <article class="cv-document" [style.--preview-scale]="previewScale()" [class]="'theme-' + (structure().theme ?? 'basic')" aria-label="CV">
         <header class="cv-header">
           @if (photoUrl(); as url) {
           <img class="portrait" [src]="url" [alt]="cv.name + ' — portrait'" (error)="photoUrl.set(null)" />
@@ -76,6 +78,7 @@
         </div>
       </article>
     </div>
+    @if (!embedded()) {
     <app-responsive-drawer #actionsMenu class="actions-menu" label="CV actions" panelId="actions-panel" side="right">
     <nav class="actions" aria-label="CV actions">
       <app-button (click)="actionsMenu.close(); export()">
@@ -87,6 +90,7 @@
       <a routerLink="/">Back to home</a>
     </nav>
     </app-responsive-drawer>
+    }
   </div>
   }
-</main>
+</div>

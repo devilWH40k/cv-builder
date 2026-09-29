@@ -1,9 +1,9 @@
 import { SaveCvButton } from '../cv/save-cv-button';
 import { SavedCvs } from '../cv/saved-cvs';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, PendingTasks, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { startWith } from 'rxjs';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Input } from '../../shared/ui/input/input';
 import { Textarea } from '../../shared/ui/textarea/textarea';
@@ -11,24 +11,38 @@ import { FileUpload } from '../../shared/ui/file-upload/file-upload';
 import { Button } from '../../shared/ui/button/button';
 import { createCvForm, createExperienceForm, createLanguageForm } from './cv-form';
 import { ExperienceEntry } from './experience-entry/experience-entry';
-import { CvDraft, CvInfo } from '../cv/cv-draft';
+import { CvDraft, CvInfo, DEFAULT_CV_STRUCTURE } from '../cv/cv-draft';
+import { Preview } from '../preview/preview';
+import { StructureOptions } from '../preview/structure-options/structure-options';
+import { Tabs } from '../../shared/ui/tabs/tabs';
 import { LANGUAGES, LANGUAGE_LEVELS } from '../cv/languages';
 import { Select } from '../../shared/ui/select/select';
-import { LucideAngularModule, Plus, X } from 'lucide-angular';
+import { Download, Eye, Pencil, LucideAngularModule, Plus, X } from 'lucide-angular';
 import { MultiSelect } from '../../shared/ui/multi-select/multi-select';
 import { TECHNOLOGY_GROUPS } from '../cv/technologies';
 
 @Component({
   selector: 'app-create',
-  imports: [SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, MultiSelect, LucideAngularModule, ExperienceEntry],
+  imports: [Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, MultiSelect, LucideAngularModule, ExperienceEntry],
   templateUrl: './create.html',
   styleUrl: './create.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Create {
-  private readonly draft = inject(CvDraft);
-  private readonly router = inject(Router);
+  protected readonly draft = inject(CvDraft);
+  protected readonly activeTab = signal('info');
+  protected readonly mobilePreview = signal(false);
+  protected readonly tabs = [
+    { id: 'info', label: 'CV info', panelId: 'info-panel' },
+    { id: 'structure', label: 'Structure', panelId: 'structure-panel' }
+  ];
+  protected readonly structure = computed(() => ({ ...DEFAULT_CV_STRUCTURE, ...this.draft.current()?.structure }));
+  protected readonly DownloadIcon = Download;
+  protected readonly EyeIcon = Eye;
+  protected readonly PencilIcon = Pencil;
   readonly form = createCvForm();
+  private readonly formStatus = toSignal(this.form.statusChanges, { initialValue: this.form.status });
+  protected readonly canExport = computed(() => this.formStatus() === 'VALID');
   protected readonly languageOptions = LANGUAGES;
   protected readonly levelOptions = LANGUAGE_LEVELS;
   protected readonly PlusIcon = Plus;
@@ -64,7 +78,11 @@ export class Create {
       inject(PendingTasks).run(() => this.loadSaved(id));
     } else {
       this.populate(this.draft.current());
+      this.draft.save(this.snapshot());
     }
+    this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.draft.save(this.snapshot());
+    });
   }
 
   private async loadSaved(id: string): Promise<void> {
@@ -125,10 +143,10 @@ export class Create {
 
   protected submit(): void {
     this.form.markAllAsTouched();
-    if (this.form.invalid) {
+    if (!this.form.valid) {
       return;
     }
     this.draft.save(this.snapshot());
-    void this.router.navigate(['/preview']);
+    window.print();
   }
 }

@@ -17,9 +17,12 @@ describe('CV themes', () => {
     }]
   };
 
-  beforeEach(() => TestBed.configureTestingModule({
-    providers: [provideZonelessChangeDetection(), provideRouter(routes)]
-  }));
+  beforeEach(() => {
+    spyOn(window, 'print');
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(), provideRouter(routes)]
+    });
+  });
 
   it('defaults older CVs to the unchanged Basic theme', async () => {
     TestBed.inject(CvDraft).save(info);
@@ -80,7 +83,7 @@ describe('CV themes', () => {
     harness.routeNativeElement!.querySelector<HTMLInputElement>('input[name="cv-theme"][value="dark-blue"]')!.click();
     await harness.fixture.whenStable();
     await harness.navigateByUrl('/create', Create);
-    harness.routeNativeElement!.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    harness.routeNativeElement!.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await harness.fixture.whenStable();
     await harness.navigateByUrl('/preview', Preview);
     expect(draft.current()?.structure?.theme).toBe('dark-blue');

@@ -1,0 +1,23 @@
+@use '../../../../styles/tokens' as tokens;
+
+:host { display: block; }
+[role='tablist'] {
+  display: flex;
+  gap: tokens.$spacing-6;
+  border-bottom: 1px solid tokens.$border-color;
+}
+
+button {
+  min-height: tokens.$input-height;
+  padding: tokens.$spacing-3 tokens.$spacing-1;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: tokens.$text-secondary;
+  font: inherit;
+  font-weight: tokens.$font-weight-medium;
+  cursor: pointer;
+  &[aria-selected='true'] { color: tokens.$color-primary; border-bottom-color: currentColor; }
+  &:hover { color: tokens.$color-primary; }
+  &:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: 2px; }
+}
