@@ -47,6 +47,15 @@ export class ExperienceEntry {
     } } }
   }));
 
+  protected updateDescription(): void {
+    const form = this.form();
+    if (form.controls.description.disabled) return;
+    // editorUpdate fires after the editor's silent control write. Notify the parent
+    // without emitting on the control, which would make the editor reapply its content.
+    form.controls.description.markAsDirty();
+    form.updateValueAndValidity();
+  }
+
   protected format(command: (typeof this.formatting)[number]['command']): void {
     if (this.form().controls.description.disabled) return;
     const editor = this.editor()?.editor();

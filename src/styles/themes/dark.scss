@@ -1,4 +1,4 @@
-﻿@use './dark-document';
+@use './dark-document';
 
 .cv-document.cv-document.theme-dark {
   @include dark-document.document(#101114);

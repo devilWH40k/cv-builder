@@ -1,6 +1,6 @@
 import { SaveCvButton } from '../cv/save-cv-button';
 import { USED_TECHNOLOGY_ICONS } from '../cv/used-technologies';
-import { afterNextRender, ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import { afterNextRender, afterRenderEffect, ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, input, signal, viewChild, viewChildren } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Download, LucideAngularModule } from 'lucide-angular';
 import { Button } from '../../shared/ui/button/button';
@@ -13,11 +13,14 @@ import { formatCalendarDate } from '../../shared/ui/date-picker/date-value';
   selector: 'app-preview',
   imports: [SaveCvButton, RouterLink, Button, LucideAngularModule, StructureOptions, ResponsiveDrawer],
   templateUrl: './preview.html',
-  styleUrl: './preview.scss',
+  styleUrls: ['./preview.scss', './preview-pages.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Preview {
   readonly embedded = input(false);
+  private readonly pageCount = signal(1);
+  protected readonly pages = computed(() => Array.from({ length: this.pageCount() }, (_, index) => index));
+  private readonly pageFlows = viewChildren<ElementRef<HTMLElement>>('pageFlow');
   protected readonly previewScale = signal(1);
   private readonly viewport = viewChild<ElementRef<HTMLElement>>('viewport');
   private readonly destroyRef = inject(DestroyRef);
@@ -31,6 +34,20 @@ export class Preview {
   protected readonly formatDate = formatCalendarDate;
 
   constructor() {
+    afterRenderEffect((onCleanup) => {
+      this.info();
+      const flow = this.pageFlows()[0]?.nativeElement;
+      if (!flow) return;
+      const measure = () => {
+        const mm = 96 / 25.4;
+        const count = Math.max(1, Math.ceil((flow.scrollWidth + 32 * mm - 1) / (210 * mm)));
+        this.pageCount.set(count);
+      };
+      measure();
+      const observer = new ResizeObserver(measure);
+      for (const child of Array.from(flow.children)) observer.observe(child);
+      onCleanup(() => observer.disconnect());
+    });
     afterNextRender(() => {
       if (!this.embedded()) {
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -39,7 +56,6 @@ export class Preview {
       const viewport = this.viewport()?.nativeElement;
       if (!viewport) return;
       const observer = new ResizeObserver(([entry]) => {
-        // Fit the A4 sheet to the pane without changing document typography.
         if (entry.contentRect.width > 0) {
           this.previewScale.set(Math.min(1, entry.contentRect.width / (210 * 96 / 25.4)));
         }

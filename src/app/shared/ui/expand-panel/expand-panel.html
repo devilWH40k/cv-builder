@@ -1,0 +1,18 @@
+<section [attr.aria-labelledby]="panelId() + '-heading'">
+  <h3>
+    <button type="button" [id]="panelId() + '-heading'"
+      [attr.aria-expanded]="expanded()" [attr.aria-controls]="panelId()"
+      (click)="expanded.set(!expanded())">
+      <span class="heading">
+        {{ heading() }}
+        @if (count() > 0) {
+          <span class="count">{{ count() }}</span>
+        }
+      </span>
+      <lucide-icon [img]="expanded() ? ChevronUpIcon : ChevronDownIcon" [size]="20" aria-hidden="true" />
+    </button>
+  </h3>
+  <div class="panel-content" [id]="panelId()" [hidden]="!expanded()">
+    <ng-content />
+  </div>
+</section>
