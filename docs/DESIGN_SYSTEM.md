@@ -762,6 +762,11 @@ expands invalid sections, and focuses and scrolls to the first error instead of 
 width on screen; print styles restore full document sizing and hide editor UI.
 The standalone preview route remains available for existing links.
 
+The preview displays separate A4 sheets with page labels and a live page count.
+Each sheet has a 178mm by 265mm content area, matching the 16mm print margins.
+CSS columns flow content across sheets; print uses the same clipped column views
+with explicit page breaks. Page gaps, labels, and the count are screen-only.
+
 The editor and CV preview should be visually distinct.
 
 The CV preview should feel like a real document rather than another application card.

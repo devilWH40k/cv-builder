@@ -8,7 +8,15 @@
     </app-responsive-drawer>
     }
     <div #viewport class="document-viewport" role="region" aria-label="A4 CV preview" tabindex="0">
-      <article class="cv-document" [style.--preview-scale]="previewScale()" [class]="'theme-' + (structure().theme ?? 'basic')" aria-label="CV">
+      <p class="page-count" role="status">{{ pages().length }} {{ pages().length === 1 ? 'page' : 'pages' }}</p>
+      <div class="page-stack" [style.--preview-scale]="previewScale()">
+      @for (page of pages(); track page) {
+      <div class="preview-sheet">
+      <p class="page-label">Page {{ page + 1 }} of {{ pages().length }}</p>
+      <article class="cv-document" [class]="'theme-' + (structure().theme ?? 'basic')"
+        [class.continuation-page]="page > 0" [attr.aria-label]="'CV page ' + (page + 1)">
+        <div class="page-content">
+          <div #pageFlow class="page-flow" [style.transform]="'translateX(-' + (page * 210) + 'mm)'">
         <header class="cv-header">
           @if (photoUrl(); as url) {
           <img class="portrait" [src]="url" [alt]="cv.name + ' — portrait'" (error)="photoUrl.set(null)" />
@@ -22,8 +30,8 @@
         <div class="cv-body" [class.sidebar-left]="structure().sidebarPosition === 'left'">
           <div class="cv-main">
             @if (cv.experiences.length) {
-            <section class="cv-experience" aria-labelledby="cv-experience-title">
-              <h3 id="cv-experience-title">Experience:</h3>
+            <section class="cv-experience" [attr.aria-labelledby]="'cv-experience-title-' + page">
+              <h3 [id]="'cv-experience-title-' + page">Experience:</h3>
               @for (experience of cv.experiences; track $index) {
               <article class="experience-entry">
                 <h4>{{ experience.company }}@if (experience.position) { | {{ experience.position }}}</h4>
@@ -55,8 +63,8 @@
           </div>
           <aside class="cv-sidebar">
             @if (cv.languages.length) {
-            <section class="cv-languages" aria-labelledby="cv-languages-title">
-              <h3 id="cv-languages-title">Languages:</h3>
+            <section class="cv-languages" [attr.aria-labelledby]="'cv-languages-title-' + page">
+              <h3 [id]="'cv-languages-title-' + page">Languages:</h3>
               <ul>
                 @for (language of cv.languages; track $index) {
                 <li>{{ language.language }} - {{ shortLevel(language.level) }}</li>
@@ -65,8 +73,8 @@
             </section>
             }
             @if (cv.technologies.length) {
-            <section class="cv-technologies" [class.technology-blocks]="structure().sidebarTechnologiesView === 'blocks'" aria-labelledby="cv-technologies-title">
-              <h3 id="cv-technologies-title">Tools/Technologies</h3>
+            <section class="cv-technologies" [class.technology-blocks]="structure().sidebarTechnologiesView === 'blocks'" [attr.aria-labelledby]="'cv-technologies-title-' + page">
+              <h3 [id]="'cv-technologies-title-' + page">Tools/Technologies</h3>
               <ul>
                 @for (technology of cv.technologies; track technology) {
                 <li>{{ technology }}</li>
@@ -76,7 +84,12 @@
             }
           </aside>
         </div>
+          </div>
+        </div>
       </article>
+      </div>
+      }
+      </div>
     </div>
     @if (!embedded()) {
     <app-responsive-drawer #actionsMenu class="actions-menu" label="CV actions" panelId="actions-panel" side="right">
