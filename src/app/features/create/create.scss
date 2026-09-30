@@ -52,6 +52,10 @@ section > h3 {
 .add-entry { display: inline-block; }
 .empty-state { color: tokens.$text-muted; }
 
+.empty-state + .add-entry {
+  margin-top: tokens.$spacing-4;
+}
+
 a, .mobile-switch, .icon-button, .skill-chip button {
   @include buttons.secondary;
 }
