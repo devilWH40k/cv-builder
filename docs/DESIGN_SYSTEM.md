@@ -756,10 +756,16 @@ update the shared draft immediately. Tabs preserve form state and support arrow,
 Home, and End keys. On smaller screens, a toggle switches between editor and
 preview.
 
-Save, Export, and Back to home remain in the bottom action bar. Export is enabled
-only when the CV info form is valid. The embedded preview scales to its available
+Save and Export remain in the bottom action bar. A back arrow beside the editor
+heading and the header brand link navigate home. Export remains enabled; when the CV info form is invalid, it reveals the editor,
+expands invalid sections, and focuses and scrolls to the first error instead of printing. The embedded preview scales to its available
 width on screen; print styles restore full document sizing and hide editor UI.
 The standalone preview route remains available for existing links.
+
+The preview displays separate A4 sheets with page labels and a live page count.
+Each sheet has a 178mm by 265mm content area, matching the 16mm print margins.
+CSS columns flow content across sheets; print uses the same clipped column views
+with explicit page breaks. Page gaps, labels, and the count are screen-only.
 
 The editor and CV preview should be visually distinct.
 

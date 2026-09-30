@@ -404,17 +404,17 @@ describe('Combined CV editor', () => {
     providers: [provideZonelessChangeDetection(), provideRouter([])]
   }));
 
-  it('updates preview while invalid and gates export as rows are added and removed', async () => {
+  it('updates preview while invalid and only prints when the form is valid', async () => {
     const fixture = TestBed.createComponent(Create);
     const page: HTMLElement = fixture.nativeElement;
     const print = spyOn(window, 'print');
     await fixture.whenStable();
     const exportButton = page.querySelector<HTMLButtonElement>('.actions > app-button button')!;
-    expect(exportButton.disabled).toBeTrue();
+    expect(exportButton.disabled).toBeFalse();
     fixture.componentInstance.form.controls.name.setValue('Live name');
     await fixture.whenStable();
     expect(page.querySelector('.cv-info h2')?.textContent).toBe('Live name');
-    expect(exportButton.disabled).toBeTrue();
+    expect(exportButton.disabled).toBeFalse();
     exportButton.click();
     expect(print).not.toHaveBeenCalled();
     fixture.componentInstance.form.patchValue({ positionTitle: 'Developer', description: 'Summary' });
@@ -422,7 +422,7 @@ describe('Combined CV editor', () => {
     expect(exportButton.disabled).toBeFalse();
     page.querySelector<HTMLButtonElement>('[aria-label="Add language"]')!.click();
     await fixture.whenStable();
-    expect(exportButton.disabled).toBeTrue();
+    expect(exportButton.disabled).toBeFalse();
     page.querySelector<HTMLButtonElement>('[aria-label="Remove language 1"]')!.click();
     await fixture.whenStable();
     expect(exportButton.disabled).toBeFalse();

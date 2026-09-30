@@ -1,0 +1,47 @@
+@use '../../../../styles/tokens' as tokens;
+@use '../button/variants' as buttons;
+
+:host {
+  display: block;
+  min-width: 0;
+  margin-bottom: tokens.$spacing-6;
+}
+
+h3 { margin: 0; }
+
+button {
+  @include buttons.ghost;
+  & {
+    width: 100%;
+    justify-content: space-between;
+    gap: tokens.$spacing-4;
+    padding-inline: 0;
+    font-size: tokens.$font-size-xl;
+    font-weight: tokens.$font-weight-semibold;
+    text-align: left;
+  }
+}
+
+lucide-icon { display: flex; flex-shrink: 0; }
+.panel-content { padding-top: tokens.$spacing-4; }
+
+.heading {
+  display: inline-flex;
+  align-items: center;
+  gap: tokens.$spacing-2;
+}
+
+.count {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  min-width: tokens.$spacing-6;
+  min-height: tokens.$spacing-6;
+  aspect-ratio: 1;
+  padding: tokens.$spacing-1;
+  border-radius: tokens.$radius-full;
+  background: tokens.$color-primary;
+  color: tokens.$text-on-primary;
+  font-size: tokens.$font-size-xs;
+  line-height: 1;
+}

@@ -16,7 +16,8 @@
     <app-input [inputId]="'experience-position-' + index()" label="Position (optional)"
       autocomplete="organization-title" [control]="form().controls.position" />
   </div>
-  <fieldset class="period">
+  <fieldset class="period" tabindex="-1"
+    [attr.aria-invalid]="form().touched && (form().hasError('dateOrder') || form().hasError('invalidDate'))">
     <legend>Period</legend>
     <label class="precision" [for]="'date-format-' + index()">Date format
       <select [id]="'date-format-' + index()" [value]="dateMode()" (change)="changeMode($event)">
@@ -66,6 +67,7 @@
       </button>
       }
     </div>
-    <angular-tiptap-editor [formControl]="form().controls.description" [config]="editorConfig()" />
+    <angular-tiptap-editor [formControl]="form().controls.description" [config]="editorConfig()"
+      (editorUpdate)="updateDescription()" />
   </div>
 </div>

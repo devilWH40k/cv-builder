@@ -1,6 +1,6 @@
 import { SaveCvButton } from '../cv/save-cv-button';
 import { SavedCvs } from '../cv/saved-cvs';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, PendingTasks, signal } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, computed, DestroyRef, ElementRef, inject, Injector, PendingTasks, signal, viewChild, viewChildren } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { startWith } from 'rxjs';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -14,16 +14,17 @@ import { ExperienceEntry } from './experience-entry/experience-entry';
 import { CvDraft, CvInfo, DEFAULT_CV_STRUCTURE } from '../cv/cv-draft';
 import { Preview } from '../preview/preview';
 import { StructureOptions } from '../preview/structure-options/structure-options';
+import { ExpandPanel } from '../../shared/ui/expand-panel/expand-panel';
 import { Tabs } from '../../shared/ui/tabs/tabs';
 import { LANGUAGES, LANGUAGE_LEVELS } from '../cv/languages';
 import { Select } from '../../shared/ui/select/select';
-import { Download, Eye, Pencil, LucideAngularModule, Plus, X } from 'lucide-angular';
+import { ArrowLeft, Download, Eye, Pencil, LucideAngularModule, X } from 'lucide-angular';
 import { MultiSelect } from '../../shared/ui/multi-select/multi-select';
 import { TECHNOLOGY_GROUPS } from '../cv/technologies';
 
 @Component({
   selector: 'app-create',
-  imports: [Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, MultiSelect, LucideAngularModule, ExperienceEntry],
+  imports: [ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, MultiSelect, LucideAngularModule, ExperienceEntry],
   templateUrl: './create.html',
   styleUrl: './create.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -37,15 +38,16 @@ export class Create {
     { id: 'structure', label: 'Structure', panelId: 'structure-panel' }
   ];
   protected readonly structure = computed(() => ({ ...DEFAULT_CV_STRUCTURE, ...this.draft.current()?.structure }));
+  protected readonly ArrowLeftIcon = ArrowLeft;
   protected readonly DownloadIcon = Download;
   protected readonly EyeIcon = Eye;
   protected readonly PencilIcon = Pencil;
   readonly form = createCvForm();
-  private readonly formStatus = toSignal(this.form.statusChanges, { initialValue: this.form.status });
-  protected readonly canExport = computed(() => this.formStatus() === 'VALID');
+  private readonly injector = inject(Injector);
+  private readonly formElement = viewChild<ElementRef<HTMLFormElement>>('cvForm');
+  private readonly panels = viewChildren(ExpandPanel);
   protected readonly languageOptions = LANGUAGES;
   protected readonly levelOptions = LANGUAGE_LEVELS;
-  protected readonly PlusIcon = Plus;
   protected readonly XIcon = X;
   protected readonly technologyGroups = TECHNOLOGY_GROUPS;
   private readonly selectedTechnologies = toSignal(
@@ -143,9 +145,30 @@ export class Create {
 
   protected submit(): void {
     this.form.markAllAsTouched();
+
     if (!this.form.valid) {
+      this.activeTab.set('info');
+      this.mobilePreview.set(false);
+
+      for (const panel of this.panels()) {
+        if ((panel.panelId() === 'experience-panel' && this.form.controls.experiences.invalid) ||
+          (panel.panelId() === 'languages-panel' && this.form.controls.languages.invalid)) {
+          panel.expand();
+        }
+      }
+
+      afterNextRender(() => {
+        const error = this.formElement()?.nativeElement.querySelector<HTMLElement>('[aria-invalid="true"]');
+        if (!error) return;
+        error.focus({ preventScroll: true });
+        error.scrollIntoView({
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+          block: 'center'
+        });
+      }, { injector: this.injector });
       return;
     }
+
     this.draft.save(this.snapshot());
     window.print();
   }
