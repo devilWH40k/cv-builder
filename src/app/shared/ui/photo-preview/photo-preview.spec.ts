@@ -1,10 +1,15 @@
-import { provideZonelessChangeDetection } from '@angular/core';
+import { Component, provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Toasts } from '../toast/toast';
 import { PhotoPreview } from './photo-preview';
+
+@Component({ imports: [Toasts], template: '<app-toasts />' })
+class ToastHost {}
 
 describe('PhotoPreview', () => {
   let fixture: ComponentFixture<PhotoPreview>;
   let page: HTMLElement;
+  let toastFixture: ComponentFixture<ToastHost>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -21,7 +26,9 @@ describe('PhotoPreview', () => {
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve));
     fixture = TestBed.createComponent(PhotoPreview);
     fixture.componentRef.setInput('file', new File([blob!], 'portrait.png', { type: 'image/png' }));
-    page = fixture.nativeElement;
+    toastFixture = TestBed.createComponent(ToastHost);
+    document.body.append(fixture.nativeElement);
+    page = document.body;
     fixture.detectChanges();
     await fixture.whenStable();
     await page.querySelector<HTMLImageElement>('.source-photo')!.decode();
@@ -98,7 +105,7 @@ describe('PhotoPreview', () => {
   it('reports decode errors with a dismissible custom toast and prevents applying an unreadable image', async () => {
     page.querySelector('.source-photo')!.dispatchEvent(new Event('error'));
     await fixture.whenStable();
-    const toast = page.querySelector('dialog app-toasts .toast.danger')!;
+    const toast = page.querySelector('app-toasts .toast.danger')!;
     expect(toast.getAttribute('role')).toBe('alert');
     expect(toast.textContent).toContain('could not be opened');
     expect(page.querySelector('[role="status"]')).toBeNull();
@@ -113,7 +120,7 @@ describe('PhotoPreview', () => {
     const apply = page.querySelector<HTMLButtonElement>('app-button button')!;
     apply.click();
     await fixture.whenStable();
-    const toast = page.querySelector('dialog app-toasts .toast.danger')!;
+    const toast = page.querySelector('app-toasts .toast.danger')!;
     expect(toast.textContent).toContain('The crop could not be applied. Please try again.');
     expect(page.querySelector('dialog')!.open).toBeTrue();
     expect(apply.disabled).toBeFalse();

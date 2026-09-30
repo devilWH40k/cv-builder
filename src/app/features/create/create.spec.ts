@@ -2,6 +2,9 @@ import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Create } from './create';
+import { ExperiencesDialog } from './experiences-dialog/experiences-dialog';
+import { SavedCvs } from '../cv/saved-cvs';
+import { By } from '@angular/platform-browser';
 import { CvDraft } from '../cv/cv-draft';
 
 describe('CV form', () => {
@@ -39,6 +42,27 @@ describe('CV form', () => {
     input.files = transfer.files;
     input.dispatchEvent(new Event('change'));
   }
+
+  it('loads a library experience once and retains its ID in the draft', async () => {
+    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([]);
+    page.querySelector<HTMLButtonElement>('[aria-label="Load experiences"] button')!.click();
+    await fixture.whenStable();
+    const dialog = fixture.debugElement.query(By.directive(ExperiencesDialog)).componentInstance as ExperiencesDialog;
+    const record = { id: 'library-1', updatedAt: 1, experience: {
+      company: 'Example', position: '', startDate: '', endDate: '', isCurrent: false,
+      technologies: [], description: ''
+    } };
+    dialog.applied.emit([record, record]);
+    await fixture.whenStable();
+    expect(fixture.componentInstance.form.controls.experiences.length).toBe(1);
+    expect(TestBed.inject(CvDraft).current()?.experiences[0].savedExperienceId).toBe(record.id);
+    page.querySelector<HTMLButtonElement>('[aria-label="Load experiences"] button')!.click();
+    await fixture.whenStable();
+    const reopened = fixture.debugElement.query(By.directive(ExperiencesDialog)).componentInstance as ExperiencesDialog;
+    expect(reopened.linkedIds()).toEqual([record.id]);
+    reopened.applied.emit([record]);
+    expect(fixture.componentInstance.form.controls.experiences.length).toBe(1);
+  });
 
   it('starts neutral with a three-row textarea and fixed error space', async () => {
     expect(page.querySelector('textarea')?.rows).toBe(3);
@@ -213,7 +237,7 @@ describe('CV form', () => {
       await fixture.whenStable();
       expect(fixture.componentInstance.form.controls.photo.value).toBeNull();
       expect(fixture.componentInstance.form.controls.photo.valid).toBeTrue();
-      expect(page.querySelector('app-photo-preview dialog')).not.toBeNull();
+      expect(document.querySelector('.dialog-overlay dialog.photo-preview-dialog')).not.toBeNull();
       expect(page.querySelector('.filename')?.textContent).toBe('');
     });
   }
@@ -231,14 +255,14 @@ describe('CV form', () => {
     await fixture.whenStable();
     expect(control.value).toBe(oldPhoto);
     expect(control.pristine).toBeTrue();
-    page.querySelector<HTMLButtonElement>('app-photo-preview .cancel')!.click();
+    document.querySelector<HTMLButtonElement>('.dialog-overlay .cancel')!.click();
     await fixture.whenStable();
     expect(control.value).toBe(oldPhoto);
     expect(page.querySelector('app-photo-preview')).toBeNull();
 
     selectFile(newPhoto);
     await fixture.whenStable();
-    const image = page.querySelector<HTMLImageElement>('app-photo-preview .source-photo')!;
+    const image = document.querySelector<HTMLImageElement>('.dialog-overlay .source-photo')!;
     await image.decode();
     image.dispatchEvent(new Event('load'));
     await fixture.whenStable();
@@ -248,7 +272,7 @@ describe('CV form', () => {
         resolve(value);
       });
     });
-    page.querySelector<HTMLButtonElement>('app-photo-preview app-button button')!.click();
+    document.querySelector<HTMLButtonElement>('.dialog-overlay app-button button')!.click();
     const cropped = await changed;
     await fixture.whenStable();
     expect(cropped?.name).toBe('new.png');
@@ -275,7 +299,7 @@ describe('CV form', () => {
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve));
     selectFile(new File([blob!], 'photo.png', { type: 'image/png' }));
     await fixture.whenStable();
-    const image = page.querySelector<HTMLImageElement>('app-photo-preview .source-photo')!;
+    const image = document.querySelector<HTMLImageElement>('.dialog-overlay .source-photo')!;
     await image.decode();
     image.dispatchEvent(new Event('load'));
     await fixture.whenStable();
@@ -285,7 +309,7 @@ describe('CV form', () => {
         resolve();
       });
     });
-    page.querySelector<HTMLButtonElement>('app-photo-preview app-button button')!.click();
+    document.querySelector<HTMLButtonElement>('.dialog-overlay app-button button')!.click();
     await applied;
     await fixture.whenStable();
     expect(page.querySelector('#photo-error')?.textContent?.trim()).toBe('');

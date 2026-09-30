@@ -131,21 +131,21 @@ describe('CV preview', () => {
     const harness = await RouterTestingHarness.create('/preview');
     await harness.fixture.whenStable();
     const page = harness.routeNativeElement!;
-    page.querySelector<HTMLButtonElement>('[aria-label="Open Structure"]')!.click();
+    document.querySelector<HTMLButtonElement>('[aria-label="Open Structure"]')!.click();
     await harness.fixture.whenStable();
-    expect(page.querySelector('#structure-panel')!.matches(':modal')).toBeTrue();
-    page.querySelector<HTMLInputElement>('input[value="left"]')!.click();
+    expect(document.querySelector('#structure-panel')!.getAttribute('aria-modal') === 'true').toBeTrue();
+    document.querySelector<HTMLInputElement>('input[value="left"]')!.click();
     await harness.fixture.whenStable();
     expect(page.querySelector('.cv-body')!.classList.contains('sidebar-left')).toBeTrue();
-    page.querySelector<HTMLButtonElement>('[aria-label="Close Structure"]')!.click();
+    document.querySelector<HTMLButtonElement>('[aria-label="Close Structure"]')!.click();
     await harness.fixture.whenStable();
-    page.querySelector<HTMLButtonElement>('[aria-label="Open CV actions"]')!.click();
+    document.querySelector<HTMLButtonElement>('[aria-label="Open CV actions"]')!.click();
     await harness.fixture.whenStable();
-    expect(page.querySelector('#actions-panel')!.matches(':modal')).toBeTrue();
+    expect(document.querySelector('#actions-panel')!.getAttribute('aria-modal') === 'true').toBeTrue();
     print.and.callFake(() => {
       expect(page.querySelector<HTMLDialogElement>('#actions-panel')!.open).toBeFalse();
     });
-    page.querySelector<HTMLButtonElement>('.actions app-button button')!.click();
+    document.querySelector<HTMLButtonElement>('.actions app-button button')!.click();
     expect(print).toHaveBeenCalledTimes(1);
   });
 
@@ -344,7 +344,7 @@ describe('CV preview', () => {
     expect(section.getBoundingClientRect().right)
       .toBeLessThan(page.querySelector('.cv-languages')!.getBoundingClientRect().left);
     const create = await harness.navigateByUrl('/create', Create);
-    expect(create.form.controls.experiences.getRawValue()).toEqual(experiences);
+    expect(create.form.controls.experiences.getRawValue()).toEqual(experiences.map((experience) => ({ ...experience, savedExperienceId: null })));
     expect(harness.routeNativeElement?.querySelector('[contenteditable]')?.textContent).toContain('banking platform');
   });
 

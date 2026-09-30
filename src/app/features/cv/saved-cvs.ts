@@ -1,4 +1,5 @@
 import { DestroyRef, inject, Injectable, InjectionToken, signal } from '@angular/core';
+import { CvExperience, SavedExperience } from './experience';
 import { CvInfo } from './cv-draft';
 import { parseLegacyCvs, LEGACY_STORAGE_KEY } from './legacy-saved-cvs';
 
@@ -70,6 +71,20 @@ export class SavedCvs {
     return record?.info ?? null;
   }
 
+  async listExperiences(): Promise<SavedExperience[]> {
+    const records = await this.request<SavedExperience[]>('readonly', (store) => store.getAll(), 'experiences');
+    return records.sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+
+  async saveExperience(experience: CvExperience): Promise<string> {
+    const id = experience.savedExperienceId ?? crypto.randomUUID();
+    const record: SavedExperience = {
+      id, experience: structuredClone({ ...experience, savedExperienceId: id }), updatedAt: Date.now()
+    };
+    await this.request('readwrite', (store) => store.put(record), 'experiences');
+    return id;
+  }
+
   private async updateStorageEstimate(): Promise<void> {
     try {
       const estimate = await navigator.storage?.estimate?.();
@@ -87,11 +102,11 @@ export class SavedCvs {
   }
 
   private async request<T>(
-    mode: IDBTransactionMode, operation: (store: IDBObjectStore) => IDBRequest<T>
+    mode: IDBTransactionMode, operation: (store: IDBObjectStore) => IDBRequest<T>, table = 'cvs'
   ): Promise<T> {
     const database = await this.open();
-    const transaction = database.transaction('cvs', mode);
-    const request = operation(transaction.objectStore('cvs'));
+    const transaction = database.transaction(table, mode);
+    const request = operation(transaction.objectStore(table));
     await completed(transaction);
     return request.result;
   }
@@ -99,12 +114,13 @@ export class SavedCvs {
   private open(): Promise<IDBDatabase> {
     if (!this.database) {
       this.database = new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(this.databaseName, 1);
+        const request = indexedDB.open(this.databaseName, 2);
         let blocked = false;
         request.onupgradeneeded = () => {
           const database = request.result;
-          database.createObjectStore('cvs', { keyPath: 'id' });
-          database.createObjectStore('metadata');
+          if (!database.objectStoreNames.contains('cvs')) database.createObjectStore('cvs', { keyPath: 'id' });
+          if (!database.objectStoreNames.contains('metadata')) database.createObjectStore('metadata');
+          if (!database.objectStoreNames.contains('experiences')) database.createObjectStore('experiences', { keyPath: 'id' });
         };
         request.onerror = () => reject(request.error);
         request.onblocked = () => {

@@ -3,7 +3,7 @@
   [attr.aria-expanded]="opened()" (click)="open()">
   <lucide-icon [img]="side() === 'left' ? StructureIcon : ActionsIcon" [size]="24" aria-hidden="true" />
 </button>
-<dialog #panel [id]="panelId()" [open]="!compact()" [attr.aria-label]="label()" [attr.role]="compact() ? 'dialog' : 'region'"
+<dialog appDialogOverlay #panel [id]="panelId()" [open]="!compact()" [attr.aria-label]="label()" [attr.role]="compact() ? 'dialog' : 'region'"
   [class.from-right]="side() === 'right'" (click)="dismissBackdrop($event)"
   (cancel)="close()" (close)="opened.set(false)">
   <header class="drawer-header">

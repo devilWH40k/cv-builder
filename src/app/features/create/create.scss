@@ -52,7 +52,8 @@ section > h3 {
 .add-entry { display: inline-block; }
 .empty-state { color: tokens.$text-muted; }
 
-.empty-state + .add-entry {
+.empty-state + .add-entry,
+.empty-state + .experience-actions {
   margin-top: tokens.$spacing-4;
 }
 
@@ -217,3 +218,5 @@ a, .mobile-switch, .icon-button, .skill-chip button {
   .editor-layout { display: block; }
   .preview-pane { display: block; position: static; padding: 0; border: 0; }
 }
+
+.experience-actions { display: flex; flex-wrap: wrap; align-items: center; gap: tokens.$spacing-3; }

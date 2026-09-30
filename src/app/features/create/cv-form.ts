@@ -6,6 +6,7 @@ import { parseCalendarDate } from '../../shared/ui/date-picker/date-value';
 
 export function createExperienceForm(experience?: CvExperience) {
   const form = new FormGroup({
+    savedExperienceId: new FormControl<string | null>(experience?.savedExperienceId ?? null),
     company: new FormControl(experience?.company ?? '', {
       nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)]
     }),
