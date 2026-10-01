@@ -3,14 +3,12 @@ import {
   inject, input, output, signal, viewChild
 } from '@angular/core';
 import { Button } from '../button/button';
-import { Toasts } from '../toast/toast';
+import { DialogOverlay } from '../dialog/dialog-overlay';
 import { ToastService } from '../toast/toast.service';
 
 @Component({
   selector: 'app-photo-preview',
-  imports: [Button, Toasts],
-  // Keep notifications inside the modal layer and scoped to this preview.
-  providers: [ToastService],
+  imports: [Button, DialogOverlay],
   templateUrl: './photo-preview.html',
   styleUrl: './photo-preview.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,6 +25,7 @@ export class PhotoPreview {
   protected readonly loadFailed = signal(false);
   protected readonly maximumSize = computed(() => Math.min(this.dimensions().width, this.dimensions().height));
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+  private readonly overlay = viewChild.required(DialogOverlay);
   private readonly image = viewChild.required<ElementRef<HTMLImageElement>>('image');
   private readonly destroyRef = inject(DestroyRef);
   private readonly toasts = inject(ToastService);
@@ -36,7 +35,7 @@ export class PhotoPreview {
     afterNextRender(() => {
       const url = URL.createObjectURL(this.file());
       this.source.set(url);
-      this.dialog().nativeElement.showModal();
+      this.overlay().open();
       this.destroyRef.onDestroy(() => URL.revokeObjectURL(url));
     });
   }
@@ -107,7 +106,7 @@ export class PhotoPreview {
   }
 
   protected cancel(): void {
-    this.dialog().nativeElement.close();
+    this.overlay().close();
     this.cancelled.emit();
   }
 
@@ -127,7 +126,7 @@ export class PhotoPreview {
       if (this.destroyRef.destroyed) return;
       if (!blob) throw new Error('Photo export failed');
       const file = new File([blob], this.file().name.replace(/\.[^.]+$/, '') + '.png', { type: 'image/png' });
-      this.dialog().nativeElement.close();
+      this.overlay().close();
       this.applied.emit(file);
     } catch {
       if (!this.destroyRef.destroyed && this.dialog().nativeElement.open) {

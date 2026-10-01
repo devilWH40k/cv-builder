@@ -1,3 +1,4 @@
+import { CvPdf } from '../cv/cv-pdf';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -7,7 +8,7 @@ import { Create } from '../create/create';
 import { CvDraft } from '../cv/cv-draft';
 
 describe('CV preview', () => {
-  let print: jasmine.Spy;
+  let download: jasmine.Spy;
   const info = {
     name: 'Alex Morgan',
     positionTitle: 'Full Stack Developer',
@@ -19,7 +20,6 @@ describe('CV preview', () => {
   };
 
   beforeEach(() => {
-    print = spyOn(window, 'print');
     const matchMedia = window.matchMedia.bind(window);
     spyOn(window, 'matchMedia').and.callFake((query) => {
       const media = matchMedia(query);
@@ -29,6 +29,7 @@ describe('CV preview', () => {
     TestBed.configureTestingModule({
       providers: [provideZonelessChangeDetection(), provideRouter(routes)]
     });
+    download = spyOn(TestBed.inject(CvPdf), 'download').and.resolveTo();
   });
 
 
@@ -131,22 +132,22 @@ describe('CV preview', () => {
     const harness = await RouterTestingHarness.create('/preview');
     await harness.fixture.whenStable();
     const page = harness.routeNativeElement!;
-    page.querySelector<HTMLButtonElement>('[aria-label="Open Structure"]')!.click();
+    document.querySelector<HTMLButtonElement>('[aria-label="Open Structure"]')!.click();
     await harness.fixture.whenStable();
-    expect(page.querySelector('#structure-panel')!.matches(':modal')).toBeTrue();
-    page.querySelector<HTMLInputElement>('input[value="left"]')!.click();
+    expect(document.querySelector('#structure-panel')!.getAttribute('aria-modal') === 'true').toBeTrue();
+    document.querySelector<HTMLInputElement>('input[value="left"]')!.click();
     await harness.fixture.whenStable();
     expect(page.querySelector('.cv-body')!.classList.contains('sidebar-left')).toBeTrue();
-    page.querySelector<HTMLButtonElement>('[aria-label="Close Structure"]')!.click();
+    document.querySelector<HTMLButtonElement>('[aria-label="Close Structure"]')!.click();
     await harness.fixture.whenStable();
-    page.querySelector<HTMLButtonElement>('[aria-label="Open CV actions"]')!.click();
+    document.querySelector<HTMLButtonElement>('[aria-label="Open CV actions"]')!.click();
     await harness.fixture.whenStable();
-    expect(page.querySelector('#actions-panel')!.matches(':modal')).toBeTrue();
-    print.and.callFake(() => {
+    expect(document.querySelector('#actions-panel')!.getAttribute('aria-modal') === 'true').toBeTrue();
+    download.and.callFake(async () => {
       expect(page.querySelector<HTMLDialogElement>('#actions-panel')!.open).toBeFalse();
     });
-    page.querySelector<HTMLButtonElement>('.actions app-button button')!.click();
-    expect(print).toHaveBeenCalledTimes(1);
+    document.querySelector<HTMLButtonElement>('.actions app-button button')!.click();
+    expect(download).toHaveBeenCalledTimes(1);
   });
 
   it('omits empty technology lines in comma-separated view', async () => {
@@ -185,7 +186,7 @@ describe('CV preview', () => {
     expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('Your CV');
   });
 
-  it('shows live information in the editor and prints on Export without navigating', async () => {
+  it('shows live information in the editor and downloads a PDF on Export without navigating', async () => {
     const harness = await RouterTestingHarness.create();
     const create = await harness.navigateByUrl('/create', Create);
     create.form.setValue(info);
@@ -205,7 +206,7 @@ describe('CV preview', () => {
     expect(getComputedStyle(document).color).toBe('rgb(0, 0, 0)');
     expect(getComputedStyle(document).backgroundColor).toBe('rgb(255, 255, 255)');
     page.querySelector<HTMLButtonElement>('.actions > app-button button')!.click();
-    expect(window.print).toHaveBeenCalledTimes(1);
+    expect(TestBed.inject(CvPdf).download).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(Router).url).toBe('/create');
     expect(page.querySelector<HTMLInputElement>('#name')?.value).toBe(info.name);
     page.querySelector<HTMLAnchorElement>('a[routerLink="/"]')!.click();
@@ -344,7 +345,7 @@ describe('CV preview', () => {
     expect(section.getBoundingClientRect().right)
       .toBeLessThan(page.querySelector('.cv-languages')!.getBoundingClientRect().left);
     const create = await harness.navigateByUrl('/create', Create);
-    expect(create.form.controls.experiences.getRawValue()).toEqual(experiences);
+    expect(create.form.controls.experiences.getRawValue()).toEqual(experiences.map((experience) => ({ ...experience, savedExperienceId: null })));
     expect(harness.routeNativeElement?.querySelector('[contenteditable]')?.textContent).toContain('banking platform');
   });
 

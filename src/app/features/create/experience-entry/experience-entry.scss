@@ -157,3 +157,11 @@ select:focus-visible, input:focus-visible {
   object-fit: contain;
   margin-right: tokens.$spacing-2;
 }
+
+.entry-actions { display: flex; gap: tokens.$spacing-1; }
+
+.entry-actions button {
+  width: tokens.$button-height-sm;
+  min-height: tokens.$button-height-sm;
+  padding: tokens.$spacing-1;
+}

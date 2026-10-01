@@ -1,3 +1,4 @@
+import { CvPdf } from '../cv/cv-pdf';
 import { SaveCvButton } from '../cv/save-cv-button';
 import { USED_TECHNOLOGY_ICONS } from '../cv/used-technologies';
 import { afterNextRender, afterRenderEffect, ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, input, signal, viewChild, viewChildren } from '@angular/core';
@@ -17,6 +18,7 @@ import { formatCalendarDate } from '../../shared/ui/date-picker/date-value';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Preview {
+  protected readonly pdf = inject(CvPdf);
   readonly embedded = input(false);
   private readonly pageCount = signal(1);
   protected readonly pages = computed(() => Array.from({ length: this.pageCount() }, (_, index) => index));
@@ -76,7 +78,8 @@ export class Preview {
   }
 
   protected export(): void {
-    window.print();
+    const cv = this.info();
+    if (cv) void this.pdf.download(cv);
   }
 
   protected shortLevel(level: string): string {

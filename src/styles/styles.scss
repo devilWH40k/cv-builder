@@ -32,7 +32,24 @@ body {
 }
 
 @media screen {
-  body:has(app-responsive-drawer dialog:modal) {
+  body:has(> .dialog-overlay) {
     overflow: hidden;
   }
 }
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: tokens.$z-modal;
+  display: grid;
+  place-items: center;
+  background: rgba(tokens.$color-gray-900, 0.4);
+}
+.dialog-overlay > dialog {
+  position: relative;
+  inset: auto;
+  margin: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media print { .dialog-overlay { display: none; } }
