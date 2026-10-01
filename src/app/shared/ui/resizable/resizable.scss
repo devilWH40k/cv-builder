@@ -1,0 +1,36 @@
+@use '../../../../styles/tokens' as tokens;
+
+:host {
+  display: block;
+  position: relative;
+  flex-shrink: 0;
+  break-inside: avoid;
+  cursor: nwse-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+:host(:hover), :host(:focus-visible), :host(.resizing) {
+  outline: 2px solid tokens.$color-primary;
+  outline-offset: 2px;
+}
+
+.resize-grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: tokens.$spacing-6;
+  height: tokens.$spacing-6;
+  border-radius: tokens.$radius-sm;
+  color: tokens.$text-on-primary;
+  background: tokens.$color-primary;
+  pointer-events: none;
+}
+
+@media print {
+  :host, :host(:hover), :host(:focus-visible), :host(.resizing) { outline: none; }
+  .resize-grip { display: none; }
+}

@@ -18,8 +18,12 @@
         <div class="page-content">
           <div #pageFlow class="page-flow" [style.transform]="'translateX(-' + (page * 210) + 'mm)'">
         <header class="cv-header">
-          @if (photoUrl(); as url) {
-          <img class="portrait" [src]="url" [alt]="cv.name + ' — portrait'" (error)="photoUrl.set(null)" />
+          @if (structure().showPhoto !== false && photoUrl(); as url) {
+          <app-resizable [size]="photoSize()" [minSize]="minPhotoSize" [maxSize]="maxPhotoSize"
+            [step]="photoSizeStep" label="Photo size" [valueText]="photoSizeMm() + ' millimeters'"
+            (sizeChange)="resizePhoto($event)">
+          <img class="portrait" draggable="false" [src]="url" [alt]="cv.name + ' — portrait'" (error)="photoUrl.set(null)" />
+          </app-resizable>
           }
           <div class="cv-info">
             <h2>{{ cv.name }}</h2>

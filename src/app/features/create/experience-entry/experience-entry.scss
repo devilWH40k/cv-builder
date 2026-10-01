@@ -165,3 +165,11 @@ select:focus-visible, input:focus-visible {
   min-height: tokens.$button-height-sm;
   padding: tokens.$spacing-1;
 }
+
+.entry-actions .save-btn {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-1;
+  width: auto;
+  font-size: tokens.$font-size-sm;
+}
