@@ -55,14 +55,25 @@ describe('PDF export', () => {
       canvas.width = canvas.height = 4;
       const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((result) => result ? resolve(result) : reject()));
       const definition = await buildCvPdf({ ...cv, photo: new File([blob], 'photo.png', { type: 'image/png' }),
-        structure: { theme, sidebarPosition: 'left', technologiesView: 'blocks', sidebarTechnologiesView: 'blocks' },
+        structure: { photoSizeMm: 52, theme, sidebarPosition: 'left', technologiesView: 'blocks', sidebarTechnologiesView: 'blocks' },
       });
       const content = JSON.stringify(definition.content);
       expect(content.indexOf('Languages:')).toBeLessThan(content.indexOf('Experience:'));
       expect(content).toContain('data:image/png;base64,');
+      expect(content).toContain('"width":' + (52 * 72 / 25.4));
+      expect(content).toContain('"height":' + (52 * 72 / 25.4));
       expect((await pdfMake.createPdf(definition).getBuffer()).length).toBeGreaterThan(1000);
     });
   }
+
+  it('omits a hidden photo from the PDF without decoding it', async () => {
+    const definition = await buildCvPdf({ ...cv,
+      photo: new File(['invalid'], 'photo.png', { type: 'image/png' }),
+      structure: { showPhoto: false, sidebarPosition: 'right', technologiesView: 'comma-separated' }
+    });
+    expect(JSON.stringify(definition.content)).not.toContain('"image":');
+    expect(JSON.stringify(definition.content)).toContain(cv.name);
+  });
 
   it('reports export failures and restores the ability to retry', async () => {
     const service = TestBed.inject(CvPdf);

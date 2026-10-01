@@ -2,6 +2,17 @@
   <h2 id="structure-title">Structure</h2>
   <div class="options">
     <fieldset>
+      <legend>Photo</legend>
+      <div class="radio-row">
+        <app-radio name="photo-visibility" value="show" label="Show"
+          [checked]="structure().showPhoto !== false"
+          (selected)="update({ showPhoto: true })" />
+        <app-radio name="photo-visibility" value="hide" label="Hide"
+          [checked]="structure().showPhoto === false"
+          (selected)="update({ showPhoto: false })" />
+      </div>
+    </fieldset>
+    <fieldset>
       <legend>Theme</legend>
       <div class="radio-row">
         @for (theme of themes; track theme.value) {

@@ -1,3 +1,5 @@
+import { Resizable } from '../../shared/ui/resizable/resizable';
+import { CSS_PIXELS_PER_MM, CV_PHOTO_MIN_MM, CV_PHOTO_MAX_MM, cvPhotoSizeMm } from '../cv/cv-photo-size';
 import { CvPdf } from '../cv/cv-pdf';
 import { SaveCvButton } from '../cv/save-cv-button';
 import { USED_TECHNOLOGY_ICONS } from '../cv/used-technologies';
@@ -12,7 +14,7 @@ import { formatCalendarDate } from '../../shared/ui/date-picker/date-value';
 
 @Component({
   selector: 'app-preview',
-  imports: [SaveCvButton, RouterLink, Button, LucideAngularModule, StructureOptions, ResponsiveDrawer],
+  imports: [Resizable, SaveCvButton, RouterLink, Button, LucideAngularModule, StructureOptions, ResponsiveDrawer],
   templateUrl: './preview.html',
   styleUrls: ['./preview.scss', './preview-pages.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -29,6 +31,11 @@ export class Preview {
   protected readonly draft = inject(CvDraft);
   protected readonly info = this.draft.current;
   protected readonly structure = computed(() => ({ ...DEFAULT_CV_STRUCTURE, ...this.info()?.structure }));
+  protected readonly photoSizeMm = computed(() => cvPhotoSizeMm(this.structure().photoSizeMm));
+  protected readonly photoSize = computed(() => this.photoSizeMm() * CSS_PIXELS_PER_MM);
+  protected readonly minPhotoSize = CV_PHOTO_MIN_MM * CSS_PIXELS_PER_MM;
+  protected readonly maxPhotoSize = CV_PHOTO_MAX_MM * CSS_PIXELS_PER_MM;
+  protected readonly photoSizeStep = CSS_PIXELS_PER_MM;
   private readonly photo = computed(() => this.info()?.photo);
   protected readonly photoUrl = signal<string | null>(null);
   protected readonly technologyIcons = USED_TECHNOLOGY_ICONS;
@@ -75,6 +82,11 @@ export class Preview {
       this.photoUrl.set(url);
       onCleanup(() => URL.revokeObjectURL(url));
     });
+  }
+
+  protected resizePhoto(size: number): void {
+    const photoSizeMm = cvPhotoSizeMm(Math.round(size / CSS_PIXELS_PER_MM * 10) / 10);
+    this.draft.updateStructure({ ...this.structure(), photoSizeMm });
   }
 
   protected export(): void {

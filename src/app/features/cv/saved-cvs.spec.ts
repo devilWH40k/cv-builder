@@ -86,7 +86,7 @@ describe('IndexedDB saved CVs', () => {
 
   it('preserves structure options when saving and reopening a CV', async () => {
     const structuredInfo: CvInfo = { ...info,
-      structure: { theme: 'dark-blue', sidebarPosition: 'left', technologiesView: 'comma-separated', sidebarTechnologiesView: 'blocks' } };
+      structure: { photoSizeMm: 52, showPhoto: false, theme: 'dark-blue', sidebarPosition: 'left', technologiesView: 'comma-separated', sidebarTechnologiesView: 'blocks' } };
     const id = await service().save(structuredInfo, null);
     expect(await service().load(id)).toEqual(structuredInfo);
   });
