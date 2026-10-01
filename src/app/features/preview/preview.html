@@ -94,9 +94,9 @@
     @if (!embedded()) {
     <app-responsive-drawer #actionsMenu class="actions-menu" label="CV actions" panelId="actions-panel" side="right">
     <nav class="actions" aria-label="CV actions">
-      <app-button (click)="actionsMenu.close(); export()">
+      <app-button (click)="actionsMenu.close(); export()" [disabled]="pdf.exporting()">
         <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
-        Export
+        {{ pdf.exporting() ? 'Exporting…' : 'Export' }}
       </app-button>
       <app-save-cv-button [info]="info" />
       <a routerLink="/create">Edit CV info</a>

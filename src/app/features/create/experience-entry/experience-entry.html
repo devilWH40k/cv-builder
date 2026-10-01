@@ -1,10 +1,16 @@
 <div class="entry">
   <div class="heading">
     <h4>Experience {{ index() + 1 }}</h4>
+    <div class="entry-actions">
+    <button type="button" [attr.aria-label]="'Save experience ' + (index() + 1)" title="Save experience"
+      [disabled]="saving()" [attr.aria-busy]="saving()" (click)="save()">
+      <lucide-icon [img]="SaveIcon" [size]="16" aria-hidden="true" />
+    </button>
     <button class="remove" type="button" [attr.aria-label]="'Remove experience ' + (index() + 1)"
       (click)="remove.emit()">
-      <lucide-icon [img]="XIcon" [size]="18" aria-hidden="true" />
+      <lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" />
     </button>
+    </div>
   </div>
   <div class="columns">
     <app-input [inputId]="'company-' + index()" label="Company/Project" autocomplete="organization"

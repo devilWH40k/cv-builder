@@ -1,0 +1,44 @@
+<dialog appDialogOverlay aria-labelledby="experiences-title" (cancel)="$event.preventDefault(); cancel()">
+  <h2 id="experiences-title">Experiences</h2>
+  <app-input inputId="experience-search" label="Search by company name or position" [control]="search" />
+  @if (loading()) {
+    <p role="status">Loading experiences...</p>
+  } @else if (failed()) {
+    <p>Saved experiences could not be loaded.</p>
+    <app-button (click)="load()">Try again</app-button>
+  } @else {
+    <div class="experiences">
+      @for (record of visibleRecords(); track record.id) {
+        <label class="experience">
+          <input type="checkbox" [checked]="selected().includes(record.id) || linkedIds().includes(record.id)"
+            [disabled]="linkedIds().includes(record.id)" (change)="toggle(record.id)" />
+          <span>
+            <strong>{{ record.experience.company }}</strong>
+            @if (record.experience.position) { <span>{{ record.experience.position }}</span> }
+            <span>{{ record.experience.startDate }}{{ record.experience.startDate ? ' - ' : '' }}{{ record.experience.isCurrent ? 'Present' : record.experience.endDate }}</span>
+            @if (linkedIds().includes(record.id)) { <small>Already added</small> }
+          </span>
+        </label>
+      } @empty {
+        <p class="empty-state" role="status">
+          @if (records().length) {
+            No experiences match your search.
+          } @else {
+            You have no saved experiences. Save an experience using its save icon to reuse it here.
+          }
+        </p>
+      }
+    </div>
+    @if (pageCount() > 1) {
+      <nav class="pagination" aria-label="Experience pages">
+        <button type="button" [disabled]="page() === 1" (click)="changePage(page() - 1)">Previous</button>
+        <span role="status">Page {{ page() }} of {{ pageCount() }}</span>
+        <button type="button" [disabled]="page() === pageCount()" (click)="changePage(page() + 1)">Next</button>
+      </nav>
+    }
+  }
+  <footer>
+    <button class="cancel" type="button" autofocus (click)="cancel()">Cancel</button>
+    <app-button [disabled]="loading() || failed() || !selected().length" (click)="apply()">Apply</app-button>
+  </footer>
+</dialog>
