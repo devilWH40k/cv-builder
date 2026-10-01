@@ -1,3 +1,4 @@
+import { cvPhotoSizeMm } from './cv-photo-size';
 import { pdfTechnologyBlocks } from './cv-pdf-technology-blocks';
 import pdfMake from 'pdfmake/build/pdfmake';
 import fonts from 'pdfmake/build/vfs_fonts';
@@ -78,10 +79,11 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
     ],
     width: '*',
   }];
-  if (cv.photo) {
+  if (structure.showPhoto !== false && cv.photo) {
     const url = URL.createObjectURL(cv.photo);
     try {
-      header.unshift({ image: await imageData(url, 480, true), width: 113, height: 113 });
+      const size = cvPhotoSizeMm(structure.photoSizeMm) * 72 / 25.4;
+      header.unshift({ image: await imageData(url, 480, true), width: size, height: size });
     } finally {
       URL.revokeObjectURL(url);
     }
