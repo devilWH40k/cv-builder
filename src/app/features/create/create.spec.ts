@@ -1,3 +1,4 @@
+import { CvPdf } from '../cv/cv-pdf';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -17,7 +18,7 @@ describe('CV form', () => {
       providers: [provideZonelessChangeDetection(), provideRouter([])]
     }).compileComponents();
     spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
-    spyOn(window, 'print');
+    spyOn(TestBed.inject(CvPdf), 'download').and.resolveTo();
     fixture = TestBed.createComponent(Create);
     page = fixture.nativeElement;
     fixture.detectChanges();
@@ -89,7 +90,7 @@ describe('CV form', () => {
     expect(page.querySelectorAll('.success-icon').length).toBe(3);
     expect(page.querySelector('#name')?.getAttribute('aria-invalid')).toBe('false');
     submit();
-    expect(window.print).toHaveBeenCalledTimes(1);
+    expect(TestBed.inject(CvPdf).download).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(CvDraft).current()).toEqual({
       name: 'Alex Morgan',
       positionTitle: 'Designer',
@@ -203,7 +204,7 @@ describe('CV form', () => {
     page.querySelector<HTMLButtonElement>('[aria-label="Remove language 2"]')!.click();
     await fixture.whenStable();
     submit();
-    expect(window.print).toHaveBeenCalledTimes(1);
+    expect(TestBed.inject(CvPdf).download).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(CvDraft).current()?.languages).toEqual([
       { language: 'Ukrainian', level: 'Native' }
     ]);
@@ -416,7 +417,7 @@ describe('CV form', () => {
     page.querySelector<HTMLButtonElement>('[aria-label="Remove experience 2"]')!.click();
     await fixture.whenStable();
     submit();
-    expect(window.print).toHaveBeenCalledTimes(1);
+    expect(TestBed.inject(CvPdf).download).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(CvDraft).current()?.experiences[0].company).toBe('FINBIT');
   });
 
@@ -428,10 +429,10 @@ describe('Combined CV editor', () => {
     providers: [provideZonelessChangeDetection(), provideRouter([])]
   }));
 
-  it('updates preview while invalid and only prints when the form is valid', async () => {
+  it('updates preview while invalid and only exports when the form is valid', async () => {
     const fixture = TestBed.createComponent(Create);
     const page: HTMLElement = fixture.nativeElement;
-    const print = spyOn(window, 'print');
+    const download = spyOn(TestBed.inject(CvPdf), 'download').and.resolveTo();
     await fixture.whenStable();
     const exportButton = page.querySelector<HTMLButtonElement>('.actions > app-button button')!;
     expect(exportButton.disabled).toBeFalse();
@@ -440,7 +441,7 @@ describe('Combined CV editor', () => {
     expect(page.querySelector('.cv-info h2')?.textContent).toBe('Live name');
     expect(exportButton.disabled).toBeFalse();
     exportButton.click();
-    expect(print).not.toHaveBeenCalled();
+    expect(download).not.toHaveBeenCalled();
     fixture.componentInstance.form.patchValue({ positionTitle: 'Developer', description: 'Summary' });
     await fixture.whenStable();
     expect(exportButton.disabled).toBeFalse();
@@ -451,7 +452,7 @@ describe('Combined CV editor', () => {
     await fixture.whenStable();
     expect(exportButton.disabled).toBeFalse();
     exportButton.click();
-    expect(print).toHaveBeenCalledTimes(1);
+    expect(download).toHaveBeenCalledTimes(1);
   });
 
   it('switches tabs by keyboard, retains form edits, and previews structure changes', async () => {

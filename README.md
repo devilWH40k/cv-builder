@@ -84,3 +84,20 @@ unavailable. Data stays in this browser profile and is removed if site data is c
 ## Notifications and save feedback
 
 See [Toast notifications and save feedback](docs/TOASTS.md).
+
+## PDF export
+
+Both Export actions generate an A4 PDF locally from `CvInfo` using pdfmake.
+The exporter and bundled Roboto fonts load on demand. The browser distributions
+of pdfmake and html-to-pdfmake are CommonJS, explicitly allowed in `angular.json`.
+No CV data is sent to a server.
+
+`features/cv/cv-pdf-document.ts` owns PDF layout, theme colors, image conversion,
+and rich-text conversion. Keep it aligned with document theme changes. Rich text
+preserves semantic formatting (bold, italic, underline, lists, and safe links);
+embedded HTML images and arbitrary HTML styles are not imported. Portraits and
+technology icons are embedded separately. PDF text remains selectable.
+
+The live preview remains HTML. PDF pagination is handled independently by pdfmake;
+Roboto typography and solid accent text can differ from the preview's system fonts
+and gradient headings. The existing browser-print styles still support manual printing.

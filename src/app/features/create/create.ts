@@ -1,3 +1,4 @@
+import { CvPdf } from '../cv/cv-pdf';
 import { ExperiencesDialog } from './experiences-dialog/experiences-dialog';
 import { SavedExperience } from '../cv/experience';
 import { ToastService } from '../../shared/ui/toast/toast.service';
@@ -33,6 +34,7 @@ import { TECHNOLOGY_GROUPS } from '../cv/technologies';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Create {
+  protected readonly pdf = inject(CvPdf);
   protected readonly draft = inject(CvDraft);
   protected readonly activeTab = signal('info');
   protected readonly mobilePreview = signal(false);
@@ -194,6 +196,6 @@ export class Create {
     }
 
     this.draft.save(this.snapshot());
-    window.print();
+    void this.pdf.download(this.snapshot());
   }
 }

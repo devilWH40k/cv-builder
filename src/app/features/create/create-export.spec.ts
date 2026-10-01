@@ -1,3 +1,4 @@
+import { CvPdf } from '../cv/cv-pdf';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -6,7 +7,7 @@ import { Create } from './create';
 describe('Export validation navigation', () => {
   let fixture: ComponentFixture<Create>;
   let page: HTMLElement;
-  let print: jasmine.Spy;
+  let download: jasmine.Spy;
   let scroll: jasmine.Spy;
 
   beforeEach(async () => {
@@ -14,7 +15,7 @@ describe('Export validation navigation', () => {
       imports: [Create],
       providers: [provideZonelessChangeDetection(), provideRouter([])]
     });
-    print = spyOn(window, 'print');
+    download = spyOn(TestBed.inject(CvPdf), 'download').and.resolveTo();
     scroll = spyOn(HTMLElement.prototype, 'scrollIntoView');
     fixture = TestBed.createComponent(Create);
     page = fixture.nativeElement;
@@ -41,12 +42,12 @@ describe('Export validation navigation', () => {
     expect(page.querySelector<HTMLElement>('#info-panel')!.hidden).toBeFalse();
     expect(document.activeElement).toBe(page.querySelector('#name')!);
     expect(scroll.calls.mostRecent().object).toBe(page.querySelector('#name')!);
-    expect(print).not.toHaveBeenCalled();
+    expect(download).not.toHaveBeenCalled();
 
     fillGeneralInfo();
     await fixture.whenStable();
     await exportCv();
-    expect(print).toHaveBeenCalledTimes(1);
+    expect(download).toHaveBeenCalledTimes(1);
   });
 
   it('reveals a collapsed language error when exporting from preview mode', async () => {
@@ -61,7 +62,7 @@ describe('Export validation navigation', () => {
     expect(page.querySelector<HTMLElement>('#languages-panel')!.hidden).toBeFalse();
     expect(document.activeElement).toBe(page.querySelector('#language-0')!);
     expect(scroll.calls.mostRecent().object).toBe(page.querySelector('#language-0')!);
-    expect(print).not.toHaveBeenCalled();
+    expect(download).not.toHaveBeenCalled();
   });
 
   it('reveals experience date errors ahead of later language errors', async () => {
@@ -80,6 +81,6 @@ describe('Export validation navigation', () => {
     expect(period.getAttribute('aria-invalid')).toBe('true');
     expect(document.activeElement).toBe(period);
     expect(scroll.calls.mostRecent().object).toBe(period);
-    expect(print).not.toHaveBeenCalled();
+    expect(download).not.toHaveBeenCalled();
   });
 });
