@@ -1,6 +1,6 @@
 {
   "name": "cv-builder",
-  "version": "2.1.0a",
+  "version": "3.0.0a",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
