@@ -1,0 +1,23 @@
+@use 'styles/tokens' as tokens;
+
+:host { display: block; }
+label { display: flex; align-items: center; gap: tokens.$spacing-2; min-height: tokens.$button-height-sm; cursor: pointer; }
+.label { display: flex; align-items: center; gap: tokens.$spacing-2; font-size: tokens.$font-size-sm; color: tokens.$text-primary; }
+.box { display: inline-flex; position: relative; flex-shrink: 0; }
+input {
+  appearance: none;
+  width: tokens.$spacing-5;
+  height: tokens.$spacing-5;
+  margin: 0;
+  border: 1px solid tokens.$border-color-strong;
+  border-radius: tokens.$radius-sm;
+  background: tokens.$background-surface;
+  cursor: pointer;
+  &:checked { background: tokens.$color-primary; border-color: tokens.$color-primary; }
+  &:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: tokens.$spacing-1; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+lucide-icon { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; color: tokens.$text-on-primary; pointer-events: none; }
+input:checked + lucide-icon { display: flex; }
+label:has(input:disabled) { cursor: not-allowed; }
+.hint { margin: tokens.$spacing-1 0 0; font-size: tokens.$font-size-xs; color: tokens.$text-muted; line-height: tokens.$line-height-normal; }

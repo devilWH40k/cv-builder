@@ -711,6 +711,10 @@ Use muted text below the field.
 
 Helper text should explain useful constraints rather than repeat the label.
 
+For `app-input`, pass `helpText="..."` to display an accessible hint directly below
+the control. When helper text is present, empty error space is hidden; validation
+messages appear below the hint when the field is invalid and touched.
+
 ---
 
 # 15. Cards and Panels
