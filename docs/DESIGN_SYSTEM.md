@@ -1175,3 +1175,29 @@ editor controls. Dark theme print rules preserve document colors during export.
 
 Available choices are declared in src/app/features/cv/cv-themes.ts.
 The selected theme is stored in CvStructure.theme; older CVs default to Basic.
+
+
+## Saved experiences and dialog overlays
+
+Experience entries can be saved independently in the IndexedDB `experiences`
+object store. Load experience opens a centered multi-select picker. Applying
+entries retains their library IDs and prevents adding the same ID twice.
+Saving a linked entry updates its library record; CVs retain their own editable
+snapshots and the library ID, so library updates do not silently rewrite other CVs.
+
+Dialogs use the shared `DialogOverlay` directive to move their Angular-owned DOM
+into a body-level overlay. The overlay manages background inertness, keyboard
+focus, Escape/backdrop dismissal, focus restoration, and cleanup. Its z-index
+stays below the global toast outlet. Photo preview and mobile drawers use the
+same overlay; desktop drawers remain inline.
+
+
+## Resizable CV photo
+
+The preview photo uses the shared `app-resizable` square wrapper. Drag the photo
+or its corner grip to resize; the diagonal resize cursor is visible on hover.
+Arrow keys adjust its size, Home/End select the limits, and Escape cancels a drag.
+Photo size ranges from 24 to 60mm, defaults to 40mm, and is saved in
+`CvStructure.photoSizeMm`. Preview, print, and PDF export share the same size.
+Resize controls are hidden in print. The shared component accepts unscaled CSS
+pixel sizes and compensates for preview scaling during pointer interaction.

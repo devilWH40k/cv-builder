@@ -1,10 +1,17 @@
 <div class="entry">
   <div class="heading">
     <h4>Experience {{ index() + 1 }}</h4>
-    <button class="remove" type="button" [attr.aria-label]="'Remove experience ' + (index() + 1)"
-      (click)="remove.emit()">
-      <lucide-icon [img]="XIcon" [size]="18" aria-hidden="true" />
-    </button>
+    <div class="entry-actions">
+      <button type="button" class="save-btn" [attr.aria-label]="'Save experience ' + (index() + 1)"
+        title="Save experience" [disabled]="saving()" [attr.aria-busy]="saving()" (click)="save()">
+        <span>Save</span>
+        <lucide-icon [img]="SaveIcon" [size]="16" aria-hidden="true" />
+      </button>
+      <button class="remove" type="button" [attr.aria-label]="'Remove experience ' + (index() + 1)"
+        (click)="remove.emit()">
+        <lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" />
+      </button>
+    </div>
   </div>
   <div class="columns">
     <app-input [inputId]="'company-' + index()" label="Company/Project" autocomplete="organization"
@@ -50,7 +57,7 @@
     @for (technology of form().controls.technologies.value; track technology) {
     <li>
       @if (technologyIcons[technology]; as icon) {
-        <img class="technology-icon" [src]="icon" alt="" width="20" height="20" />
+      <img class="technology-icon" [src]="icon" alt="" width="20" height="20" />
       }
       {{ technology }}<button type="button" [attr.aria-label]="'Remove ' + technology"
         (click)="removeTechnology(technology)"><lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" /></button>

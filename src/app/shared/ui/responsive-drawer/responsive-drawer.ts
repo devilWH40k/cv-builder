@@ -1,3 +1,4 @@
+import { DialogOverlay } from '../dialog/dialog-overlay';
 import {
   afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, ElementRef,
   inject, input, signal, viewChild
@@ -6,7 +7,7 @@ import { Form, LucideAngularModule, TableOfContents, X } from 'lucide-angular';
 
 @Component({
   selector: 'app-responsive-drawer',
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, DialogOverlay],
   templateUrl: './responsive-drawer.html',
   styleUrl: './responsive-drawer.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,10 +24,10 @@ export class ResponsiveDrawer {
   protected readonly CloseIcon = X;
   private readonly panel = viewChild.required<ElementRef<HTMLDialogElement>>('panel');
   private readonly destroyRef = inject(DestroyRef);
+  private readonly overlay = viewChild.required(DialogOverlay);
 
   constructor() {
     afterNextRender(() => {
-      // Keep this query aligned with the design system's breakpoint-xl.
       const query = window.matchMedia('(max-width: 80rem)');
       const sync = () => {
         this.close();
@@ -40,12 +41,12 @@ export class ResponsiveDrawer {
 
   protected open(): void {
     if (!this.compact()) return;
-    this.panel().nativeElement.showModal();
+    this.overlay().open();
     this.opened.set(true);
   }
 
   close(): void {
-    if (this.opened()) this.panel().nativeElement.close();
+    if (this.opened()) this.overlay().close();
     this.opened.set(false);
   }
 
@@ -54,6 +55,6 @@ export class ResponsiveDrawer {
     if (event.target !== panel) return;
     const bounds = panel.getBoundingClientRect();
     if (event.clientX < bounds.left || event.clientX > bounds.right ||
-        event.clientY < bounds.top || event.clientY > bounds.bottom) this.close();
+      event.clientY < bounds.top || event.clientY > bounds.bottom) this.close();
   }
 }

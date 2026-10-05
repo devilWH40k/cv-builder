@@ -40,6 +40,39 @@ describe('IndexedDB saved CVs', () => {
     });
   });
 
+  it('saves experiences independently and updates linked records without duplicates', async () => {
+    const saved = service();
+    const id = await saved.saveExperience(info.experiences[0]);
+    const linked = { ...info.experiences[0], savedExperienceId: id };
+    expect(await service().listExperiences()).toEqual([
+      jasmine.objectContaining({ id, experience: linked })
+    ]);
+    expect(await saved.saveExperience({ ...linked, company: 'Updated' })).toBe(id);
+    expect((await service().listExperiences()).length).toBe(1);
+    expect((await service().listExperiences())[0].experience.company).toBe('Updated');
+    const cvId = await saved.save({ ...info, experiences: [linked] }, null);
+    expect((await saved.load(cvId))?.experiences[0].savedExperienceId).toBe(id);
+    await saved.delete(cvId);
+    expect((await saved.listExperiences()).length).toBe(1);
+  });
+
+  it('upgrades version 1 without losing existing CVs', async () => {
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open(databaseName, 1);
+      request.onupgradeneeded = () => {
+        request.result.createObjectStore('cvs', { keyPath: 'id' }).put({ id: 'existing', info, updatedAt: 1 });
+        request.result.createObjectStore('metadata');
+      };
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => { request.result.close(); resolve(); };
+    });
+    const saved = service();
+    expect(await saved.load('existing')).toEqual(info);
+    expect(await saved.listExperiences()).toEqual([]);
+    await saved.saveExperience(info.experiences[0]);
+    expect((await saved.listExperiences()).length).toBe(1);
+  });
+
   it('persists snapshots across instances and updates the same record', async () => {
     const saved = service();
     const id = await saved.save(info, null);
@@ -53,7 +86,7 @@ describe('IndexedDB saved CVs', () => {
 
   it('preserves structure options when saving and reopening a CV', async () => {
     const structuredInfo: CvInfo = { ...info,
-      structure: { theme: 'dark-blue', sidebarPosition: 'left', technologiesView: 'comma-separated', sidebarTechnologiesView: 'blocks' } };
+      structure: { photoSizeMm: 52, showPhoto: false, theme: 'dark-blue', sidebarPosition: 'left', technologiesView: 'comma-separated', sidebarTechnologiesView: 'blocks' } };
     const id = await service().save(structuredInfo, null);
     expect(await service().load(id)).toEqual(structuredInfo);
   });

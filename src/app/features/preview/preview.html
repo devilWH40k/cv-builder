@@ -18,8 +18,12 @@
         <div class="page-content">
           <div #pageFlow class="page-flow" [style.transform]="'translateX(-' + (page * 210) + 'mm)'">
         <header class="cv-header">
-          @if (photoUrl(); as url) {
-          <img class="portrait" [src]="url" [alt]="cv.name + ' — portrait'" (error)="photoUrl.set(null)" />
+          @if (structure().showPhoto !== false && photoUrl(); as url) {
+          <app-resizable [size]="photoSize()" [minSize]="minPhotoSize" [maxSize]="maxPhotoSize"
+            [step]="photoSizeStep" label="Photo size" [valueText]="photoSizeMm() + ' millimeters'"
+            (sizeChange)="resizePhoto($event)">
+          <img class="portrait" draggable="false" [src]="url" [alt]="cv.name + ' — portrait'" (error)="photoUrl.set(null)" />
+          </app-resizable>
           }
           <div class="cv-info">
             <h2>{{ cv.name }}</h2>
@@ -94,9 +98,9 @@
     @if (!embedded()) {
     <app-responsive-drawer #actionsMenu class="actions-menu" label="CV actions" panelId="actions-panel" side="right">
     <nav class="actions" aria-label="CV actions">
-      <app-button (click)="actionsMenu.close(); export()">
+      <app-button (click)="actionsMenu.close(); export()" [disabled]="pdf.exporting()">
         <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
-        Export
+        {{ pdf.exporting() ? 'Exporting…' : 'Export' }}
       </app-button>
       <app-save-cv-button [info]="info" />
       <a routerLink="/create">Edit CV info</a>

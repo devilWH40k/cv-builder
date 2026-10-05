@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal, viewChild } from '@angular/core';
+import { SavedCvs } from '../../cv/saved-cvs';
+import { ToastService } from '../../../shared/ui/toast/toast.service';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, output, signal, viewChild } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AngularTiptapEditorComponent, AteEditorCommandsService, AteEditorConfig } from '@flogeez/angular-tiptap-editor';
-import { Bold, Italic, List, ListOrdered, LucideAngularModule, Redo2, Underline, Undo2, X } from 'lucide-angular';
+import { Bold, Italic, List, ListOrdered, LucideAngularModule, Redo2, Save, Underline, Undo2, X } from 'lucide-angular';
 import { Input } from '../../../shared/ui/input/input';
 import { MultiSelect } from '../../../shared/ui/multi-select/multi-select';
 import { DatePicker } from '../../../shared/ui/date-picker/date-picker';
@@ -32,6 +34,34 @@ export class ExperienceEntry {
     { label: 'Redo', icon: Redo2, command: 'redo' }
   ] as const;
   protected readonly XIcon = X;
+  protected readonly SaveIcon = Save;
+  protected readonly saving = signal(false);
+  private readonly saved = inject(SavedCvs);
+  private readonly toasts = inject(ToastService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  protected async save(): Promise<void> {
+    if (this.saving()) return;
+    const form = this.form();
+    form.markAllAsTouched();
+    if (form.invalid) {
+      this.toasts.show('alert', 'Please correct the experience fields before saving.');
+      return;
+    }
+    this.saving.set(true);
+    try {
+      const id = await this.saved.saveExperience(form.getRawValue());
+      if (this.destroyRef.destroyed) return;
+      form.controls.savedExperienceId.setValue(id);
+      form.markAsDirty();
+      this.toasts.show('success', 'Your experience has been saved.');
+    } catch {
+      if (!this.destroyRef.destroyed) this.toasts.show('danger', 'Your experience could not be saved. Please try again.');
+    } finally {
+      if (!this.destroyRef.destroyed) this.saving.set(false);
+    }
+  }
+
   protected readonly technologyGroups = USED_TECHNOLOGY_GROUPS;
   protected readonly technologyIcons = USED_TECHNOLOGY_ICONS;
   protected readonly dateMode = signal<DateMode>('month-year');
@@ -41,17 +71,20 @@ export class ExperienceEntry {
     placeholder: 'Describe the project, your responsibilities, and achievements...',
     showToolbar: false, showEditToggle: false, showFooter: false, enableSlashCommands: false,
     showBubbleMenu: false, blockControls: 'none',
-    tiptapOptions: { editorProps: { attributes: {
-      'aria-label': 'Project description for experience ' + (this.index() + 1),
-      role: 'textbox', 'aria-multiline': 'true'
-    } } }
+    tiptapOptions: {
+      editorProps: {
+        attributes: {
+          'aria-label': 'Project description for experience ' + (this.index() + 1),
+          role: 'textbox', 'aria-multiline': 'true'
+        }
+      }
+    }
   }));
 
   protected updateDescription(): void {
     const form = this.form();
     if (form.controls.description.disabled) return;
-    // editorUpdate fires after the editor's silent control write. Notify the parent
-    // without emitting on the control, which would make the editor reapply its content.
+
     form.controls.description.markAsDirty();
     form.updateValueAndValidity();
   }

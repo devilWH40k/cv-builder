@@ -1,3 +1,7 @@
+import { CvPdf } from '../cv/cv-pdf';
+import { ExperiencesDialog } from './experiences-dialog/experiences-dialog';
+import { SavedExperience } from '../cv/experience';
+import { ToastService } from '../../shared/ui/toast/toast.service';
 import { SaveCvButton } from '../cv/save-cv-button';
 import { SavedCvs } from '../cv/saved-cvs';
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, DestroyRef, ElementRef, inject, Injector, PendingTasks, signal, viewChild, viewChildren } from '@angular/core';
@@ -24,12 +28,13 @@ import { TECHNOLOGY_GROUPS } from '../cv/technologies';
 
 @Component({
   selector: 'app-create',
-  imports: [ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, MultiSelect, LucideAngularModule, ExperienceEntry],
+  imports: [ExperiencesDialog, ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, MultiSelect, LucideAngularModule, ExperienceEntry],
   templateUrl: './create.html',
   styleUrl: './create.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Create {
+  protected readonly pdf = inject(CvPdf);
   protected readonly draft = inject(CvDraft);
   protected readonly activeTab = signal('info');
   protected readonly mobilePreview = signal(false);
@@ -116,7 +121,28 @@ export class Create {
       this.form.controls.experiences.push(createExperienceForm(experience));
     }
     const { structure, ...fields } = info;
-    this.form.setValue({ ...fields, languages: [...info.languages], experiences: [...info.experiences] });
+    this.form.patchValue({ ...fields, languages: [...info.languages], experiences: [...info.experiences] });
+  }
+
+  protected readonly experiencesOpen = signal(false);
+  private readonly toasts = inject(ToastService);
+  protected get linkedExperienceIds(): string[] {
+    return this.form.controls.experiences.controls.flatMap((row) => {
+      const id = row.controls.savedExperienceId.value;
+      return id ? [id] : [];
+    });
+  }
+
+  protected applyExperiences(records: readonly SavedExperience[]): void {
+    const ids = new Set(this.linkedExperienceIds);
+    for (const record of records) {
+      if (ids.has(record.id)) continue;
+      this.form.controls.experiences.push(createExperienceForm({ ...record.experience, savedExperienceId: record.id }));
+      ids.add(record.id);
+    }
+    this.form.markAsDirty();
+    this.experiencesOpen.set(false);
+    this.toasts.show('success', 'Selected experiences have been added.');
   }
 
   protected addExperience(): void {
@@ -170,6 +196,6 @@ export class Create {
     }
 
     this.draft.save(this.snapshot());
-    window.print();
+    void this.pdf.download(this.snapshot());
   }
 }

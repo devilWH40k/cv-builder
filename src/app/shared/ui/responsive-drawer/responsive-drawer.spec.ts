@@ -29,9 +29,10 @@ describe('Responsive drawer', () => {
     trigger.focus();
     trigger.click();
     await fixture.whenStable();
-    expect(panel.matches(':modal')).toBeTrue();
+    expect(panel.getAttribute('aria-modal')).toBe('true');
+    expect(panel.parentElement?.parentElement).toBe(document.body);
     expect(trigger.getAttribute('aria-expanded')).toBe('true');
-    expect(document.activeElement).toBe(host.querySelector('.drawer-header button'));
+    expect(document.activeElement).toBe(panel.querySelector('.drawer-header button'));
     panel.dispatchEvent(new Event('cancel', { cancelable: true }));
     await fixture.whenStable();
     expect(panel.open).toBeFalse();

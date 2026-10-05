@@ -56,7 +56,10 @@
       } @empty {
       <p class="empty-state">Add an experience to boost your CV</p>
       }
+      <div class="experience-actions">
       <app-button class="add-entry" aria-label="Add experience" (click)="addExperience()">Add experience</app-button>
+      <app-button aria-label="Load experiences" (click)="experiencesOpen.set(true)">Load experiences</app-button>
+      </div>
     </app-expand-panel>
 
     <app-expand-panel heading="Languages" panelId="languages-panel"
@@ -125,10 +128,15 @@
   </div>
   <nav class="actions" aria-label="CV actions">
     <app-save-cv-button [info]="snapshot" />
-    <app-button (click)="submit()">
+    <app-button (click)="submit()" [disabled]="pdf.exporting()">
       <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
-      Export
+      {{ pdf.exporting() ? 'Exporting…' : 'Export' }}
     </app-button>
   </nav>
   }
 </main>
+
+@if (experiencesOpen()) {
+  <app-experiences-dialog [linkedIds]="linkedExperienceIds" (applied)="applyExperiences($event)"
+    (cancelled)="experiencesOpen.set(false)" />
+}

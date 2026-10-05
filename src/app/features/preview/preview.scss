@@ -58,8 +58,9 @@
 
 .portrait {
   flex-shrink: 0;
-  width: 40mm;
-  height: 40mm;
+  display: block;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -214,7 +215,11 @@ a {
   padding: 0;
   background: tokens.$background-app;
   .preview-layout { display: block; }
-  .document-viewport { max-height: calc(100dvh - 15rem); overflow: auto; }
+  .document-viewport {
+    max-height: calc(100dvh - 15rem);
+    overflow: auto;
+    scrollbar-gutter: stable;
+  }
 }
 @media screen {
   .embedded .page-stack { zoom: var(--preview-scale, 1); }
@@ -222,6 +227,6 @@ a {
 @media print {
   .embedded {
     background: transparent;
-    .document-viewport { max-height: none; overflow: visible; }
+    .document-viewport { max-height: none; overflow: visible; scrollbar-gutter: auto; }
   }
 }
