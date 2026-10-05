@@ -13,5 +13,6 @@ import { FormField } from '../form-field/form-field';
 export class Input extends FormField<string> {
   readonly type = input<'text' | 'email' | 'tel' | 'url' | 'password'>('text');
   readonly autocomplete = input('off');
+  readonly helpText = input('');
   protected readonly CheckIcon = Check;
 }
