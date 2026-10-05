@@ -9,6 +9,11 @@ export interface SavedCv {
   readonly updatedAt: number;
 }
 
+export interface CvDatabaseSnapshot {
+  readonly cvs: readonly SavedCv[];
+  readonly experiences: readonly SavedExperience[];
+}
+
 export const CV_DATABASE_NAME = new InjectionToken<string>('CV database name', {
   providedIn: 'root', factory: () => 'cv-builder'
 });
@@ -85,6 +90,46 @@ export class SavedCvs {
     return id;
   }
 
+  async snapshot(): Promise<readonly SavedCv[]> {
+    return this.request<SavedCv[]>('readonly', (store) => store.getAll());
+  }
+
+  async backupSnapshot(): Promise<CvDatabaseSnapshot> {
+    const database = await this.open();
+    const transaction = database.transaction(['cvs', 'experiences'], 'readonly');
+    const cvs = transaction.objectStore('cvs').getAll();
+    const experiences = transaction.objectStore('experiences').getAll();
+    await completed(transaction);
+    return { cvs: cvs.result, experiences: experiences.result };
+  }
+
+  async importRecords(
+    records: readonly SavedCv[], experiences: readonly SavedExperience[] = [],
+    wipePreviousData = false
+  ): Promise<void> {
+    const database = await this.open();
+    const transaction = database.transaction(['cvs', 'experiences'], 'readwrite');
+    const done = completed(transaction);
+    try {
+      const cvsStore = transaction.objectStore('cvs');
+      const experiencesStore = transaction.objectStore('experiences');
+      if (wipePreviousData) {
+        cvsStore.clear();
+        experiencesStore.clear();
+      }
+      for (const record of records) cvsStore.put(record);
+      for (const record of experiences) {
+        experiencesStore.put({
+          ...record, experience: { ...record.experience, savedExperienceId: record.id }
+        });
+      }
+    } catch {
+      transaction.abort();
+    }
+    await done;
+    await this.refresh();
+  }
+
   private async updateStorageEstimate(): Promise<void> {
     try {
       const estimate = await navigator.storage?.estimate?.();
@@ -113,33 +158,7 @@ export class SavedCvs {
 
   private open(): Promise<IDBDatabase> {
     if (!this.database) {
-      this.database = new Promise<IDBDatabase>((resolve, reject) => {
-        const request = indexedDB.open(this.databaseName, 2);
-        let blocked = false;
-        request.onupgradeneeded = () => {
-          const database = request.result;
-          if (!database.objectStoreNames.contains('cvs')) database.createObjectStore('cvs', { keyPath: 'id' });
-          if (!database.objectStoreNames.contains('metadata')) database.createObjectStore('metadata');
-          if (!database.objectStoreNames.contains('experiences')) database.createObjectStore('experiences', { keyPath: 'id' });
-        };
-        request.onerror = () => reject(request.error);
-        request.onblocked = () => {
-          blocked = true;
-          reject(new Error('Close other CV Builder tabs and try again.'));
-        };
-        request.onsuccess = () => {
-          const database = request.result;
-          if (blocked) {
-            database.close();
-            return;
-          }
-          database.onversionchange = () => {
-            database.close();
-            this.database = null;
-          };
-          resolve(database);
-        };
-      }).then(async (database) => {
+      this.database = this.connect().then(async (database) => {
         try {
           await this.migrate(database);
         } catch {
@@ -154,6 +173,42 @@ export class SavedCvs {
       });
     }
     return this.database;
+  }
+
+  private connect(version?: number): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.databaseName, version);
+      let blocked = false;
+      request.onupgradeneeded = () => {
+        const database = request.result;
+        if (!database.objectStoreNames.contains('cvs')) database.createObjectStore('cvs', { keyPath: 'id' });
+        if (!database.objectStoreNames.contains('metadata')) database.createObjectStore('metadata');
+        if (!database.objectStoreNames.contains('experiences')) database.createObjectStore('experiences', { keyPath: 'id' });
+      };
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => {
+        blocked = true;
+        reject(new Error('Close other CV Builder tabs and try again.'));
+      };
+      request.onsuccess = () => {
+        const database = request.result;
+        if (blocked) {
+          database.close();
+          return;
+        }
+        if (['cvs', 'metadata', 'experiences'].some((name) => !database.objectStoreNames.contains(name))) {
+          const nextVersion = database.version + 1;
+          database.close();
+          void this.connect(nextVersion).then(resolve, reject);
+          return;
+        }
+        database.onversionchange = () => {
+          database.close();
+          this.database = null;
+        };
+        resolve(database);
+      };
+    });
   }
 
   private async migrate(database: IDBDatabase): Promise<void> {

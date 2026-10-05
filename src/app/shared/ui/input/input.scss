@@ -1,1 +1,9 @@
 @use '../form-field/field';
+@use 'styles/tokens' as tokens;
+
+.hint {
+  margin: tokens.$spacing-1 0 0;
+  color: tokens.$text-muted;
+  font-size: tokens.$font-size-xs;
+  line-height: tokens.$line-height-normal;
+}

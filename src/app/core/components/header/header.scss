@@ -1,3 +1,4 @@
+@use '../../../shared/ui/button/variants' as buttons;
 @use 'styles/tokens' as tokens;
 
 :host {
@@ -49,3 +50,35 @@ img {
     display: none;
   }
 }
+
+.backup-button {
+  @include buttons.secondary;
+  & {
+    gap: tokens.$spacing-2;
+    padding-inline: tokens.$spacing-3;
+    white-space: nowrap;
+  }
+}
+
+.header-content {
+  justify-content: space-between;
+  gap: tokens.$spacing-4;
+  flex-wrap: wrap;
+}
+
+@media (max-width: tokens.$breakpoint-sm) {
+  .header-content {
+    padding-inline: tokens.$spacing-4;
+    gap: tokens.$spacing-2;
+  }
+
+  .brand {
+    font-size: tokens.$font-size-md;
+    gap: tokens.$spacing-2;
+  }
+
+  .backup-button {
+    font-size: tokens.$font-size-sm;
+  }
+}
+

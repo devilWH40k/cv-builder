@@ -1,0 +1,9 @@
+<label [for]="inputId()">
+  <span class="box">
+    <input type="checkbox" [id]="inputId()" [formControl]="control()"
+      [attr.aria-describedby]="helpText() ? inputId() + '-hint' : null" />
+    <lucide-icon [img]="CheckIcon" [size]="16" aria-hidden="true" />
+  </span>
+  <span class="label">{{ label() }}<ng-content /></span>
+</label>
+@if (helpText()) { <p class="hint" [id]="inputId() + '-hint'">{{ helpText() }}</p> }

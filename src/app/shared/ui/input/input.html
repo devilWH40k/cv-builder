@@ -2,7 +2,7 @@
   <div class="control-wrap">
     <input class="control" [id]="inputId()" [type]="type()" [formControl]="control()"
       [autocomplete]="autocomplete()" [required]="required()" placeholder=" "
-      [attr.aria-invalid]="invalid()" [attr.aria-describedby]="inputId() + '-error'" />
+      [attr.aria-invalid]="invalid()" [attr.aria-describedby]="helpText() ? inputId() + '-hint ' + inputId() + '-error' : inputId() + '-error'" />
     <label [for]="inputId()">{{ label() }}{{ required() ? ' *' : '' }}</label>
     @if (success()) {
       <span class="success-icon" aria-hidden="true">
@@ -10,7 +10,10 @@
       </span>
     }
   </div>
-  <div class="error" [id]="inputId() + '-error'" aria-live="polite">
+  @if (helpText()) {
+    <p class="hint" [id]="inputId() + '-hint'">{{ helpText() }}</p>
+  }
+  <div class="error" [hidden]="!!helpText() && !invalid()" [id]="inputId() + '-error'" aria-live="polite">
     <ng-content />
   </div>
 </div>

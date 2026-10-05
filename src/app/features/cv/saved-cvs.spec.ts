@@ -232,5 +232,170 @@ describe('IndexedDB saved CVs', () => {
     const id = await saved.save({ ...info, photo }, null);
     expect((await service().load(id))?.photo?.size).toBe(photo.size);
   });
+
+  it('updates matching IDs, adds new IDs and leaves other records intact', async () => {
+    const saved = service();
+    const id = await saved.save(info, null);
+    const untouched = await saved.save(info, null);
+    const records = [
+      { id, info: { ...info, name: 'Imported' }, updatedAt: 42 },
+      { id: 'new-cv', info, updatedAt: 43 }
+    ];
+    await saved.importRecords(records);
+    await saved.importRecords(records);
+    expect((await saved.snapshot()).length).toBe(3);
+    expect(await saved.load(untouched)).toEqual(info);
+    expect((await saved.snapshot()).find((record) => record.id === id)).toEqual(records[0]);
+    expect(await saved.load('new-cv')).toEqual(info);
+    expect(saved.all().length).toBe(3);
+  });
+
+  it('rolls back the entire import if a later record fails', async () => {
+    const saved = service();
+    const id = await saved.save(info, null);
+    const original = (await saved.snapshot())[0];
+    const add = IDBObjectStore.prototype.put;
+    let writes = 0;
+    spyOn(IDBObjectStore.prototype, 'put').and.callFake(function (
+      this: IDBObjectStore, value: unknown, key?: IDBValidKey
+    ) {
+      if (++writes === 2) throw new Error('Write failed');
+      return add.call(this, value, key);
+    });
+    await expectAsync(saved.importRecords([{ ...original, info: { ...info, name: 'Lost update' } }, { ...original, id: 'new' }])).toBeRejected();
+    expect((await service().snapshot()).length).toBe(1);
+    expect(await saved.load(id)).toEqual(info);
+    expect(saved.all().length).toBe(1);
+  });
+
+
+  for (const version of [1, 2]) {
+    it(`opens an existing version ${version} database without replacing saved data`, async () => {
+      const photo = new File(['existing photo'], 'existing.png', {
+        type: 'image/png', lastModified: 123
+      });
+      const existing = { id: 'existing', info: { ...info, photo }, updatedAt: 42 };
+      await new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open(databaseName, version);
+        request.onupgradeneeded = () => {
+          request.result.createObjectStore('cvs', { keyPath: 'id' });
+          request.result.createObjectStore('metadata');
+          request.result.createObjectStore('experiences', { keyPath: 'id' });
+        };
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          const database = request.result;
+          const transaction = database.transaction('cvs', 'readwrite');
+          transaction.oncomplete = () => { database.close(); resolve(); };
+          transaction.onabort = () => { database.close(); reject(transaction.error); };
+          transaction.objectStore('cvs').add(existing);
+        };
+      });
+
+      const saved = service();
+      await saved.refresh();
+      expect(saved.error()).toBe('');
+      expect(saved.all().map((record) => record.id)).toEqual(['existing']);
+      const snapshot = await saved.snapshot();
+      expect(snapshot[0].updatedAt).toBe(42);
+      const restoredPhoto = (await saved.load('existing'))!.photo!;
+      expect(await restoredPhoto.text()).toBe('existing photo');
+      expect(restoredPhoto.name).toBe(photo.name);
+      expect(restoredPhoto.lastModified).toBe(photo.lastModified);
+
+      await saved.importRecords(snapshot);
+      expect(saved.all().length).toBe(1);
+      await saved.save({ ...info, name: 'Updated' }, 'existing');
+      expect((await saved.load('existing'))?.name).toBe('Updated');
+      await saved.delete('existing');
+      expect(saved.all().length).toBe(0);
+
+      await new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open(databaseName);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          expect(request.result.version).toBe(version);
+          request.result.close();
+          resolve();
+        };
+      });
+    });
+  }
+
+
+  it('round trips both stores without duplicates and preserves experience links', async () => {
+    const saved = service();
+    const experienceId = await saved.saveExperience(info.experiences[0]);
+    const linked = { ...info.experiences[0], savedExperienceId: experienceId };
+    const cvId = await saved.save({ ...info, experiences: [linked, linked] }, null);
+    const snapshot = await saved.backupSnapshot();
+    const { createArchive, readArchive } = await import('./cv-archive');
+    const archive = await readArchive(await createArchive(snapshot.cvs, snapshot.experiences));
+    await saved.saveExperience({ ...linked, company: 'Local change' });
+    await saved.importRecords(archive.cvs, archive.experiences);
+    await saved.importRecords(archive.cvs, archive.experiences);
+    expect(await service().backupSnapshot()).toEqual(snapshot);
+    expect((await saved.load(cvId))!.experiences.map((entry) => entry.savedExperienceId))
+      .toEqual([experienceId, experienceId]);
+    await saved.saveExperience({ ...linked, company: 'Edited imported experience' });
+    expect((await saved.listExperiences()).length).toBe(1);
+    expect((await saved.listExperiences())[0].experience.company).toBe('Edited imported experience');
+  });
+
+  it('preserves experience links in CV-only imports', async () => {
+    const saved = service();
+    const id = await saved.saveExperience(info.experiences[0]);
+    await saved.importRecords([{ id: 'cv', updatedAt: 1,
+      info: { ...info, experiences: [{ ...info.experiences[0], savedExperienceId: id }] } }]);
+    const snapshot = await saved.backupSnapshot();
+    expect(snapshot.cvs[0].info.experiences[0].savedExperienceId).toBe(id);
+    expect(snapshot.experiences.length).toBe(1);
+    expect(snapshot.experiences[0].id).toBe(id);
+  });
+
+  for (const wipe of [false, true]) {
+    it(`rolls back both stores on an experience write failure with wipe=${wipe}`, async () => {
+      const saved = service();
+      await saved.save(info, null);
+      await saved.saveExperience(info.experiences[0]);
+      const before = await saved.backupSnapshot();
+      const put = IDBObjectStore.prototype.put;
+      spyOn(IDBObjectStore.prototype, 'put').and.callFake(function (
+        this: IDBObjectStore, value: unknown, key?: IDBValidKey
+      ) {
+        if (this.name === 'experiences') throw new Error('Write failed');
+        return put.call(this, value, key);
+      });
+      const cvs = before.cvs.map((record) => ({ ...record, info: { ...info, name: 'Lost update' } }));
+      await expectAsync(saved.importRecords(cvs, before.experiences, wipe)).toBeRejected();
+      expect(await service().backupSnapshot()).toEqual(before);
+      expect(saved.all()).toEqual(before.cvs);
+    });
+  }
+
+  it('wipes both stores before importing and supports an empty replacement', async () => {
+    const saved = service();
+    await saved.save(info, null);
+    await saved.saveExperience(info.experiences[0]);
+    const cvs = [{ id: 'replacement', info, updatedAt: 42 }];
+    const experiences = [{ id: 'replacement-experience', updatedAt: 43,
+      experience: { ...info.experiences[0], savedExperienceId: 'replacement-experience' } }];
+    await saved.importRecords(cvs, experiences, true);
+    expect(await saved.backupSnapshot()).toEqual({ cvs, experiences });
+    await saved.importRecords([], [], true);
+    expect(await saved.backupSnapshot()).toEqual({ cvs: [], experiences: [] });
+    expect(saved.all()).toEqual([]);
+  });
+
+  it('imports saved experiences without CVs', async () => {
+    const saved = service();
+    await saved.importRecords([], [{ id: 'source', updatedAt: 42, experience: info.experiences[0] }]);
+    const snapshot = await saved.backupSnapshot();
+    expect(snapshot.cvs).toEqual([]);
+    expect(snapshot.experiences.length).toBe(1);
+    expect(snapshot.experiences[0].id).toBe('source');
+    expect(snapshot.experiences[0].experience.savedExperienceId).toBe(snapshot.experiences[0].id);
+  });
+
 });
 
