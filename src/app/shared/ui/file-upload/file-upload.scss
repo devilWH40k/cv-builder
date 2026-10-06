@@ -51,6 +51,16 @@
   min-width: 0;
 }
 
+.photo-preview.icon-preview {
+  border-radius: tokens.$radius-md;
+
+  img {
+    box-sizing: border-box;
+    padding: tokens.$spacing-2;
+    object-fit: contain;
+  }
+}
+
 .hint,
 .error {
   grid-column: 2;

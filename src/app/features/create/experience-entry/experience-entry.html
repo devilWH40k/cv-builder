@@ -51,22 +51,23 @@
     <p class="error" role="alert">Please select a valid date.</p>
     }
   </fieldset>
-  <app-multi-select [inputId]="'experience-technologies-' + index()" label="Used technologies"
-    [control]="form().controls.technologies" [groups]="technologyGroups" [optionIcons]="technologyIcons" [allowCustom]="true" />
+  <app-technology-select [inputId]="'experience-technologies-' + index()" label="Used technologies"
+    [control]="form().controls.technologies" [groups]="technologyGroups" [optionIcons]="technologyIcons"
+    [customIcons]="form().controls.customTechnologyIcons" />
   <ul class="chips" aria-label="Selected technologies">
-    @for (technology of form().controls.technologies.value; track technology) {
+    @for (technology of formValue()?.technologies ?? form().controls.technologies.value; track technology) {
     <li>
-      @if (technologyIcons[technology]; as icon) {
+      @if (usedTechnologyIcon(technology, formValue()?.customTechnologyIcons ?? form().controls.customTechnologyIcons.value); as icon) {
       <img class="technology-icon" [src]="icon" alt="" width="20" height="20" />
       }
       {{ technology }}<button type="button" [attr.aria-label]="'Remove ' + technology"
         (click)="removeTechnology(technology)"><lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" /></button>
     </li>
     }
-    @if (usedTechnologiesView(form().controls.technologies.value, 'blocks') === 'comma-separated') {
+    @if (usedTechnologiesView(formValue()?.technologies ?? form().controls.technologies.value, 'blocks', formValue()?.customTechnologyIcons ?? form().controls.customTechnologyIcons.value) === 'comma-separated') {
     <li class="technology-warning">
       <button type="button" aria-label="Custom technology view warning"
-        appTooltip='By adding at least one custom technology experience tech view mode becomes "comma separated"'>
+        appTooltip='By adding at least one technology without an icon, experience tech view mode becomes "comma separated"'>
         <lucide-icon [img]="TriangleAlertIcon" [size]="20" aria-hidden="true" />
       </button>
     </li>

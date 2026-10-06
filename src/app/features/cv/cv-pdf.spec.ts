@@ -14,6 +14,25 @@ const cv: CvInfo = {
 };
 
 describe('PDF export', () => {
+  for (const sidebarTechnologiesView of ['list', 'blocks'] as const) {
+    it(`exports custom icons in experience blocks and the sidebar ${sidebarTechnologiesView}`, async () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 96;
+      canvas.getContext('2d')!.fillRect(0, 0, 96, 96);
+      const icon = canvas.toDataURL('image/png');
+      const definition = await buildCvPdf({ ...cv,
+        technologies: ['SDK'], customTechnologyIcons: { SDK: icon },
+        experiences: [{ ...cv.experiences[0], technologies: ['SDK'], customTechnologyIcons: { SDK: icon } },
+          { ...cv.experiences[0], technologies: ['SDK', 'No icon'], customTechnologyIcons: { SDK: icon } }],
+        structure: { sidebarPosition: 'right', technologiesView: 'blocks', sidebarTechnologiesView }
+      });
+      const content = JSON.stringify(definition.content);
+      expect(content).toContain('SDK, No icon');
+      expect(content).toContain('data:image/png;base64,');
+      const bytes = await pdfMake.createPdf(definition).getBuffer();
+      expect(new TextDecoder('latin1').decode(bytes)).toContain('/Subtype /Image');
+    });
+  }
   it('uses comma-separated names for custom experience technologies even in blocks mode', async () => {
     const decode = spyOn(HTMLImageElement.prototype, 'decode').and.rejectWith(new Error('Unexpected icon'));
     const definition = await buildCvPdf({ ...cv,

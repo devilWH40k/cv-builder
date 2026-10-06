@@ -4,6 +4,7 @@ import { SavedCvs } from './saved-cvs';
 export interface ImportCounts {
   readonly cvs: number;
   readonly experiences: number;
+  readonly technologies: number;
 }
 
 export function defaultBackupName(date = new Date()): string {
@@ -19,9 +20,9 @@ export class CvBackup {
   async export(fileName: string): Promise<void> {
     const { createArchive } = await import('./cv-archive');
     const records = await this.saved.backupSnapshot().catch(() => {
-      throw new Error('Saved CVs and experiences could not be read. Please try again.');
+      throw new Error('Saved CVs, experiences and technologies could not be read. Please try again.');
     });
-    const archive = await createArchive(records.cvs, records.experiences);
+    const archive = await createArchive(records.cvs, records.experiences, records.technologies);
     const url = URL.createObjectURL(archive);
     const link = document.createElement('a');
     link.href = url;
@@ -36,9 +37,9 @@ export class CvBackup {
   async import(file: File, wipePreviousData = false): Promise<ImportCounts> {
     const { readArchive } = await import('./cv-archive');
     const records = await readArchive(file);
-    await this.saved.importRecords(records.cvs, records.experiences, wipePreviousData).catch(() => {
-      throw new Error('CVs and experiences could not be imported. Browser storage may be full or unavailable. Existing saves were kept.');
+    await this.saved.importRecords(records.cvs, records.experiences, wipePreviousData, records.technologies).catch(() => {
+      throw new Error('CVs, experiences and technologies could not be imported. Browser storage may be full or unavailable. Existing saves were kept.');
     });
-    return { cvs: records.cvs.length, experiences: records.experiences.length };
+    return { cvs: records.cvs.length, experiences: records.experiences.length, technologies: records.technologies?.length ?? 0 };
   }
 }

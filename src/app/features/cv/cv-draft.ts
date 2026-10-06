@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { CvLanguage } from './languages';
 import { CvExperience } from './experience';
 import { CvTheme } from './cv-themes';
+import { CustomEntryIcons } from '../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 
 export interface CvStructure {
   readonly theme?: CvTheme;
@@ -17,6 +18,7 @@ export const DEFAULT_CV_STRUCTURE: CvStructure = {
 };
 
 export interface CvInfo {
+  readonly customTechnologyIcons?: CustomEntryIcons;
   readonly structure?: CvStructure;
   readonly name: string;
   readonly positionTitle: string;
@@ -48,10 +50,12 @@ export class CvDraft {
   save(info: CvInfo): void {
     this.info.set({
       ...info,
+      ...(info.customTechnologyIcons ? { customTechnologyIcons: { ...info.customTechnologyIcons } } : {}),
       languages: info.languages.map((language) => ({ ...language })),
       technologies: [...info.technologies],
       experiences: info.experiences.map((experience) => ({
-        ...experience, technologies: [...experience.technologies]
+        ...experience, technologies: [...experience.technologies],
+        ...(experience.customTechnologyIcons ? { customTechnologyIcons: { ...experience.customTechnologyIcons } } : {})
       }))
     });
   }

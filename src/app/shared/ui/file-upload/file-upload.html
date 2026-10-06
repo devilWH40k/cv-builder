@@ -1,13 +1,13 @@
 <div class="field" [class.invalid]="invalid()" [class.success]="success()">
-  <div class="photo-preview">
+  <div class="photo-preview" [class.icon-preview]="mode() === 'icon'">
     @if (previewUrl(); as url) {
-    <img [src]="url" alt="Selected photo preview" (error)="previewUrl.set(null)" />
+    <img [src]="url" [alt]="mode() === 'icon' ? 'Selected icon preview' : 'Selected photo preview'" (error)="previewUrl.set(null)" />
     } @else {
-    <lucide-icon [img]="UserIcon" [size]="24" aria-hidden="true" />
+    <lucide-icon [img]="mode() === 'icon' ? ImageIcon : UserIcon" [size]="24" aria-hidden="true" />
     }
   </div>
   <div class="control-wrap upload">
-    <input class="file-input" type="file" [id]="inputId()" accept=".jpg,.jpeg,.png" [disabled]="disabled()"
+    <input class="file-input" type="file" [id]="inputId()" [accept]="accept()" [disabled]="disabled()"
       [attr.aria-required]="required()" [attr.aria-invalid]="invalid()"
       [attr.aria-describedby]="inputId() + '-hint ' + inputId() + '-error'" (change)="selectFile($event)"
       (blur)="control().markAsTouched()" />
@@ -18,7 +18,7 @@
         <span class="filename">{{ value()?.name }}</span>
       </div>
     </div>
-    <p class="hint" [id]="inputId() + '-hint'">JPG, JPEG or PNG</p>
+    <p class="hint" [id]="inputId() + '-hint'">{{ helpText() }}</p>
   </div>
   <div class="error" [id]="inputId() + '-error'" aria-live="polite">
     <ng-content />

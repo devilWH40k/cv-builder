@@ -1,3 +1,5 @@
+import { CustomEntryIcons, entryIcon } from "../../core/dialogs/custom-entry-dialog/custom-entry-icon";
+
 interface UsedTechnologyGroup {
   readonly label: string;
   readonly options: readonly { readonly name: string; readonly icon: string }[];
@@ -72,8 +74,12 @@ export const USED_TECHNOLOGY_ICONS: Readonly<Record<string, string | undefined>>
 };
 
 export function usedTechnologiesView(
-  technologies: readonly string[], preferred: 'blocks' | 'comma-separated'
+  technologies: readonly string[], preferred: 'blocks' | 'comma-separated', customIcons: CustomEntryIcons = {}
 ): 'blocks' | 'comma-separated' {
-  return technologies.some((technology) => !Object.hasOwn(USED_TECHNOLOGY_ICONS, technology))
+  return technologies.some((technology) => !usedTechnologyIcon(technology, customIcons))
     ? 'comma-separated' : preferred;
+}
+
+export function usedTechnologyIcon(name: string, customIcons: CustomEntryIcons = {}): string | undefined {
+  return entryIcon(USED_TECHNOLOGY_ICONS, name) ?? entryIcon(customIcons, name);
 }

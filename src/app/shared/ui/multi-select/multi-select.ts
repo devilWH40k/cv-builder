@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { LucideAngularModule, Search } from 'lucide-angular';
 import { FormField } from '../form-field/form-field';
-import { Button } from '../button/button';
+import { CustomEntry, CustomEntryDialog } from '../../../core/dialogs/custom-entry-dialog/custom-entry-dialog';
+import { CustomEntryIcons, entryIcon } from '../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 
 export interface MultiSelectGroup {
   readonly label: string;
@@ -10,7 +11,7 @@ export interface MultiSelectGroup {
 
 @Component({
   selector: 'app-multi-select',
-  imports: [LucideAngularModule, Button],
+  imports: [LucideAngularModule, CustomEntryDialog],
   templateUrl: './multi-select.html',
   styleUrl: './multi-select.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -19,12 +20,24 @@ export class MultiSelect extends FormField<readonly string[]> {
   readonly groups = input.required<readonly MultiSelectGroup[]>();
   readonly optionIcons = input<Readonly<Record<string, string | undefined>>>({});
   readonly allowCustom = input(false);
-  protected readonly customName = signal('');
+  readonly showIcons = input(true);
+  readonly customIcons = input<CustomEntryIcons>({});
+  readonly customIconsChange = output<CustomEntryIcons>();
+  readonly savedEntries = input<readonly CustomEntry[]>([]);
+  readonly saveEntry = input<((entry: CustomEntry) => Promise<CustomEntry>) | null>(null);
+  protected readonly dialogOpen = signal(false);
+  protected readonly entryIcon = entryIcon;
+  protected readonly icons = computed(() => ({
+    ...Object.fromEntries(this.savedEntries().filter((entry) => entry.icon).map((entry) => [entry.name, entry.icon])),
+    ...this.customIcons(), ...this.optionIcons()
+  }));
   protected readonly availableGroups = computed(() => {
     const groups = this.groups();
     if (!this.allowCustom()) return groups;
     const known = new Set(groups.flatMap((group) => group.options));
-    const custom = this.value().filter((option) => !known.has(option));
+    const saved = this.savedEntries().map((entry) => entry.name)
+      .filter((name) => !groups.some((group) => group.options.some((option) => option.toLowerCase() === name.toLowerCase())));
+    const custom = [...new Set([...saved, ...this.value().filter((option) => !known.has(option))])];
     return custom.length ? [...groups, { label: 'Custom', options: custom }] : groups;
   });
   protected readonly query = signal('');
@@ -37,20 +50,25 @@ export class MultiSelect extends FormField<readonly string[]> {
     })).filter((group) => group.options.length > 0);
   });
 
-  protected addCustom(event?: Event): void {
-    event?.preventDefault();
+  protected addCustom(entry: CustomEntry): void {
+    this.dialogOpen.set(false);
     const control = this.control();
-    const name = this.customName().trim();
+    const name = entry.name.trim();
     if (!this.allowCustom() || control.disabled || !name) return;
-    const existing = [...this.groups().flatMap((group) => group.options), ...control.value]
+    const existing = [...this.groups().flatMap((group) => group.options), ...control.value, ...this.savedEntries().map((item) => item.name)]
       .find((option) => option.toLowerCase() === name.toLowerCase());
     const option = existing ?? name;
+    const isDefault = this.groups().some((group) => group.options.includes(option));
+    if (entry.icon && !isDefault) {
+      this.customIconsChange.emit({ ...this.customIcons(), [option]: entry.icon });
+      control.markAsDirty();
+      control.markAsTouched();
+    }
     if (!control.value.includes(option)) {
       control.setValue([...control.value, option]);
       control.markAsDirty();
       control.markAsTouched();
     }
-    this.customName.set('');
     this.query.set('');
   }
 
@@ -58,6 +76,12 @@ export class MultiSelect extends FormField<readonly string[]> {
     const control = this.control();
     if (control.disabled) return;
     const selected = control.value;
+    if (!selected.includes(option)) {
+      const icon = entryIcon(this.icons(), option);
+      if (icon && !entryIcon(this.customIcons(), option) && !entryIcon(this.optionIcons(), option)) {
+        this.customIconsChange.emit({ ...this.customIcons(), [option]: icon });
+      }
+    }
     control.setValue(selected.includes(option)
       ? selected.filter((item) => item !== option)
       : [...selected, option]);

@@ -1166,6 +1166,31 @@ The application should feel cohesive rather than individually designed screen by
 
 The user should focus primarily on creating their CV, not on understanding the interface.
 
+## Custom technology entries
+
+The multi-select's small secondary “Add custom entry” button opens a shared dialog
+with a required name and optional icon. Cancel, Escape, and backdrop dismissal
+leave selections unchanged. Uploaded icons are decoded locally and fitted without
+stretching into a transparent 96×96 PNG. Pickers and chips display them at 20×20px;
+experience preview icons use 24×24px, matching the built-in icons.
+
+The icon field reuses `app-file-upload` with `mode="icon"`, a configurable `accept`
+filter and `helpText`. Icon mode displays a square, uncropped preview and applies
+files directly to the provided control; the caller handles validation. The default
+photo mode retains the circular preview and photo cropping dialog.
+
+CVs and experiences store optional `customTechnologyIcons` maps alongside their
+technology names. Local saves and ZIP backups preserve these maps. An experience
+uses comma-separated technology names and shows a warning whenever any selected
+technology has no icon. Custom entries with icons can use the normal blocks view.
+
+Technology selectors use the feature-specific `app-technology-select` wrapper.
+It supplies the saved technology library and an optional save callback to the
+generic multi-select. **Apply** only selects the entry; **Apply and save** waits
+for an IndexedDB transaction before selecting it. Failed saves leave the dialog
+open for retry. Unrelated multi-selects do not receive the library or save action.
+Selected icons remain snapshots, so library updates do not rewrite existing CVs.
+
 ## Tooltips
 
 Import `Tooltip` from `src/app/shared/directories/tooltip` and add

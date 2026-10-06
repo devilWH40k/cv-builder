@@ -17,6 +17,17 @@ describe('IndexedDB saved CVs', () => {
   };
   const service = () => TestBed.runInInjectionContext(() => new SavedCvs());
 
+  it('preserves custom icons when saving and loading CVs and reusable experiences', async () => {
+    const customTechnologyIcons = { SDK: document.createElement('canvas').toDataURL('image/png') };
+    const experience = { ...info.experiences[0], technologies: ['SDK'], customTechnologyIcons };
+    const stored = { ...info, technologies: ['SDK'], customTechnologyIcons, experiences: [experience] };
+    const saved = service();
+    const id = await saved.save(stored, null);
+    expect(await saved.load(id)).toEqual(stored);
+    await saved.saveExperience(experience);
+    expect((await saved.listExperiences())[0].experience.customTechnologyIcons).toEqual(customTechnologyIcons);
+  });
+
   beforeEach(() => {
     databaseName = 'cv-builder-test-' + crypto.randomUUID();
     legacy = new Map();
@@ -314,13 +325,34 @@ describe('IndexedDB saved CVs', () => {
         const request = indexedDB.open(databaseName);
         request.onerror = () => reject(request.error);
         request.onsuccess = () => {
-          expect(request.result.version).toBe(version);
+          expect(request.result.version).toBe(version + 1);
+          expect(request.result.objectStoreNames.contains('technologies')).toBeTrue();
           request.result.close();
           resolve();
         };
       });
     });
   }
+
+  it('persists a technology library, deduplicates names and imports or wipes entries', async () => {
+    const saved = service();
+    const icon = document.createElement('canvas').toDataURL('image/png');
+    await saved.saveTechnology({ name: ' SDK ', icon });
+    await saved.saveTechnology({ name: 'sdk', icon });
+    const reloaded = service();
+    await reloaded.loadTechnologies();
+    expect(reloaded.technologies()).toEqual([
+      jasmine.objectContaining({ id: 'sdk', name: 'SDK', icon })
+    ]);
+    const snapshot = await saved.backupSnapshot();
+    expect(snapshot.technologies).toEqual(reloaded.technologies());
+    await saved.importRecords([], [], false, [{ id: 'tool', name: 'Tool', updatedAt: 1 }]);
+    expect(saved.technologies().map((entry) => entry.name)).toEqual(['SDK', 'Tool']);
+    await saved.importRecords([], [], true, snapshot.technologies);
+    expect(saved.technologies()).toEqual(snapshot.technologies!);
+    await saved.importRecords([], [], true);
+    expect((await saved.backupSnapshot()).technologies).toEqual([]);
+  });
 
 
   it('round trips both stores without duplicates and preserves experience links', async () => {
@@ -381,9 +413,9 @@ describe('IndexedDB saved CVs', () => {
     const experiences = [{ id: 'replacement-experience', updatedAt: 43,
       experience: { ...info.experiences[0], savedExperienceId: 'replacement-experience' } }];
     await saved.importRecords(cvs, experiences, true);
-    expect(await saved.backupSnapshot()).toEqual({ cvs, experiences });
+    expect(await saved.backupSnapshot()).toEqual({ cvs, experiences, technologies: [] });
     await saved.importRecords([], [], true);
-    expect(await saved.backupSnapshot()).toEqual({ cvs: [], experiences: [] });
+    expect(await saved.backupSnapshot()).toEqual({ cvs: [], experiences: [], technologies: [] });
     expect(saved.all()).toEqual([]);
   });
 

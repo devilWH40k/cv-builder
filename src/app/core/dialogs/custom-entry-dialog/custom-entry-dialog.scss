@@ -1,0 +1,19 @@
+@use 'styles/tokens' as tokens;
+@use '../../../shared/ui/button/variants' as buttons;
+
+dialog {
+  box-sizing: border-box;
+  width: min(tokens.$breakpoint-sm, calc(100% - #{tokens.$spacing-8}));
+  max-height: calc(100dvh - #{tokens.$spacing-8});
+  padding: tokens.$spacing-6;
+  color: tokens.$text-primary;
+  background: tokens.$background-surface;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  box-shadow: tokens.$shadow-lg;
+}
+h2 { margin: 0 0 tokens.$spacing-4; font-size: tokens.$font-size-xl; }
+p { color: tokens.$text-secondary; font-size: tokens.$font-size-sm; }
+.secondary { @include buttons.secondary; }
+.cancel { @include buttons.ghost; }
+footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: tokens.$spacing-2; margin-top: tokens.$spacing-6; }

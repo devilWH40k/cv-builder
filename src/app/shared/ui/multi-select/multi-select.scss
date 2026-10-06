@@ -1,4 +1,5 @@
 @use '../../../../styles/tokens' as tokens;
+@use '../button/variants' as buttons;
 
 :host {
   display: block;
@@ -58,15 +59,16 @@ summary {
   padding-top: tokens.$spacing-3;
   border-top: 1px solid tokens.$border-color;
 
-  label {
-    display: block;
-    margin-bottom: tokens.$spacing-2;
+}
+
+.add-custom {
+  @include buttons.secondary;
+  & {
+    min-height: tokens.$button-height-sm;
+    padding: tokens.$spacing-1 tokens.$spacing-3;
     font-size: tokens.$font-size-sm;
   }
-
-  .search-wrap {
-    margin-bottom: 0;
-  }
+  &:disabled { color: tokens.$text-disabled; cursor: not-allowed; }
 }
 
 fieldset {
@@ -111,6 +113,8 @@ fieldset:disabled .option {
 }
 
 .option-icon {
+  width: tokens.$spacing-5;
+  height: tokens.$spacing-5;
   flex-shrink: 0;
   object-fit: contain;
 }

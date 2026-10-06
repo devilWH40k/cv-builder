@@ -23,17 +23,19 @@ import { Tabs } from '../../shared/ui/tabs/tabs';
 import { LANGUAGES, LANGUAGE_LEVELS } from '../cv/languages';
 import { Select } from '../../shared/ui/select/select';
 import { ArrowLeft, Download, Eye, Pencil, LucideAngularModule, X } from 'lucide-angular';
-import { MultiSelect } from '../../shared/ui/multi-select/multi-select';
+import { TechnologySelect } from '../cv/technology-select/technology-select';
 import { TECHNOLOGY_GROUPS } from '../cv/technologies';
+import { entryIcon } from '../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 
 @Component({
   selector: 'app-create',
-  imports: [ExperiencesDialog, ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, MultiSelect, LucideAngularModule, ExperienceEntry],
+  imports: [ExperiencesDialog, ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, TechnologySelect, LucideAngularModule, ExperienceEntry],
   templateUrl: './create.html',
   styleUrl: './create.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Create {
+  protected readonly entryIcon = entryIcon;
   protected readonly pdf = inject(CvPdf);
   protected readonly draft = inject(CvDraft);
   protected readonly activeTab = signal('info');

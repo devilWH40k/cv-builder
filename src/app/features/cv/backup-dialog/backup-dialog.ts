@@ -65,7 +65,7 @@ export class BackupDialog {
     if (!file || this.busy()) return;
     await this.run('import', async () => {
       const counts = await this.backup.import(file, this.wipePreviousData.value);
-      this.toasts.show('success', `Imported ${counts.cvs} CV${counts.cvs === 1 ? '' : 's'} and ${counts.experiences} saved experience${counts.experiences === 1 ? '' : 's'}.`);
+      this.toasts.show('success', `Imported ${counts.cvs} CV${counts.cvs === 1 ? '' : 's'}, ${counts.experiences} saved experience${counts.experiences === 1 ? '' : 's'} and ${counts.technologies} technolog${counts.technologies === 1 ? 'y' : 'ies'}.`);
       this.wipePreviousData.reset(false);
       this.selectedFile.set(null);
       this.fileInput().nativeElement.value = '';

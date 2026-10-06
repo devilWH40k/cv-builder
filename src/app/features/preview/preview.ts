@@ -2,7 +2,8 @@ import { Resizable } from '../../shared/ui/resizable/resizable';
 import { CSS_PIXELS_PER_MM, CV_PHOTO_MIN_MM, CV_PHOTO_MAX_MM, cvPhotoSizeMm } from '../cv/cv-photo-size';
 import { CvPdf } from '../cv/cv-pdf';
 import { SaveCvButton } from '../cv/save-cv-button';
-import { USED_TECHNOLOGY_ICONS, usedTechnologiesView } from '../cv/used-technologies';
+import { usedTechnologyIcon, usedTechnologiesView } from '../cv/used-technologies';
+import { entryIcon } from '../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 import { afterNextRender, afterRenderEffect, ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, input, signal, viewChild, viewChildren } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Download, LucideAngularModule } from 'lucide-angular';
@@ -16,7 +17,7 @@ import { formatCalendarDate } from '../../shared/ui/date-picker/date-value';
   selector: 'app-preview',
   imports: [Resizable, SaveCvButton, RouterLink, Button, LucideAngularModule, StructureOptions, ResponsiveDrawer],
   templateUrl: './preview.html',
-  styleUrls: ['./preview.scss', './preview-pages.scss'],
+  styleUrls: ['./preview.scss', './preview-pages.scss', './preview-technologies.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Preview {
@@ -38,7 +39,8 @@ export class Preview {
   protected readonly photoSizeStep = CSS_PIXELS_PER_MM;
   private readonly photo = computed(() => this.info()?.photo);
   protected readonly photoUrl = signal<string | null>(null);
-  protected readonly technologyIcons = USED_TECHNOLOGY_ICONS;
+  protected readonly usedTechnologyIcon = usedTechnologyIcon;
+  protected readonly entryIcon = entryIcon;
   protected readonly usedTechnologiesView = usedTechnologiesView;
   protected readonly DownloadIcon = Download;
   protected readonly formatDate = formatCalendarDate;

@@ -49,4 +49,18 @@ describe('PDF technology blocks', () => {
   it('omits an empty technology grid', async () => {
     expect((await pdfTechnologyBlocks([], 154, '#000000', false)).length).toBe(0);
   });
+
+  it('embeds a custom icon into its card at a fixed size in the actual PDF', async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 96;
+    canvas.getContext('2d')!.fillRect(0, 0, 96, 96);
+    const icon = canvas.toDataURL('image/png');
+    const rows = await pdfTechnologyBlocks(['SDK', 'Other'], 154, '#000000', false, { SDK: icon });
+    const image = rowSvg(rows[0]).querySelector('image')!;
+    expect(image.getAttribute('href')).toBe(icon);
+    expect(image.getAttribute('width')).toBe('15');
+    expect(image.getAttribute('height')).toBe('15');
+    const bytes = await pdfMake.createPdf({ content: rows }).getBuffer();
+    expect(new TextDecoder('latin1').decode(bytes)).toContain('/Subtype /Image');
+  });
 });
