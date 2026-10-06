@@ -1,70 +1,26 @@
-# CvBuilder
+# CV Builder
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.37.
+<a href="https://app.netlify.com/projects/cv-builder-2/deploys">
+  <img align="right" src="https://api.netlify.com/api/v1/badges/07e08a3f-ff78-458d-a4a8-72afa5ee6c71/deploy-status" alt="Netlify Status" />
+</a>
 
-## Development server
+[Open CV Builder](https://cv-builder-2.netlify.app/)
 
-To start a local development server, run:
+A simple Angular app for creating and customizing your CV, previewing changes,
+saving CVs in your browser, and exporting them as PDFs.
 
-```bash
-ng serve
-```
+The app runs completely client-side. Your CV data and photos stay in your browser
+and are never sent to a server. Saving and PDF generation happen locally.
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Project notes
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## App version
+### App version
 
 Set `appVersion` in `src/environments/environment.ts` to change the version shown
 in the footer. The same value is used for development and production builds.
 The footer year comes from the current date.
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
-
-## Saved CV storage
+### Saved CV storage
 
 CV snapshots are stored locally in the browser's IndexedDB database, named
 `cv-builder`. Photos are stored as files rather than base64 strings. Save, load,
@@ -81,11 +37,11 @@ whole site, not just its CV records; the browser controls the quota. If the API
 is unavailable or fails, saving remains available and the estimate is marked
 unavailable. Data stays in this browser profile and is removed if site data is cleared.
 
-## Notifications and save feedback
+### Notifications and save feedback
 
 See [Toast notifications and save feedback](docs/TOASTS.md).
 
-## PDF export
+### PDF export
 
 Both Export actions generate an A4 PDF locally from `CvInfo` using pdfmake.
 The exporter and bundled Roboto fonts load on demand. The browser distributions
@@ -101,3 +57,61 @@ technology icons are embedded separately. PDF text remains selectable.
 The live preview remains HTML. PDF pagination is handled independently by pdfmake;
 Roboto typography and solid accent text can differ from the preview's system fonts
 and gradient headings. The existing browser-print styles still support manual printing.
+
+## Angular CLI reference
+
+### Development server
+
+To start a local development server, run:
+
+```bash
+ng serve
+```
+
+Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+
+### Code scaffolding
+
+Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+
+```bash
+ng generate component component-name
+```
+
+For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+
+```bash
+ng generate --help
+```
+
+### Building
+
+To build the project run:
+
+```bash
+ng build
+```
+
+This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+
+### Running unit tests
+
+To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+
+```bash
+ng test
+```
+
+### Running end-to-end tests
+
+For end-to-end (e2e) testing, run:
+
+```bash
+ng e2e
+```
+
+Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+
+### Additional resources
+
+For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
