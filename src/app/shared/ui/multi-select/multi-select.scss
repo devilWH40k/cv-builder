@@ -53,6 +53,22 @@ summary {
   overflow-y: auto;
 }
 
+.custom-entry {
+  margin-top: tokens.$spacing-3;
+  padding-top: tokens.$spacing-3;
+  border-top: 1px solid tokens.$border-color;
+
+  label {
+    display: block;
+    margin-bottom: tokens.$spacing-2;
+    font-size: tokens.$font-size-sm;
+  }
+
+  .search-wrap {
+    margin-bottom: 0;
+  }
+}
+
 fieldset {
   margin: 0 0 tokens.$spacing-3;
   padding: 0;

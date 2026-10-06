@@ -70,3 +70,10 @@ export const USED_TECHNOLOGY_ICONS: Readonly<Record<string, string | undefined>>
   // Older saved CVs used this name for Angular.
   Angular: technologyIcons['Angular 2+']
 };
+
+export function usedTechnologiesView(
+  technologies: readonly string[], preferred: 'blocks' | 'comma-separated'
+): 'blocks' | 'comma-separated' {
+  return technologies.some((technology) => !Object.hasOwn(USED_TECHNOLOGY_ICONS, technology))
+    ? 'comma-separated' : preferred;
+}

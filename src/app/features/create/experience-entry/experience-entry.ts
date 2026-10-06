@@ -3,17 +3,18 @@ import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, output, signal, viewChild } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AngularTiptapEditorComponent, AteEditorCommandsService, AteEditorConfig } from '@flogeez/angular-tiptap-editor';
-import { Bold, Italic, List, ListOrdered, LucideAngularModule, Redo2, Save, Underline, Undo2, X } from 'lucide-angular';
+import { Bold, Italic, List, ListOrdered, LucideAngularModule, Redo2, Save, TriangleAlert, Underline, Undo2, X } from 'lucide-angular';
 import { Input } from '../../../shared/ui/input/input';
 import { MultiSelect } from '../../../shared/ui/multi-select/multi-select';
 import { DatePicker } from '../../../shared/ui/date-picker/date-picker';
 import { DateMode, parseCalendarDate } from '../../../shared/ui/date-picker/date-value';
-import { USED_TECHNOLOGY_GROUPS, USED_TECHNOLOGY_ICONS } from '../../cv/used-technologies';
+import { USED_TECHNOLOGY_GROUPS, USED_TECHNOLOGY_ICONS, usedTechnologiesView } from '../../cv/used-technologies';
 import { createExperienceForm } from '../cv-form';
+import { Tooltip } from '../../../shared/directories/tooltip';
 
 @Component({
   selector: 'app-experience-entry',
-  imports: [ReactiveFormsModule, Input, MultiSelect, DatePicker, AngularTiptapEditorComponent, LucideAngularModule],
+  imports: [ReactiveFormsModule, Input, MultiSelect, DatePicker, AngularTiptapEditorComponent, LucideAngularModule, Tooltip],
   templateUrl: './experience-entry.html',
   styleUrl: './experience-entry.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -35,6 +36,8 @@ export class ExperienceEntry {
   ] as const;
   protected readonly XIcon = X;
   protected readonly SaveIcon = Save;
+  protected readonly TriangleAlertIcon = TriangleAlert;
+  protected readonly usedTechnologiesView = usedTechnologiesView;
   protected readonly saving = signal(false);
   private readonly saved = inject(SavedCvs);
   private readonly toasts = inject(ToastService);
