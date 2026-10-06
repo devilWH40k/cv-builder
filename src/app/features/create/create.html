@@ -92,7 +92,7 @@
     <section aria-labelledby="technologies-title">
       <h3 id="technologies-title">Tools/Technologies</h3>
       <app-multi-select inputId="technologies" label="Tools and technologies" [control]="form.controls.technologies"
-        [groups]="technologyGroups" />
+        [groups]="technologyGroups" [allowCustom]="true" />
       <div class="selected-technologies">
         @for (group of selectedTechnologyGroups(); track group.label) {
         <div class="skill-group">

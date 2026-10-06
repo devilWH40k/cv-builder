@@ -62,7 +62,8 @@ export class Create {
   );
   protected readonly selectedTechnologyGroups = computed(() => {
     const selected = this.selectedTechnologies();
-    return TECHNOLOGY_GROUPS.map((group) => ({
+    const known = new Set<string>(TECHNOLOGY_GROUPS.flatMap((group) => [...group.options]));
+    return [...TECHNOLOGY_GROUPS, { label: 'Custom', options: selected.filter((option) => !known.has(option)) }].map((group) => ({
       label: group.label,
       options: group.options.filter((option) => selected.includes(option))
     })).filter((group) => group.options.length > 0);

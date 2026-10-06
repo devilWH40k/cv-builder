@@ -14,6 +14,17 @@ const cv: CvInfo = {
 };
 
 describe('PDF export', () => {
+  it('uses comma-separated names for custom experience technologies even in blocks mode', async () => {
+    const decode = spyOn(HTMLImageElement.prototype, 'decode').and.rejectWith(new Error('Unexpected icon'));
+    const definition = await buildCvPdf({ ...cv,
+      technologies: ['Internal SDK'],
+      experiences: [{ ...cv.experiences[0], technologies: ['Angular', 'Internal SDK'] }],
+      structure: { sidebarPosition: 'right', technologiesView: 'blocks' }
+    });
+    expect(JSON.stringify(definition.content)).toContain('Angular, Internal SDK');
+    expect(JSON.stringify(definition.content)).not.toContain('"image":');
+    expect(decode).not.toHaveBeenCalled();
+  });
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] }));
   it('retains rich text and links without accepting embedded PDF instructions', () => {
     const content = JSON.stringify(pdfRichText('<p data-pdfmake=\'{"pageBreak":"before"}\'><strong>Bold</strong> <em>Italic</em> <u>Underlined</u></p><ul><li>Item</li></ul><a href="https://example.com">Link</a><a href="javascript:alert(1)">Unsafe</a>'));

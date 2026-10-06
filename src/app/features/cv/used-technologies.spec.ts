@@ -49,6 +49,7 @@ describe('Project technologies', () => {
     page.querySelector<HTMLInputElement>('.option input')!.click();
     await fixture.whenStable();
     expect(form.controls.technologies.value).toEqual(['Stripe']);
+    expect(page.querySelector('.technology-warning')).toBeNull();
     expect(page.querySelector('.chips img')!.getAttribute('src')).toBe('used-tech-icons/ic-stripe.svg');
     page.querySelector<HTMLButtonElement>('[aria-label="Remove Stripe"]')!.click();
     await fixture.whenStable();
@@ -56,7 +57,7 @@ describe('Project technologies', () => {
     expect(page.querySelector('.chips img')).toBeNull();
   });
 
-  it('keeps older unsupported selections visible and removable without offering them as new options', async () => {
+  it('keeps saved custom selections visible and removable in the picker and chips', async () => {
     const fixture = TestBed.createComponent(ExperienceEntry);
     const form = createExperienceForm();
     form.controls.technologies.setValue(['React']);
@@ -67,7 +68,7 @@ describe('Project technologies', () => {
     const page: HTMLElement = fixture.nativeElement;
     expect(page.querySelector('.chips')!.textContent).toContain('React');
     expect(page.querySelector('.chips img')).toBeNull();
-    expect(Array.from(page.querySelectorAll('.option span'), (item) => item.textContent)).not.toContain('React');
+    expect(Array.from(page.querySelectorAll('.option span'), (item) => item.textContent)).toContain('React');
     page.querySelector<HTMLButtonElement>('[aria-label="Remove React"]')!.click();
     expect(form.controls.technologies.value).toEqual([]);
   });
@@ -78,7 +79,10 @@ describe('Project technologies', () => {
       name: 'Alex', positionTitle: 'Developer', description: 'Applications', photo: null,
       languages: [], technologies: ['React'], experiences: [{
         company: 'Project', position: '', startDate: '', endDate: '', isCurrent: false,
-        description: '', technologies: ['Angular', 'SignalR', 'React']
+        description: '', technologies: ['Angular', 'SignalR']
+      }, {
+        company: 'Custom project', position: '', startDate: '', endDate: '', isCurrent: false,
+        description: '', technologies: ['Angular', 'Custom SDK']
       }]
     });
     const fixture = TestBed.createComponent(Preview);
@@ -95,9 +99,48 @@ describe('Project technologies', () => {
       .toEqual(['Angular', 'SignalR']);
     expect(page.querySelector('.cv-technologies')!.textContent).toContain('React');
     expect(page.querySelector('.cv-technologies img')).toBeNull();
+    expect(page.querySelector('.technologies-inline')!.textContent!.trim()).toBe('Angular, Custom SDK');
     draft.updateStructure({ sidebarPosition: 'right', technologiesView: 'comma-separated' });
     await fixture.whenStable();
-    expect(page.querySelector('.technologies-inline')!.textContent!.trim()).toBe('Angular, SignalR, React');
+    expect(page.querySelector('.technologies-inline')!.textContent!.trim()).toBe('Angular, SignalR');
     expect(page.querySelector('.experience-technologies')).toBeNull();
+  });
+
+  it('adds a trimmed custom experience technology without an icon using Enter', async () => {
+    const fixture = TestBed.createComponent(ExperienceEntry);
+    const form = createExperienceForm();
+    fixture.componentRef.setInput('form', form);
+    fixture.componentRef.setInput('index', 0);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const page: HTMLElement = fixture.nativeElement;
+    const input = page.querySelector<HTMLInputElement>('.custom-entry input')!;
+    input.value = '  Custom SDK  ';
+    input.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
+    input.dispatchEvent(enter);
+    await fixture.whenStable();
+    expect(enter.defaultPrevented).toBeTrue();
+    expect(form.controls.technologies.value).toEqual(['Custom SDK']);
+    expect(form.controls.technologies.dirty).toBeTrue();
+    expect(page.querySelector('.chips')!.textContent).toContain('Custom SDK');
+    expect(page.querySelector('.chips img')).toBeNull();
+    expect(input.value).toBe('');
+    const warning = page.querySelector<HTMLButtonElement>('.chips li:last-child.technology-warning button')!;
+    const hint = document.getElementById(warning.getAttribute('aria-describedby')!)!;
+    expect(hint.textContent).toBe('By adding at least one custom technology experience tech view mode becomes "comma separated"');
+    expect(warning.getAttribute('aria-describedby')).toBe(hint.id);
+    expect(hint.hidden).toBeTrue();
+    warning.focus();
+    await fixture.whenStable();
+    expect(hint.hidden).toBeFalse();
+    warning.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await fixture.whenStable();
+    expect(hint.hidden).toBeTrue();
+    page.querySelector<HTMLButtonElement>('[aria-label="Remove Custom SDK"]')!.click();
+    await fixture.whenStable();
+    expect(page.querySelector('.technology-warning')).toBeNull();
+    expect(hint.isConnected).toBeFalse();
   });
 });

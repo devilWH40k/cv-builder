@@ -52,7 +52,7 @@
     }
   </fieldset>
   <app-multi-select [inputId]="'experience-technologies-' + index()" label="Used technologies"
-    [control]="form().controls.technologies" [groups]="technologyGroups" [optionIcons]="technologyIcons" />
+    [control]="form().controls.technologies" [groups]="technologyGroups" [optionIcons]="technologyIcons" [allowCustom]="true" />
   <ul class="chips" aria-label="Selected technologies">
     @for (technology of form().controls.technologies.value; track technology) {
     <li>
@@ -61,6 +61,14 @@
       }
       {{ technology }}<button type="button" [attr.aria-label]="'Remove ' + technology"
         (click)="removeTechnology(technology)"><lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" /></button>
+    </li>
+    }
+    @if (usedTechnologiesView(form().controls.technologies.value, 'blocks') === 'comma-separated') {
+    <li class="technology-warning">
+      <button type="button" aria-label="Custom technology view warning"
+        appTooltip='By adding at least one custom technology experience tech view mode becomes "comma separated"'>
+        <lucide-icon [img]="TriangleAlertIcon" [size]="20" aria-hidden="true" />
+      </button>
     </li>
     }
   </ul>

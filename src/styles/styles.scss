@@ -1,4 +1,5 @@
 @use './tokens' as tokens;
+@use '../app/shared/directories/tooltip';
 @use './reset';
 @use './themes/basic';
 @use './themes/dark-blue';

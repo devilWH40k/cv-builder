@@ -1,0 +1,23 @@
+@use '../../../styles/tokens' as tokens;
+
+.app-tooltip {
+  position: fixed;
+  z-index: tokens.$z-tooltip;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(100vw, tokens.$sidebar-width);
+  padding: tokens.$spacing-3;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md;
+  background: tokens.$background-surface;
+  color: tokens.$text-primary;
+  box-shadow: tokens.$shadow-md;
+  font-family: tokens.$font-family-base;
+  font-size: tokens.$font-size-sm;
+  line-height: tokens.$line-height-normal;
+  overflow-wrap: anywhere;
+}
+
+@media print {
+  .app-tooltip { display: none; }
+}

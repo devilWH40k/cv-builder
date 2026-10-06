@@ -29,6 +29,27 @@ describe('CV form', () => {
     page.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   }
 
+  it('adds general technologies to Custom and prevents blank or duplicate entries', async () => {
+    const input = page.querySelector<HTMLInputElement>('#technologies-custom')!;
+    const button = page.querySelector<HTMLButtonElement>('#technologies-custom + app-button button')!;
+    expect(button.disabled).toBeTrue();
+    for (const name of ['  Internal SDK  ', 'internal sdk', ' vue ', '   ']) {
+      input.value = name;
+      input.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+      button.click();
+      await fixture.whenStable();
+    }
+    expect(fixture.componentInstance.form.controls.technologies.value).toEqual(['Internal SDK', 'Vue']);
+    const custom = Array.from(page.querySelectorAll('.skill-group'))
+      .find((group) => group.querySelector('h4')?.textContent?.trim() === 'Custom');
+    expect(custom?.textContent).toContain('Internal SDK');
+    custom!.querySelector<HTMLButtonElement>('[aria-label="Remove Internal SDK"]')!.click();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.form.controls.technologies.value).toEqual(['Vue']);
+    expect(button.disabled).toBeTrue();
+  });
+
   function enterText(id: string, value: string): void {
     const element = page.querySelector<HTMLInputElement | HTMLTextAreaElement>(`#${id}`)!;
     element.value = value;

@@ -5,7 +5,7 @@ import fonts from 'pdfmake/build/vfs_fonts';
 import htmlToPdfmake from 'html-to-pdfmake';
 import type { Content, ContentColumns, Column, TDocumentDefinitions } from 'pdfmake/interfaces';
 import { CvInfo, DEFAULT_CV_STRUCTURE } from './cv-draft';
-import { USED_TECHNOLOGY_ICONS } from './used-technologies';
+import { USED_TECHNOLOGY_ICONS, usedTechnologiesView } from './used-technologies';
 import { formatCalendarDate } from '../../shared/ui/date-picker/date-value';
 
 pdfMake.addVirtualFileSystem(fonts);
@@ -91,7 +91,9 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
 
   const icons: Record<string, string> = {};
   if (structure.technologiesView === 'blocks') {
-    const technologies = [...new Set(cv.experiences.flatMap((entry) => [...entry.technologies]))];
+    const technologies = [...new Set(cv.experiences
+      .filter((entry) => usedTechnologiesView(entry.technologies, structure.technologiesView) === 'blocks')
+      .flatMap((entry) => [...entry.technologies]))];
     await Promise.all(technologies.map(async (technology) => {
       const source = USED_TECHNOLOGY_ICONS[technology];
       if (source) icons[technology] = await imageData(source, 96);
@@ -104,6 +106,7 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
   const main: Content[] = [];
   if (cv.experiences.length) main.push(heading('Experience:'));
   for (const [index, entry] of cv.experiences.entries()) {
+    const technologiesView = usedTechnologiesView(entry.technologies, structure.technologiesView);
     main.push({
       text: entry.company + (entry.position ? ` | ${entry.position}` : ''),
       fontSize: 14, bold: true, margin: [0, index === 0 ? 0 : 20, 0, 6], headlineLevel: 1,
@@ -114,11 +117,11 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
       text: [start, end].filter(Boolean).join(' – '), fontSize: 10, color: muted,
       margin: [0, 0, 0, 9],
     });
-    if (entry.technologies.length && structure.technologiesView === 'comma-separated') {
+    if (entry.technologies.length && technologiesView === 'comma-separated') {
       main.push({ text: entry.technologies.join(', '), fontSize: 10, margin: [0, 0, 0, 9] });
     }
     main.push(pdfRichText(entry.description));
-    if (entry.technologies.length && structure.technologiesView === 'blocks') {
+    if (entry.technologies.length && technologiesView === 'blocks') {
       // Short rows wrap icon groups without making a long experience unbreakable.
       for (let index = 0; index < entry.technologies.length; index += 8) {
         main.push({

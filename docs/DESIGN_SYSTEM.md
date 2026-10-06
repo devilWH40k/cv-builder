@@ -1166,6 +1166,16 @@ The application should feel cohesive rather than individually designed screen by
 
 The user should focus primarily on creating their CV, not on understanding the interface.
 
+## Tooltips
+
+Import `Tooltip` from `src/app/shared/directories/tooltip` and add
+`appTooltip="Hint text"` (or `[appTooltip]="hint"`) to a focusable control.
+The directive opens a plain-text hint on hover, focus, or tap and dismisses it
+on Escape, blur, or resize. On scroll, focused hints reposition and other hints
+close. It preserves existing `aria-describedby`
+references and removes its tooltip when the control is destroyed. Shared styles
+are loaded by `src/styles/styles.scss`; tooltip positioning stays within the viewport.
+
 ## CV document themes
 
 CV themes live in src/styles/themes/, with one entry file per theme:
