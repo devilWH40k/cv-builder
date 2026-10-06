@@ -189,7 +189,7 @@ describe('CV preview', () => {
   it('shows live information in the editor and downloads a PDF on Export without navigating', async () => {
     const harness = await RouterTestingHarness.create();
     const create = await harness.navigateByUrl('/create', Create);
-    create.form.setValue(info);
+    create.form.setValue({ ...info, customTechnologyIcons: {} });
     await harness.fixture.whenStable();
     const page = harness.routeNativeElement!;
     expect(TestBed.inject(Router).url).toBe('/create');
@@ -345,7 +345,7 @@ describe('CV preview', () => {
     expect(section.getBoundingClientRect().right)
       .toBeLessThan(page.querySelector('.cv-languages')!.getBoundingClientRect().left);
     const create = await harness.navigateByUrl('/create', Create);
-    expect(create.form.controls.experiences.getRawValue()).toEqual(experiences.map((experience) => ({ ...experience, savedExperienceId: null })));
+    expect(create.form.controls.experiences.getRawValue()).toEqual(experiences.map((experience) => ({ ...experience, savedExperienceId: null, customTechnologyIcons: {} })));
     expect(harness.routeNativeElement?.querySelector('[contenteditable]')?.textContent).toContain('banking platform');
   });
 

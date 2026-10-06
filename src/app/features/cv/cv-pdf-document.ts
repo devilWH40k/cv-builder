@@ -5,7 +5,7 @@ import fonts from 'pdfmake/build/vfs_fonts';
 import htmlToPdfmake from 'html-to-pdfmake';
 import type { Content, ContentColumns, Column, TDocumentDefinitions } from 'pdfmake/interfaces';
 import { CvInfo, DEFAULT_CV_STRUCTURE } from './cv-draft';
-import { USED_TECHNOLOGY_ICONS, usedTechnologiesView } from './used-technologies';
+import { usedTechnologyIcon, usedTechnologiesView } from './used-technologies';
 import { formatCalendarDate } from '../../shared/ui/date-picker/date-value';
 
 pdfMake.addVirtualFileSystem(fonts);
@@ -89,14 +89,13 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
     }
   }
 
-  const icons: Record<string, string> = {};
+  const icons = new Map<string, string>();
   if (structure.technologiesView === 'blocks') {
-    const technologies = [...new Set(cv.experiences
-      .filter((entry) => usedTechnologiesView(entry.technologies, structure.technologiesView) === 'blocks')
-      .flatMap((entry) => [...entry.technologies]))];
-    await Promise.all(technologies.map(async (technology) => {
-      const source = USED_TECHNOLOGY_ICONS[technology];
-      if (source) icons[technology] = await imageData(source, 96);
+    const sources = [...new Set(cv.experiences
+      .filter((entry) => usedTechnologiesView(entry.technologies, structure.technologiesView, entry.customTechnologyIcons) === 'blocks')
+      .flatMap((entry) => entry.technologies.map((name) => usedTechnologyIcon(name, entry.customTechnologyIcons))))];
+    await Promise.all(sources.map(async (source) => {
+      if (source) icons.set(source, await imageData(source, 96));
     }));
   }
 
@@ -106,7 +105,7 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
   const main: Content[] = [];
   if (cv.experiences.length) main.push(heading('Experience:'));
   for (const [index, entry] of cv.experiences.entries()) {
-    const technologiesView = usedTechnologiesView(entry.technologies, structure.technologiesView);
+    const technologiesView = usedTechnologiesView(entry.technologies, structure.technologiesView, entry.customTechnologyIcons);
     main.push({
       text: entry.company + (entry.position ? ` | ${entry.position}` : ''),
       fontSize: 14, bold: true, margin: [0, index === 0 ? 0 : 20, 0, 6], headlineLevel: 1,
@@ -125,10 +124,11 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
       // Short rows wrap icon groups without making a long experience unbreakable.
       for (let index = 0; index < entry.technologies.length; index += 8) {
         main.push({
-          columns: entry.technologies.slice(index, index + 8).map((technology): Column =>
-            icons[technology]
-              ? { image: icons[technology], width: 18, height: 18 }
-              : { text: technology, width: 36, fontSize: 8 }),
+          columns: entry.technologies.slice(index, index + 8).map((technology): Column => {
+            const icon = icons.get(usedTechnologyIcon(technology, entry.customTechnologyIcons) ?? '');
+            return icon ? { image: icon, width: 18, height: 18 }
+              : { text: technology, width: 36, fontSize: 8 };
+          }),
           columnGap: 6, margin: [0, 5, 0, 0],
         });
       }

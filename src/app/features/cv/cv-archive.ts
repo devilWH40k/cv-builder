@@ -4,13 +4,16 @@ import type { CvInfo, CvStructure } from './cv-draft';
 import type { CvExperience, SavedExperience } from './experience';
 import type { CvDatabaseSnapshot, SavedCv } from './saved-cvs';
 import { CV_THEMES } from './cv-themes';
+import { CustomEntryIcons } from '../../core/dialogs/custom-entry-dialog/custom-entry-icon';
+import { SavedTechnology, technologyId } from './saved-technology';
 
 const MAX_BYTES = 100 * 1024 ** 2;
 const MAX_CVS = 1000;
 const MAX_EXPERIENCES = 1000;
+const MAX_TECHNOLOGIES = 1000;
 const MAX_JSON_BYTES = 10 * 1024 ** 2;
 const INVALID = 'This is not a valid CV Builder backup.';
-const TOO_LARGE = 'Backups must contain at most 1,000 CVs, 1,000 saved experiences and 100 MB of data.';
+const TOO_LARGE = 'Backups must contain at most 1,000 CVs, 1,000 saved experiences, 1,000 technologies and 100 MB of data.';
 
 function object(value: unknown): Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error(INVALID);
@@ -37,15 +40,28 @@ function experience(value: unknown): CvExperience {
   const isCurrent = entry['isCurrent'];
   const savedExperienceId = entry['savedExperienceId'];
   if (typeof isCurrent !== 'boolean' ||
-      (savedExperienceId !== undefined && savedExperienceId !== null &&
-        (typeof savedExperienceId !== 'string' || !savedExperienceId))) throw new Error(INVALID);
+    (savedExperienceId !== undefined && savedExperienceId !== null &&
+      (typeof savedExperienceId !== 'string' || !savedExperienceId))) throw new Error(INVALID);
   return {
     company: string(entry['company']), position: string(entry['position']),
     startDate: string(entry['startDate']), endDate: string(entry['endDate']),
     description: string(entry['description']), isCurrent,
     technologies: array(entry['technologies']).map(string),
+    ...customIcons(entry['customTechnologyIcons']),
     ...(savedExperienceId !== undefined ? { savedExperienceId } : {})
   };
+}
+
+function customIcons(value: unknown): { customTechnologyIcons?: CustomEntryIcons } {
+  if (value === undefined) return {};
+  const entries = Object.entries(object(value)).map(([name, source]) => {
+    const icon = string(source);
+    if (!name.trim() || icon.length > 100000 || !/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(icon)) {
+      throw new Error(INVALID);
+    }
+    return [name, icon];
+  });
+  return { customTechnologyIcons: Object.fromEntries(entries) };
 }
 
 function structure(value: unknown): CvStructure | undefined {
@@ -56,26 +72,28 @@ function structure(value: unknown): CvStructure | undefined {
   const sidebarTechnologiesView = settings['sidebarTechnologiesView'];
   const theme = CV_THEMES.find((theme) => theme.value === settings['theme'])?.value;
   if ((settings['theme'] !== undefined && !theme) ||
-      (sidebarPosition !== 'left' && sidebarPosition !== 'right') ||
-      (technologiesView !== 'blocks' && technologiesView !== 'comma-separated') ||
-      (sidebarTechnologiesView !== undefined && sidebarTechnologiesView !== 'blocks' &&
-        sidebarTechnologiesView !== 'list')) throw new Error(INVALID);
+    (sidebarPosition !== 'left' && sidebarPosition !== 'right') ||
+    (technologiesView !== 'blocks' && technologiesView !== 'comma-separated') ||
+    (sidebarTechnologiesView !== undefined && sidebarTechnologiesView !== 'blocks' &&
+      sidebarTechnologiesView !== 'list')) throw new Error(INVALID);
   const showPhoto = settings['showPhoto'];
   const photoSizeMm = settings['photoSizeMm'];
   if (showPhoto !== undefined && typeof showPhoto !== 'boolean') throw new Error(INVALID);
   if (photoSizeMm !== undefined && (typeof photoSizeMm !== 'number' ||
-      !Number.isFinite(photoSizeMm) || photoSizeMm <= 0)) throw new Error(INVALID);
-  return { sidebarPosition, technologiesView,
+    !Number.isFinite(photoSizeMm) || photoSizeMm <= 0)) throw new Error(INVALID);
+  return {
+    sidebarPosition, technologiesView,
     ...(showPhoto !== undefined ? { showPhoto } : {}),
     ...(photoSizeMm !== undefined ? { photoSizeMm } : {}),
     ...(theme ? { theme } : {}),
-    ...(sidebarTechnologiesView ? { sidebarTechnologiesView } : {}) };
+    ...(sidebarTechnologiesView ? { sidebarTechnologiesView } : {})
+  };
 }
 
 export async function createArchive(
-  records: readonly SavedCv[], experiences: readonly SavedExperience[] = []
+  records: readonly SavedCv[], experiences: readonly SavedExperience[] = [], technologies: readonly SavedTechnology[] = []
 ): Promise<Blob> {
-  if (records.length > MAX_CVS || experiences.length > MAX_EXPERIENCES) throw new Error(TOO_LARGE);
+  if (records.length > MAX_CVS || experiences.length > MAX_EXPERIENCES || technologies.length > MAX_TECHNOLOGIES) throw new Error(TOO_LARGE);
   const entries: AsyncZippable = Object.create(null);
   const cvs = [];
   let size = 0;
@@ -87,22 +105,28 @@ export async function createArchive(
       if (size > MAX_BYTES) throw new Error(TOO_LARGE);
       entries[path] = [new Uint8Array(await photo.arrayBuffer()), { level: 0 }];
     }
-    cvs.push({ ...record, info: { ...record.info, photo: photo ? {
-      path, name: photo.name, type: photo.type, lastModified: photo.lastModified
-    } : null } });
+    cvs.push({
+      ...record, info: {
+        ...record.info, photo: photo ? {
+          path, name: photo.name, type: photo.type, lastModified: photo.lastModified
+        } : null
+      }
+    });
   }
   const manifest = strToU8(JSON.stringify({
-    format: 'cv-builder', schemaVersion: 2, exportedAt: new Date().toISOString()
+    format: 'cv-builder', schemaVersion: 3, exportedAt: new Date().toISOString()
   }));
   const data = strToU8(JSON.stringify(cvs));
   const experienceData = strToU8(JSON.stringify(experiences));
-  if (data.length > MAX_JSON_BYTES || experienceData.length > MAX_JSON_BYTES ||
-      size + data.length + experienceData.length + manifest.length > MAX_BYTES) {
+  const technologyData = strToU8(JSON.stringify(technologies));
+  if (data.length > MAX_JSON_BYTES || experienceData.length > MAX_JSON_BYTES || technologyData.length > MAX_JSON_BYTES ||
+    size + data.length + experienceData.length + technologyData.length + manifest.length > MAX_BYTES) {
     throw new Error(TOO_LARGE);
   }
   entries['manifest.json'] = manifest;
   entries['cvs.json'] = data;
   entries['experiences.json'] = experienceData;
+  entries['technologies.json'] = technologyData;
   return new Promise((resolve, reject) => {
     zip(entries, { level: 6 }, (error, bytes) => {
       if (error) reject(new Error('Could not create the backup. Please try again.'));
@@ -129,13 +153,13 @@ async function extractArchive(file: Blob): Promise<Map<string, Uint8Array>> {
     const complete = () => { if (finished && active.size === 0 && !failed) resolve(entries); };
     const unzip = new Unzip((entry) => {
       if (failed) return;
-      if (names.has(entry.name) || !/^(manifest\.json|cvs\.json|experiences\.json|photos\/\d+\.(png|jpg))$/.test(entry.name)) {
+      if (names.has(entry.name) || !/^(manifest\.json|cvs\.json|experiences\.json|technologies\.json|photos\/\d+\.(png|jpg))$/.test(entry.name)) {
         fail(new Error(INVALID));
         return;
       }
       names.add(entry.name);
       const limit = entry.name.endsWith('.json') ? MAX_JSON_BYTES : MAX_BYTES;
-      if (names.size > MAX_CVS + 3 || (entry.originalSize ?? 0) > limit) {
+      if (names.size > MAX_CVS + 4 || (entry.originalSize ?? 0) > limit) {
         fail(new Error(TOO_LARGE));
         return;
       }
@@ -185,8 +209,21 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
   const manifest = object(json('manifest.json'));
   if (manifest['format'] !== 'cv-builder') throw new Error(INVALID);
   const version = manifest['schemaVersion'];
-  if (version !== 1 && version !== 2) throw new Error('This backup version is not supported.');
-  const savedExperiences = version === 2 ? array(json('experiences.json')) : [];
+  if (version !== 1 && version !== 2 && version !== 3) throw new Error('This backup version is not supported.');
+  const savedExperiences = version >= 2 ? array(json('experiences.json')) : [];
+  const savedTechnologies = version === 3 ? array(json('technologies.json')) : [];
+  if (savedTechnologies.length > MAX_TECHNOLOGIES) throw new Error(TOO_LARGE);
+  const technologyIds = new Set<string>();
+  const technologies = savedTechnologies.map((value): SavedTechnology => {
+    const entry = object(value);
+    const name = string(entry['name']);
+    const id = string(entry['id']);
+    if (!name.trim() || name !== name.trim() || id !== technologyId(name) || technologyIds.has(id)) throw new Error(INVALID);
+    technologyIds.add(id);
+    const icon = entry['icon'];
+    if (icon !== undefined) customIcons({ [name]: icon });
+    return { id, name, updatedAt: number(entry['updatedAt']), ...(icon !== undefined ? { icon: string(icon) } : {}) };
+  });
   if (savedExperiences.length > MAX_EXPERIENCES) throw new Error(TOO_LARGE);
   const experienceIds = new Set<string>();
   const experiences = savedExperiences.map((value): SavedExperience => {
@@ -214,7 +251,7 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
       const bytes = entries.get(path);
       const type = string(stored['type']);
       if (!/^photos\/\d+\.(png|jpg)$/.test(path) || !bytes ||
-          !['image/png', 'image/jpeg'].includes(type)) throw new Error(INVALID);
+        !['image/png', 'image/jpeg'].includes(type)) throw new Error(INVALID);
       photo = new File([new Uint8Array(bytes)], string(stored['name']), {
         type, lastModified: number(stored['lastModified'])
       });
@@ -224,6 +261,7 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
       name: string(info['name']), positionTitle: string(info['positionTitle']),
       description: string(info['description']), photo,
       technologies: array(info['technologies']).map(string),
+      ...customIcons(info['customTechnologyIcons']),
       languages: array(info['languages']).map((value) => {
         const language = object(value);
         return { language: string(language['language']), level: string(language['level']) };
@@ -233,5 +271,5 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
     };
     return { id, updatedAt: number(record['updatedAt']), info: restored };
   });
-  return { cvs: records, experiences };
+  return { cvs: records, experiences, technologies };
 }

@@ -11,7 +11,7 @@ describe('Header backup dialog', () => {
 
   beforeEach(async () => {
     backup = jasmine.createSpyObj<CvBackup>('CvBackup', ['import', 'export']);
-    backup.import.and.resolveTo({ cvs: 2, experiences: 1 });
+    backup.import.and.resolveTo({ cvs: 2, experiences: 1, technologies: 3 });
     backup.export.and.resolveTo();
     TestBed.configureTestingModule({
       imports: [Header], providers: [provideZonelessChangeDetection(), provideRouter([]),
@@ -72,7 +72,7 @@ describe('Header backup dialog', () => {
     page.querySelector<HTMLButtonElement>('section app-button button')!.click();
     await fixture.whenStable();
     expect(backup.import).toHaveBeenCalledOnceWith(file, false);
-    expect(page.querySelector('dialog app-toasts .toast.success')!.textContent).toContain('Imported 2 CVs and 1 saved experience.');
+    expect(page.querySelector('dialog app-toasts .toast.success')!.textContent).toContain('Imported 2 CVs, 1 saved experience and 3 technologies.');
     expect(page.querySelector<HTMLInputElement>('#backup-file')!.value).toBe('');
     expect(page.querySelector<HTMLButtonElement>('section app-button button')!.disabled).toBeTrue();
   });
@@ -119,7 +119,7 @@ describe('Header backup dialog', () => {
     const checkbox = page.querySelector<HTMLInputElement>('#wipe-previous-data')!;
     expect(checkbox.checked).toBeFalse();
     expect(page.querySelector('app-checkbox .caution-icon')).not.toBeNull();
-    expect(page.querySelector('app-checkbox')!.textContent).toContain('all saved CVs and experiences are cleared');
+    expect(page.querySelector('app-checkbox')!.textContent).toContain('all saved CVs, experiences and technologies are cleared');
     checkbox.click();
     const file = selectFile();
     await fixture.whenStable();

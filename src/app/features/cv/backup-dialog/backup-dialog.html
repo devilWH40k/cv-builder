@@ -5,21 +5,21 @@
       <lucide-icon [img]="CloseIcon" [size]="20" aria-hidden="true" />
     </button>
   </div>
-  <p id="backup-description">Move your saved CVs and experiences between devices or keep a backup.</p>
+  <p id="backup-description">Move your saved CVs, experiences and technologies between devices or keep a backup.</p>
 
   <div class="options" [attr.aria-busy]="!!busy()">
     <section aria-labelledby="import-title">
       <h3 id="import-title">Import DB</h3>
-      <p>Choose a CV Builder ZIP backup. Matching CVs and saved experiences are updated by ID. New records are added.</p>
+      <p>Choose a CV Builder ZIP backup. Matching CVs and saved experiences are updated by ID; technologies are matched by name. New records are added.</p>
       <div class="import-controls">
         <div class="file-field">
           <label for="backup-file">Backup file</label>
           <input #fileInput id="backup-file" type="file" accept=".zip,application/zip"
             [disabled]="!!busy()" aria-describedby="backup-file-hint" (change)="selectFile($event)" />
-          <p class="hint" id="backup-file-hint">ZIP archive, up to 100 MB, 1,000 CVs and 1,000 saved experiences.</p>
+          <p class="hint" id="backup-file-hint">ZIP archive, up to 100 MB, 1,000 CVs, 1,000 saved experiences and 1,000 technologies.</p>
         </div>
         <app-checkbox inputId="wipe-previous-data" label="Wipe previous data" [control]="wipePreviousData"
-          helpText="When checked, all saved CVs and experiences are cleared before importing.">
+          helpText="When checked, all saved CVs, experiences and technologies are cleared before importing.">
           <lucide-icon class="caution-icon" [img]="CautionIcon" [size]="18" aria-hidden="true" />
         </app-checkbox>
         <app-button [disabled]="!!busy() || !selectedFile()" (click)="importBackup()">
@@ -31,7 +31,7 @@
 
     <section aria-labelledby="export-title">
       <h3 id="export-title">Export DB</h3>
-      <p>Download all saved CVs and experiences, including photos and layout settings. Save any editor changes first.</p>
+      <p>Download all saved CVs, experiences and technologies, including icons, photos and layout settings. Save any editor changes first.</p>
       <form [formGroup]="exportForm" (ngSubmit)="exportBackup()">
         <app-input inputId="backup-name" label="File name" [control]="fileName"
           helpText="The .zip extension is added automatically.">

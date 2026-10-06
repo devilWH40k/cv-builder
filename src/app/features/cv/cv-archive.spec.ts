@@ -4,6 +4,40 @@ import { defaultBackupName } from './cv-backup';
 import { SavedCv } from './saved-cvs';
 
 describe('CV ZIP backups', () => {
+  it('round trips a standalone technology library with optional icons', async () => {
+    const technologies = [
+      { id: 'sdk', name: 'SDK', icon: document.createElement('canvas').toDataURL('image/png'), updatedAt: 1 },
+      { id: 'tool', name: 'Tool', updatedAt: 2 }
+    ];
+    expect(await readArchive(await createArchive([], [], technologies)))
+      .toEqual({ cvs: [], experiences: [], technologies });
+  });
+
+  it('rejects invalid technology identities, duplicate entries and remote icons', async () => {
+    const entry = { id: 'sdk', name: 'SDK', updatedAt: 1 };
+    for (const technologies of [
+      [{ ...entry, id: 'wrong' }], [entry, entry],
+      [{ ...entry, icon: 'https://example.com/icon.png' }]
+    ]) {
+      await expectAsync(readArchive(archive([], 3, {
+        'experiences.json': strToU8('[]'),
+        'technologies.json': strToU8(JSON.stringify(technologies))
+      }))).toBeRejected();
+    }
+  });
+  it('round trips custom icons on CVs and saved experiences and rejects remote icon URLs', async () => {
+    const customTechnologyIcons = { SDK: document.createElement('canvas').toDataURL('image/png') };
+    const experience = { ...record.info.experiences[0], technologies: ['SDK'], customTechnologyIcons };
+    const cv = { ...record, info: { ...record.info, customTechnologyIcons, experiences: [experience] } };
+    const saved = { id: 'custom-experience', updatedAt: 1, experience };
+    const restored = await readArchive(await createArchive([cv], [saved]));
+    expect(restored.cvs[0].info.customTechnologyIcons).toEqual(customTechnologyIcons);
+    expect(restored.cvs[0].info.experiences[0].customTechnologyIcons).toEqual(customTechnologyIcons);
+    expect(restored.experiences[0].experience.customTechnologyIcons).toEqual(customTechnologyIcons);
+    await expectAsync(readArchive(await createArchive([{ ...cv, info: { ...cv.info,
+      customTechnologyIcons: { SDK: 'https://example.com/icon.png' }
+    } }]))).toBeRejectedWithError(/valid/);
+  });
   const record: SavedCv = {
     id: 'saved-id', updatedAt: 123456,
     info: {
@@ -28,7 +62,7 @@ describe('CV ZIP backups', () => {
   it('round trips every CV field and original photo bytes and metadata', async () => {
     const blob = await createArchive([record]);
     const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
-    expect(Object.keys(files).sort()).toEqual(['cvs.json', 'experiences.json', 'manifest.json', 'photos/0.png']);
+    expect(Object.keys(files).sort()).toEqual(['cvs.json', 'experiences.json', 'manifest.json', 'photos/0.png', 'technologies.json']);
     const { cvs: [restored] } = await readArchive(blob);
     expect({ ...restored, info: { ...restored.info, photo: null } })
       .toEqual({ ...record, info: { ...record.info, photo: null } });
@@ -39,19 +73,19 @@ describe('CV ZIP backups', () => {
   });
 
   it('supports empty databases and CVs without photos or optional structure', async () => {
-    expect(await readArchive(await createArchive([]))).toEqual({ cvs: [], experiences: [] });
+    expect(await readArchive(await createArchive([]))).toEqual({ cvs: [], experiences: [], technologies: [] });
     const { structure, ...info } = record.info;
     const plain = { ...record, info: { ...info, photo: null } };
-    expect(await readArchive(await createArchive([plain]))).toEqual({ cvs: [plain], experiences: [] });
+    expect(await readArchive(await createArchive([plain]))).toEqual({ cvs: [plain], experiences: [], technologies: [] });
   });
 
   it('handles asynchronous decompression of larger content', async () => {
     const large = { ...record, info: { ...record.info, photo: null, description: 'content '.repeat(60000) } };
-    expect(await readArchive(await createArchive([large]))).toEqual({ cvs: [large], experiences: [] });
+    expect(await readArchive(await createArchive([large]))).toEqual({ cvs: [large], experiences: [], technologies: [] });
   });
 
   it('rejects unsupported versions, malformed ZIPs and invalid nested fields', async () => {
-    await expectAsync(readArchive(archive([], 3))).toBeRejectedWithError(/version/);
+    await expectAsync(readArchive(archive([], 4))).toBeRejectedWithError(/version/);
     await expectAsync(readArchive(new Blob(['not a zip']))).toBeRejectedWithError();
     await expectAsync(readArchive(archive([{ ...record,
       info: { ...record.info, photo: null, experiences: [{ isCurrent: 'yes' }] }
@@ -85,15 +119,15 @@ describe('CV ZIP backups', () => {
     const saved = { id: 'experience-id', updatedAt: 987, experience };
     const linked = { ...record, info: { ...record.info, photo: null, experiences: [experience] } };
     expect(await readArchive(await createArchive([linked], [saved])))
-      .toEqual({ cvs: [linked], experiences: [saved] });
+      .toEqual({ cvs: [linked], experiences: [saved], technologies: [] });
     expect(await readArchive(await createArchive([], [saved])))
-      .toEqual({ cvs: [], experiences: [saved] });
+      .toEqual({ cvs: [], experiences: [saved], technologies: [] });
   });
 
   it('continues to read version 1 CV-only archives', async () => {
     const plain = { ...record, info: { ...record.info, photo: null } };
     expect(await readArchive(archive([plain])))
-      .toEqual({ cvs: [plain], experiences: [] });
+      .toEqual({ cvs: [plain], experiences: [], technologies: [] });
   });
 
   it('rejects incomplete version 2 backups and invalid saved experiences', async () => {
