@@ -27,7 +27,7 @@ describe('CV backup service', () => {
     expect(click).toHaveBeenCalledTimes(1);
     const blob = create.calls.mostRecent().args[0];
     expect(blob instanceof Blob).toBeTrue();
-    if (blob instanceof Blob) expect(await readArchive(blob)).toEqual({ cvs: [], experiences: [] });
+    if (blob instanceof Blob) expect(await readArchive(blob)).toEqual({ cvs: [], experiences: [], technologies: [] });
     expect(document.querySelector('a[download="custom.zip"]')).toBeNull();
   });
 
@@ -38,8 +38,8 @@ describe('CV backup service', () => {
 
   it('imports a validated backup and reports storage failures meaningfully', async () => {
     const file = new File([await createArchive([])], 'backup.zip');
-    expect(await backup.import(file)).toEqual({ cvs: 0, experiences: 0 });
-    expect(saved.importRecords).toHaveBeenCalledOnceWith([], [], false);
+    expect(await backup.import(file)).toEqual({ cvs: 0, experiences: 0, technologies: 0 });
+    expect(saved.importRecords).toHaveBeenCalledOnceWith([], [], false, []);
     saved.importRecords.and.rejectWith(new Error('Internal storage error'));
     await expectAsync(backup.import(file)).toBeRejectedWithError(/Browser storage may be full/);
   });
@@ -47,7 +47,7 @@ describe('CV backup service', () => {
   it('passes the wipe option only after validating the archive', async () => {
     const file = new File([await createArchive([])], 'backup.zip');
     await backup.import(file, true);
-    expect(saved.importRecords).toHaveBeenCalledOnceWith([], [], true);
+    expect(saved.importRecords).toHaveBeenCalledOnceWith([], [], true, []);
   });
 
   it('exports independent saved experiences and passes them to atomic import with both counts', async () => {
@@ -56,15 +56,16 @@ describe('CV backup service', () => {
       experience: { savedExperienceId: 'reusable', company: 'Example', position: 'Engineer',
         startDate: '2020', endDate: '', isCurrent: true, technologies: ['Angular'], description: '<p>Work</p>' }
     };
-    saved.backupSnapshot.and.resolveTo({ cvs: [], experiences: [experience] });
+    const technologies = [{ id: 'sdk', name: 'SDK', updatedAt: 42 }];
+    saved.backupSnapshot.and.resolveTo({ cvs: [], experiences: [experience], technologies });
     const create = spyOn(URL, 'createObjectURL').and.returnValue('blob:experiences');
     spyOn(HTMLAnchorElement.prototype, 'click');
     await backup.export('experiences');
     const blob = create.calls.mostRecent().args[0];
     if (!(blob instanceof Blob)) throw new Error('Expected an archive Blob');
     expect(await backup.import(new File([blob], 'experiences.zip')))
-      .toEqual({ cvs: 0, experiences: 1 });
-    expect(saved.importRecords).toHaveBeenCalledOnceWith([], [experience], false);
+      .toEqual({ cvs: 0, experiences: 1, technologies: 1 });
+    expect(saved.importRecords).toHaveBeenCalledOnceWith([], [experience], false, technologies);
   });
 
 });

@@ -1,0 +1,29 @@
+<dialog appDialogOverlay [attr.aria-labelledby]="inputId() + '-title'"
+  (cancel)="$event.preventDefault(); cancel()">
+  <h2 [id]="inputId() + '-title'">Add custom entry</h2>
+  <app-input [inputId]="inputId() + '-name'" label="Entry name" [control]="name" [required]="true" (keydown.enter)="apply($event)">
+    @if (name.invalid && name.touched) { <span>Entry name is required.</span> }
+  </app-input>
+  <app-file-upload [inputId]="inputId() + '-icon'" label="Icon (optional)" [control]="iconFile" mode="icon"
+    accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+    helpText="PNG, JPEG, WebP, GIF, or SVG, up to 5 MB.">
+    @if (error()) { <span role="alert">{{ error() }}</span> }
+  </app-file-upload>
+  @if (loading()) { <p role="status">Preparing icon...</p> }
+  @if (icon() || error()) {
+    <div class="icon-actions">
+      <button class="secondary" type="button" [disabled]="saving()" (click)="clearIcon()">Remove icon</button>
+    </div>
+  }
+  @if (saveError()) { <p role="alert">{{ saveError() }}</p> }
+  <footer [attr.aria-busy]="saving()">
+    <button class="cancel" type="button" [disabled]="saving()" (click)="cancel()">Cancel</button>
+    <app-button [disabled]="name.invalid || loading() || !!error() || saving()" (click)="apply()">Apply</app-button>
+    @if (saveEntry()) {
+      <app-button class="apply-save"
+        [disabled]="name.invalid || loading() || !!error() || saving()" (click)="applyAndSave()">
+        {{ saving() ? 'Saving...' : 'Apply and save' }}
+      </app-button>
+    }
+  </footer>
+</dialog>

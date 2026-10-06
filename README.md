@@ -37,6 +37,18 @@ whole site, not just its CV records; the browser controls the quota. If the API
 is unavailable or fails, saving remains available and the estimate is marked
 unavailable. Data stays in this browser profile and is removed if site data is cleared.
 
+### Custom technology library and backups
+
+In a technology selector, **Apply** adds a custom entry to the current CV or
+experience. **Apply and save** also stores it in IndexedDB and makes it available
+in every general and experience technology selector. Other multi-selects remain
+independent. Names are deduplicated without regard to case; icons are optional.
+An experience containing a technology without an icon uses comma-separated names.
+
+ZIP backups include saved CVs, experiences, and the technology library, including
+uploaded icons. Older backups remain supported. Import merges records by ID;
+the wipe option replaces all three libraries. All operations happen locally.
+
 ### Notifications and save feedback
 
 See [Toast notifications and save feedback](docs/TOASTS.md).

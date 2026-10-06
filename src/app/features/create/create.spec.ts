@@ -30,15 +30,20 @@ describe('CV form', () => {
   }
 
   it('adds general technologies to Custom and prevents blank or duplicate entries', async () => {
-    const input = page.querySelector<HTMLInputElement>('#technologies-custom')!;
-    const button = page.querySelector<HTMLButtonElement>('#technologies-custom + app-button button')!;
-    expect(button.disabled).toBeTrue();
     for (const name of ['  Internal SDK  ', 'internal sdk', ' vue ', '   ']) {
+      page.querySelector<HTMLButtonElement>('#technologies')!.closest('app-multi-select')!.querySelector<HTMLButtonElement>('.add-custom')!.click();
+      await fixture.whenStable();
+      const input = document.querySelector<HTMLInputElement>('#technologies-custom-name')!;
       input.value = name;
       input.dispatchEvent(new Event('input'));
       await fixture.whenStable();
-      button.click();
+      document.querySelector<HTMLButtonElement>('dialog app-button button')!.click();
       await fixture.whenStable();
+      if (!name.trim()) {
+        expect(document.querySelector<HTMLButtonElement>('dialog app-button button')!.disabled).toBeTrue();
+        document.querySelector<HTMLButtonElement>('dialog .cancel')!.click();
+        await fixture.whenStable();
+      }
     }
     expect(fixture.componentInstance.form.controls.technologies.value).toEqual(['Internal SDK', 'Vue']);
     const custom = Array.from(page.querySelectorAll('.skill-group'))
@@ -47,7 +52,6 @@ describe('CV form', () => {
     custom!.querySelector<HTMLButtonElement>('[aria-label="Remove Internal SDK"]')!.click();
     await fixture.whenStable();
     expect(fixture.componentInstance.form.controls.technologies.value).toEqual(['Vue']);
-    expect(button.disabled).toBeTrue();
   });
 
   function enterText(id: string, value: string): void {
@@ -113,6 +117,7 @@ describe('CV form', () => {
     submit();
     expect(TestBed.inject(CvPdf).download).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(CvDraft).current()).toEqual({
+      customTechnologyIcons: {},
       name: 'Alex Morgan',
       positionTitle: 'Designer',
       description: 'I design accessible applications.',

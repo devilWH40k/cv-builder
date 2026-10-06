@@ -3,9 +3,11 @@ import { imageFileValidator } from '../../shared/ui/file-upload/image-file.valid
 import { CvLanguage } from '../cv/languages';
 import { CvExperience } from '../cv/experience';
 import { parseCalendarDate } from '../../shared/ui/date-picker/date-value';
+import { CustomEntryIcons } from '../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 
 export function createExperienceForm(experience?: CvExperience) {
   const form = new FormGroup({
+    customTechnologyIcons: new FormControl<CustomEntryIcons>(experience?.customTechnologyIcons ?? {}, { nonNullable: true }),
     savedExperienceId: new FormControl<string | null>(experience?.savedExperienceId ?? null),
     company: new FormControl(experience?.company ?? '', {
       nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)]
@@ -43,6 +45,7 @@ export function createLanguageForm(language?: CvLanguage) {
 
 export function createCvForm() {
   return new FormGroup({
+    customTechnologyIcons: new FormControl<CustomEntryIcons>({}, { nonNullable: true }),
     name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)] }),
     positionTitle: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)] }),
     description: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)] }),

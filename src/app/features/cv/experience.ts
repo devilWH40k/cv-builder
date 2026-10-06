@@ -1,4 +1,7 @@
+import { CustomEntryIcons } from "../../core/dialogs/custom-entry-dialog/custom-entry-icon";
+
 export interface CvExperience {
+  readonly customTechnologyIcons?: CustomEntryIcons;
   readonly savedExperienceId?: string | null;
   readonly company: string;
   readonly position: string;

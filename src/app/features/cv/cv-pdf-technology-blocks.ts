@@ -1,5 +1,6 @@
 ﻿import fonts from 'pdfmake/build/vfs_fonts';
 import type { Content } from 'pdfmake/interfaces';
+import { CustomEntryIcons, entryIcon } from '../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 
 // Match the preview's 3mm gap, 2mm padding, 9mm minimum height and 8px radius.
 const GAP = 3 * 72 / 25.4;
@@ -39,6 +40,7 @@ function escapeXml(text: string): string {
 
 export async function pdfTechnologyBlocks(
   technologies: readonly string[], width: number, color: string, tinted: boolean,
+  icons: CustomEntryIcons = {},
 ): Promise<Content[]> {
   if (!technologies.length) return [];
   // Measure with the same bundled font that pdfmake embeds, rather than a system fallback.
@@ -54,18 +56,22 @@ export async function pdfTechnologyBlocks(
     const rows: Content[] = [];
     for (let index = 0; index < labels.length; index += 2) {
       const pair = labels.slice(index, index + 2);
-      const height = Math.max(MIN_HEIGHT, Math.max(...pair.map((lines) => lines.length)) * LINE_HEIGHT + 2 * (PADDING + BORDER));
+      const hasIcons = technologies.slice(index, index + 2).some((name) => entryIcon(icons, name));
+      const iconSpace = hasIcons ? 19 : 0;
+      const height = Math.max(MIN_HEIGHT, Math.max(...pair.map((lines) => lines.length)) * LINE_HEIGHT + 2 * (PADDING + BORDER) + iconSpace);
       const cards = pair.map((lines, column) => {
         const x = column * (cardWidth + GAP);
         const metrics = context.measureText('Mg');
         const ascent = metrics.fontBoundingBoxAscent;
         const descent = metrics.fontBoundingBoxDescent;
-        const firstBaseline = (height - lines.length * LINE_HEIGHT) / 2
+        const firstBaseline = (height - iconSpace - lines.length * LINE_HEIGHT) / 2 + iconSpace
           + (LINE_HEIGHT + ascent - descent) / 2;
         const text = lines.map((line, row) =>
           `<text x="${x + cardWidth / 2}" y="${firstBaseline + row * LINE_HEIGHT}" text-anchor="middle" font-family="Roboto" font-size="${FONT_SIZE}" fill="${color}">${escapeXml(line)}</text>`,
         ).join('');
-        return `<rect x="${x + BORDER / 2}" y="${BORDER / 2}" width="${cardWidth - BORDER}" height="${height - BORDER}" rx="6" stroke="${color}" stroke-width="${BORDER}" fill="${color}" fill-opacity="${tinted ? 0.04 : 0}"/>${text}`;
+        const source = entryIcon(icons, technologies[index + column]);
+        const icon = source ? `<image x="${x + (cardWidth - 15) / 2}" y="${PADDING}" width="15" height="15" href="${escapeXml(source)}"/>` : '';
+        return `<rect x="${x + BORDER / 2}" y="${BORDER / 2}" width="${cardWidth - BORDER}" height="${height - BORDER}" rx="6" stroke="${color}" stroke-width="${BORDER}" fill="${color}" fill-opacity="${tinted ? 0.04 : 0}"/>${icon}${text}`;
       }).join('');
       // Each row is one vector object, so cards stay together across page breaks.
       rows.push({

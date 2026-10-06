@@ -9,6 +9,39 @@ import { TECHNOLOGY_GROUPS } from './technologies';
 import { USED_TECHNOLOGY_GROUPS, USED_TECHNOLOGY_ICONS } from './used-technologies';
 
 describe('Project technologies', () => {
+  it('keeps custom technologies with icons in blocks and warns only for missing icons', async () => {
+    const icon = document.createElement('canvas').toDataURL('image/png');
+    const experience = {
+      company: 'Project', position: '', startDate: '', endDate: '', isCurrent: false,
+      description: '', technologies: ['Angular', 'My SDK'], customTechnologyIcons: { 'My SDK': icon }
+    };
+    const form = createExperienceForm(experience);
+    const entry = TestBed.createComponent(ExperienceEntry);
+    entry.componentRef.setInput('form', form);
+    entry.componentRef.setInput('index', 0);
+    entry.detectChanges();
+    const draft = TestBed.inject(CvDraft);
+    draft.save({ name: 'Alex', positionTitle: 'Dev', description: '', photo: null,
+      languages: [], technologies: ['My SDK'], customTechnologyIcons: { 'My SDK': icon }, experiences: [experience] });
+    const preview = TestBed.createComponent(Preview);
+    preview.detectChanges();
+    await entry.whenStable();
+    const page: HTMLElement = entry.nativeElement;
+    const documentPage: HTMLElement = preview.nativeElement;
+    expect(page.querySelector('.technology-warning')).toBeNull();
+    expect(page.querySelector<HTMLImageElement>('.chips img[src^="data:"]')?.src).toBe(icon);
+    expect(documentPage.querySelectorAll('.experience-technologies img').length).toBe(2);
+    expect(documentPage.querySelector('.technologies-inline')).toBeNull();
+    expect(documentPage.querySelector('.cv-technologies img')).toBeNull();
+    form.controls.technologies.setValue(['Angular', 'My SDK', 'No icon']);
+    entry.changeDetectorRef.markForCheck();
+    draft.save({ ...draft.current()!, experiences: [form.getRawValue()] });
+    entry.detectChanges();
+    await entry.whenStable();
+    expect(page.querySelector('.technology-warning')).not.toBeNull();
+    expect(documentPage.querySelector('.experience-technologies')).toBeNull();
+    expect(documentPage.querySelector('.technologies-inline')?.textContent?.trim()).toBe('Angular, My SDK, No icon');
+  });
   beforeEach(() => TestBed.configureTestingModule({
     imports: [ExperienceEntry, Preview],
     providers: [provideZonelessChangeDetection(), provideRouter([])]
@@ -114,7 +147,9 @@ describe('Project technologies', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const page: HTMLElement = fixture.nativeElement;
-    const input = page.querySelector<HTMLInputElement>('.custom-entry input')!;
+    page.querySelector<HTMLButtonElement>('.add-custom')!.click();
+    await fixture.whenStable();
+    const input = document.querySelector<HTMLInputElement>('#experience-technologies-0-custom-name')!;
     input.value = '  Custom SDK  ';
     input.dispatchEvent(new Event('input'));
     await fixture.whenStable();
@@ -126,10 +161,10 @@ describe('Project technologies', () => {
     expect(form.controls.technologies.dirty).toBeTrue();
     expect(page.querySelector('.chips')!.textContent).toContain('Custom SDK');
     expect(page.querySelector('.chips img')).toBeNull();
-    expect(input.value).toBe('');
+    expect(document.querySelector('dialog')).toBeNull();
     const warning = page.querySelector<HTMLButtonElement>('.chips li:last-child.technology-warning button')!;
     const hint = document.getElementById(warning.getAttribute('aria-describedby')!)!;
-    expect(hint.textContent).toBe('By adding at least one custom technology experience tech view mode becomes "comma separated"');
+    expect(hint.textContent).toBe('By adding at least one technology without an icon, experience tech view mode becomes "comma separated"');
     expect(warning.getAttribute('aria-describedby')).toBe(hint.id);
     expect(hint.hidden).toBeTrue();
     warning.focus();

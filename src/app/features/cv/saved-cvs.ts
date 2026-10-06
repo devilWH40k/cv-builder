@@ -2,6 +2,8 @@ import { DestroyRef, inject, Injectable, InjectionToken, signal } from '@angular
 import { CvExperience, SavedExperience } from './experience';
 import { CvInfo } from './cv-draft';
 import { parseLegacyCvs, LEGACY_STORAGE_KEY } from './legacy-saved-cvs';
+import { SavedTechnology, technologyId } from './saved-technology';
+import { CustomEntry } from '../../core/dialogs/custom-entry-dialog/custom-entry-dialog';
 
 export interface SavedCv {
   readonly id: string;
@@ -12,6 +14,7 @@ export interface SavedCv {
 export interface CvDatabaseSnapshot {
   readonly cvs: readonly SavedCv[];
   readonly experiences: readonly SavedExperience[];
+  readonly technologies?: readonly SavedTechnology[];
 }
 
 export const CV_DATABASE_NAME = new InjectionToken<string>('CV database name', {
@@ -36,6 +39,9 @@ export class SavedCvs {
   readonly migrationWarning = signal('');
   readonly loading = signal(false);
   readonly storageEstimate = signal<{ usedMb: string; quotaGb: string } | null>(null);
+  private readonly technologyRecords = signal<readonly SavedTechnology[]>([]);
+  readonly technologies = this.technologyRecords.asReadonly();
+  private technologyLoad: Promise<void> | null = null;
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
@@ -81,6 +87,33 @@ export class SavedCvs {
     return records.sort((a, b) => b.updatedAt - a.updatedAt);
   }
 
+  loadTechnologies(): Promise<void> {
+    this.technologyLoad ??= this.refreshTechnologies().catch((error: unknown) => {
+      this.technologyLoad = null;
+      throw error;
+    });
+    return this.technologyLoad;
+  }
+
+  private async refreshTechnologies(): Promise<void> {
+    const records = await this.request<SavedTechnology[]>('readonly', (store) => store.getAll(), 'technologies');
+    this.technologyRecords.set(records.sort((a, b) => a.name.localeCompare(b.name)));
+  }
+
+  async saveTechnology(entry: CustomEntry): Promise<CustomEntry> {
+    await this.loadTechnologies();
+    const id = technologyId(entry.name);
+    const name = this.technologies().find((record) => record.id === id)?.name ?? entry.name.trim();
+    if (!name) throw new Error('Entry name is required.');
+    const record: SavedTechnology = {
+      id: technologyId(name), name, ...(entry.icon ? { icon: entry.icon } : {}), updatedAt: Date.now()
+    };
+    await this.request('readwrite', (store) => store.put(record), 'technologies');
+    this.technologyRecords.update((records) => [...records.filter((entry) => entry.id !== record.id), record]
+      .sort((a, b) => a.name.localeCompare(b.name)));
+    return { name: record.name, ...(record.icon ? { icon: record.icon } : {}) };
+  }
+
   async saveExperience(experience: CvExperience): Promise<string> {
     const id = experience.savedExperienceId ?? crypto.randomUUID();
     const record: SavedExperience = {
@@ -96,38 +129,46 @@ export class SavedCvs {
 
   async backupSnapshot(): Promise<CvDatabaseSnapshot> {
     const database = await this.open();
-    const transaction = database.transaction(['cvs', 'experiences'], 'readonly');
+    const transaction = database.transaction(['cvs', 'experiences', 'technologies'], 'readonly');
     const cvs = transaction.objectStore('cvs').getAll();
     const experiences = transaction.objectStore('experiences').getAll();
+    const technologies = transaction.objectStore('technologies').getAll();
     await completed(transaction);
-    return { cvs: cvs.result, experiences: experiences.result };
+    return { cvs: cvs.result, experiences: experiences.result, technologies: technologies.result };
   }
 
   async importRecords(
     records: readonly SavedCv[], experiences: readonly SavedExperience[] = [],
-    wipePreviousData = false
+    wipePreviousData = false, technologies: readonly SavedTechnology[] = []
   ): Promise<void> {
     const database = await this.open();
-    const transaction = database.transaction(['cvs', 'experiences'], 'readwrite');
+    const transaction = database.transaction(['cvs', 'experiences', 'technologies'], 'readwrite');
     const done = completed(transaction);
+    let importedTechnologies: SavedTechnology[] = [];
     try {
       const cvsStore = transaction.objectStore('cvs');
       const experiencesStore = transaction.objectStore('experiences');
+      const technologiesStore = transaction.objectStore('technologies');
       if (wipePreviousData) {
         cvsStore.clear();
         experiencesStore.clear();
+        technologiesStore.clear();
       }
       for (const record of records) cvsStore.put(record);
+      for (const record of technologies) technologiesStore.put(record);
       for (const record of experiences) {
         experiencesStore.put({
           ...record, experience: { ...record.experience, savedExperienceId: record.id }
         });
       }
+      const library = technologiesStore.getAll();
+      library.onsuccess = () => { importedTechnologies = library.result; };
     } catch {
       transaction.abort();
     }
     await done;
     await this.refresh();
+    this.technologyRecords.set(importedTechnologies.sort((a, b) => a.name.localeCompare(b.name)));
   }
 
   private async updateStorageEstimate(): Promise<void> {
@@ -184,6 +225,7 @@ export class SavedCvs {
         if (!database.objectStoreNames.contains('cvs')) database.createObjectStore('cvs', { keyPath: 'id' });
         if (!database.objectStoreNames.contains('metadata')) database.createObjectStore('metadata');
         if (!database.objectStoreNames.contains('experiences')) database.createObjectStore('experiences', { keyPath: 'id' });
+        if (!database.objectStoreNames.contains('technologies')) database.createObjectStore('technologies', { keyPath: 'id' });
       };
       request.onerror = () => reject(request.error);
       request.onblocked = () => {
@@ -196,7 +238,7 @@ export class SavedCvs {
           database.close();
           return;
         }
-        if (['cvs', 'metadata', 'experiences'].some((name) => !database.objectStoreNames.contains(name))) {
+        if (['cvs', 'metadata', 'experiences', 'technologies'].some((name) => !database.objectStoreNames.contains(name))) {
           const nextVersion = database.version + 1;
           database.close();
           void this.connect(nextVersion).then(resolve, reject);

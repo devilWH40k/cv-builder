@@ -201,16 +201,6 @@ a {
 .experience-entry { margin-bottom: 7mm; }
 .period { margin: 0 0 3mm; font-size: 10pt; color: tokens.$text-secondary; }
 .project-description { font-size: 11pt; line-height: tokens.$line-height-normal; }
-.experience-technologies {
-  display: flex; flex-wrap: wrap; gap: 2mm; margin: 4mm 0 0; padding: 0; list-style: none;
-  li { display: flex; align-items: center; break-inside: avoid; }
-}
-
-.experience-technologies img {
-  flex-shrink: 0;
-  object-fit: contain;
-}
-
 .embedded {
   padding: 0;
   background: tokens.$background-app;

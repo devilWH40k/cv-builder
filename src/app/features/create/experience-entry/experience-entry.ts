@@ -5,16 +5,18 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { AngularTiptapEditorComponent, AteEditorCommandsService, AteEditorConfig } from '@flogeez/angular-tiptap-editor';
 import { Bold, Italic, List, ListOrdered, LucideAngularModule, Redo2, Save, TriangleAlert, Underline, Undo2, X } from 'lucide-angular';
 import { Input } from '../../../shared/ui/input/input';
-import { MultiSelect } from '../../../shared/ui/multi-select/multi-select';
+import { TechnologySelect } from '../../cv/technology-select/technology-select';
 import { DatePicker } from '../../../shared/ui/date-picker/date-picker';
 import { DateMode, parseCalendarDate } from '../../../shared/ui/date-picker/date-value';
-import { USED_TECHNOLOGY_GROUPS, USED_TECHNOLOGY_ICONS, usedTechnologiesView } from '../../cv/used-technologies';
+import { USED_TECHNOLOGY_GROUPS, USED_TECHNOLOGY_ICONS, usedTechnologiesView, usedTechnologyIcon } from '../../cv/used-technologies';
 import { createExperienceForm } from '../cv-form';
 import { Tooltip } from '../../../shared/directories/tooltip';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { startWith, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-experience-entry',
-  imports: [ReactiveFormsModule, Input, MultiSelect, DatePicker, AngularTiptapEditorComponent, LucideAngularModule, Tooltip],
+  imports: [ReactiveFormsModule, Input, TechnologySelect, DatePicker, AngularTiptapEditorComponent, LucideAngularModule, Tooltip],
   templateUrl: './experience-entry.html',
   styleUrl: './experience-entry.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -22,6 +24,9 @@ import { Tooltip } from '../../../shared/directories/tooltip';
 export class ExperienceEntry {
   readonly form = input.required<ReturnType<typeof createExperienceForm>>();
   readonly index = input.required<number>();
+  protected readonly formValue = toSignal(toObservable(this.form).pipe(
+    switchMap((form) => form.valueChanges.pipe(startWith(form.getRawValue())))
+  ));
   readonly remove = output<void>();
   private readonly editor = viewChild(AngularTiptapEditorComponent);
   private readonly commands = viewChild(AngularTiptapEditorComponent, { read: AteEditorCommandsService });
@@ -38,6 +43,7 @@ export class ExperienceEntry {
   protected readonly SaveIcon = Save;
   protected readonly TriangleAlertIcon = TriangleAlert;
   protected readonly usedTechnologiesView = usedTechnologiesView;
+  protected readonly usedTechnologyIcon = usedTechnologyIcon;
   protected readonly saving = signal(false);
   private readonly saved = inject(SavedCvs);
   private readonly toasts = inject(ToastService);

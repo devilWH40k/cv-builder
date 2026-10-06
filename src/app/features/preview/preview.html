@@ -44,15 +44,15 @@
                   || experience.isCurrent)) { &ndash; }{{ experience.isCurrent ? 'Present' :
                   formatDate(experience.endDate) }}</p>
                 }
-                @if (experience.technologies.length && usedTechnologiesView(experience.technologies, structure().technologiesView) === 'comma-separated') {
+                @if (experience.technologies.length && usedTechnologiesView(experience.technologies, structure().technologiesView, experience.customTechnologyIcons) === 'comma-separated') {
                 <p class="technologies-inline" aria-label="Used technologies">{{ experience.technologies.join(', ') }}
                 </p>
                 }
                 <div class="project-description" [innerHTML]="experience.description"></div>
-                @if (experience.technologies.length && usedTechnologiesView(experience.technologies, structure().technologiesView) === 'blocks') {
+                @if (experience.technologies.length && usedTechnologiesView(experience.technologies, structure().technologiesView, experience.customTechnologyIcons) === 'blocks') {
                 <ul class="experience-technologies" aria-label="Used technologies">
                   @for (technology of experience.technologies; track technology) {
-                  @if (technologyIcons[technology]; as icon) {
+                  @if (usedTechnologyIcon(technology, experience.customTechnologyIcons); as icon) {
                   <li [title]="technology">
                     <img [src]="icon" [alt]="technology" width="24" height="24" />
                   </li>
