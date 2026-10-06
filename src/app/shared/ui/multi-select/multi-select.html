@@ -28,5 +28,16 @@
         <p role="status">No matching options.</p>
       }
     </div>
+    @if (allowCustom()) {
+      <div class="custom-entry">
+        <label [for]="inputId() + '-custom'">Custom technology</label>
+        <div class="search-wrap">
+          <input #custom type="text" [id]="inputId() + '-custom'" placeholder="Technology name"
+            [value]="customName()" (input)="customName.set(custom.value)" [disabled]="disabled()"
+            (keydown.enter)="addCustom($event)" />
+          <app-button [disabled]="disabled() || !customName().trim()" (click)="addCustom()">Add</app-button>
+        </div>
+      </div>
+    }
   </div>
 </details>
