@@ -1212,7 +1212,7 @@ Theme selectors intentionally outrank the preview component's scoped styles.
 Keep theme colors and overrides inside these files; do not theme the surrounding
 editor controls. Dark theme print rules preserve document colors during export.
 
-Available choices are declared in src/app/features/cv/cv-themes.ts.
+Available choices are declared in src/app/features/cv/constants/cv-themes.ts.
 The selected theme is stored in CvStructure.theme; older CVs default to Basic.
 
 

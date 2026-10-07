@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ArrowDownUp, LucideAngularModule } from 'lucide-angular';
-import { BackupDialog } from '../../../features/cv/backup-dialog/backup-dialog';
+import { BackupDialog } from '../../../features/cv/components/backup-dialog/backup-dialog';
 
 @Component({
   selector: 'app-header',
