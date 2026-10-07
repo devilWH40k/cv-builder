@@ -19,7 +19,7 @@
   <footer [attr.aria-busy]="saving()">
     <button class="cancel" type="button" [disabled]="saving()" (click)="cancel()">Cancel</button>
     <app-button [disabled]="name.invalid || loading() || !!error() || saving()" (click)="apply()">Apply</app-button>
-    @if (saveEntry()) {
+    @if (saveEntry() && !saveOnApply()) {
       <app-button class="apply-save"
         [disabled]="name.invalid || loading() || !!error() || saving()" (click)="applyAndSave()">
         {{ saving() ? 'Saving...' : 'Apply and save' }}

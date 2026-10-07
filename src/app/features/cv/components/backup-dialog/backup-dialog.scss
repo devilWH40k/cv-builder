@@ -1,0 +1,63 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+dialog {
+  box-sizing: border-box;
+  width: min(42rem, calc(100% - tokens.$spacing-8));
+  max-height: calc(100dvh - tokens.$spacing-8);
+  padding: tokens.$spacing-6;
+  color: tokens.$text-primary;
+  background: tokens.$background-surface;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  box-shadow: tokens.$shadow-lg;
+  &::backdrop { background: rgba(tokens.$color-gray-900, 0.4); }
+}
+.dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: tokens.$spacing-4; }
+h2 { margin: 0; font-size: tokens.$font-size-xl; }
+h3 { margin: 0; font-size: tokens.$font-size-lg; }
+p { margin: 0; color: tokens.$text-secondary; font-size: tokens.$font-size-sm; }
+.close {
+  @include buttons.ghost;
+  & {
+    padding: tokens.$spacing-2;
+    flex-shrink: 0;
+  }
+}
+.options { display: grid; gap: tokens.$spacing-6; margin-top: tokens.$spacing-6; }
+section + section { border-top: 1px solid tokens.$border-color; padding-top: tokens.$spacing-6; }
+label { display: block; margin-bottom: tokens.$spacing-2; font-size: tokens.$font-size-sm; }
+input[type='file'] {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: tokens.$input-height;
+  border: 1px solid tokens.$input-border;
+  border-radius: tokens.$input-radius;
+  background: tokens.$background-surface;
+  color: tokens.$text-secondary;
+  font: inherit;
+  font-size: tokens.$font-size-sm;
+  &::file-selector-button {
+    min-height: tokens.$input-height;
+    margin-right: tokens.$spacing-3;
+    padding-inline: tokens.$spacing-3;
+    border: 0;
+    border-right: 1px solid tokens.$border-color;
+    background: tokens.$background-subtle;
+    color: tokens.$text-primary;
+    font: inherit;
+    cursor: pointer;
+  }
+  &:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: tokens.$spacing-1; }
+}
+button:disabled, input:disabled { cursor: not-allowed; opacity: 0.6; }
+.hint { font-size: tokens.$font-size-xs; color: tokens.$text-muted; }
+
+
+#backup-description { margin-top: tokens.$spacing-2; }
+section > p { margin: tokens.$spacing-2 0 tokens.$spacing-4; }
+form, .import-controls { display: grid; gap: tokens.$spacing-4; justify-items: start; }
+.file-field, app-input { width: 100%; min-width: 0; }
+.file-field .hint { margin-top: tokens.$spacing-1; }
+
+.caution-icon { color: tokens.$color-warning; display: inline-flex; vertical-align: middle; }
