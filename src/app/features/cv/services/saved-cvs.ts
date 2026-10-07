@@ -114,6 +114,12 @@ export class SavedCvs {
     return { name: record.name, ...(record.icon ? { icon: record.icon } : {}) };
   }
 
+  async deleteTechnology(id: string): Promise<void> {
+    await this.loadTechnologies();
+    await this.request('readwrite', (store) => store.delete(id), 'technologies');
+    this.technologyRecords.update((records) => records.filter((record) => record.id !== id));
+  }
+
   async saveExperience(experience: CvExperience): Promise<string> {
     const id = experience.savedExperienceId ?? crypto.randomUUID();
     const record: SavedExperience = {

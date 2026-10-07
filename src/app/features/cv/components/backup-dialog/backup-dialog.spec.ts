@@ -20,9 +20,16 @@ describe('Header backup dialog', () => {
     fixture = TestBed.createComponent(Header);
     await fixture.whenStable();
     page = fixture.nativeElement;
-    page.querySelector<HTMLButtonElement>('.backup-button')!.click();
+    await openBackup();
     await fixture.whenStable();
   });
+
+  async function openBackup(): Promise<void> {
+    page.querySelector<HTMLButtonElement>('[aria-label="Settings"]')!.click();
+    await fixture.whenStable();
+    page.querySelector<HTMLButtonElement>('[role="menuitem"]')!.click();
+    await fixture.whenStable();
+  }
 
   function selectFile(): File {
     const file = new File(['archive'], 'backup.zip', { type: 'application/zip' });
@@ -129,7 +136,7 @@ describe('Header backup dialog', () => {
     expect(checkbox.checked).toBeFalse();
     checkbox.click();
     page.querySelector<HTMLButtonElement>('.close')!.click();
-    page.querySelector<HTMLButtonElement>('.backup-button')!.click();
+    await openBackup();
     await fixture.whenStable();
     expect(checkbox.checked).toBeFalse();
   });
@@ -143,7 +150,7 @@ describe('Header backup dialog', () => {
     page.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
     await fixture.whenStable();
     page.querySelector<HTMLButtonElement>('.close')!.click();
-    page.querySelector<HTMLButtonElement>('.backup-button')!.click();
+    await openBackup();
     await fixture.whenStable();
     expect(page.querySelector('.toast')).toBeNull();
   });

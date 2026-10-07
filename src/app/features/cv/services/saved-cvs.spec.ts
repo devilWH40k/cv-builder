@@ -334,6 +334,36 @@ describe('IndexedDB saved CVs', () => {
     });
   }
 
+  it('deletes technologies persistently without modifying CV or experience snapshots', async () => {
+    const saved = service();
+    await saved.saveTechnology({ name: 'SDK' });
+    const snapshot = { ...info, technologies: ['SDK'] };
+    const id = await saved.save(snapshot, null);
+    const experience = { ...info.experiences[0], technologies: ['SDK'] };
+    await saved.saveExperience(experience);
+    await saved.deleteTechnology('sdk');
+    expect(saved.technologies()).toEqual([]);
+    const reloaded = service();
+    await reloaded.loadTechnologies();
+    expect(reloaded.technologies()).toEqual([]);
+    expect(await saved.load(id)).toEqual(snapshot);
+    expect((await saved.listExperiences())[0].experience.technologies).toEqual(['SDK']);
+  });
+
+  it('keeps a technology when its delete transaction aborts', async () => {
+    const saved = service();
+    await saved.saveTechnology({ name: 'SDK' });
+    const original = IDBObjectStore.prototype.delete;
+    spyOn(IDBObjectStore.prototype, 'delete').and.callFake(function (this: IDBObjectStore, key) {
+      const request = original.call(this, key);
+      this.transaction.abort();
+      return request;
+    });
+    await expectAsync(saved.deleteTechnology('sdk')).toBeRejected();
+    expect(saved.technologies().map((entry) => entry.name)).toEqual(['SDK']);
+    expect((await saved.backupSnapshot()).technologies?.length).toBe(1);
+  });
+
   it('persists a technology library, deduplicates names and imports or wipes entries', async () => {
     const saved = service();
     const icon = document.createElement('canvas').toDataURL('image/png');

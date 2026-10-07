@@ -1191,6 +1191,23 @@ for an IndexedDB transaction before selecting it. Failed saves leave the dialog
 open for retry. Unrelated multi-selects do not receive the library or save action.
 Selected icons remain snapshots, so library updates do not rewrite existing CVs.
 
+## Settings menu and saved technologies
+
+The header Settings icon uses `shared/ui/dropdown`. Pass a unique `menuId`, an
+accessible `label`, and an `items` array of `{ id, label, disabled? }` entries.
+Project trigger content inside `app-dropdown` and handle its `selected` output.
+Menus open on hover or click, support arrow/Home/End navigation and Escape, and
+close when focus or the pointer leaves, or when the user clicks outside.
+
+Settings offers Import / Export and Technologies. Technologies uses the shared
+dialog overlay and a dialog with a 32rem minimum height, capped by the
+viewport. The technology list scrolls above the bottom-anchored Add button.
+Deleting a saved technology updates the library after storage succeeds;
+existing CV and experience snapshots retain their selected names and icons.
+The Technologies dialog's Add button reuses the custom-entry dialog with name and
+optional icon fields. In this context, Apply saves to the library before returning
+to the list; cancellation leaves the library unchanged.
+
 ## Tooltips
 
 Import `Tooltip` from `src/app/shared/directories/tooltip` and add
