@@ -1191,6 +1191,23 @@ for an IndexedDB transaction before selecting it. Failed saves leave the dialog
 open for retry. Unrelated multi-selects do not receive the library or save action.
 Selected icons remain snapshots, so library updates do not rewrite existing CVs.
 
+## Settings menu and saved technologies
+
+The header Settings icon uses `shared/ui/dropdown`. Pass a unique `menuId`, an
+accessible `label`, and an `items` array of `{ id, label, disabled? }` entries.
+Project trigger content inside `app-dropdown` and handle its `selected` output.
+Menus open on hover or click, support arrow/Home/End navigation and Escape, and
+close when focus or the pointer leaves, or when the user clicks outside.
+
+Settings offers Import / Export and Technologies. Technologies uses the shared
+dialog overlay and a dialog with a 32rem minimum height, capped by the
+viewport. The technology list scrolls above the bottom-anchored Add button.
+Deleting a saved technology updates the library after storage succeeds;
+existing CV and experience snapshots retain their selected names and icons.
+The Technologies dialog's Add button reuses the custom-entry dialog with name and
+optional icon fields. In this context, Apply saves to the library before returning
+to the list; cancellation leaves the library unchanged.
+
 ## Tooltips
 
 Import `Tooltip` from `src/app/shared/directories/tooltip` and add
@@ -1203,6 +1220,10 @@ are loaded by `src/styles/styles.scss`; tooltip positioning stays within the vie
 
 ## CV document themes
 
+The Used technologies view section also controls Top / Bottom placement relative
+to each experience description. Position is independent of Blocks / Comma separated
+view, defaults to Bottom, and is preserved in saved CVs, backups, preview, and PDF.
+
 CV themes live in src/styles/themes/, with one entry file per theme:
 basic.scss, dark-blue.scss, and dark.scss. They are loaded by
 src/styles/styles.scss and scoped to a theme class on .cv-document.
@@ -1212,7 +1233,7 @@ Theme selectors intentionally outrank the preview component's scoped styles.
 Keep theme colors and overrides inside these files; do not theme the surrounding
 editor controls. Dark theme print rules preserve document colors during export.
 
-Available choices are declared in src/app/features/cv/cv-themes.ts.
+Available choices are declared in src/app/features/cv/constants/cv-themes.ts.
 The selected theme is stored in CvStructure.theme; older CVs default to Basic.
 
 

@@ -1,0 +1,118 @@
+<div class="preview-root" [class.embedded]="embedded()">
+  @if (!embedded()) { <h1 id="preview-title" class="page-title">Your CV Preview</h1> }
+  @if (info(); as cv) {
+  <div class="preview-layout">
+    @if (!embedded()) {
+    <app-responsive-drawer class="structure-menu" label="Structure" panelId="structure-panel">
+      <app-structure-options [structure]="structure()" (structureChange)="draft.updateStructure($event)" />
+    </app-responsive-drawer>
+    }
+    <div #viewport class="document-viewport" role="region" aria-label="A4 CV preview" tabindex="0">
+      <p class="page-count" role="status">{{ pages().length }} {{ pages().length === 1 ? 'page' : 'pages' }}</p>
+      <div class="page-stack" [style.--preview-scale]="previewScale()">
+      @for (page of pages(); track page) {
+      <div class="preview-sheet">
+      <p class="page-label">Page {{ page + 1 }} of {{ pages().length }}</p>
+      <article class="cv-document" [class]="'theme-' + (structure().theme ?? 'basic')"
+        [class.continuation-page]="page > 0" [attr.aria-label]="'CV page ' + (page + 1)">
+        <div class="page-content">
+          <div #pageFlow class="page-flow" [style.transform]="'translateX(-' + (page * 210) + 'mm)'">
+        <header class="cv-header">
+          @if (structure().showPhoto !== false && photoUrl(); as url) {
+          <app-resizable [size]="photoSize()" [minSize]="minPhotoSize" [maxSize]="maxPhotoSize"
+            [step]="photoSizeStep" label="Photo size" [valueText]="photoSizeMm() + ' millimeters'"
+            (sizeChange)="resizePhoto($event)">
+          <img class="portrait" draggable="false" [src]="url" [alt]="cv.name + ' — portrait'" (error)="photoUrl.set(null)" />
+          </app-resizable>
+          }
+          <div class="cv-info">
+            <h2>{{ cv.name }}</h2>
+            <p class="position">{{ cv.positionTitle }}</p>
+            <p class="description">{{ cv.description }}</p>
+          </div>
+        </header>
+        <div class="cv-body" [class.sidebar-left]="structure().sidebarPosition === 'left'">
+          <div class="cv-main">
+            @if (cv.experiences.length) {
+            <section class="cv-experience" [attr.aria-labelledby]="'cv-experience-title-' + page">
+              <h3 [id]="'cv-experience-title-' + page">Experience:</h3>
+              @for (experience of cv.experiences; track $index) {
+              <article class="experience-entry" [class.technologies-top]="structure().technologiesPosition === 'top'">
+                <h4>{{ experience.company }}@if (experience.position) { | {{ experience.position }}}</h4>
+                @if (experience.startDate || experience.endDate || experience.isCurrent) {
+                <p class="period">{{ formatDate(experience.startDate) }}@if (experience.startDate && (experience.endDate
+                  || experience.isCurrent)) { &ndash; }{{ experience.isCurrent ? 'Present' :
+                  formatDate(experience.endDate) }}</p>
+                }
+                @if (structure().technologiesPosition !== 'top') {
+                <div class="project-description" [innerHTML]="experience.description | experienceDescription"></div>
+                }
+                @if (experience.technologies.length && usedTechnologiesView(experience.technologies, structure().technologiesView, experience.customTechnologyIcons) === 'comma-separated') {
+                <p class="technologies-inline" aria-label="Used technologies">{{ experience.technologies.join(', ') }}
+                </p>
+                }
+                @if (experience.technologies.length && usedTechnologiesView(experience.technologies, structure().technologiesView, experience.customTechnologyIcons) === 'blocks') {
+                <ul class="experience-technologies" aria-label="Used technologies">
+                  @for (technology of experience.technologies; track technology) {
+                  @if (usedTechnologyIcon(technology, experience.customTechnologyIcons); as icon) {
+                  <li [title]="technology">
+                    <img [src]="icon" [alt]="technology" width="24" height="24" />
+                  </li>
+                  }
+                  }
+                </ul>
+                }
+                @if (structure().technologiesPosition === 'top') {
+                <div class="project-description" [innerHTML]="experience.description | experienceDescription"></div>
+                }
+              </article>
+              }
+            </section>
+            }
+          </div>
+          <aside class="cv-sidebar">
+            @if (cv.languages.length) {
+            <section class="cv-languages" [attr.aria-labelledby]="'cv-languages-title-' + page">
+              <h3 [id]="'cv-languages-title-' + page">Languages:</h3>
+              <ul>
+                @for (language of cv.languages; track $index) {
+                <li>{{ language.language }} - {{ shortLevel(language.level) }}</li>
+                }
+              </ul>
+            </section>
+            }
+            @if (cv.technologies.length) {
+            <section class="cv-technologies" [class.technology-blocks]="structure().sidebarTechnologiesView === 'blocks'" [attr.aria-labelledby]="'cv-technologies-title-' + page">
+              <h3 [id]="'cv-technologies-title-' + page">Tools/Technologies</h3>
+              <ul>
+                @for (technology of cv.technologies; track technology) {
+                <li>{{ technology }}</li>
+                }
+              </ul>
+            </section>
+            }
+          </aside>
+        </div>
+          </div>
+        </div>
+      </article>
+      </div>
+      }
+      </div>
+    </div>
+    @if (!embedded()) {
+    <app-responsive-drawer #actionsMenu class="actions-menu" label="CV actions" panelId="actions-panel" side="right">
+    <nav class="actions" aria-label="CV actions">
+      <app-button (click)="actionsMenu.close(); export()" [disabled]="pdf.exporting()">
+        <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
+        {{ pdf.exporting() ? 'Exporting…' : 'Export' }}
+      </app-button>
+      <app-save-cv-button [info]="info" />
+      <a routerLink="/create">Edit CV info</a>
+      <a routerLink="/">Back to home</a>
+    </nav>
+    </app-responsive-drawer>
+    }
+  </div>
+  }
+</div>

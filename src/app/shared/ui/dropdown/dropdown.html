@@ -1,0 +1,14 @@
+<button #trigger class="trigger" type="button" [attr.aria-label]="label()"
+  aria-haspopup="menu" [attr.aria-expanded]="isOpen()" [attr.aria-controls]="menuId()"
+  (click)="toggle()">
+  <ng-content />
+</button>
+<div class="menu-container" [hidden]="!isOpen()">
+  <div #menu class="menu" role="menu" [id]="menuId()" [attr.aria-label]="label()">
+    @for (item of items(); track item.id) {
+      <button type="button" role="menuitem" [disabled]="item.disabled" (click)="choose(item)">
+        {{ item.label }}
+      </button>
+    }
+  </div>
+</div>

@@ -24,6 +24,7 @@ export class CustomEntryDialog {
   readonly applied = output<CustomEntry>();
   readonly cancelled = output<void>();
   readonly saveEntry = input<((entry: CustomEntry) => Promise<CustomEntry>) | null>(null);
+  readonly saveOnApply = input(false);
   protected readonly name = new FormControl('', {
     nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)]
   });
@@ -71,6 +72,10 @@ export class CustomEntryDialog {
   protected apply(event?: Event): void {
     event?.preventDefault();
     event?.stopPropagation();
+    if (this.saveOnApply()) {
+      void this.applyAndSave();
+      return;
+    }
     this.name.markAsTouched();
     if (this.name.invalid || this.loading() || this.error() || this.saving()) return;
     this.overlay().close();
