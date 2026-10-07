@@ -69,11 +69,13 @@ function structure(value: unknown): CvStructure | undefined {
   const settings = object(value);
   const sidebarPosition = settings['sidebarPosition'];
   const technologiesView = settings['technologiesView'];
+  const technologiesPosition = settings['technologiesPosition'];
   const sidebarTechnologiesView = settings['sidebarTechnologiesView'];
   const theme = CV_THEMES.find((theme) => theme.value === settings['theme'])?.value;
   if ((settings['theme'] !== undefined && !theme) ||
     (sidebarPosition !== 'left' && sidebarPosition !== 'right') ||
     (technologiesView !== 'blocks' && technologiesView !== 'comma-separated') ||
+    (technologiesPosition !== undefined && technologiesPosition !== 'top' && technologiesPosition !== 'bottom') ||
     (sidebarTechnologiesView !== undefined && sidebarTechnologiesView !== 'blocks' &&
       sidebarTechnologiesView !== 'list')) throw new Error(INVALID);
   const showPhoto = settings['showPhoto'];
@@ -83,6 +85,7 @@ function structure(value: unknown): CvStructure | undefined {
     !Number.isFinite(photoSizeMm) || photoSizeMm <= 0)) throw new Error(INVALID);
   return {
     sidebarPosition, technologiesView,
+    ...(technologiesPosition !== undefined ? { technologiesPosition } : {}),
     ...(showPhoto !== undefined ? { showPhoto } : {}),
     ...(photoSizeMm !== undefined ? { photoSizeMm } : {}),
     ...(theme ? { theme } : {}),

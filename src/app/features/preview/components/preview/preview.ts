@@ -1,4 +1,5 @@
 import { Resizable } from '../../../../shared/ui/resizable/resizable';
+import { ExperienceDescription } from '../../pipes/experience-description';
 import { CSS_PIXELS_PER_MM, CV_PHOTO_MIN_MM, CV_PHOTO_MAX_MM, cvPhotoSizeMm } from '../../../cv/helpers/cv-photo-size';
 import { CvPdf } from '../../../cv/services/cv-pdf';
 import { SaveCvButton } from '../../../cv/components/save-cv-button/save-cv-button';
@@ -15,7 +16,7 @@ import { formatCalendarDate } from '../../../../shared/ui/date-picker/date-value
 
 @Component({
   selector: 'app-preview',
-  imports: [Resizable, SaveCvButton, RouterLink, Button, LucideAngularModule, StructureOptions, ResponsiveDrawer],
+  imports: [ExperienceDescription, Resizable, SaveCvButton, RouterLink, Button, LucideAngularModule, StructureOptions, ResponsiveDrawer],
   templateUrl: './preview.html',
   styleUrls: ['./preview.scss', './preview-pages.scss', './preview-technologies.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -14,6 +14,21 @@ const cv: CvInfo = {
 };
 
 describe('PDF export', () => {
+  for (const technologiesView of ['blocks', 'comma-separated'] as const) {
+    for (const technologiesPosition of ['top', 'bottom'] as const) {
+      it(`exports ${technologiesView} technologies at the ${technologiesPosition}`, async () => {
+        const definition = await buildCvPdf({ ...cv,
+          structure: { sidebarPosition: 'right', technologiesView, technologiesPosition }
+        });
+        const content = JSON.stringify(definition.content);
+        const technologyIndex = content.indexOf(technologiesView === 'blocks' ? '"image":' : '"text":"Angular"');
+        const descriptionIndex = content.indexOf('Built');
+        expect(technologyIndex).toBeGreaterThan(-1);
+        expect(descriptionIndex).toBeGreaterThan(-1);
+        expect(technologyIndex < descriptionIndex).toBe(technologiesPosition === 'top');
+      });
+    }
+  }
   for (const sidebarTechnologiesView of ['list', 'blocks'] as const) {
     it(`exports custom icons in experience blocks and the sidebar ${sidebarTechnologiesView}`, async () => {
       const canvas = document.createElement('canvas');

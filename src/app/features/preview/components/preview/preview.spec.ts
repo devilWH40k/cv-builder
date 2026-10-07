@@ -8,6 +8,31 @@ import { Create } from '../../../create/components/create/create';
 import { CvDraft } from '../../../cv/services/cv-draft';
 
 describe('CV preview', () => {
+  for (const technologiesView of ['blocks', 'comma-separated'] as const) {
+    for (const technologiesPosition of ['top', 'bottom'] as const) {
+      it(`positions ${technologiesView} technologies at the ${technologiesPosition}`, async () => {
+        const draft = TestBed.inject(CvDraft);
+        draft.save({ ...info,
+          structure: { sidebarPosition: 'right', technologiesView, technologiesPosition },
+          experiences: [{ company: 'Example', position: 'Engineer', startDate: '', endDate: '',
+            isCurrent: false, technologies: ['Angular'], description: '<p>Project details</p>' }]
+        });
+        const harness = await RouterTestingHarness.create('/preview');
+        const page = harness.routeNativeElement!;
+        const entry = page.querySelector('.experience-entry')!;
+        const technologies = entry.querySelector('[aria-label="Used technologies"]')!;
+        const description = entry.querySelector('.project-description')!;
+        expect(!!(technologies.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING))
+          .toBe(technologiesPosition === 'top');
+        const next = technologiesPosition === 'top' ? 'bottom' : 'top';
+        page.querySelector<HTMLInputElement>(`input[name="technologies-position"][value="${next}"]`)!.click();
+        await harness.fixture.whenStable();
+        expect(draft.current()?.structure?.technologiesPosition).toBe(next);
+        expect(draft.current()?.structure?.technologiesView).toBe(technologiesView);
+      });
+    }
+  }
+
   let download: jasmine.Spy;
   const info = {
     name: 'Alex Morgan',
@@ -52,6 +77,7 @@ describe('CV preview', () => {
     const sidebar = page.querySelector('.cv-sidebar')!.getBoundingClientRect();
     expect(sidebar.right).toBeLessThan(page.querySelector('.cv-main')!.getBoundingClientRect().left);
     await choose('comma-separated');
+    await choose('top');
     const period = page.querySelector('.period')!;
     expect(period.nextElementSibling?.textContent?.trim()).toBe('Angular, TypeScript');
     expect(period.nextElementSibling?.nextElementSibling?.className).toBe('project-description');
@@ -68,7 +94,7 @@ describe('CV preview', () => {
     await harness.navigateByUrl('/create', Create);
     harness.routeNativeElement!.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await harness.fixture.whenStable();
-    expect(draft.current()?.structure).toEqual({ showPhoto: true, theme: 'basic', sidebarPosition: 'left', technologiesView: 'comma-separated', sidebarTechnologiesView: 'list' });
+    expect(draft.current()?.structure).toEqual({ showPhoto: true, theme: 'basic', sidebarPosition: 'left', technologiesView: 'comma-separated', technologiesPosition: 'top', sidebarTechnologiesView: 'list' });
     expect(harness.routeNativeElement!.querySelector<HTMLInputElement>('input[value="left"]')!.checked).toBeTrue();
     expect(harness.routeNativeElement!.querySelector('.technologies-inline')?.textContent?.trim()).toBe('Angular, TypeScript');
   });

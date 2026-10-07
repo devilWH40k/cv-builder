@@ -37,18 +37,20 @@
             <section class="cv-experience" [attr.aria-labelledby]="'cv-experience-title-' + page">
               <h3 [id]="'cv-experience-title-' + page">Experience:</h3>
               @for (experience of cv.experiences; track $index) {
-              <article class="experience-entry">
+              <article class="experience-entry" [class.technologies-top]="structure().technologiesPosition === 'top'">
                 <h4>{{ experience.company }}@if (experience.position) { | {{ experience.position }}}</h4>
                 @if (experience.startDate || experience.endDate || experience.isCurrent) {
                 <p class="period">{{ formatDate(experience.startDate) }}@if (experience.startDate && (experience.endDate
                   || experience.isCurrent)) { &ndash; }{{ experience.isCurrent ? 'Present' :
                   formatDate(experience.endDate) }}</p>
                 }
+                @if (structure().technologiesPosition !== 'top') {
+                <div class="project-description" [innerHTML]="experience.description | experienceDescription"></div>
+                }
                 @if (experience.technologies.length && usedTechnologiesView(experience.technologies, structure().technologiesView, experience.customTechnologyIcons) === 'comma-separated') {
                 <p class="technologies-inline" aria-label="Used technologies">{{ experience.technologies.join(', ') }}
                 </p>
                 }
-                <div class="project-description" [innerHTML]="experience.description"></div>
                 @if (experience.technologies.length && usedTechnologiesView(experience.technologies, structure().technologiesView, experience.customTechnologyIcons) === 'blocks') {
                 <ul class="experience-technologies" aria-label="Used technologies">
                   @for (technology of experience.technologies; track technology) {
@@ -59,6 +61,9 @@
                   }
                   }
                 </ul>
+                }
+                @if (structure().technologiesPosition === 'top') {
+                <div class="project-description" [innerHTML]="experience.description | experienceDescription"></div>
                 }
               </article>
               }

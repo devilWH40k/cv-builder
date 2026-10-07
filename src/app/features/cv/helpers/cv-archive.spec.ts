@@ -4,6 +4,21 @@ import { defaultBackupName } from '../services/cv-backup';
 import { SavedCv } from '../services/saved-cvs';
 
 describe('CV ZIP backups', () => {
+  for (const technologiesPosition of ['top', 'bottom'] as const) {
+    it(`preserves the ${technologiesPosition} used technologies position`, async () => {
+      const saved = { ...record, info: { ...record.info,
+        structure: { sidebarPosition: 'right' as const, technologiesView: 'blocks' as const, technologiesPosition }
+      } };
+      const restored = await readArchive(await createArchive([saved]));
+      expect(restored.cvs[0].info.structure?.technologiesPosition).toBe(technologiesPosition);
+    });
+  }
+
+  it('rejects invalid used technologies positions', async () => {
+    await expectAsync(readArchive(archive([{ ...record, info: { ...record.info, photo: null,
+      structure: { ...record.info.structure, technologiesPosition: 'middle' }
+    } }]))).toBeRejected();
+  });
   it('round trips a standalone technology library with optional icons', async () => {
     const technologies = [
       { id: 'sdk', name: 'SDK', icon: document.createElement('canvas').toDataURL('image/png'), updatedAt: 1 },

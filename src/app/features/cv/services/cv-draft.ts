@@ -10,11 +10,12 @@ export interface CvStructure {
   readonly photoSizeMm?: number;
   readonly sidebarPosition: 'left' | 'right';
   readonly technologiesView: 'blocks' | 'comma-separated';
+  readonly technologiesPosition?: 'top' | 'bottom';
   readonly sidebarTechnologiesView?: 'blocks' | 'list';
 }
 
 export const DEFAULT_CV_STRUCTURE: CvStructure = {
-  showPhoto: true, theme: 'basic', sidebarPosition: 'right', technologiesView: 'blocks', sidebarTechnologiesView: 'list'
+  showPhoto: true, theme: 'basic', sidebarPosition: 'right', technologiesView: 'blocks', technologiesPosition: 'bottom', sidebarTechnologiesView: 'list'
 };
 
 export interface CvInfo {

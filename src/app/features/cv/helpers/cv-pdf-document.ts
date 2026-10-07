@@ -21,6 +21,32 @@ export function pdfRichText(html: string): Content {
       if (!safeLink) element.removeAttribute(attribute.name);
     }
   }
+
+  const trimTrailingBreaks = (parent: Node): void => {
+    while (parent.lastChild) {
+      const last = parent.lastChild;
+      if (last.nodeType === Node.TEXT_NODE) {
+        last.textContent = (last.textContent ?? '').trimEnd();
+        if (last.textContent) return;
+        parent.removeChild(last);
+      } else if (last instanceof Element) {
+        if (last.tagName === 'BR') {
+          last.remove();
+          continue;
+        }
+        trimTrailingBreaks(last);
+        if (last.matches('p, div, span, strong, em, b, i, u') && !last.textContent && !last.children.length) {
+          last.remove();
+          continue;
+        }
+        return;
+      } else {
+        parent.removeChild(last);
+      }
+    }
+  };
+  trimTrailingBreaks(document.body);
+
   // Editors can leave empty paragraphs after a list; they should not separate jobs.
   let last = document.body.lastElementChild;
   while (last?.matches('p') && !last.textContent?.trim()) {
@@ -32,7 +58,9 @@ export function pdfRichText(html: string): Content {
     if (last.matches('p, ul, ol, li')) last.setAttribute('style', 'margin-bottom: 0');
     last = last.lastElementChild;
   }
-  return htmlToPdfmake(document.body.innerHTML, {
+  return htmlToPdfmake(document.body.innerHTML.trim(), {
+    // Formatting whitespace between block tags otherwise becomes blank PDF text lines.
+    removeExtraBlanks: true,
     defaultStyles: {
       p: { margin: [0, 0, 0, 6] },
       ul: { margin: [0, 0, 0, 6] },
@@ -116,10 +144,14 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
       text: [start, end].filter(Boolean).join(' – '), fontSize: 10, color: muted,
       margin: [0, 0, 0, 9],
     });
+    const technologiesAtTop = structure.technologiesPosition === 'top';
+    if (!technologiesAtTop) main.push(pdfRichText(entry.description));
     if (entry.technologies.length && technologiesView === 'comma-separated') {
-      main.push({ text: entry.technologies.join(', '), fontSize: 10, margin: [0, 0, 0, 9] });
+      main.push({
+        text: entry.technologies.join(', '), fontSize: 10,
+        margin: technologiesAtTop ? [0, 0, 0, 9] : [0, 9, 0, 0]
+      });
     }
-    main.push(pdfRichText(entry.description));
     if (entry.technologies.length && technologiesView === 'blocks') {
       // Short rows wrap icon groups without making a long experience unbreakable.
       for (let index = 0; index < entry.technologies.length; index += 8) {
@@ -129,11 +161,11 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
             return icon ? { image: icon, width: 18, height: 18 }
               : { text: technology, width: 36, fontSize: 8 };
           }),
-          columnGap: 6, margin: [0, 5, 0, 0],
+          columnGap: 6, margin: technologiesAtTop ? [0, 0, 0, 9] : [0, 9, 0, 0],
         });
       }
     }
-
+    if (technologiesAtTop) main.push(pdfRichText(entry.description));
   }
 
   const sidebar: Content[] = [];

@@ -54,6 +54,17 @@
           [checked]="structure().technologiesView === 'comma-separated'"
           (selected)="update({ technologiesView: 'comma-separated' })" />
       </div>
+      <div class="position-options" role="group" aria-labelledby="used-technologies-position-label">
+        <p id="used-technologies-position-label">Position</p>
+        <div class="radio-row">
+          <app-radio name="technologies-position" value="top" label="Top"
+            [checked]="structure().technologiesPosition === 'top'"
+            (selected)="update({ technologiesPosition: 'top' })" />
+          <app-radio name="technologies-position" value="bottom" label="Bottom"
+            [checked]="structure().technologiesPosition !== 'top'"
+            (selected)="update({ technologiesPosition: 'bottom' })" />
+        </div>
+      </div>
     </fieldset>
   </div>
 </section>

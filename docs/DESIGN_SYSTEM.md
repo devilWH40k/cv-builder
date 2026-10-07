@@ -1220,6 +1220,10 @@ are loaded by `src/styles/styles.scss`; tooltip positioning stays within the vie
 
 ## CV document themes
 
+The Used technologies view section also controls Top / Bottom placement relative
+to each experience description. Position is independent of Blocks / Comma separated
+view, defaults to Bottom, and is preserved in saved CVs, backups, preview, and PDF.
+
 CV themes live in src/styles/themes/, with one entry file per theme:
 basic.scss, dark-blue.scss, and dark.scss. They are loaded by
 src/styles/styles.scss and scoped to a theme class on .cv-document.
