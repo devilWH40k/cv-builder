@@ -14,6 +14,18 @@ and are never sent to a server. Saving and PDF generation happen locally.
 
 ## Project notes
 
+### Feature folders
+
+Feature code lives under `src/app/features/<feature>/`, grouped by responsibility:
+
+- `components/`: components with their templates, styles, and tests.
+- `services/`: injectable services and their closely related declarations.
+- `interfaces/`: files containing domain types only.
+- `constants/`: lookup data and related types.
+- `helpers/`: functions, including files that combine functions and interfaces.
+
+Tests stay beside the code they cover. Feature route definitions stay at the feature root.
+
 ### App version
 
 Set `appVersion` in `src/environments/environment.ts` to change the version shown
@@ -60,7 +72,7 @@ The exporter and bundled Roboto fonts load on demand. The browser distributions
 of pdfmake and html-to-pdfmake are CommonJS, explicitly allowed in `angular.json`.
 No CV data is sent to a server.
 
-`features/cv/cv-pdf-document.ts` owns PDF layout, theme colors, image conversion,
+`features/cv/helpers/cv-pdf-document.ts` owns PDF layout, theme colors, image conversion,
 and rich-text conversion. Keep it aligned with document theme changes. Rich text
 preserves semantic formatting (bold, italic, underline, lists, and safe links);
 embedded HTML images and arbitrary HTML styles are not imported. Portraits and

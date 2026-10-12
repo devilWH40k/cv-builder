@@ -1,0 +1,42 @@
+<dialog appDialogOverlay aria-labelledby="technologies-title" (cancel)="$event.preventDefault(); close()">
+  <header>
+    <h2 id="technologies-title">Technologies</h2>
+    <button #closeButton class="close" type="button" aria-label="Close technologies" autofocus (click)="close()">
+      <lucide-icon [img]="CloseIcon" [size]="20" aria-hidden="true" />
+    </button>
+  </header>
+  <p class="hint">Manage your saved technology library. Deleting an entry keeps it in existing CVs.</p>
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  <div class="content" [attr.aria-busy]="loading()">
+    @if (loading()) {
+      <p role="status">Loading technologies...</p>
+    } @else if (loadFailed()) {
+      <button class="retry" type="button" (click)="load()">Try again</button>
+    } @else {
+      <ul>
+        @for (technology of saved.technologies(); track technology.id) {
+          <li>
+            @if (technology.icon) { <img [src]="technology.icon" alt="" width="24" height="24" /> }
+            <span>{{ technology.name }}</span>
+            <button class="delete" type="button" [attr.aria-label]="'Delete ' + technology.name"
+              [disabled]="deletingIds().includes(technology.id)" (click)="remove(technology.id)">
+              <lucide-icon [img]="DeleteIcon" [size]="20" aria-hidden="true" />
+            </button>
+          </li>
+        } @empty {
+          <li class="empty" role="status">No saved technologies yet.</li>
+        }
+      </ul>
+    }
+  </div>
+  <footer>
+    <app-button #addButton [disabled]="loading() || loadFailed()" (click)="add()">
+      <lucide-icon [img]="AddIcon" [size]="20" aria-hidden="true" />
+      Add
+    </app-button>
+  </footer>
+</dialog>
+@if (adding()) {
+  <app-custom-entry-dialog inputId="saved-technology-custom" [saveEntry]="saveEntry" [saveOnApply]="true"
+    (applied)="finishAdding()" (cancelled)="finishAdding()" />
+}

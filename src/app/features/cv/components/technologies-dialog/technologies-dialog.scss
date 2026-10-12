@@ -1,0 +1,37 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+dialog {
+  box-sizing: border-box;
+  width: min(36rem, calc(100% - #{tokens.$spacing-8}));
+  min-height: min(32rem, calc(100dvh - #{tokens.$spacing-8}));
+  max-height: calc(100dvh - #{tokens.$spacing-8});
+  overflow: hidden;
+  padding: tokens.$spacing-6;
+  color: tokens.$text-primary;
+  background: tokens.$background-surface;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  box-shadow: tokens.$shadow-lg;
+}
+dialog[open] { display: flex; flex-direction: column; }
+header { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: tokens.$spacing-4; }
+.content { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+h2 { margin: 0; font-size: tokens.$font-size-xl; }
+.hint { margin-block: tokens.$spacing-4; color: tokens.$text-secondary; font-size: tokens.$font-size-sm; }
+.error { color: tokens.$text-danger; }
+.close, .delete {
+  @include buttons.ghost;
+  & { padding-inline: tokens.$spacing-3; flex-shrink: 0; }
+}
+.delete {
+  color: tokens.$text-danger;
+  &:disabled { color: tokens.$text-disabled; cursor: wait; }
+}
+.retry { @include buttons.secondary; }
+ul { padding: 0; margin: 0; list-style: none; }
+li { display: flex; align-items: center; gap: tokens.$spacing-3; padding-block: tokens.$spacing-2; border-bottom: 1px solid tokens.$border-color; }
+li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+img { flex-shrink: 0; object-fit: contain; }
+.empty { border: 0; color: tokens.$text-secondary; }
+footer { display: flex; flex-shrink: 0; justify-content: flex-end; margin-top: auto; padding-top: tokens.$spacing-4; }

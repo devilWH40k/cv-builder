@@ -1,0 +1,27 @@
+@use 'styles/tokens' as tokens;
+
+.experience-technologies {
+  display: flex; flex-wrap: wrap; gap: 2mm; margin: 4mm 0 0; padding: 0; list-style: none;
+  li { display: flex; align-items: center; break-inside: avoid; }
+}
+.experience-technologies img {
+  width: tokens.$spacing-6;
+  height: tokens.$spacing-6;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.technologies-top .experience-technologies { margin: 0 0 3mm; }
+.experience-entry:not(.technologies-top) .technologies-inline { margin: 3mm 0 0; }
+.custom-technology-icon {
+  width: tokens.$spacing-5;
+  height: tokens.$spacing-5;
+  flex-shrink: 0;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: tokens.$spacing-1;
+}
+.cv-technologies.technology-blocks li:has(.custom-technology-icon) {
+  flex-direction: column;
+  gap: tokens.$spacing-1;
+  .custom-technology-icon { margin: 0; }
+}

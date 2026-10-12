@@ -1,13 +1,13 @@
 import { inject } from '@angular/core';
 import { Router, Routes } from '@angular/router';
-import { CvDraft } from './features/cv/cv-draft';
+import { CvDraft } from './features/cv/services/cv-draft';
 
 export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
     title: 'CV Builder',
-    loadComponent: () => import('./features/home/home').then((m) => m.Home)
+    loadComponent: () => import('./features/home/components/home/home').then((m) => m.Home)
   },
   {
     path: 'create',
@@ -18,6 +18,6 @@ export const routes: Routes = [
     path: 'preview',
     title: 'Your CV Preview | CV Builder',
     canActivate: [() => inject(CvDraft).current() ? true : inject(Router).createUrlTree(['/create'])],
-    loadComponent: () => import('./features/preview/preview').then((m) => m.Preview)
+    loadComponent: () => import('./features/preview/components/preview/preview').then((m) => m.Preview)
   }
 ];

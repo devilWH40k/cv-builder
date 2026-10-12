@@ -1,0 +1,34 @@
+@use 'styles/tokens' as tokens;
+@use '../button/variants' as buttons;
+
+:host { display: inline-block; position: relative; }
+.trigger {
+  @include buttons.secondary;
+  & { padding-inline: tokens.$spacing-3; gap: tokens.$spacing-2; }
+}
+.menu-container {
+  position: absolute;
+  inset-inline-end: 0;
+  top: 100%;
+  padding-top: tokens.$spacing-2;
+  z-index: tokens.$z-dropdown;
+}
+.menu {
+  min-width: 12rem;
+  max-width: calc(100vw - #{tokens.$spacing-8});
+  padding: tokens.$spacing-1;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md;
+  background: tokens.$background-surface;
+  box-shadow: tokens.$shadow-md;
+}
+.menu button {
+  @include buttons.ghost;
+  & {
+    width: 100%;
+    justify-content: flex-start;
+    padding-inline: tokens.$spacing-3;
+    text-align: start;
+  }
+  &:disabled { color: tokens.$text-disabled; cursor: default; }
+}

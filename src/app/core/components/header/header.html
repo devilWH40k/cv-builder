@@ -4,10 +4,10 @@
       <img src="logo.png" alt="" width="40" height="40" />
       <span>CV Builder</span>
     </a>
-    <button class="backup-button" type="button" aria-haspopup="dialog" (click)="backup.open()">
-      <lucide-icon [img]="TransferIcon" [size]="20" aria-hidden="true" />
-      Import / Export
-    </button>
+    <app-dropdown menuId="header-settings" label="Settings" [items]="settingsItems" (selected)="selectSetting($event)">
+      <lucide-icon [img]="SettingsIcon" [size]="20" aria-hidden="true" />
+    </app-dropdown>
   </div>
 </header>
-<app-backup-dialog #backup />
+<app-backup-dialog />
+<app-technologies-dialog />
