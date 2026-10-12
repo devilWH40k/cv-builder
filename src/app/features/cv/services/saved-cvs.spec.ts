@@ -110,6 +110,149 @@ describe('IndexedDB saved CVs', () => {
     expect(saved.all().length).toBe(2);
   });
 
+  it('creates persistent empty folders with trimmed names and validates names', async () => {
+    const saved = service();
+    const folder = await saved.createFolder('  Applications  ');
+    expect(folder.name).toBe('Applications');
+    expect(folder.cvIds).toEqual([]);
+    const reloaded = service();
+    await reloaded.refresh();
+    expect(reloaded.folders()).toEqual([folder]);
+    await expectAsync(saved.createFolder('   ')).toBeRejected();
+    await expectAsync(saved.createFolder('a'.repeat(121))).toBeRejected();
+    expect(saved.folders().length).toBe(1);
+    await saved.deleteFolder(folder.id);
+    expect(saved.folders()).toEqual([]);
+  });
+
+  it('moves CVs between folders and back to the main list without changing their contents', async () => {
+    const saved = service();
+    const id = await saved.save(info, null);
+    const first = await saved.createFolder('First');
+    const second = await saved.createFolder('Second');
+    await saved.moveCv(id, first.id);
+    await saved.moveCv(id, first.id);
+    expect(saved.folders().find((folder) => folder.id === first.id)?.cvIds).toEqual([id]);
+    await saved.save({ ...info, name: 'Updated' }, id);
+    expect(saved.folders().find((folder) => folder.id === first.id)?.cvIds).toEqual([id]);
+    await saved.moveCv(id, second.id);
+    expect(saved.folders().find((folder) => folder.id === first.id)?.cvIds).toEqual([]);
+    expect(saved.folders().find((folder) => folder.id === second.id)?.cvIds).toEqual([id]);
+    const reloaded = service();
+    await reloaded.refresh();
+    expect(reloaded.folders()).toEqual(saved.folders());
+    await saved.moveCv(id, null);
+    expect(saved.folders().every((folder) => !folder.cvIds.length)).toBeTrue();
+    expect(await saved.load(id)).toEqual({ ...info, name: 'Updated' });
+  });
+
+  it('rejects nonempty folder deletion and invalid move targets atomically', async () => {
+    const saved = service();
+    const id = await saved.save(info, null);
+    const folder = await saved.createFolder('Applications');
+    await saved.moveCv(id, folder.id);
+    await expectAsync(saved.deleteFolder(folder.id)).toBeRejectedWithError(/empty/);
+    await expectAsync(saved.moveCv(id, 'missing')).toBeRejected();
+    await expectAsync(saved.moveCv('missing', folder.id)).toBeRejected();
+    expect((await service().backupSnapshot()).folders).toEqual([{ ...folder, cvIds: [id] }]);
+    await saved.delete(id);
+    expect(saved.folders()).toEqual([folder]);
+    await saved.deleteFolder(folder.id);
+    expect(saved.folders()).toEqual([]);
+  });
+
+  it('rolls back folder moves when writing the destination fails', async () => {
+    const saved = service();
+    const id = await saved.save(info, null);
+    const first = await saved.createFolder('First');
+    const second = await saved.createFolder('Second');
+    await saved.moveCv(id, first.id);
+    const before = await saved.backupSnapshot();
+    const put = IDBObjectStore.prototype.put;
+    spyOn(IDBObjectStore.prototype, 'put').and.callFake(function (
+      this: IDBObjectStore, value: unknown, key?: IDBValidKey
+    ) {
+      if (this.name === 'folders' && typeof value === 'object' && value !== null &&
+        'id' in value && value.id === second.id) throw new Error('Folder write failed');
+      return put.call(this, value, key);
+    });
+    await expectAsync(saved.moveCv(id, second.id)).toBeRejected();
+    expect(await service().backupSnapshot()).toEqual(before);
+    expect(saved.folders()).toEqual([...before.folders!].sort((a, b) => a.name.localeCompare(b.name)));
+  });
+
+  it('upgrades an existing database with all previous stores without losing CVs', async () => {
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open(databaseName, 3);
+      request.onupgradeneeded = () => {
+        request.result.createObjectStore('cvs', { keyPath: 'id' }).put({ id: 'existing', info, updatedAt: 1 });
+        request.result.createObjectStore('metadata');
+        request.result.createObjectStore('experiences', { keyPath: 'id' });
+        request.result.createObjectStore('technologies', { keyPath: 'id' });
+      };
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => { request.result.close(); resolve(); };
+    });
+    const saved = service();
+    await saved.refresh();
+    expect(saved.all()[0].id).toBe('existing');
+    expect(saved.folders()).toEqual([]);
+    const folder = await saved.createFolder('Applications');
+    await saved.moveCv('existing', folder.id);
+    expect(await saved.load('existing')).toEqual(info);
+  });
+
+  it('rolls back CV deletion if removing its folder membership fails', async () => {
+    const saved = service();
+    const id = await saved.save(info, null);
+    const folder = await saved.createFolder('Applications');
+    await saved.moveCv(id, folder.id);
+    const before = await saved.backupSnapshot();
+    spyOn(IDBObjectStore.prototype, 'put').and.throwError('Membership write failed');
+    await expectAsync(saved.delete(id)).toBeRejected();
+    expect(await service().backupSnapshot()).toEqual(before);
+    expect(await saved.load(id)).toEqual(info);
+  });
+
+  for (const wipe of [false, true]) {
+    it(`rolls back imports when folder writes fail with wipe=${wipe}`, async () => {
+      const saved = service();
+      const id = await saved.save(info, null);
+      const folder = await saved.createFolder('Applications');
+      await saved.moveCv(id, folder.id);
+      const before = await saved.backupSnapshot();
+      const put = IDBObjectStore.prototype.put;
+      spyOn(IDBObjectStore.prototype, 'put').and.callFake(function (
+        this: IDBObjectStore, value: unknown, key?: IDBValidKey
+      ) {
+        if (this.name === 'folders') throw new Error('Folder write failed');
+        return put.call(this, value, key);
+      });
+      await expectAsync(saved.importRecords(before.cvs, before.experiences, wipe, before.technologies, before.folders)).toBeRejected();
+      expect(await service().backupSnapshot()).toEqual(before);
+      expect(saved.folders()).toEqual(before.folders!);
+    });
+  }
+
+  it('round trips folder membership and merges without assigning a CV to two folders', async () => {
+    const saved = service();
+    const id = await saved.save(info, null);
+    const first = await saved.createFolder('First');
+    await saved.moveCv(id, first.id);
+    const snapshot = await saved.backupSnapshot();
+    const { createArchive, readArchive } = await import('../helpers/cv-archive');
+    const archive = await readArchive(await createArchive(snapshot.cvs, snapshot.experiences, snapshot.technologies, snapshot.folders));
+    await saved.importRecords(archive.cvs, archive.experiences, true, archive.technologies, archive.folders);
+    expect(await saved.backupSnapshot()).toEqual(snapshot);
+    const second = { id: 'second', name: 'Second', cvIds: [id] };
+    await saved.importRecords([], [], false, [], [second]);
+    expect(saved.folders().find((folder) => folder.id === first.id)?.cvIds).toEqual([]);
+    expect(saved.folders().find((folder) => folder.id === second.id)?.cvIds).toEqual([id]);
+    await saved.importRecords([], [], true);
+    expect(saved.folders()).toEqual([]);
+    expect(saved.all()).toEqual([]);
+  });
+
   it('stores photos directly as files with unchanged bytes and metadata', async () => {
     const saved = service();
     const photo = new File(['photo bytes'], 'photo.png', { type: 'image/png', lastModified: 123 });
@@ -443,9 +586,9 @@ describe('IndexedDB saved CVs', () => {
     const experiences = [{ id: 'replacement-experience', updatedAt: 43,
       experience: { ...info.experiences[0], savedExperienceId: 'replacement-experience' } }];
     await saved.importRecords(cvs, experiences, true);
-    expect(await saved.backupSnapshot()).toEqual({ cvs, experiences, technologies: [] });
+    expect(await saved.backupSnapshot()).toEqual({ cvs, experiences, technologies: [], folders: [] });
     await saved.importRecords([], [], true);
-    expect(await saved.backupSnapshot()).toEqual({ cvs: [], experiences: [], technologies: [] });
+    expect(await saved.backupSnapshot()).toEqual({ cvs: [], experiences: [], technologies: [], folders: [] });
     expect(saved.all()).toEqual([]);
   });
 

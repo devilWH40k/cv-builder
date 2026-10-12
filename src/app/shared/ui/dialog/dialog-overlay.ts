@@ -1,9 +1,14 @@
 import { DOCUMENT } from '@angular/common';
-import { DestroyRef, Directive, ElementRef, inject } from '@angular/core';
+import { DestroyRef, Directive, effect, ElementRef, inject, input, output } from '@angular/core';
+import { DragDrop, DragItem } from '../draggable/drag-drop';
 
 /** Moves an Angular-owned dialog to the body without entering the browser top layer. */
 @Directive({ selector: 'dialog[appDialogOverlay]' })
 export class DialogOverlay {
+  readonly backdropDropType = input('');
+  readonly backdropDropped = output<DragItem>();
+  private readonly drag = inject(DragDrop);
+  private unregisterDrop: (() => void) | null = null;
   private readonly document = inject(DOCUMENT);
   private readonly dialog = inject<ElementRef<HTMLDialogElement>>(ElementRef).nativeElement;
   private layer: HTMLElement | null = null;
@@ -13,6 +18,10 @@ export class DialogOverlay {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.close());
+    effect(() => {
+      const hovered = this.drag.isOver(this.layer ?? this.dialog);
+      this.layer?.classList.toggle('drop-target', hovered);
+    });
   }
 
   open(): void {
@@ -37,6 +46,12 @@ export class DialogOverlay {
     };
     disable(this.document.body);
     this.layer.addEventListener('click', this.backdrop);
+    this.unregisterDrop = this.drag.register({
+      element: this.layer,
+      includeChildren: false,
+      accepts: (item) => !!this.backdropDropType() && item.type === this.backdropDropType(),
+      dropped: (item) => this.backdropDropped.emit(item)
+    });
     this.document.addEventListener('keydown', this.keydown);
     this.dialog.addEventListener('close', this.closed);
     (this.dialog.querySelector<HTMLElement>('[autofocus], button:not(:disabled), input:not(:disabled)') ?? this.dialog).focus();
@@ -44,6 +59,8 @@ export class DialogOverlay {
 
   close(): void {
     if (!this.layer) return;
+    this.unregisterDrop?.();
+    this.unregisterDrop = null;
     this.dialog.removeEventListener('close', this.closed);
     this.document.removeEventListener('keydown', this.keydown);
     this.dialog.close();

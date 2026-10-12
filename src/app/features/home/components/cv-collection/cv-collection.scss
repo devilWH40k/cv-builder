@@ -1,0 +1,100 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+:host { display: block; min-width: 0; }
+.cv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+  gap: tokens.$spacing-6;
+  > * { width: 100%; max-width: 15rem + tokens.$spacing-8; }
+}
+.saved-card {
+  flex: 1;
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+.cv-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: tokens.$spacing-3;
+  padding: tokens.$spacing-4;
+  color: tokens.$text-primary;
+  text-decoration: none;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$background-subtle;
+  &:hover { border-color: tokens.$color-primary; }
+  &:focus-visible { outline: 3px solid tokens.$border-color-focus; outline-offset: tokens.$spacing-1; }
+}
+.mini-document {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: tokens.$spacing-2;
+  width: 100%;
+  max-width: 15rem;
+  aspect-ratio: 210 / 297;
+  margin-inline: auto;
+  padding: tokens.$spacing-4;
+  background: tokens.$background-surface;
+  box-shadow: tokens.$shadow-xs;
+  text-align: left;
+  font-size: tokens.$font-size-xs;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  p { margin: tokens.$spacing-2 0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  strong { font-size: tokens.$font-size-sm; }
+}
+.cv-caption, .folder-name { font-weight: tokens.$font-weight-medium; overflow-wrap: anywhere; }
+lucide-icon { display: flex; flex-shrink: 0; }
+.delete-cv {
+  @include buttons.ghost;
+  & {
+    position: absolute;
+    top: tokens.$spacing-2;
+    right: tokens.$spacing-2;
+    width: tokens.$button-height-md;
+    height: tokens.$button-height-md;
+    padding: 0;
+    background: tokens.$background-surface;
+    color: tokens.$color-danger;
+  }
+  &:hover { color: tokens.$color-danger-hover; background: tokens.$color-danger-light; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+.folder-card {
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+  > lucide-icon { color: tokens.$color-primary; }
+}
+.drop-target .folder-card { border-color: tokens.$color-primary; background: tokens.$background-primary-subtle; }
+.folder-count { color: tokens.$text-muted; }
+.cv-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: tokens.$spacing-2;
+  > * { max-width: none; }
+  .cv-card { flex-direction: row; align-items: center; padding-right: tokens.$spacing-16; text-align: left; }
+  .folder-card { min-height: 0; }
+  .folder-name { flex: 1; min-width: 0; }
+  .cv-details {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: tokens.$spacing-4;
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .cv-position { color: tokens.$text-secondary; }
+  .cv-updated { flex-shrink: 0; color: tokens.$text-muted; font-size: tokens.$font-size-xs; white-space: nowrap; }
+  .delete-cv { top: 50%; transform: translateY(-50%); }
+  @media (max-width: tokens.$breakpoint-sm) {
+    .cv-details { grid-template-columns: minmax(0, 1fr); gap: tokens.$spacing-1; }
+  }
+}

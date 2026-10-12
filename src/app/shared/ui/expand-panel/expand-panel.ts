@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, linkedSignal } from '@angular/core';
 import { ChevronDown, ChevronUp, LucideAngularModule } from 'lucide-angular';
 
 @Component({
@@ -12,7 +12,8 @@ export class ExpandPanel {
   readonly heading = input.required<string>();
   readonly panelId = input.required<string>();
   readonly count = input(0);
-  protected readonly expanded = signal(true);
+  readonly initiallyExpanded = input(true);
+  protected readonly expanded = linkedSignal(() => this.initiallyExpanded());
 
   expand(): void {
     this.expanded.set(true);
