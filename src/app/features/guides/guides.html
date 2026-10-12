@@ -1,0 +1,157 @@
+<main class="guides" aria-labelledby="guides-title">
+  <header class="page-heading">
+    <div class="title-row">
+      <a class="icon-button" routerLink="/" aria-label="Back to home" title="Back to home">
+        <lucide-icon [img]="ArrowLeftIcon" [size]="24" aria-hidden="true" />
+      </a>
+      <h1 id="guides-title">Guides</h1>
+    </div>
+    <p>Step-by-step help for using CV Builder. Select a guide to expand or collapse it.</p>
+  </header>
+
+  <div class="guide-list">
+    <app-expand-panel heading="How to Import/Export the DB" panelId="import-export-guide" [initiallyExpanded]="false">
+      <article class="guide-content" aria-label="Database import and export instructions">
+        <p>Back up your saved CVs, folders, experiences and technologies, or move them to another
+          device. The backup includes icons, photos and CV layout settings.</p>
+
+        <section aria-labelledby="open-backup-heading">
+          <h4 id="open-backup-heading">Open Import / Export</h4>
+          <p>Select the <strong>Settings</strong> icon in the header, then choose
+            <strong>Import / Export</strong>.</p>
+          <figure>
+            <img src="guides/how-to-import-export/import-export-menu-button.png"
+              alt="Settings menu with Import / Export highlighted" width="1984" height="866"
+              loading="lazy" />
+            <figcaption>Import / Export is available from the Settings menu on any page.</figcaption>
+          </figure>
+        </section>
+
+        <section aria-labelledby="export-backup-heading">
+          <h4 id="export-backup-heading">Export your database</h4>
+          <ol>
+            <li>Save any changes in the CV editor before exporting.</li>
+            <li>In the <strong>Export DB</strong> section, keep the suggested file name or enter your own.
+              The <strong>.zip</strong> extension is added automatically.</li>
+            <li>Select <strong>Export DB</strong> to download your backup. Keep the ZIP file for
+              restoring your data or transferring it to another device.</li>
+          </ol>
+          <figure>
+            <img class="backup-screenshot" src="guides/how-to-import-export/export-db-button.png"
+              alt="Import / Export dialog with the file name field and Export DB button highlighted"
+              width="1476" height="1574" loading="lazy" />
+            <figcaption>Choose a file name, then select Export DB to download the ZIP backup.</figcaption>
+          </figure>
+        </section>
+
+        <section aria-labelledby="import-backup-heading">
+          <h4 id="import-backup-heading">Import a database backup</h4>
+          <ol>
+            <li>Open CV Builder on the device where you want to import your data, then open
+              <strong>Settings → Import / Export</strong>.</li>
+            <li>Under <strong>Backup file</strong>, select <strong>Choose file</strong> and choose a
+              ZIP backup exported from CV Builder. You do not need to unzip it.</li>
+            <li>Leave <strong>Wipe previous data</strong> unchecked to merge the backup with your
+              existing data. Matching CVs, folders and saved experiences are updated by ID;
+              technologies are matched by name. New records are added.</li>
+            <li>Select <strong>Import DB</strong> and wait for the success message.</li>
+          </ol>
+          <p class="notice"><strong>Replacing your database:</strong> Select
+            <strong>Wipe previous data</strong> only if you want to clear all saved CVs, folders,
+            experiences and technologies before importing. Export your current database first if
+            you want to keep a copy.</p>
+          <p>Backups can be up to 100 MB and contain up to 1,000 CVs, 1,000 folders,
+            1,000 saved experiences and 1,000 technologies.</p>
+          <figure>
+            <img class="backup-screenshot" src="guides/how-to-import-export/import-btn.png"
+              alt="A selected ZIP backup, the unchecked Wipe previous data option and the Import DB button"
+              width="1442" height="970" loading="lazy" />
+            <figcaption>Select your backup file, check the import options, then select Import DB.</figcaption>
+          </figure>
+        </section>
+      </article>
+    </app-expand-panel>
+    <app-expand-panel heading="How to manage folders" panelId="manage-folders-guide" [initiallyExpanded]="false">
+      <article class="guide-content" aria-label="Folder management instructions">
+        <p>Use folders to organize your saved CVs on the home page. Folders work in both list and
+          card view and can contain CVs, but not other folders.</p>
+
+        <section aria-labelledby="create-folder-heading">
+          <h4 id="create-folder-heading">Create a folder</h4>
+          <p>Go to the home page by selecting <strong>CV Builder</strong> in the header. Under
+            <strong>Your CVs</strong>, select the <strong>New folder</strong> icon (a folder with a
+            plus sign) next to the list/card view switch.</p>
+          <figure>
+            <img src="guides/how-to-manage-folders/add-folder-button.png"
+              alt="Your CVs toolbar with the New folder button circled"
+              width="2310" height="1134" loading="lazy" />
+            <figcaption>Select New folder to create a place for related CVs.</figcaption>
+          </figure>
+          <p>Enter a <strong>Folder name</strong> of up to 120 characters, then select
+            <strong>Apply</strong>. Select <strong>Cancel</strong> to close without creating a folder.</p>
+          <figure>
+            <img class="folder-dialog-screenshot" src="guides/how-to-manage-folders/add-folder-dialog.png"
+              alt="New folder dialog with a Folder name field and Cancel and Apply buttons"
+              width="1270" height="602" loading="lazy" />
+            <figcaption>Name your folder, then select Apply.</figcaption>
+          </figure>
+          <p>The new folder appears in <strong>Your CVs</strong>. In list view, the number beside
+            its name shows how many CVs it contains.</p>
+          <figure>
+            <img src="guides/how-to-manage-folders/folder-in-the-list.png"
+              alt="A newly created folder in Your CVs with a count of zero"
+              width="2850" height="1150" loading="lazy" />
+            <figcaption>Your new folder is empty and ready for CVs.</figcaption>
+          </figure>
+        </section>
+
+        <section aria-labelledby="add-cv-to-folder-heading">
+          <h4 id="add-cv-to-folder-heading">Move a CV into a folder</h4>
+          <p>Press and hold a saved CV row or card, then drag it onto the folder. Release when the
+            folder is highlighted. The CV moves into that folder.</p>
+          <figure>
+            <img src="guides/how-to-manage-folders/moving-cv-over-folder-to-add.png"
+              alt="A CV being dragged over a highlighted folder"
+              width="2414" height="960" loading="lazy" />
+            <figcaption>Drop the CV onto the highlighted folder to move it inside.</figcaption>
+          </figure>
+        </section>
+
+        <section aria-labelledby="open-folder-heading">
+          <h4 id="open-folder-heading">Open a folder</h4>
+          <p>Select a folder to open its contents. Select a CV inside to edit it.
+            Use the close button to return to the home page.</p>
+          <figure>
+            <img src="guides/how-to-manage-folders/folder-dialog-with-added-cv.png"
+              alt="An open folder containing one saved CV"
+              width="2130" height="1124" loading="lazy" />
+            <figcaption>Opening a folder shows the CVs stored inside it.</figcaption>
+          </figure>
+        </section>
+
+        <section aria-labelledby="remove-cv-from-folder-heading">
+          <h4 id="remove-cv-from-folder-heading">Move a CV out of a folder</h4>
+          <p>Open the folder, then drag the CV outside the dialog onto the shaded area around it.
+            Release there to return the CV to the main <strong>Your CVs</strong> collection.
+            To move it to another folder, close the dialog and drag the CV onto its new folder.</p>
+          <figure>
+            <img src="guides/how-to-manage-folders/moving-cv-from-folder.png"
+              alt="A CV being dragged out of its folder dialog onto the shaded background"
+              width="2088" height="1270" loading="lazy" />
+            <figcaption>Drop outside the dialog to move the CV back to Your CVs.</figcaption>
+          </figure>
+          <p>Press <strong>Escape</strong> while dragging to cancel the move.</p>
+        </section>
+
+        <section aria-labelledby="delete-folder-heading">
+          <h4 id="delete-folder-heading">Delete an empty folder</h4>
+          <p>Move all CVs out of the folder first, then close the folder dialog. Select the folder's
+            <strong>Delete folder</strong> trash icon in <strong>Your CVs</strong> to remove it.
+            This button is disabled while the folder contains CVs.</p>
+          <p>To keep a CV when removing it from a folder, drag it out as described above.
+            The trash icon on a CV deletes the saved CV itself.</p>
+        </section>
+      </article>
+    </app-expand-panel>
+  </div>
+</main>

@@ -1,0 +1,112 @@
+@use 'styles/tokens' as tokens;
+@use '../../shared/ui/button/variants' as buttons;
+
+:host { display: block; }
+
+.guides {
+  max-width: tokens.$content-max-width;
+  margin-inline: auto;
+  padding: tokens.$spacing-10 tokens.$spacing-4;
+}
+
+.page-heading {
+  margin-bottom: tokens.$spacing-8;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  color: tokens.$text-primary;
+  font-size: tokens.$font-size-3xl;
+  font-weight: tokens.$font-weight-semibold;
+  line-height: tokens.$line-height-tight;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: tokens.$spacing-3;
+  margin-bottom: tokens.$spacing-3;
+}
+
+.icon-button {
+  @include buttons.ghost;
+  & {
+    width: tokens.$button-height-lg;
+    height: tokens.$button-height-lg;
+    padding: 0;
+    color: tokens.$color-black;
+  }
+}
+
+p, ol { margin: 0; }
+
+.page-heading p, figcaption { color: tokens.$text-secondary; }
+
+.guide-list {
+  margin-inline: auto;
+  padding: tokens.$spacing-4;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$background-surface;
+}
+
+app-expand-panel { margin-bottom: 0; }
+
+app-expand-panel + app-expand-panel {
+  margin-top: tokens.$spacing-6;
+  padding-top: tokens.$spacing-6;
+  border-top: 1px solid tokens.$border-color;
+}
+
+.guide-content, .guide-content section {
+  display: grid;
+  gap: tokens.$spacing-4;
+  min-width: 0;
+  line-height: tokens.$line-height-relaxed;
+}
+
+.guide-content { gap: tokens.$spacing-8; }
+
+h4 {
+  margin: 0;
+  font-size: tokens.$font-size-lg;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+ol { padding-inline-start: tokens.$spacing-6; }
+li + li { margin-top: tokens.$spacing-3; }
+figure { margin: 0; }
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md;
+}
+
+.backup-screenshot, .folder-dialog-screenshot {
+  width: 36rem;
+}
+
+figcaption {
+  margin-top: tokens.$spacing-2;
+  font-size: tokens.$font-size-sm;
+}
+
+.notice {
+  padding: tokens.$spacing-4;
+  border-inline-start: tokens.$spacing-1 solid tokens.$color-warning;
+  border-radius: tokens.$radius-sm;
+  background: tokens.$color-warning-light;
+}
+
+@media (min-width: tokens.$breakpoint-lg) {
+  .guides { padding: tokens.$spacing-12 tokens.$spacing-6; }
+  .guide-list {
+    width: 80%;
+    padding: tokens.$spacing-6;
+  }
+}
