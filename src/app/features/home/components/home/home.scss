@@ -9,20 +9,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: tokens.$spacing-10;
   padding: tokens.$spacing-16 tokens.$spacing-6;
   text-align: center;
   overflow: hidden;
 }
 
-h1 {
+h1, h2 {
   margin: 0;
   color: tokens.$color-primary;
   font-size: clamp(tokens.$font-size-2xl, 4vw, tokens.$font-size-4xl);
   font-weight: tokens.$font-weight-medium;
-  line-height: tokens.$line-height-tight;
 }
+h1 { line-height: tokens.$line-height-tight; }
 
 .create-link {
   position: relative;
@@ -101,16 +101,21 @@ lucide-icon {
   width: 100%;
   max-width: tokens.$breakpoint-lg;
 }
-h2 {
-  margin: 0;
-  color: tokens.$color-primary;
-  font-size: clamp(tokens.$font-size-2xl, 4vw, tokens.$font-size-4xl);
-  font-weight: tokens.$font-weight-medium;
+.saved-toolbar {
+  display: grid;
+  grid-template-columns: tokens.$button-height-lg minmax(0, 1fr) tokens.$button-height-lg;
+  align-items: center;
+  gap: tokens.$spacing-2;
+  margin: tokens.$spacing-3 0 tokens.$spacing-6;
+}
+.view-toggle {
+  width: tokens.$button-height-lg;
 }
 .storage {
+  grid-column: 2;
   color: tokens.$text-muted;
   font-size: tokens.$font-size-sm;
-  margin: tokens.$spacing-3 0 tokens.$spacing-6;
+  margin: 0;
 }
 .cv-grid {
   display: grid;
@@ -160,20 +165,53 @@ h2 {
   min-width: 0;
   .cv-card { flex: 1; }
 }
-.delete-cv {
+:is(.delete-cv, .view-toggle) {
   @include buttons.ghost;
-  & {
+  & { padding: 0; }
+}
+.delete-cv {
     position: absolute;
     top: tokens.$spacing-2;
     right: tokens.$spacing-2;
     width: tokens.$button-height-md;
     height: tokens.$button-height-md;
-    padding: 0;
     background: tokens.$background-surface;
     color: tokens.$color-danger;
-  }
   &:hover {
     color: tokens.$color-danger-hover;
     background: tokens.$color-danger-light;
+  }
+}
+
+.cv-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: tokens.$spacing-2;
+
+  .cv-card {
+    flex-direction: row;
+    align-items: center;
+    padding-right: tokens.$spacing-16;
+    text-align: left;
+  }
+
+  .cv-details {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: tokens.$spacing-4;
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .cv-position { color: tokens.$text-secondary; }
+  lucide-icon { flex-shrink: 0; }
+
+  .delete-cv {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  @media (max-width: tokens.$breakpoint-sm) {
+    .cv-details { grid-template-columns: minmax(0, 1fr); gap: tokens.$spacing-1; }
   }
 }

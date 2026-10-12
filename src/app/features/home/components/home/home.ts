@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, PendingTasks, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideAngularModule, Plus, FileText, Trash2 } from 'lucide-angular';
+import { LucideAngularModule, Plus, FileText, Trash2, List, LayoutGrid } from 'lucide-angular';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { CvDraft } from '../../../cv/services/cv-draft';
+import { HomeViewStore } from '../../state/home-view-store';
 
 @Component({
   selector: 'app-home',
@@ -16,6 +17,10 @@ export class Home {
   protected readonly DeleteIcon = Trash2;
   protected readonly deleteError = signal('');
   protected readonly FileIcon = FileText;
+  protected readonly ListIcon = List;
+  protected readonly GridIcon = LayoutGrid;
+  private readonly viewStore = inject(HomeViewStore);
+  protected readonly isListView = this.viewStore.isListView;
   protected readonly saved = inject(SavedCvs);
   private readonly pendingTasks = inject(PendingTasks);
   protected readonly deletingIds = signal<readonly string[]>([]);
@@ -40,4 +45,6 @@ export class Home {
   }
 
   protected startNew(): void { this.draft.reset(); }
+
+  protected toggleView(): void { this.viewStore.toggleView(); }
 }

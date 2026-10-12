@@ -29,7 +29,8 @@ describe('Saved CV navigation', () => {
     });
   });
 
-  it('opens a saved card, updates it and starts a separate blank CV', async () => {
+  for (const view of ['card', 'list']) {
+  it(`opens a saved ${view}, updates it and starts a separate blank CV`, async () => {
     const saved = TestBed.inject(SavedCvs);
     const id = await saved.save({
       name: 'Ada', positionTitle: 'Engineer', description: 'Hello',
@@ -38,6 +39,10 @@ describe('Saved CV navigation', () => {
     }, null);
     const harness = await RouterTestingHarness.create('/');
     expect(harness.routeNativeElement?.querySelector('.cv-caption')?.textContent).toContain('Ada');
+    if (view === 'list') {
+      harness.routeNativeElement?.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+      await harness.fixture.whenStable();
+    }
     harness.routeNativeElement?.querySelector<HTMLAnchorElement>('.cv-card')!.click();
     await harness.fixture.whenStable();
     const create = harness.routeDebugElement!.componentInstance as Create;
@@ -50,11 +55,41 @@ describe('Saved CV navigation', () => {
     expect((await saved.load(id))?.name).toBe('Updated');
     expect(saved.all().length).toBe(1);
     await harness.navigateByUrl('/');
+    expect(harness.routeNativeElement?.querySelector('.cv-list') !== null).toBe(view === 'list');
+    expect(harness.routeNativeElement?.querySelector('.view-toggle')?.getAttribute('aria-label'))
+      .toBe(view === 'list' ? 'Switch to card view' : 'Switch to list view');
     harness.routeNativeElement?.querySelector<HTMLAnchorElement>('.create-link')!.click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(CvDraft).savedId()).toBeNull();
     expect((harness.routeDebugElement!.componentInstance as Create).form.controls.name.value).toBe('');
     expect(saved.all().length).toBe(1);
+  });
+  }
+
+  it('switches between cards and compact rows without file sizes', async () => {
+    const saved = TestBed.inject(SavedCvs);
+    await saved.save({
+      name: 'Ada', positionTitle: 'Engineer', description: 'Hidden summary', photo: null,
+      languages: [], experiences: [], technologies: ['Angular']
+    }, null);
+    const harness = await RouterTestingHarness.create('/');
+    const toggle = harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!;
+    expect(toggle.getAttribute('aria-label')).toBe('Switch to list view');
+    toggle.click();
+    await harness.fixture.whenStable();
+    const row = harness.routeNativeElement!.querySelector('.cv-list .cv-card')!;
+    expect(row.querySelector('lucide-icon')).not.toBeNull();
+    expect(row.querySelector('.cv-name')?.textContent).toBe('Ada');
+    expect(row.querySelector('.cv-position')?.textContent).toBe('Engineer');
+    expect(row.querySelector('.cv-size')).toBeNull();
+    expect(row.textContent).not.toContain('Hidden summary');
+    expect(row.textContent).not.toContain('Angular');
+    expect(row.querySelector('.mini-document')).toBeNull();
+    expect(toggle.getAttribute('aria-label')).toBe('Switch to card view');
+    toggle.click();
+    await harness.fixture.whenStable();
+    expect(harness.routeNativeElement!.querySelector('.mini-document')).not.toBeNull();
+    expect(harness.routeNativeElement!.querySelector('.cv-list')).toBeNull();
   });
 
   it('loads saved data from a direct URL with a fresh draft', async () => {
@@ -68,7 +103,8 @@ describe('Saved CV navigation', () => {
     expect(create.form.controls.name.value).toBe('Ada');
     expect(TestBed.inject(CvDraft).savedId()).toBe(id);
   });
-  it('deletes a card without navigating and shows the empty state', async () => {
+  for (const view of ['card', 'list']) {
+  it(`deletes a ${view} without navigating and shows the empty state`, async () => {
     const saved = TestBed.inject(SavedCvs);
     const id = await saved.save({
       name: 'Ada', positionTitle: '', description: '', photo: null,
@@ -76,6 +112,10 @@ describe('Saved CV navigation', () => {
     }, null);
     TestBed.inject(CvDraft).savedId.set(id);
     const harness = await RouterTestingHarness.create('/');
+    if (view === 'list') {
+      harness.routeNativeElement?.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+      await harness.fixture.whenStable();
+    }
     harness.routeNativeElement?.querySelector<HTMLButtonElement>('.delete-cv')!.click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/');
@@ -84,6 +124,7 @@ describe('Saved CV navigation', () => {
     expect(await saved.load(id)).toBeNull();
     expect(TestBed.inject(CvDraft).savedId()).toBeNull();
   });
+  }
 
   it('keeps the card and reports a failed deletion', async () => {
     await TestBed.inject(SavedCvs).save({
