@@ -1,0 +1,14 @@
+@use 'styles/tokens' as tokens;
+.app-drag-preview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: tokens.$z-modal + 1;
+  pointer-events: none;
+  opacity: 1;
+  filter: none;
+  user-select: none;
+  cursor: grabbing;
+}
+.app-dragging { cursor: grabbing; user-select: none; }
+@media print { .app-drag-preview { display: none; } }

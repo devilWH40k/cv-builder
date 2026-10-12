@@ -1,5 +1,6 @@
 @use './tokens' as tokens;
 @use '../app/shared/directories/tooltip';
+@use '../app/shared/ui/draggable/drag-preview';
 @use './reset';
 @use './themes/basic';
 @use './themes/dark-blue';
@@ -55,4 +56,5 @@ body {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+.dialog-overlay.drop-target { background: rgba(tokens.$color-primary, 0.2); }
 @media print { .dialog-overlay { display: none; } }

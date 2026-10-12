@@ -11,7 +11,7 @@ describe('Header backup dialog', () => {
 
   beforeEach(async () => {
     backup = jasmine.createSpyObj<CvBackup>('CvBackup', ['import', 'export']);
-    backup.import.and.resolveTo({ cvs: 2, experiences: 1, technologies: 3 });
+    backup.import.and.resolveTo({ cvs: 2, experiences: 1, technologies: 3, folders: 0 });
     backup.export.and.resolveTo();
     TestBed.configureTestingModule({
       imports: [Header], providers: [provideZonelessChangeDetection(), provideRouter([]),
@@ -126,7 +126,7 @@ describe('Header backup dialog', () => {
     const checkbox = page.querySelector<HTMLInputElement>('#wipe-previous-data')!;
     expect(checkbox.checked).toBeFalse();
     expect(page.querySelector('app-checkbox .caution-icon')).not.toBeNull();
-    expect(page.querySelector('app-checkbox')!.textContent).toContain('all saved CVs, experiences and technologies are cleared');
+    expect(page.querySelector('app-checkbox')!.textContent).toContain('all saved CVs, folders, experiences and technologies are cleared');
     checkbox.click();
     const file = selectFile();
     await fixture.whenStable();

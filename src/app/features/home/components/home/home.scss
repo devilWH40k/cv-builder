@@ -103,13 +103,15 @@ lucide-icon {
 }
 .saved-toolbar {
   display: grid;
-  grid-template-columns: tokens.$button-height-lg minmax(0, 1fr) tokens.$button-height-lg;
+  grid-template-columns: (tokens.$button-height-lg * 2) minmax(0, 1fr) (tokens.$button-height-lg * 2);
   align-items: center;
   gap: tokens.$spacing-2;
   margin: tokens.$spacing-3 0 tokens.$spacing-6;
 }
-.view-toggle {
-  width: tokens.$button-height-lg;
+.view-actions { display: flex; justify-content: flex-end; }
+:is(.view-toggle, .folder-add) {
+  @include buttons.ghost;
+  & { width: tokens.$button-height-lg; flex-shrink: 0; padding: 0; }
 }
 .storage {
   grid-column: 2;
@@ -117,101 +119,6 @@ lucide-icon {
   font-size: tokens.$font-size-sm;
   margin: 0;
 }
-.cv-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
-  gap: tokens.$spacing-6;
-}
-.cv-card {
-  display: flex;
-  flex-direction: column;
-  gap: tokens.$spacing-3;
-  padding: tokens.$spacing-4;
-  color: tokens.$text-primary;
-  text-decoration: none;
-  border: 1px solid tokens.$border-color;
-  border-radius: tokens.$radius-lg;
-  background: tokens.$background-subtle;
-  min-width: 0;
-  &:hover { border-color: tokens.$color-primary; }
-  &:focus-visible { outline: 3px solid tokens.$border-color-focus; outline-offset: tokens.$spacing-1; }
-}
-.mini-document {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: tokens.$spacing-2;
-  width: 100%;
-  max-width: 15rem;
-  aspect-ratio: 210 / 297;
-  margin-inline: auto;
-  padding: tokens.$spacing-4;
-  background: tokens.$background-surface;
-  box-shadow: tokens.$shadow-xs;
-  text-align: left;
-  font-size: tokens.$font-size-xs;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  p { margin: tokens.$spacing-2 0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-  strong { font-size: tokens.$font-size-sm; }
-}
-.cv-caption { font-weight: tokens.$font-weight-medium; overflow-wrap: anywhere; }
-
-.saved-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: tokens.$spacing-2;
-  min-width: 0;
-  .cv-card { flex: 1; }
-}
-:is(.delete-cv, .view-toggle) {
-  @include buttons.ghost;
-  & { padding: 0; }
-}
-.delete-cv {
-    position: absolute;
-    top: tokens.$spacing-2;
-    right: tokens.$spacing-2;
-    width: tokens.$button-height-md;
-    height: tokens.$button-height-md;
-    background: tokens.$background-surface;
-    color: tokens.$color-danger;
-  &:hover {
-    color: tokens.$color-danger-hover;
-    background: tokens.$color-danger-light;
-  }
-}
-
-.cv-list {
-  grid-template-columns: minmax(0, 1fr);
-  gap: tokens.$spacing-2;
-
-  .cv-card {
-    flex-direction: row;
-    align-items: center;
-    padding-right: tokens.$spacing-16;
-    text-align: left;
-  }
-
-  .cv-details {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: tokens.$spacing-4;
-    flex: 1;
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .cv-position { color: tokens.$text-secondary; }
-  lucide-icon { flex-shrink: 0; }
-
-  .delete-cv {
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  @media (max-width: tokens.$breakpoint-sm) {
-    .cv-details { grid-template-columns: minmax(0, 1fr); gap: tokens.$spacing-1; }
-  }
+@media (max-width: tokens.$breakpoint-sm) {
+  .storage, .view-actions { grid-column: 1 / -1; }
 }

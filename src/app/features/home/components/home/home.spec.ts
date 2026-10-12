@@ -38,8 +38,8 @@ describe('Saved CV navigation', () => {
       languages: [{ language: 'English', level: 'Native' }], experiences: []
     }, null);
     const harness = await RouterTestingHarness.create('/');
-    expect(harness.routeNativeElement?.querySelector('.cv-caption')?.textContent).toContain('Ada');
-    if (view === 'list') {
+    expect(harness.routeNativeElement?.querySelector('.cv-name')?.textContent).toContain('Ada');
+    if (view === 'card') {
       harness.routeNativeElement?.querySelector<HTMLButtonElement>('.view-toggle')!.click();
       await harness.fixture.whenStable();
     }
@@ -66,7 +66,7 @@ describe('Saved CV navigation', () => {
   });
   }
 
-  it('switches between cards and compact rows without file sizes', async () => {
+  it('defaults to compact rows and switches to cards without file sizes', async () => {
     const saved = TestBed.inject(SavedCvs);
     await saved.save({
       name: 'Ada', positionTitle: 'Engineer', description: 'Hidden summary', photo: null,
@@ -74,9 +74,7 @@ describe('Saved CV navigation', () => {
     }, null);
     const harness = await RouterTestingHarness.create('/');
     const toggle = harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!;
-    expect(toggle.getAttribute('aria-label')).toBe('Switch to list view');
-    toggle.click();
-    await harness.fixture.whenStable();
+    expect(toggle.getAttribute('aria-label')).toBe('Switch to card view');
     const row = harness.routeNativeElement!.querySelector('.cv-list .cv-card')!;
     expect(row.querySelector('lucide-icon')).not.toBeNull();
     expect(row.querySelector('.cv-name')?.textContent).toBe('Ada');
@@ -112,7 +110,7 @@ describe('Saved CV navigation', () => {
     }, null);
     TestBed.inject(CvDraft).savedId.set(id);
     const harness = await RouterTestingHarness.create('/');
-    if (view === 'list') {
+    if (view === 'card') {
       harness.routeNativeElement?.querySelector<HTMLButtonElement>('.view-toggle')!.click();
       await harness.fixture.whenStable();
     }
@@ -138,5 +136,391 @@ describe('Saved CV navigation', () => {
     expect(harness.routeNativeElement?.querySelector('.cv-card')).not.toBeNull();
     expect(harness.routeNativeElement?.querySelector('[role="alert"]')?.textContent)
       .toContain('Could not delete this CV.');
+  });
+
+  const cvInfo = {
+    name: 'Ada', positionTitle: 'Engineer', description: 'Hello', photo: null,
+    languages: [], experiences: [], technologies: []
+  };
+
+  function startDrag(source: Element): void {
+    source.scrollIntoView({ block: 'center' });
+    const rect = source.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    source.dispatchEvent(new PointerEvent('pointerdown', {
+      pointerId: 1, pointerType: 'mouse', button: 0, clientX: x, clientY: y, bubbles: true
+    }));
+    document.dispatchEvent(new PointerEvent('pointermove', {
+      pointerId: 1, clientX: x + 10, clientY: y, bubbles: true, cancelable: true
+    }));
+  }
+
+  function overTarget(target: Element): void {
+    target.scrollIntoView({ block: 'center' });
+    const rect = target.getBoundingClientRect();
+    document.dispatchEvent(new PointerEvent('pointermove', {
+      pointerId: 1, clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2,
+      bubbles: true, cancelable: true
+    }));
+  }
+
+  function releaseOn(target: Element): void {
+    target.scrollIntoView({ block: 'center' });
+    const rect = target.getBoundingClientRect();
+    document.dispatchEvent(new PointerEvent('pointerup', {
+      pointerId: 1, clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2,
+      bubbles: true, cancelable: true
+    }));
+  }
+
+  function onBackdrop(type: 'pointermove' | 'pointerup'): void {
+    document.dispatchEvent(new PointerEvent(type, {
+      pointerId: 1, clientX: 1, clientY: 1, bubbles: true, cancelable: true
+    }));
+  }
+
+  async function newFolder(harness: RouterTestingHarness, name: string): Promise<void> {
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-add')!.focus();
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-add')!.click();
+    await harness.fixture.whenStable();
+    const input = document.querySelector<HTMLInputElement>('#folder-name')!;
+    input.value = name;
+    input.dispatchEvent(new Event('input'));
+    await harness.fixture.whenStable();
+  }
+
+  it('creates a named empty folder and allows deleting it without navigation', async () => {
+    const harness = await RouterTestingHarness.create('/');
+    await newFolder(harness, '  Applications  ');
+    const dialog = document.querySelector<HTMLDialogElement>('#create-folder-dialog')!;
+    expect(dialog.open).toBeTrue();
+    expect(document.activeElement?.id).toBe('folder-name');
+    dialog.querySelector<HTMLButtonElement>('app-button button')!.click();
+    await harness.fixture.whenStable();
+    expect(document.querySelector('#create-folder-dialog')).toBeNull();
+    expect(TestBed.inject(SavedCvs).folders()[0].name).toBe('Applications');
+    expect(harness.routeNativeElement!.querySelector('.folder-name')?.textContent).toBe('Applications');
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.delete-folder')!.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(SavedCvs).folders()).toEqual([]);
+    expect(TestBed.inject(Router).url).toBe('/');
+  });
+
+  it('rejects blank names and cancels without storing folders, including Escape and backdrop dismissal', async () => {
+    const harness = await RouterTestingHarness.create('/');
+    for (const dismissal of ['cancel', 'escape', 'backdrop']) {
+      await newFolder(harness, '   ');
+      expect(document.querySelector<HTMLButtonElement>('#create-folder-dialog app-button button')!.disabled).toBeTrue();
+      if (dismissal === 'cancel') document.querySelector<HTMLButtonElement>('#create-folder-dialog .cancel')!.click();
+      else if (dismissal === 'escape') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      else document.querySelector<HTMLElement>('.dialog-overlay')!.click();
+      await harness.fixture.whenStable();
+      expect(document.querySelector('#create-folder-dialog')).toBeNull();
+      expect(TestBed.inject(SavedCvs).folders()).toEqual([]);
+      expect(document.activeElement).toBe(harness.routeNativeElement!.querySelector('.folder-add'));
+    }
+  });
+
+  it('keeps the folder creation dialog open for retry when storage fails', async () => {
+    const harness = await RouterTestingHarness.create('/');
+    await newFolder(harness, 'Applications');
+    const add = spyOn(IDBObjectStore.prototype, 'add').and.throwError('Storage unavailable');
+    document.querySelector<HTMLButtonElement>('#create-folder-dialog app-button button')!.click();
+    await harness.fixture.whenStable();
+    expect(document.querySelector('#create-folder-dialog [role="alert"]')?.textContent).toContain('could not be created');
+    expect(document.querySelector<HTMLButtonElement>('#create-folder-dialog app-button button')!.disabled).toBeFalse();
+    expect(TestBed.inject(SavedCvs).folders()).toEqual([]);
+    add.and.callThrough();
+    document.querySelector<HTMLButtonElement>('#create-folder-dialog app-button button')!.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(SavedCvs).folders().length).toBe(1);
+  });
+
+  it('cancels folder creation without flashing required-field validation', async () => {
+    const harness = await RouterTestingHarness.create('/');
+    await newFolder(harness, '');
+    const dialog = document.querySelector<HTMLDialogElement>('#create-folder-dialog')!;
+    const input = dialog.querySelector<HTMLInputElement>('#folder-name')!;
+    const cancel = dialog.querySelector<HTMLButtonElement>('.cancel')!;
+    const down = new PointerEvent('pointerdown', { button: 0, bubbles: true, cancelable: true });
+    cancel.dispatchEvent(down);
+    await harness.fixture.whenStable();
+    expect(down.defaultPrevented).toBeTrue();
+    expect(document.activeElement).toBe(input);
+    expect(input.getAttribute('aria-invalid')).toBe('false');
+    expect(dialog.querySelector<HTMLElement>('#folder-name-error')!.hidden).toBeTrue();
+    cancel.click();
+    expect(dialog.open).toBeFalse();
+    await harness.fixture.whenStable();
+    expect(document.querySelector('#create-folder-dialog')).toBeNull();
+    expect(TestBed.inject(SavedCvs).folders()).toEqual([]);
+    expect(document.activeElement).toBe(harness.routeNativeElement!.querySelector('.folder-add'));
+  });
+
+  for (const view of ['card', 'list']) {
+    it(`moves a ${view} into a folder and drops it outside the dialog to move it back`, async () => {
+      const saved = TestBed.inject(SavedCvs);
+      const id = await saved.save(cvInfo, null);
+      const folder = await saved.createFolder('Applications');
+      const harness = await RouterTestingHarness.create('/');
+      if (view === 'card') {
+        harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+        await harness.fixture.whenStable();
+      }
+      const root = harness.routeNativeElement!;
+      const source = root.querySelector<HTMLAnchorElement>('a.cv-card')!;
+      expect(source.draggable).toBeFalse();
+      startDrag(source);
+      await harness.fixture.whenStable();
+      expect(getComputedStyle(source.closest('app-draggable')!).display).toBe('none');
+      expect(document.querySelector('.app-drag-preview')?.textContent).toContain('Ada');
+      const target = root.querySelector('.saved-folder')!;
+      overTarget(target);
+      await harness.fixture.whenStable();
+      expect(target.classList.contains('drop-target')).toBeTrue();
+      releaseOn(target);
+      await harness.fixture.whenStable();
+      expect(root.querySelector('a.cv-card')).toBeNull();
+      expect(saved.folders()[0].cvIds).toEqual([id]);
+      expect(document.querySelector('.app-drag-preview')).toBeNull();
+      expect(root.querySelector<HTMLButtonElement>('.delete-folder')!.disabled).toBeTrue();
+      if (view === 'list') expect(root.querySelector('.folder-count')?.textContent).toBe('1');
+      root.querySelector<HTMLButtonElement>('.folder-card')!.click();
+      await harness.fixture.whenStable();
+      const dialog = document.querySelector<HTMLDialogElement>('#folder-dialog')!;
+      expect(dialog.open).toBeTrue();
+      expect(dialog.querySelector('h2')?.textContent).toBe(folder.name);
+      expect(dialog.querySelector('.cv-list') !== null).toBe(view === 'list');
+      const inside = dialog.querySelector('a.cv-card')!;
+      startDrag(inside);
+      await harness.fixture.whenStable();
+      expect(getComputedStyle(inside.closest('app-draggable')!).display).toBe('none');
+      expect(saved.folders()[0].cvIds).toEqual([id]);
+      const backdrop = document.querySelector('.dialog-overlay')!;
+      onBackdrop('pointermove');
+      await harness.fixture.whenStable();
+      expect(backdrop.classList.contains('drop-target')).toBeTrue();
+      onBackdrop('pointerup');
+      await harness.fixture.whenStable();
+      expect(saved.folders()[0].cvIds).toEqual([]);
+      expect(dialog.querySelector('a.cv-card')).toBeNull();
+      expect(dialog.textContent).toContain('This folder is empty');
+      expect(root.querySelector('a.cv-card')).not.toBeNull();
+      dialog.querySelector<HTMLButtonElement>('.close')!.click();
+      await harness.fixture.whenStable();
+      expect(root.querySelector<HTMLButtonElement>('.delete-folder')!.disabled).toBeFalse();
+      if (view === 'list') expect(root.querySelector('.folder-count')?.textContent).toBe('0');
+      expect(TestBed.inject(Router).url).toBe('/');
+    });
+
+    it(`opens and edits a folder CV in ${view} mode and preserves its folder`, async () => {
+      const saved = TestBed.inject(SavedCvs);
+      const id = await saved.save(cvInfo, null);
+      const folder = await saved.createFolder('Applications');
+      await saved.moveCv(id, folder.id);
+      const harness = await RouterTestingHarness.create('/');
+      if (view === 'card') {
+        harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+        await harness.fixture.whenStable();
+      }
+      harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+      await harness.fixture.whenStable();
+      document.querySelector<HTMLAnchorElement>('#folder-dialog a.cv-card')!.click();
+      await harness.fixture.whenStable();
+      const create = harness.routeDebugElement!.componentInstance as Create;
+      expect(create.form.controls.name.value).toBe('Ada');
+      expect(document.querySelector('.dialog-overlay')).toBeNull();
+      create.form.controls.name.setValue('Updated');
+      harness.routeNativeElement!.querySelector<HTMLButtonElement>('app-save-cv-button button')!.click();
+      await harness.fixture.whenStable();
+      await harness.navigateByUrl('/');
+      expect(harness.routeNativeElement!.querySelector('.cv-list') !== null).toBe(view === 'list');
+      expect(harness.routeNativeElement!.querySelector('a.cv-card')).toBeNull();
+      expect(saved.folders()[0].cvIds).toEqual([id]);
+      harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+      await harness.fixture.whenStable();
+      expect(document.querySelector('#folder-dialog')?.textContent).toContain('Updated');
+    });
+  }
+
+  it('cancels drags and ignores external drops without changing folder membership', async () => {
+    const saved = TestBed.inject(SavedCvs);
+    await saved.save(cvInfo, null);
+    await saved.createFolder('Applications');
+    const harness = await RouterTestingHarness.create('/');
+    const source = harness.routeNativeElement!.querySelector('a.cv-card')!;
+    startDrag(source);
+    document.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 1 }));
+    releaseOn(harness.routeNativeElement!.querySelector('.saved-folder')!);
+    await harness.fixture.whenStable();
+    expect(saved.folders()[0].cvIds).toEqual([]);
+    expect(harness.routeNativeElement!.querySelector('a.cv-card')).not.toBeNull();
+  });
+
+  it('keeps a CV in the main list and reports a failed move', async () => {
+    const saved = TestBed.inject(SavedCvs);
+    await saved.save(cvInfo, null);
+    await saved.createFolder('Applications');
+    const harness = await RouterTestingHarness.create('/');
+    spyOn(IDBObjectStore.prototype, 'put').and.throwError('Storage unavailable');
+    startDrag(harness.routeNativeElement!.querySelector('a.cv-card')!);
+    await harness.fixture.whenStable();
+    releaseOn(harness.routeNativeElement!.querySelector('.saved-folder')!);
+    await harness.fixture.whenStable();
+    expect(saved.folders()[0].cvIds).toEqual([]);
+    expect(harness.routeNativeElement!.querySelector('a.cv-card')).not.toBeNull();
+    expect(harness.routeNativeElement!.querySelector('[role="alert"]')?.textContent).toContain('could not be moved');
+  });
+
+  it('deletes a CV from its folder without navigating and updates the count', async () => {
+    const saved = TestBed.inject(SavedCvs);
+    const id = await saved.save(cvInfo, null);
+    const folder = await saved.createFolder('Applications');
+    await saved.moveCv(id, folder.id);
+    TestBed.inject(CvDraft).savedId.set(id);
+    const harness = await RouterTestingHarness.create('/');
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+    await harness.fixture.whenStable();
+    document.querySelector<HTMLButtonElement>('#folder-dialog .delete-cv')!.click();
+    await harness.fixture.whenStable();
+    expect(saved.folders()[0].cvIds).toEqual([]);
+    expect(await saved.load(id)).toBeNull();
+    expect(document.querySelector('#folder-dialog')?.textContent).toContain('This folder is empty');
+    expect(TestBed.inject(CvDraft).savedId()).toBeNull();
+    expect(TestBed.inject(Router).url).toBe('/');
+  });
+
+  it('keeps a CV in its folder when a move out fails', async () => {
+    const saved = TestBed.inject(SavedCvs);
+    const id = await saved.save(cvInfo, null);
+    const folder = await saved.createFolder('Applications');
+    await saved.moveCv(id, folder.id);
+    const harness = await RouterTestingHarness.create('/');
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+    await harness.fixture.whenStable();
+    spyOn(IDBObjectStore.prototype, 'put').and.throwError('Membership write failed');
+    startDrag(document.querySelector('#folder-dialog a.cv-card')!);
+    await harness.fixture.whenStable();
+    onBackdrop('pointerup');
+    await harness.fixture.whenStable();
+    expect(saved.folders()[0].cvIds).toEqual([id]);
+    expect(harness.routeNativeElement!.querySelector('a.cv-card')).toBeNull();
+    expect(document.querySelector('#folder-dialog a.cv-card')).not.toBeNull();
+    expect(document.querySelector('#folder-dialog [role="alert"]')?.textContent).toContain('could not be moved');
+  });
+
+  it('keeps a minimum folder-dialog height and cancels Escape dragging without closing the folder', async () => {
+    const saved = TestBed.inject(SavedCvs);
+    const id = await saved.save(cvInfo, null);
+    const folder = await saved.createFolder('Applications');
+    await saved.moveCv(id, folder.id);
+    const harness = await RouterTestingHarness.create('/');
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+    await harness.fixture.whenStable();
+    const dialog = document.querySelector<HTMLDialogElement>('#folder-dialog')!;
+    const minHeight = Math.min(32 * parseFloat(getComputedStyle(document.documentElement).fontSize), innerHeight - 32);
+    expect(parseFloat(getComputedStyle(dialog).minHeight)).toBeCloseTo(minHeight, 0);
+    startDrag(dialog.querySelector('a.cv-card')!);
+    await harness.fixture.whenStable();
+    expect(dialog.getBoundingClientRect().height).toBeGreaterThanOrEqual(minHeight);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await harness.fixture.whenStable();
+    expect(dialog.open).toBeTrue();
+    expect(getComputedStyle(dialog.querySelector('app-draggable')!).display).not.toBe('none');
+    expect(saved.folders()[0].cvIds).toEqual([id]);
+    expect(document.querySelector('.app-drag-preview')).toBeNull();
+    await saved.moveCv(id, null);
+    await harness.fixture.whenStable();
+    expect(dialog.getBoundingClientRect().height).toBeGreaterThanOrEqual(minHeight);
+  });
+
+  for (const view of ['card', 'list']) {
+    for (const direction of ['into', 'out of']) {
+      it(`keeps the ${view} layout stable while a move ${direction} a folder is saving`, async () => {
+        const saved = TestBed.inject(SavedCvs);
+        const id = await saved.save(cvInfo, null);
+        const folder = await saved.createFolder('Applications');
+        if (direction === 'out of') await saved.moveCv(id, folder.id);
+        const harness = await RouterTestingHarness.create('/');
+        const root = harness.routeNativeElement!;
+        if (view === 'card') {
+          root.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+          await harness.fixture.whenStable();
+        }
+        if (direction === 'out of') {
+          root.querySelector<HTMLButtonElement>('.folder-card')!.click();
+          await harness.fixture.whenStable();
+        }
+        const originalRefresh = saved.refresh.bind(saved);
+        let finishRefresh!: () => void;
+        let enteredRefresh!: () => void;
+        const gate = new Promise<void>((resolve) => { finishRefresh = resolve; });
+        const entered = new Promise<void>((resolve) => { enteredRefresh = resolve; });
+        spyOn(saved, 'refresh').and.callFake(async () => {
+          saved.loading.set(true);
+          enteredRefresh();
+          await gate;
+          await originalRefresh();
+        });
+        const dialog = document.querySelector<HTMLDialogElement>('#folder-dialog');
+        const source = direction === 'into' ? root.querySelector('a.cv-card')! : dialog!.querySelector('a.cv-card')!;
+        startDrag(source);
+        await harness.fixture.whenStable();
+        const target = root.querySelector('.saved-folder')!;
+        if (direction === 'into') {
+          overTarget(target);
+          await harness.fixture.whenStable();
+        }
+        const heldHeight = (dialog ?? target).getBoundingClientRect().height;
+        const title = root.querySelector('#home-title')!;
+        const folderTop = target.getBoundingClientRect().top - title.getBoundingClientRect().top;
+        if (direction === 'into') releaseOn(target);
+        else onBackdrop('pointerup');
+        harness.fixture.detectChanges();
+        expect(root.querySelector('a.cv-card')).toBeNull();
+        expect(dialog?.querySelector('a.cv-card') ?? null).toBeNull();
+        expect(document.querySelector('.app-drag-preview')).toBeNull();
+        expect((dialog ?? target).getBoundingClientRect().height).toBeCloseTo(heldHeight, 0);
+        await entered;
+        harness.fixture.detectChanges();
+        expect(saved.loading()).toBeTrue();
+        expect(root.querySelector('.saved-cvs > [role="status"]')).toBeNull();
+        expect(root.querySelector('a.cv-card')).toBeNull();
+        expect(dialog?.querySelector('a.cv-card') ?? null).toBeNull();
+        expect(target.getBoundingClientRect().top - title.getBoundingClientRect().top).toBeCloseTo(folderTop, 0);
+        expect((dialog ?? target).getBoundingClientRect().height).toBeCloseTo(heldHeight, 0);
+        finishRefresh();
+        await harness.fixture.whenStable();
+        expect(saved.folders()[0].cvIds).toEqual(direction === 'into' ? [id] : []);
+        expect(root.querySelector('a.cv-card') !== null).toBe(direction === 'out of');
+        expect(dialog?.querySelector('a.cv-card') ?? null).toBeNull();
+      });
+    }
+  }
+
+  it('restores a folder CV only after a delayed move fails', async () => {
+    const saved = TestBed.inject(SavedCvs);
+    const id = await saved.save(cvInfo, null);
+    const folder = await saved.createFolder('Applications');
+    await saved.moveCv(id, folder.id);
+    const harness = await RouterTestingHarness.create('/');
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+    await harness.fixture.whenStable();
+    let rejectMove!: (error: Error) => void;
+    spyOn(saved, 'moveCv').and.returnValue(new Promise<void>((_, reject) => { rejectMove = reject; }));
+    const dialog = document.querySelector<HTMLDialogElement>('#folder-dialog')!;
+    startDrag(dialog.querySelector('a.cv-card')!);
+    await harness.fixture.whenStable();
+    onBackdrop('pointerup');
+    harness.fixture.detectChanges();
+    expect(dialog.querySelector('a.cv-card')).toBeNull();
+    expect(harness.routeNativeElement!.querySelector('a.cv-card')).toBeNull();
+    rejectMove(new Error('Storage unavailable'));
+    await harness.fixture.whenStable();
+    expect(dialog.querySelector('a.cv-card')).not.toBeNull();
+    expect(harness.routeNativeElement!.querySelector('a.cv-card')).toBeNull();
+    expect(saved.folders()[0].cvIds).toEqual([id]);
+    expect(dialog.querySelector('[role="alert"]')?.textContent).toContain('could not be moved');
   });
 });

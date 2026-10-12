@@ -25,7 +25,7 @@ describe('CV ZIP backups', () => {
       { id: 'tool', name: 'Tool', updatedAt: 2 }
     ];
     expect(await readArchive(await createArchive([], [], technologies)))
-      .toEqual({ cvs: [], experiences: [], technologies });
+      .toEqual({ cvs: [], experiences: [], technologies, folders: [] });
   });
 
   it('rejects invalid technology identities, duplicate entries and remote icons', async () => {
@@ -77,7 +77,7 @@ describe('CV ZIP backups', () => {
   it('round trips every CV field and original photo bytes and metadata', async () => {
     const blob = await createArchive([record]);
     const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
-    expect(Object.keys(files).sort()).toEqual(['cvs.json', 'experiences.json', 'manifest.json', 'photos/0.png', 'technologies.json']);
+    expect(Object.keys(files).sort()).toEqual(['cvs.json', 'experiences.json', 'folders.json', 'manifest.json', 'photos/0.png', 'technologies.json']);
     const { cvs: [restored] } = await readArchive(blob);
     expect({ ...restored, info: { ...restored.info, photo: null } })
       .toEqual({ ...record, info: { ...record.info, photo: null } });
@@ -88,19 +88,19 @@ describe('CV ZIP backups', () => {
   });
 
   it('supports empty databases and CVs without photos or optional structure', async () => {
-    expect(await readArchive(await createArchive([]))).toEqual({ cvs: [], experiences: [], technologies: [] });
+    expect(await readArchive(await createArchive([]))).toEqual({ cvs: [], experiences: [], technologies: [], folders: [] });
     const { structure, ...info } = record.info;
     const plain = { ...record, info: { ...info, photo: null } };
-    expect(await readArchive(await createArchive([plain]))).toEqual({ cvs: [plain], experiences: [], technologies: [] });
+    expect(await readArchive(await createArchive([plain]))).toEqual({ cvs: [plain], experiences: [], technologies: [], folders: [] });
   });
 
   it('handles asynchronous decompression of larger content', async () => {
     const large = { ...record, info: { ...record.info, photo: null, description: 'content '.repeat(60000) } };
-    expect(await readArchive(await createArchive([large]))).toEqual({ cvs: [large], experiences: [], technologies: [] });
+    expect(await readArchive(await createArchive([large]))).toEqual({ cvs: [large], experiences: [], technologies: [], folders: [] });
   });
 
   it('rejects unsupported versions, malformed ZIPs and invalid nested fields', async () => {
-    await expectAsync(readArchive(archive([], 4))).toBeRejectedWithError(/version/);
+    await expectAsync(readArchive(archive([], 5))).toBeRejectedWithError(/version/);
     await expectAsync(readArchive(new Blob(['not a zip']))).toBeRejectedWithError();
     await expectAsync(readArchive(archive([{ ...record,
       info: { ...record.info, photo: null, experiences: [{ isCurrent: 'yes' }] }
@@ -134,15 +134,52 @@ describe('CV ZIP backups', () => {
     const saved = { id: 'experience-id', updatedAt: 987, experience };
     const linked = { ...record, info: { ...record.info, photo: null, experiences: [experience] } };
     expect(await readArchive(await createArchive([linked], [saved])))
-      .toEqual({ cvs: [linked], experiences: [saved], technologies: [] });
+      .toEqual({ cvs: [linked], experiences: [saved], technologies: [], folders: [] });
     expect(await readArchive(await createArchive([], [saved])))
-      .toEqual({ cvs: [], experiences: [saved], technologies: [] });
+      .toEqual({ cvs: [], experiences: [saved], technologies: [], folders: [] });
   });
 
   it('continues to read version 1 CV-only archives', async () => {
     const plain = { ...record, info: { ...record.info, photo: null } };
     expect(await readArchive(archive([plain])))
-      .toEqual({ cvs: [plain], experiences: [], technologies: [] });
+      .toEqual({ cvs: [plain], experiences: [], technologies: [], folders: [] });
+  });
+
+  it('round trips empty folders and folder membership with photos', async () => {
+    const folders = [
+      { id: 'folder', name: 'Applications', cvIds: [record.id] },
+      { id: 'empty', name: 'Empty', cvIds: [] }
+    ];
+    const restored = await readArchive(await createArchive([record], [], [], folders));
+    expect(restored.folders).toEqual(folders);
+    expect(await restored.cvs[0].info.photo!.arrayBuffer()).toEqual(await record.info.photo!.arrayBuffer());
+  });
+
+  it('reads versions 2 and 3 without folders', async () => {
+    for (const version of [2, 3]) {
+      const restored = await readArchive(archive([], version, {
+        'experiences.json': strToU8('[]'), 'technologies.json': strToU8('[]')
+      }));
+      expect(restored.folders).toEqual([]);
+    }
+  });
+
+  it('rejects invalid, nested and conflicting folder membership', async () => {
+    const plain = { ...record, info: { ...record.info, photo: null } };
+    const folder = { id: 'folder', name: 'Applications', cvIds: [record.id] };
+    for (const folders of [
+      [folder, folder], [{ ...folder, name: ' ' }], [{ ...folder, name: 'a'.repeat(121) }],
+      [{ ...folder, cvIds: ['missing'] }], [{ ...folder, cvIds: [record.id, record.id] }],
+      [folder, { ...folder, id: 'other' }], [{ ...folder, parentId: 'parent' }]
+    ]) {
+      await expectAsync(readArchive(archive([plain], 4, {
+        'experiences.json': strToU8('[]'), 'technologies.json': strToU8('[]'),
+        'folders.json': strToU8(JSON.stringify(folders))
+      }))).toBeRejectedWithError(/valid/);
+    }
+    await expectAsync(readArchive(archive([], 4, {
+      'experiences.json': strToU8('[]'), 'technologies.json': strToU8('[]')
+    }))).toBeRejected();
   });
 
   it('rejects incomplete version 2 backups and invalid saved experiences', async () => {

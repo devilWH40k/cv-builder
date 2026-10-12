@@ -1,0 +1,15 @@
+<app-dialog dialogId="create-folder-dialog" title="New folder" [showClose]="false" [busy]="saving()"
+  (dismissed)="cancelled.emit()">
+  <form id="create-folder-form" [formGroup]="form" (ngSubmit)="apply()">
+    <app-input inputId="folder-name" label="Folder name" [control]="name" [required]="true"
+      helpText="Up to 120 characters.">
+      @if (name.invalid && name.touched) { Enter a folder name of up to 120 characters. }
+    </app-input>
+  </form>
+  @if (error()) { <p role="alert">{{ error() }}</p> }
+  <div dialogActions class="actions">
+    <button class="cancel" type="button" [disabled]="saving()"
+      (pointerdown)="cancelPointerDown($event)" (click)="cancel()">Cancel</button>
+    <app-button [disabled]="name.invalid || saving()" (click)="apply()">{{ saving() ? 'Creating...' : 'Apply' }}</app-button>
+  </div>
+</app-dialog>

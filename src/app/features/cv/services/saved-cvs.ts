@@ -4,6 +4,7 @@ import { CvInfo } from './cv-draft';
 import { parseLegacyCvs, LEGACY_STORAGE_KEY } from '../helpers/legacy-saved-cvs';
 import { SavedTechnology, technologyId } from '../helpers/saved-technology';
 import { CustomEntry } from '../../../core/dialogs/custom-entry-dialog/custom-entry-dialog';
+import { CvFolder } from '../interfaces/cv-folder';
 
 export interface SavedCv {
   readonly id: string;
@@ -15,6 +16,7 @@ export interface CvDatabaseSnapshot {
   readonly cvs: readonly SavedCv[];
   readonly experiences: readonly SavedExperience[];
   readonly technologies?: readonly SavedTechnology[];
+  readonly folders?: readonly CvFolder[];
 }
 
 export const CV_DATABASE_NAME = new InjectionToken<string>('CV database name', {
@@ -35,6 +37,8 @@ export class SavedCvs {
   private database: Promise<IDBDatabase> | null = null;
   private readonly records = signal<readonly SavedCv[]>([]);
   readonly all = this.records.asReadonly();
+  private readonly folderRecords = signal<readonly CvFolder[]>([]);
+  readonly folders = this.folderRecords.asReadonly();
   readonly error = signal('');
   readonly migrationWarning = signal('');
   readonly loading = signal(false);
@@ -52,8 +56,13 @@ export class SavedCvs {
   async refresh(): Promise<void> {
     this.loading.set(true);
     try {
-      const records = await this.request<SavedCv[]>('readonly', (store) => store.getAll());
-      this.records.set(records.sort((first, second) => second.updatedAt - first.updatedAt));
+      const database = await this.open();
+      const transaction = database.transaction(['cvs', 'folders'], 'readonly');
+      const records: IDBRequest<SavedCv[]> = transaction.objectStore('cvs').getAll();
+      const folders: IDBRequest<CvFolder[]> = transaction.objectStore('folders').getAll();
+      await completed(transaction);
+      this.records.set(records.result.sort((first, second) => second.updatedAt - first.updatedAt));
+      this.folderRecords.set(folders.result.sort((a, b) => a.name.localeCompare(b.name)));
       this.error.set('');
     } catch {
       this.error.set('Saved CVs could not be read. Browser storage may be unavailable.');
@@ -73,8 +82,69 @@ export class SavedCvs {
   }
 
   async delete(id: string): Promise<void> {
-    await this.request('readwrite', (store) => store.delete(id));
+    await this.editFolders((folders, cvsStore, foldersStore) => {
+      cvsStore.delete(id);
+      for (const folder of folders) {
+        if (folder.cvIds.includes(id)) foldersStore.put({ ...folder, cvIds: folder.cvIds.filter((cvId) => cvId !== id) });
+      }
+    });
     await this.refresh();
+  }
+
+  async createFolder(name: string): Promise<CvFolder> {
+    const trimmed = name.trim();
+    if (!trimmed || trimmed.length > 120) throw new Error('Enter a folder name of up to 120 characters.');
+    const folder: CvFolder = { id: crypto.randomUUID(), name: trimmed, cvIds: [] };
+    await this.request('readwrite', (store) => store.add(folder), 'folders');
+    await this.refresh();
+    return folder;
+  }
+
+  async deleteFolder(id: string): Promise<void> {
+    await this.editFolders((folders, _cvsStore, foldersStore) => {
+      const folder = folders.find((entry) => entry.id === id);
+      if (folder?.cvIds.length) throw new Error('Only empty folders can be deleted.');
+      foldersStore.delete(id);
+    });
+    await this.refresh();
+  }
+
+  async moveCv(id: string, folderId: string | null): Promise<void> {
+    await this.editFolders((folders, cvsStore, foldersStore, abort) => {
+      if (folderId !== null && !folders.some((folder) => folder.id === folderId)) {
+        throw new Error('This folder no longer exists.');
+      }
+      const cv = cvsStore.get(id);
+      cv.onsuccess = () => {
+        try {
+          if (!cv.result) throw new Error('This CV no longer exists.');
+          for (const folder of folders) {
+            const cvIds = folder.cvIds.filter((cvId) => cvId !== id);
+            if (folder.id === folderId) cvIds.push(id);
+            if (folder.cvIds.includes(id) || folder.id === folderId) foldersStore.put({ ...folder, cvIds });
+          }
+        } catch (error: unknown) { abort(error); }
+      };
+    });
+    await this.refresh();
+  }
+
+  private async editFolders(
+    update: (folders: readonly CvFolder[], cvs: IDBObjectStore, foldersStore: IDBObjectStore,
+      abort: (error: unknown) => void) => void
+  ): Promise<void> {
+    const database = await this.open();
+    const transaction = database.transaction(['cvs', 'folders'], 'readwrite');
+    const done = completed(transaction);
+    let operationError: unknown;
+    const abort = (error: unknown) => { operationError = error; transaction.abort(); };
+    const foldersStore = transaction.objectStore('folders');
+    const request: IDBRequest<CvFolder[]> = foldersStore.getAll();
+    request.onsuccess = () => {
+      try { update(request.result, transaction.objectStore('cvs'), foldersStore, abort); }
+      catch (error: unknown) { abort(error); }
+    };
+    await done.catch((error: unknown) => { throw operationError ?? error; });
   }
 
   async load(id: string): Promise<CvInfo | null> {
@@ -135,33 +205,49 @@ export class SavedCvs {
 
   async backupSnapshot(): Promise<CvDatabaseSnapshot> {
     const database = await this.open();
-    const transaction = database.transaction(['cvs', 'experiences', 'technologies'], 'readonly');
+    const transaction = database.transaction(['cvs', 'experiences', 'technologies', 'folders'], 'readonly');
     const cvs = transaction.objectStore('cvs').getAll();
     const experiences = transaction.objectStore('experiences').getAll();
     const technologies = transaction.objectStore('technologies').getAll();
+    const folders = transaction.objectStore('folders').getAll();
     await completed(transaction);
-    return { cvs: cvs.result, experiences: experiences.result, technologies: technologies.result };
+    return { cvs: cvs.result, experiences: experiences.result, technologies: technologies.result, folders: folders.result };
   }
 
   async importRecords(
     records: readonly SavedCv[], experiences: readonly SavedExperience[] = [],
-    wipePreviousData = false, technologies: readonly SavedTechnology[] = []
+    wipePreviousData = false, technologies: readonly SavedTechnology[] = [], folders: readonly CvFolder[] = []
   ): Promise<void> {
     const database = await this.open();
-    const transaction = database.transaction(['cvs', 'experiences', 'technologies'], 'readwrite');
+    const transaction = database.transaction(['cvs', 'experiences', 'technologies', 'folders'], 'readwrite');
     const done = completed(transaction);
     let importedTechnologies: SavedTechnology[] = [];
     try {
       const cvsStore = transaction.objectStore('cvs');
       const experiencesStore = transaction.objectStore('experiences');
       const technologiesStore = transaction.objectStore('technologies');
+      const foldersStore = transaction.objectStore('folders');
       if (wipePreviousData) {
         cvsStore.clear();
         experiencesStore.clear();
         technologiesStore.clear();
+        foldersStore.clear();
       }
       for (const record of records) cvsStore.put(record);
       for (const record of technologies) technologiesStore.put(record);
+      // Incoming folder membership wins over existing membership during a merge.
+      const existingFolders: IDBRequest<CvFolder[]> = foldersStore.getAll();
+      existingFolders.onsuccess = () => {
+        try {
+          const assignedIds = new Set(folders.flatMap((folder) => [...folder.cvIds]));
+          for (const folder of existingFolders.result) {
+            if (folder.cvIds.some((id) => assignedIds.has(id))) {
+              foldersStore.put({ ...folder, cvIds: folder.cvIds.filter((id) => !assignedIds.has(id)) });
+            }
+          }
+          for (const folder of folders) foldersStore.put(folder);
+        } catch { transaction.abort(); }
+      };
       for (const record of experiences) {
         experiencesStore.put({
           ...record, experience: { ...record.experience, savedExperienceId: record.id }
@@ -232,6 +318,7 @@ export class SavedCvs {
         if (!database.objectStoreNames.contains('metadata')) database.createObjectStore('metadata');
         if (!database.objectStoreNames.contains('experiences')) database.createObjectStore('experiences', { keyPath: 'id' });
         if (!database.objectStoreNames.contains('technologies')) database.createObjectStore('technologies', { keyPath: 'id' });
+        if (!database.objectStoreNames.contains('folders')) database.createObjectStore('folders', { keyPath: 'id' });
       };
       request.onerror = () => reject(request.error);
       request.onblocked = () => {
@@ -244,7 +331,7 @@ export class SavedCvs {
           database.close();
           return;
         }
-        if (['cvs', 'metadata', 'experiences', 'technologies'].some((name) => !database.objectStoreNames.contains(name))) {
+        if (['cvs', 'metadata', 'experiences', 'technologies', 'folders'].some((name) => !database.objectStoreNames.contains(name))) {
           const nextVersion = database.version + 1;
           database.close();
           void this.connect(nextVersion).then(resolve, reject);

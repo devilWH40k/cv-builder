@@ -1,0 +1,8 @@
+<app-dialog dialogId="folder-dialog" [title]="folder().name" [wide]="true" minHeight="32rem"
+  [backdropDropType]="dragType" (backdropDropped)="dropOutside($event)" (dismissed)="dismissed.emit()">
+  <p class="hint" [class.dragging]="!!drag.draggedId()">Drag a CV outside this dialog to return it to Your CVs.</p>
+  @if (error()) { <p role="alert">{{ error() }}</p> }
+  <app-cv-collection [cvs]="cvs()" [isListView]="isListView()" [deletingIds]="deletingIds()"
+    (cvDeleted)="cvDeleted.emit($event)" />
+  @if (!cvs().length) { <p class="empty-state" role="status">This folder is empty. Drag a CV onto it to add one.</p> }
+</app-dialog>

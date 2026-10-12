@@ -1261,3 +1261,52 @@ Photo size ranges from 24 to 60mm, defaults to 40mm, and is saved in
 `CvStructure.photoSizeMm`. Preview, print, and PDF export share the same size.
 Resize controls are hidden in print. The shared component accepts unscaled CSS
 pixel sizes and compensates for preview scaling during pointer interaction.
+
+## Saved CV folders and shared dialog shell
+
+Home uses the feature-specific `app-cv-collection` for both the main collection
+and folder contents, keeping card/list styles, edit links, and delete actions
+consistent. Folders use Lucide Folder/FolderPlus icons; list folders display a
+CV count, while card folders display a large icon and their name. Nonempty folder
+delete buttons are disabled. The folder-plus button sits immediately left of
+the view switch, with storage text centered on wider screens.
+
+The home view defaults to List. `HomeViewStore` keeps the selected mode in a
+signal and persists `list` or `card` under `cv-builder.home-view` in local storage.
+The preference survives navigation and reloads. Missing or invalid preferences
+default to List; if browser storage is blocked, switches still work for the session.
+
+New dialogs can use `shared/ui/dialog/dialog` (`app-dialog`). Supply a unique
+`dialogId` and `title`, project the body normally, and project actions with
+`dialogActions`. Optional `wide`, `minHeight`, `busy`, and `showClose` inputs control the shell;
+`dismissed` handles Close, Escape, and backdrop dismissal. It reuses `DialogOverlay`
+for focus, inertness, and cleanup. `minHeight` is capped by the viewport; folder
+dialogs use 32rem. `backdropDropType` opts into accepting a shared drag item type
+on the backdrop; `backdropDropped` delivers the `{ type, id }` item without
+dismissing the dialog. Drops inside the dialog do not trigger that output.
+
+Folder organization is persisted in IndexedDB's `folders` store and included
+in version 4 backups. CV moves and empty-folder deletion checks are transactional.
+Dropping a CV outside its folder dialog returns it to the main collection;
+canceling the drag leaves membership unchanged. Folders cannot contain folders.
+
+## Shared pointer dragging
+
+Wrap draggable content in `shared/ui/draggable/draggable` (`app-draggable`) and
+provide `dragId`, `dragType`, and an optional `disabled` input. The component
+waits for pointer movement before dragging, preserving normal clicks. It hides
+the source from layout while held and creates a full-size opaque preview above
+dialogs. Computed styles preserve the original appearance outside its container.
+The preview keeps the pointer's original grab offset and cannot receive focus
+or intercept pointer events. Nested buttons, form fields, and `data-no-drag`
+elements remain independent actions.
+
+Use `DropTarget` from `shared/ui/draggable/drop-target` with
+`[appDropTarget]="acceptedType"`, optional `dropDisabled`, and `(itemDropped)`.
+Accepted targets receive the `drop-target` class while hovered. The shared
+`DragDrop` service owns the active item, hit testing, and cleanup; features
+handle the resulting domain operation. Dialog backdrops use the same service
+and only accept drops directly outside the dialog. Escape, pointer cancellation,
+window blur, invalid drops, or source destruction restore the source and remove
+the preview. Escape cancels a drag before it can dismiss a dialog. Native browser
+dragging is suppressed to avoid a second translucent drag image.

@@ -57,9 +57,18 @@ in every general and experience technology selector. Other multi-selects remain
 independent. Names are deduplicated without regard to case; icons are optional.
 An experience containing a technology without an icon uses comma-separated names.
 
-ZIP backups include saved CVs, experiences, and the technology library, including
+ZIP backups include saved CVs, folders, experiences, and the technology library, including
 uploaded icons. Older backups remain supported. Import merges records by ID;
-the wipe option replaces all three libraries. All operations happen locally.
+the wipe option replaces all four libraries. All operations happen locally.
+
+### CV folders
+
+Use the folder-plus button beside the view switch to create a named folder.
+Drag a saved CV onto a folder to move it there. Open a folder to view its CVs
+in the currently selected card or list mode. Drop a CV on the area outside the
+folder dialog to return it to the main list. Canceling a drag leaves it in place.
+Folders have one level and only empty folders can be deleted. Folder membership
+is preserved when a CV is edited and saved, and included in ZIP backups.
 
 ### Notifications and save feedback
 
