@@ -1,0 +1,5 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+.actions { display: flex; justify-content: flex-end; gap: tokens.$spacing-2; }
+.cancel { @include buttons.ghost; }
+p { color: tokens.$text-danger; }

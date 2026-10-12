@@ -1,0 +1,22 @@
+@use 'styles/tokens' as tokens;
+@use '../button/variants' as buttons;
+
+dialog {
+  width: min(tokens.$breakpoint-sm, calc(100% - #{tokens.$spacing-8}));
+  max-height: calc(100dvh - #{tokens.$spacing-8});
+  min-height: min(var(--dialog-min-height, 0px), calc(100dvh - #{tokens.$spacing-8}));
+  padding: tokens.$spacing-6;
+  color: tokens.$text-primary;
+  background: tokens.$background-surface;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  box-shadow: tokens.$shadow-lg;
+  text-align: left;
+  &.wide { width: min(tokens.$breakpoint-lg, calc(100% - #{tokens.$spacing-8})); }
+}
+header { display: flex; align-items: center; gap: tokens.$spacing-4; margin-bottom: tokens.$spacing-4; }
+h2 { flex: 1; min-width: 0; margin: 0; font-size: tokens.$font-size-xl; overflow-wrap: anywhere; }
+.close { @include buttons.ghost; & { padding: tokens.$spacing-2; } }
+.content { min-width: 0; }
+footer:empty { display: none; }
+footer { margin-top: tokens.$spacing-6; }

@@ -1,38 +1,46 @@
 # CV backups
 
 The header's **Import / Export** dialog transfers saved CVs and reusable saved
-experiences between browsers, domains, and devices. Export defaults to
+experiences, folders, and the technology library between browsers, domains, and devices. Export defaults to
 `cv-builder-dd.mm.yyyy.zip`, using the local calendar date. Save editor changes first.
 
-Both stores are exported from one read-only IndexedDB transaction. Imports
+All four stores are exported from one read-only IndexedDB transaction. Imports
 preserve IDs and update timestamps. A matching ID is replaced with the imported
 record, even if its timestamp is older; a new ID is inserted. Experience links
-retain their original IDs. Records absent from the archive remain unchanged.
+retain their original IDs. Folder membership from the archive takes precedence
+over existing assignments, keeping each CV in at most one folder. Matching folder
+IDs replace that folder's membership. Records absent from the archive remain unchanged.
 
 The **Wipe previous data** checkbox is unchecked whenever the dialog opens.
-When selected, both the CV and experience stores are cleared before the imported
+When selected, the CV, experience, technology, and folder stores are cleared before the imported
 records are written. The archive is fully validated first, and clearing and
 writing happen in one transaction. A failure rolls back all changes, including
-the clear. An empty valid backup with this option clears both stores.
+the clear. An empty valid backup with this option clears all four stores.
 Internal migration metadata is retained. The current editor draft is unchanged.
 
-## Archive format (version 2)
+## Archive format (version 4)
 
-- `manifest.json`: `format: "cv-builder"`, `schemaVersion: 2`, and an ISO `exportedAt`.
+- `manifest.json`: `format: "cv-builder"`, `schemaVersion: 4`, and an ISO `exportedAt`.
 - `cvs.json`: saved CV records (`id`, `updatedAt`, `info`).
 - `experiences.json`: saved experience records (`id`, `updatedAt`, `experience`).
+- `technologies.json`: saved technology records with optional custom icons.
+- `folders.json`: one-level folder records (`id`, `name`, `cvIds`).
 - `photos/<index>.png` or `photos/<index>.jpg`: original image bytes.
 
 Photos in JSON are null or objects containing `path`, `name`, `type`, and
 `lastModified`. CV content, layout settings, and experience links are preserved.
 Internal migration metadata is not transferred.
 
-Version 1 CV-only backups remain importable; they contain no saved-experience
-library. Version 2 requires both JSON collections, even if one is empty.
-Older apps that support only version 1 must be updated to read version 2 backups.
+Versions 1 through 3 remain importable. Version 1 contains CVs only, version 2 adds
+saved experiences, and version 3 adds technologies. These versions have no folders.
+Version 4 requires all four JSON collections, even when empty. Folder names must
+be nonblank and at most 120 characters; membership must reference CVs in the archive,
+with no duplicate assignments or nested folders. Older apps must be updated to read
+version 4 backups.
 
 The codec loads on demand and uses fflate. JSON is compressed; JPEG and PNG are
-stored without recompression. Limits: 1,000 CVs, 1,000 saved experiences, 1,003
+stored without recompression. Limits: 1,000 CVs, 1,000 saved experiences, 1,000
+technologies, 1,000 folders, 1,005
 entries, 100 MiB compressed and extracted data, and 10 MiB per JSON entry.
 Invalid records, duplicate IDs or entries, unexpected paths, missing photos,
 and unsupported versions are rejected.

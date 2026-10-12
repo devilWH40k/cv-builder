@@ -6,14 +6,16 @@ import type { CvDatabaseSnapshot, SavedCv } from '../services/saved-cvs';
 import { CV_THEMES } from '../constants/cv-themes';
 import { CustomEntryIcons } from '../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 import { SavedTechnology, technologyId } from './saved-technology';
+import type { CvFolder } from '../interfaces/cv-folder';
 
 const MAX_BYTES = 100 * 1024 ** 2;
 const MAX_CVS = 1000;
 const MAX_EXPERIENCES = 1000;
 const MAX_TECHNOLOGIES = 1000;
+const MAX_FOLDERS = 1000;
 const MAX_JSON_BYTES = 10 * 1024 ** 2;
 const INVALID = 'This is not a valid CV Builder backup.';
-const TOO_LARGE = 'Backups must contain at most 1,000 CVs, 1,000 saved experiences, 1,000 technologies and 100 MB of data.';
+const TOO_LARGE = 'Backups must contain at most 1,000 CVs, 1,000 saved experiences, 1,000 technologies, 1,000 folders and 100 MB of data.';
 
 function object(value: unknown): Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error(INVALID);
@@ -94,9 +96,11 @@ function structure(value: unknown): CvStructure | undefined {
 }
 
 export async function createArchive(
-  records: readonly SavedCv[], experiences: readonly SavedExperience[] = [], technologies: readonly SavedTechnology[] = []
+  records: readonly SavedCv[], experiences: readonly SavedExperience[] = [],
+  technologies: readonly SavedTechnology[] = [], folders: readonly CvFolder[] = []
 ): Promise<Blob> {
-  if (records.length > MAX_CVS || experiences.length > MAX_EXPERIENCES || technologies.length > MAX_TECHNOLOGIES) throw new Error(TOO_LARGE);
+  if (records.length > MAX_CVS || experiences.length > MAX_EXPERIENCES ||
+    technologies.length > MAX_TECHNOLOGIES || folders.length > MAX_FOLDERS) throw new Error(TOO_LARGE);
   const entries: AsyncZippable = Object.create(null);
   const cvs = [];
   let size = 0;
@@ -117,19 +121,22 @@ export async function createArchive(
     });
   }
   const manifest = strToU8(JSON.stringify({
-    format: 'cv-builder', schemaVersion: 3, exportedAt: new Date().toISOString()
+    format: 'cv-builder', schemaVersion: 4, exportedAt: new Date().toISOString()
   }));
   const data = strToU8(JSON.stringify(cvs));
   const experienceData = strToU8(JSON.stringify(experiences));
   const technologyData = strToU8(JSON.stringify(technologies));
-  if (data.length > MAX_JSON_BYTES || experienceData.length > MAX_JSON_BYTES || technologyData.length > MAX_JSON_BYTES ||
-    size + data.length + experienceData.length + technologyData.length + manifest.length > MAX_BYTES) {
+  const folderData = strToU8(JSON.stringify(folders));
+  if (data.length > MAX_JSON_BYTES || experienceData.length > MAX_JSON_BYTES ||
+    technologyData.length > MAX_JSON_BYTES || folderData.length > MAX_JSON_BYTES ||
+    size + data.length + experienceData.length + technologyData.length + folderData.length + manifest.length > MAX_BYTES) {
     throw new Error(TOO_LARGE);
   }
   entries['manifest.json'] = manifest;
   entries['cvs.json'] = data;
   entries['experiences.json'] = experienceData;
   entries['technologies.json'] = technologyData;
+  entries['folders.json'] = folderData;
   return new Promise((resolve, reject) => {
     zip(entries, { level: 6 }, (error, bytes) => {
       if (error) reject(new Error('Could not create the backup. Please try again.'));
@@ -156,13 +163,13 @@ async function extractArchive(file: Blob): Promise<Map<string, Uint8Array>> {
     const complete = () => { if (finished && active.size === 0 && !failed) resolve(entries); };
     const unzip = new Unzip((entry) => {
       if (failed) return;
-      if (names.has(entry.name) || !/^(manifest\.json|cvs\.json|experiences\.json|technologies\.json|photos\/\d+\.(png|jpg))$/.test(entry.name)) {
+      if (names.has(entry.name) || !/^(manifest\.json|cvs\.json|experiences\.json|technologies\.json|folders\.json|photos\/\d+\.(png|jpg))$/.test(entry.name)) {
         fail(new Error(INVALID));
         return;
       }
       names.add(entry.name);
       const limit = entry.name.endsWith('.json') ? MAX_JSON_BYTES : MAX_BYTES;
-      if (names.size > MAX_CVS + 4 || (entry.originalSize ?? 0) > limit) {
+      if (names.size > MAX_CVS + 5 || (entry.originalSize ?? 0) > limit) {
         fail(new Error(TOO_LARGE));
         return;
       }
@@ -212,9 +219,9 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
   const manifest = object(json('manifest.json'));
   if (manifest['format'] !== 'cv-builder') throw new Error(INVALID);
   const version = manifest['schemaVersion'];
-  if (version !== 1 && version !== 2 && version !== 3) throw new Error('This backup version is not supported.');
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4) throw new Error('This backup version is not supported.');
   const savedExperiences = version >= 2 ? array(json('experiences.json')) : [];
-  const savedTechnologies = version === 3 ? array(json('technologies.json')) : [];
+  const savedTechnologies = version >= 3 ? array(json('technologies.json')) : [];
   if (savedTechnologies.length > MAX_TECHNOLOGIES) throw new Error(TOO_LARGE);
   const technologyIds = new Set<string>();
   const technologies = savedTechnologies.map((value): SavedTechnology => {
@@ -274,5 +281,23 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
     };
     return { id, updatedAt: number(record['updatedAt']), info: restored };
   });
-  return { cvs: records, experiences, technologies };
+  const savedFolders = version >= 4 ? array(json('folders.json')) : [];
+  if (savedFolders.length > MAX_FOLDERS) throw new Error(TOO_LARGE);
+  const folderIds = new Set<string>();
+  const assignedIds = new Set<string>();
+  const folders = savedFolders.map((value): CvFolder => {
+    const record = object(value);
+    const id = string(record['id']);
+    const name = string(record['name']);
+    const cvIds = array(record['cvIds']).map(string);
+    if (!id || folderIds.has(id) || !name.trim() || name !== name.trim() || name.length > 120 ||
+      record['parentId'] !== undefined) throw new Error(INVALID);
+    folderIds.add(id);
+    for (const cvId of cvIds) {
+      if (!ids.has(cvId) || assignedIds.has(cvId)) throw new Error(INVALID);
+      assignedIds.add(cvId);
+    }
+    return { id, name, cvIds };
+  });
+  return { cvs: records, experiences, technologies, folders };
 }

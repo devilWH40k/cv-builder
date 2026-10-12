@@ -1,0 +1,58 @@
+<div class="cv-grid" [class.cv-list]="isListView()">
+  @for (folder of folders(); track folder.id) {
+    <article class="saved-card saved-folder" [appDropTarget]="dragType"
+      [dropDisabled]="deletingFolderIds().includes(folder.id)" (itemDropped)="dropOnFolder($event, folder.id)">
+      <button class="cv-card folder-card" type="button" (click)="folderOpened.emit(folder.id)"
+        [attr.aria-label]="'Open folder ' + folder.name">
+        <lucide-icon [img]="FolderIcon" [size]="isListView() ? 24 : 64" aria-hidden="true" />
+        <span class="folder-name">{{ folder.name }}</span>
+        @if (isListView()) {
+          <span class="folder-count" [attr.aria-label]="folder.cvIds.length + ' CVs'">{{ folder.cvIds.length }}</span>
+        }
+      </button>
+      <button class="delete-cv delete-folder" type="button"
+        [disabled]="!!folder.cvIds.length || deletingFolderIds().includes(folder.id)"
+        [title]="folder.cvIds.length ? 'Only empty folders can be deleted' : 'Delete folder'"
+        [attr.aria-label]="'Delete folder ' + folder.name" (click)="folderDeleted.emit(folder.id)">
+        <lucide-icon [img]="DeleteIcon" [size]="18" aria-hidden="true" />
+      </button>
+    </article>
+  }
+  @for (cv of cvs(); track cv.id) {
+    <app-draggable [dragId]="cv.id" [dragType]="dragType" [disabled]="deletingIds().includes(cv.id)">
+    <article class="saved-card" [attr.data-cv-id]="cv.id">
+      <a class="cv-card" routerLink="/create" (click)="openCv()" [queryParams]="{ id: cv.id }"
+        [draggable]="false"
+        [attr.aria-label]="'Edit ' + (cv.info.name || 'Untitled CV')">
+        @if (isListView()) {
+          <lucide-icon [img]="FileIcon" [size]="24" aria-hidden="true" />
+          <span class="cv-details">
+            <strong class="cv-name">{{ cv.info.name || 'Untitled CV' }}</strong>
+            <span class="cv-position">{{ cv.info.positionTitle }}</span>
+          </span>
+          <time class="cv-updated" [attr.datetime]="cv.updatedAt | date: 'yyyy-MM-ddTHH:mm:ssZZZZZ'"
+            [title]="'Last updated: ' + (cv.updatedAt | date: 'medium')"
+            [attr.aria-label]="'Last updated ' + updatedTimes().get(cv.id)">{{ updatedTimes().get(cv.id) }}</time>
+        } @else {
+          <div class="mini-document" aria-hidden="true">
+            <lucide-icon [img]="FileIcon" [size]="24" />
+            <strong>{{ cv.info.name || 'Untitled CV' }}</strong>
+            <span>{{ cv.info.positionTitle }}</span>
+            <p>{{ cv.info.description }}</p>
+            @for (experience of cv.info.experiences.slice(0, 2); track $index) {
+              <b>{{ experience.company }}</b>
+              <span>{{ experience.position }}</span>
+            }
+            <small>{{ cv.info.technologies.join(' · ') }}</small>
+          </div>
+          <span class="cv-caption">{{ cv.info.name || 'Untitled CV' }}</span>
+        }
+      </a>
+      <button class="delete-cv" type="button" [disabled]="deletingIds().includes(cv.id)"
+        (click)="cvDeleted.emit(cv.id)" [attr.aria-label]="'Delete ' + (cv.info.name || 'Untitled CV')">
+        <lucide-icon [img]="DeleteIcon" [size]="18" aria-hidden="true" />
+      </button>
+    </article>
+    </app-draggable>
+  }
+</div>

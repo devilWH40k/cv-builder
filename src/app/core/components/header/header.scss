@@ -1,4 +1,29 @@
 @use 'styles/tokens' as tokens;
+@use '../../../shared/ui/button/variants' as buttons;
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-2;
+}
+
+.guides-link {
+  @include buttons.secondary;
+  & {
+    padding-inline: tokens.$spacing-3;
+    text-decoration: none;
+  }
+
+  &.active {
+    color: tokens.$color-primary;
+    background: tokens.$background-primary-subtle;
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$text-on-primary;
+    outline-offset: tokens.$spacing-1;
+  }
+}
 
 :host {
   display: block;
