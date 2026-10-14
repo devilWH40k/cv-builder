@@ -1243,9 +1243,64 @@ The selected theme is stored in CvStructure.theme; older CVs default to Basic.
 
 ## Saved experiences and dialog overlays
 
+The Settings menu opens the lazy-loaded Experiences page above Technologies.
+The experience library includes the example workbook's named columns: Project Name
+(the existing Company/Project), Alternative names, Web link, Photos, Description,
+Responsibilities, Technologies, Teamlead, Developer, and Is Updated. Photos holds
+a link to photos or a shared folder. The display table also includes Position after
+Alternative names, then Start date and End date after Photos. Valid HTTP(S) Web link
+and Photos values open in a new tab; empty or invalid URLs render as plain text.
+These display additions do not change the ten-column Excel template.
+Older records leave added fields blank;
+Is Updated is unset until selected, then displays `true` or `false` in the table.
+The update dialog uses Yes/No shared radio controls. The load picker's eye action
+opens the same dialog in read-only mode without changing selection.
+
+The Experiences page's Add experience button opens this dialog in add mode,
+using the CV editor's experience validation (required Company/Project and valid
+date order). The library dialog hides the numbered experience heading and keeps
+Is Updated and its Yes/No controls on one row. Its Actions column contains edit
+and delete buttons and stays visible on the right while scrolling. Deleting a
+library experience preserves existing CV snapshots.
+
+Import sits immediately right of Add experience. Its shared dialog uses
+`app-file-upload` with `mode="file"` and `.xlsx` filtering; file mode applies the
+file directly without image previews or cropping. The Report region has a fixed
+height and scrolls, with success and error messages for each populated record.
+File structure errors include a reason. Apply becomes available when at least
+one record parsed successfully; only Apply writes those records, in one atomic
+IndexedDB transaction, and refreshes the page. Failed writes retain the dialog
+and parsed records for retry. Download template sits on the left of the footer
+and produces `template.xlsx` with all ten named columns.
+
+Excel imports use the first worksheet, match headers without case sensitivity,
+ignore all columns with empty headers, and skip rows empty in mapped columns.
+Project Name is required; other known columns may be omitted. Unknown or duplicate
+named columns are structure errors. Imported rows are new library entries.
+Technologies are split on commas, semicolons, or line breaks. Is Updated accepts
+Yes/No, true/false, 1/0 (also Да/Нет and Так/Ні), or blank. Photos and Web link must
+be HTTP(S) URLs; hyperlink targets take precedence over display labels. Spreadsheet
+description text is escaped before conversion to rich text. Formula cells are
+reported as errors and are never evaluated. The fflate parser and template
+generator load on demand. Import limits are 10 MB compressed and 1,000 records.
+
+`shared/ui/table` provides `Table`, `TableHeader`, `TableRow`, and `TableCell` with
+accessible table/row/columnheader/cell roles and CSS Grid. Supply `columns` as a grid column
+template and optional `minWidth` on `app-table`; header and rows inherit the same
+template. `app-table-header` takes a `headers` array and uses `app-table-cell`
+with `[header]="true"` for column headers. Project row content into `app-table-cell`;
+it supplies the cell role and wrapping styles. Wide tables scroll horizontally inside the focusable table.
+Cells supply padding and vertical borders. Set `[stickyRight]="true"` on a cell
+and `[stickyLastColumn]="true"` on the header to keep an actions column on the right.
+Project metadata is preserved in CV snapshots and ZIP backups.
+
 Experience entries can be saved independently in the IndexedDB `experiences`
 object store. Load experience opens a centered multi-select picker. Applying
 entries retains their library IDs and prevents adding the same ID twice.
+Applying an entry combines its rich-text description with responsibilities in
+the CV's Project description field. Responsibilities become escaped paragraphs
+with their line breaks preserved. Already appended responsibilities are not
+duplicated when the same combined description is reused.
 Saving a linked entry updates its library record; CVs retain their own editable
 snapshots and the library ID, so library updates do not silently rewrite other CVs.
 

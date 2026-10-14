@@ -199,6 +199,29 @@ export class SavedCvs {
     return id;
   }
 
+  async deleteExperience(id: string): Promise<void> {
+    await this.request('readwrite', (store) => store.delete(id), 'experiences');
+  }
+
+  async importExperiences(experiences: readonly CvExperience[]): Promise<readonly SavedExperience[]> {
+    if (!experiences.length) return [];
+    const records = experiences.map((experience): SavedExperience => {
+      const id = crypto.randomUUID();
+      return { id, updatedAt: Date.now(), experience: structuredClone({ ...experience, savedExperienceId: id }) };
+    });
+    const database = await this.open();
+    const transaction = database.transaction('experiences', 'readwrite');
+    const done = completed(transaction);
+    try {
+      const store = transaction.objectStore('experiences');
+      for (const record of records) store.add(record);
+    } catch {
+      transaction.abort();
+    }
+    await done;
+    return records;
+  }
+
   async snapshot(): Promise<readonly SavedCv[]> {
     return this.request<SavedCv[]>('readonly', (store) => store.getAll());
   }

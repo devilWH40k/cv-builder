@@ -1,9 +1,12 @@
 <div class="entry">
+  @if (showHeading() || showActions()) {
   <div class="heading">
-    <h4>Experience {{ index() + 1 }}</h4>
+    @if (showHeading()) { <h4>Experience {{ index() + 1 }}</h4> }
+    @if (showActions()) {
     <div class="entry-actions">
       <button type="button" class="save-btn" [attr.aria-label]="'Save experience ' + (index() + 1)"
-        title="Save experience" [disabled]="saving()" [attr.aria-busy]="saving()" (click)="save()">
+        appTooltip="Save an experience to a storage for future use"
+        [disabled]="saving()" [attr.aria-busy]="saving()" (click)="save()">
         <span>Save</span>
         <lucide-icon [img]="SaveIcon" [size]="16" aria-hidden="true" />
       </button>
@@ -12,9 +15,11 @@
         <lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" />
       </button>
     </div>
+    }
   </div>
+  }
   <div class="columns">
-    <app-input [inputId]="'company-' + index()" label="Company/Project" autocomplete="organization"
+    <app-input [inputId]="'company-' + index()" [label]="companyLabel()" autocomplete="organization"
       [control]="form().controls.company" [required]="true">
       @if (form().controls.company.touched && form().controls.company.invalid) {
       <span>Please enter a company or project.</span>

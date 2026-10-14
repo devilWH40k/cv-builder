@@ -21,6 +21,13 @@ export type ContactForm = ReturnType<typeof createCvForm>['controls']['contact']
 
 export function createExperienceForm(experience?: CvExperience) {
   const form = new FormGroup({
+    alternativeNames: new FormControl(experience?.alternativeNames ?? '', { nonNullable: true }),
+    webLink: new FormControl(experience?.webLink ?? '', { nonNullable: true }),
+    photos: new FormControl(experience?.photos ?? '', { nonNullable: true }),
+    responsibilities: new FormControl(experience?.responsibilities ?? '', { nonNullable: true }),
+    teamlead: new FormControl(experience?.teamlead ?? '', { nonNullable: true }),
+    developer: new FormControl(experience?.developer ?? '', { nonNullable: true }),
+    isUpdated: new FormControl<boolean | null>(experience?.isUpdated ?? null),
     customTechnologyIcons: new FormControl<CustomEntryIcons>(experience?.customTechnologyIcons ?? {}, { nonNullable: true }),
     savedExperienceId: new FormControl<string | null>(experience?.savedExperienceId ?? null),
     company: new FormControl(experience?.company ?? '', {

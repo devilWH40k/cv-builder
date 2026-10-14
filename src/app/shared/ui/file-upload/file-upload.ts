@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, effect, input, signal } from '@angular/core';
-import { Image, LucideAngularModule, Upload, UserRound } from 'lucide-angular';
+import { File as FileIcon, Image, LucideAngularModule, Upload, UserRound } from 'lucide-angular';
 import { FormField } from '../form-field/form-field';
 import { imageFileValidator } from './image-file.validator';
 import { FormControl } from '@angular/forms';
@@ -13,12 +13,13 @@ import { PhotoPreview } from '../photo-preview/photo-preview';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileUpload extends FormField<File | null> {
-  readonly mode = input<'photo' | 'icon'>('photo');
+  readonly mode = input<'photo' | 'icon' | 'file'>('photo');
   readonly accept = input('.jpg,.jpeg,.png');
   readonly helpText = input('JPG, JPEG or PNG');
   protected readonly UploadIcon = Upload;
   protected readonly UserIcon = UserRound;
   protected readonly ImageIcon = Image;
+  protected readonly FileIcon = FileIcon;
   protected readonly pendingPhoto = signal<File | null>(null);
   protected readonly previewUrl = signal<string | null>(null);
 
@@ -27,7 +28,7 @@ export class FileUpload extends FormField<File | null> {
     effect(() => { if (this.disabled()) this.pendingPhoto.set(null); });
     effect((onCleanup) => {
       const file = this.value();
-      if (!file || (this.mode() === 'photo' ? imageFileValidator(this.control()) : this.invalid())) {
+      if (this.mode() === 'file' || !file || (this.mode() === 'photo' ? imageFileValidator(this.control()) : this.invalid())) {
         this.previewUrl.set(null);
         return;
       }
@@ -49,7 +50,7 @@ export class FileUpload extends FormField<File | null> {
     }
     if (this.disabled()) return;
     input.value = '';
-    if (this.mode() === 'icon') {
+    if (this.mode() !== 'photo') {
       this.applyPhoto(file);
       return;
     }

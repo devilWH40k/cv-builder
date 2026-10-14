@@ -1,0 +1,11 @@
+@use 'styles/tokens' as tokens;
+
+:host {
+  display: grid;
+  grid-template-columns: var(--table-columns);
+  min-width: var(--table-min-width, 0px);
+  align-items: stretch;
+  border-bottom: 1px solid tokens.$border-color;
+}
+
+:host:last-child { border-bottom: 0; }

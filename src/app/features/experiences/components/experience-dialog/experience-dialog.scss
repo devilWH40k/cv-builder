@@ -1,0 +1,18 @@
+@use 'styles/tokens' as tokens;
+
+.fields, .details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: tokens.$spacing-4;
+  margin: tokens.$spacing-6 0;
+}
+.full-width { grid-column: 1 / -1; }
+dt { color: tokens.$text-secondary; font-size: tokens.$font-size-sm; margin-bottom: tokens.$spacing-2; }
+dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; min-height: tokens.$spacing-6; }
+.rich-text { white-space: normal; }
+.updated { display: flex; align-items: center; gap: tokens.$spacing-4; }
+.updated > span { color: tokens.$text-secondary; font-size: tokens.$font-size-sm; white-space: nowrap; }
+.actions { display: flex; justify-content: flex-end; gap: tokens.$spacing-2; }
+@media (max-width: tokens.$breakpoint-sm) {
+  .fields, .details { grid-template-columns: minmax(0, 1fr); }
+}

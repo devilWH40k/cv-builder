@@ -1,0 +1,23 @@
+@use 'styles/tokens' as tokens;
+
+.help, .muted { color: tokens.$text-secondary; font-size: tokens.$font-size-sm; }
+.help { margin-top: tokens.$spacing-2; }
+.report-section { margin-top: tokens.$spacing-6; }
+h3 { margin: 0 0 tokens.$spacing-3; font-size: tokens.$font-size-md; font-weight: tokens.$font-weight-semibold; }
+.report {
+  height: 16rem;
+  overflow-y: auto;
+  padding: tokens.$spacing-4;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md;
+  background: tokens.$background-subtle;
+  font-size: tokens.$font-size-sm;
+  overflow-wrap: anywhere;
+}
+.report:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: tokens.$spacing-1; }
+.report p + p { margin-top: tokens.$spacing-3; }
+.success { color: tokens.$text-success; }
+.error { color: tokens.$text-danger; }
+.actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: tokens.$spacing-4; }
+.apply-actions { display: flex; gap: tokens.$spacing-2; margin-left: auto; }
+lucide-icon { display: inline-flex; margin-right: tokens.$spacing-2; vertical-align: middle; }

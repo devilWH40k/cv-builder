@@ -14,6 +14,7 @@ import { Textarea } from '../../../../shared/ui/textarea/textarea';
 import { FileUpload } from '../../../../shared/ui/file-upload/file-upload';
 import { Button } from '../../../../shared/ui/button/button';
 import { createCvForm, createExperienceForm, createLanguageForm, createSocialForm } from '../../helpers/cv-form';
+import { appliedExperienceDescription } from '../../helpers/applied-experience-description';
 import { ContactInfo } from '../contact-info/contact-info';
 import { ExperienceEntry } from '../experience-entry/experience-entry';
 import { CvDraft, CvInfo, DEFAULT_CV_STRUCTURE } from '../../../cv/services/cv-draft';
@@ -144,7 +145,9 @@ export class Create {
     const ids = new Set(this.linkedExperienceIds);
     for (const record of records) {
       if (ids.has(record.id)) continue;
-      this.form.controls.experiences.push(createExperienceForm({ ...record.experience, savedExperienceId: record.id }));
+      this.form.controls.experiences.push(createExperienceForm({
+        ...record.experience, description: appliedExperienceDescription(record.experience), savedExperienceId: record.id
+      }));
       ids.add(record.id);
     }
     this.form.markAsDirty();

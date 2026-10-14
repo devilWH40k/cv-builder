@@ -76,12 +76,18 @@ describe('CV form', () => {
     const dialog = fixture.debugElement.query(By.directive(ExperiencesDialog)).componentInstance as ExperiencesDialog;
     const record = { id: 'library-1', updatedAt: 1, experience: {
       company: 'Example', position: '', startDate: '', endDate: '', isCurrent: false,
-      technologies: [], description: ''
+      technologies: [], description: '<p>A <strong>CRM</strong> project.</p>',
+      responsibilities: 'Build the frontend.\nIntegrate APIs.'
     } };
     dialog.applied.emit([record, record]);
     await fixture.whenStable();
     expect(fixture.componentInstance.form.controls.experiences.length).toBe(1);
     expect(TestBed.inject(CvDraft).current()?.experiences[0].savedExperienceId).toBe(record.id);
+    expect(fixture.componentInstance.form.controls.experiences.at(0).controls.description.value)
+      .toBe('<p>A <strong>CRM</strong> project.</p><p>Build the frontend.</p><p>Integrate APIs.</p>');
+    expect(TestBed.inject(CvDraft).current()?.experiences[0].description)
+      .toContain('<p>Integrate APIs.</p>');
+    expect(record.experience.description).toBe('<p>A <strong>CRM</strong> project.</p>');
     page.querySelector<HTMLButtonElement>('[aria-label="Load experiences"] button')!.click();
     await fixture.whenStable();
     const reopened = fixture.debugElement.query(By.directive(ExperiencesDialog)).componentInstance as ExperiencesDialog;

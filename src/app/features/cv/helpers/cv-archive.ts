@@ -54,6 +54,10 @@ function experience(value: unknown): CvExperience {
   const entry = object(value);
   const isCurrent = entry['isCurrent'];
   const savedExperienceId = entry['savedExperienceId'];
+  const isUpdated = entry['isUpdated'];
+  if (isUpdated !== undefined && isUpdated !== null && typeof isUpdated !== 'boolean') {
+    throw new Error(INVALID);
+  }
   if (typeof isCurrent !== 'boolean' ||
     (savedExperienceId !== undefined && savedExperienceId !== null &&
       (typeof savedExperienceId !== 'string' || !savedExperienceId))) throw new Error(INVALID);
@@ -63,6 +67,9 @@ function experience(value: unknown): CvExperience {
     description: string(entry['description']), isCurrent,
     technologies: array(entry['technologies']).map(string),
     ...customIcons(entry['customTechnologyIcons']),
+    ...Object.fromEntries(['alternativeNames', 'webLink', 'photos', 'responsibilities', 'teamlead', 'developer']
+      .filter((key) => entry[key] !== undefined).map((key) => [key, string(entry[key])])),
+    ...(isUpdated !== undefined ? { isUpdated } : {}),
     ...(savedExperienceId !== undefined ? { savedExperienceId } : {})
   };
 }

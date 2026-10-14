@@ -371,7 +371,10 @@ describe('CV preview', () => {
     expect(section.getBoundingClientRect().right)
       .toBeLessThan(page.querySelector('.cv-languages')!.getBoundingClientRect().left);
     const create = await harness.navigateByUrl('/create', Create);
-    expect(create.form.controls.experiences.getRawValue()).toEqual(experiences.map((experience) => ({ ...experience, savedExperienceId: null, customTechnologyIcons: {} })));
+    expect(create.form.controls.experiences.getRawValue()).toEqual(experiences.map((experience) => ({
+      ...experience, savedExperienceId: null, customTechnologyIcons: {},
+      alternativeNames: '', webLink: '', photos: '', responsibilities: '', teamlead: '', developer: '', isUpdated: null
+    })));
     expect(harness.routeNativeElement?.querySelector('[contenteditable]')?.textContent).toContain('banking platform');
   });
 

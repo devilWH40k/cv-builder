@@ -1,0 +1,46 @@
+<app-dialog dialogId="experience-details" [title]="title()"
+  [wide]="true" [busy]="saving()" (dismissed)="cancelled.emit()">
+  @if (readOnly()) {
+    @if (record(); as savedRecord) {
+    <dl class="details">
+      @for (column of columns; track column.key) {
+        <div [class.full-width]="column.key === 'description' || column.key === 'responsibilities'">
+          <dt>{{ column.label }}</dt>
+          @if (column.key === 'description') {
+            <dd class="rich-text" [innerHTML]="savedRecord.experience.description"></dd>
+          } @else {
+            <dd>{{ cell(savedRecord.experience, column.key) }}</dd>
+          }
+        </div>
+      }
+      <div><dt>Position</dt><dd>{{ savedRecord.experience.position }}</dd></div>
+      <div><dt>Period</dt><dd>{{ savedRecord.experience.startDate }}{{ savedRecord.experience.startDate ? ' - ' : '' }}{{ savedRecord.experience.isCurrent ? 'Present' : savedRecord.experience.endDate }}</dd></div>
+    </dl>
+    }
+  } @else {
+    <form id="experience-edit-form" [formGroup]="form" (ngSubmit)="save()">
+      <app-experience-entry [form]="form" [index]="0" [showActions]="false" [showHeading]="false" companyLabel="Project Name" />
+      <div class="fields">
+        <app-input inputId="experience-alternative-names" label="Alternative names" [control]="form.controls.alternativeNames" />
+        <app-input inputId="experience-web-link" label="Web link" type="url" [control]="form.controls.webLink" />
+        <app-input inputId="experience-photos" label="Photos" type="url" helpText="Link to project photos or a shared folder." [control]="form.controls.photos" />
+        <app-input inputId="experience-teamlead" label="Teamlead" [control]="form.controls.teamlead" />
+        <app-input inputId="experience-developer" label="Developer" [control]="form.controls.developer" />
+        <div class="updated" role="radiogroup" aria-labelledby="experience-updated-label">
+          <span id="experience-updated-label">Is Updated</span>
+          <app-radio name="experience-is-updated" value="true" label="Yes" [checked]="form.controls.isUpdated.value === true"
+            [disabled]="saving()" (selected)="form.controls.isUpdated.setValue(true)" />
+          <app-radio name="experience-is-updated" value="false" label="No" [checked]="form.controls.isUpdated.value === false"
+            [disabled]="saving()" (selected)="form.controls.isUpdated.setValue(false)" />
+        </div>
+      </div>
+      <app-textarea inputId="experience-responsibilities" label="Responsibilities" [rows]="5" [control]="form.controls.responsibilities" />
+    </form>
+  }
+  <div dialogActions class="actions">
+    <app-button variant="monochrome" [disabled]="saving()" (click)="cancelled.emit()">{{ readOnly() ? 'Close' : 'Cancel' }}</app-button>
+    @if (!readOnly()) {
+      <app-button [disabled]="saving()" (click)="save()">{{ saving() ? 'Saving...' : record() ? 'Save changes' : 'Add experience' }}</app-button>
+    }
+  </div>
+</app-dialog>
