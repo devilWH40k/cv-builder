@@ -1,0 +1,31 @@
+@use 'styles/tokens' as tokens;
+@use '../../shared/ui/button/variants' as buttons;
+
+:host { display: block; min-width: 0; }
+.experiences-page { padding: tokens.$spacing-12 tokens.$spacing-6; max-width: tokens.$content-max-width; margin-inline: auto; }
+h1 { margin: 0; color: tokens.$text-primary; font-size: tokens.$font-size-3xl; line-height: tokens.$line-height-tight; }
+.page-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: tokens.$spacing-4; }
+.page-actions { display: flex; align-items: center; flex-wrap: wrap; gap: tokens.$spacing-2; }
+.page-heading lucide-icon { display: inline-flex; margin-right: tokens.$spacing-2; vertical-align: middle; }
+.intro { margin: tokens.$spacing-3 0 tokens.$spacing-6; color: tokens.$text-secondary; }
+.cell { white-space: pre-wrap; max-height: 12rem; overflow: auto; }
+.description { white-space: normal; }
+a {
+  color: tokens.$color-primary;
+  text-decoration: underline;
+  text-underline-offset: tokens.$spacing-1;
+  &:hover { color: tokens.$color-primary-hover; }
+  &:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: tokens.$spacing-1; }
+}
+.row-actions { display: flex; gap: tokens.$spacing-2; }
+.edit, .delete {
+  @include buttons.ghost;
+  & { padding: tokens.$spacing-2; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+.delete { color: tokens.$color-danger; }
+.error { margin-bottom: tokens.$spacing-4; color: tokens.$text-danger; }
+.empty-state { padding: tokens.$spacing-6; color: tokens.$text-muted; text-align: center; }
+@media (max-width: tokens.$breakpoint-sm) {
+  .experiences-page { padding: tokens.$spacing-8 tokens.$spacing-4; }
+}

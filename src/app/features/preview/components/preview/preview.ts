@@ -1,4 +1,5 @@
 import { Resizable } from '../../../../shared/ui/resizable/resizable';
+import { contactLinks } from '../../../cv/helpers/cv-contact';
 import { ExperienceDescription } from '../../pipes/experience-description';
 import { CSS_PIXELS_PER_MM, CV_PHOTO_MIN_MM, CV_PHOTO_MAX_MM, cvPhotoSizeMm } from '../../../cv/helpers/cv-photo-size';
 import { CvPdf } from '../../../cv/services/cv-pdf';
@@ -7,7 +8,7 @@ import { usedTechnologyIcon, usedTechnologiesView } from '../../../cv/helpers/us
 import { entryIcon } from '../../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 import { afterNextRender, afterRenderEffect, ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, input, signal, viewChild, viewChildren } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Download, LucideAngularModule } from 'lucide-angular';
+import { Download, Mail, Phone, LucideAngularModule } from 'lucide-angular';
 import { Button } from '../../../../shared/ui/button/button';
 import { CvDraft, DEFAULT_CV_STRUCTURE } from '../../../cv/services/cv-draft';
 import { ResponsiveDrawer } from '../../../../shared/ui/responsive-drawer/responsive-drawer';
@@ -18,7 +19,7 @@ import { formatCalendarDate } from '../../../../shared/ui/date-picker/date-value
   selector: 'app-preview',
   imports: [ExperienceDescription, Resizable, SaveCvButton, RouterLink, Button, LucideAngularModule, StructureOptions, ResponsiveDrawer],
   templateUrl: './preview.html',
-  styleUrls: ['./preview.scss', './preview-pages.scss', './preview-technologies.scss'],
+  styleUrls: ['./preview.scss', './preview-pages.scss', './preview-technologies.scss', './preview-contacts.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Preview {
@@ -32,6 +33,7 @@ export class Preview {
   private readonly destroyRef = inject(DestroyRef);
   protected readonly draft = inject(CvDraft);
   protected readonly info = this.draft.current;
+  protected readonly contacts = computed(() => contactLinks(this.info()?.contact));
   protected readonly structure = computed(() => ({ ...DEFAULT_CV_STRUCTURE, ...this.info()?.structure }));
   protected readonly photoSizeMm = computed(() => cvPhotoSizeMm(this.structure().photoSizeMm));
   protected readonly photoSize = computed(() => this.photoSizeMm() * CSS_PIXELS_PER_MM);
@@ -44,6 +46,8 @@ export class Preview {
   protected readonly entryIcon = entryIcon;
   protected readonly usedTechnologiesView = usedTechnologiesView;
   protected readonly DownloadIcon = Download;
+  protected readonly PhoneIcon = Phone;
+  protected readonly MailIcon = Mail;
   protected readonly formatDate = formatCalendarDate;
 
   constructor() {

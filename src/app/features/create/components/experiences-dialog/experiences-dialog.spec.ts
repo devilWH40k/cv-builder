@@ -106,6 +106,21 @@ describe('Experiences dialog', () => {
     expect(dialog.textContent).toContain('Already added');
   });
 
+  it('opens read-only details without selecting an experience and restores the picker', async () => {
+    const { fixture, dialog, applied } = await setup();
+    dialog.querySelector<HTMLButtonElement>('[aria-label="View Example"]')!.click();
+    await fixture.whenStable();
+    const details = document.querySelector<HTMLDialogElement>('#experience-details')!;
+    expect(details.textContent).toContain('Example');
+    expect(details.querySelector('input, textarea')).toBeNull();
+    expect(dialog.querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked).toBeFalse();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await fixture.whenStable();
+    expect(document.querySelector('#experience-details')).toBeNull();
+    expect(dialog.open).toBeTrue();
+    expect(applied).not.toHaveBeenCalled();
+  });
+
   it('shows an empty state and cancels on Escape without applying', async () => {
     const { fixture, dialog, applied } = await setup([]);
     const cancelled = jasmine.createSpy('cancelled');

@@ -17,6 +17,15 @@ describe('IndexedDB saved CVs', () => {
   };
   const service = () => TestBed.runInInjectionContext(() => new SavedCvs());
 
+  it('persists contact information through saves, loads and backup snapshots', async () => {
+    const contact = { phone: '+380501234567', email: 'ada@example.com',
+      socials: [{ network: 'Telegram', value: '@ada_dev' }] };
+    const saved = service();
+    const id = await saved.save({ ...info, contact }, null);
+    expect((await saved.load(id))?.contact).toEqual(contact);
+    expect((await saved.backupSnapshot()).cvs[0].info.contact).toEqual(contact);
+  });
+
   it('preserves custom icons when saving and loading CVs and reusable experiences', async () => {
     const customTechnologyIcons = { SDK: document.createElement('canvas').toDataURL('image/png') };
     const experience = { ...info.experiences[0], technologies: ['SDK'], customTechnologyIcons };
@@ -65,6 +74,62 @@ describe('IndexedDB saved CVs', () => {
     expect((await saved.load(cvId))?.experiences[0].savedExperienceId).toBe(id);
     await saved.delete(cvId);
     expect((await saved.listExperiences()).length).toBe(1);
+  });
+
+  it('persists project metadata updates while preserving existing CV snapshots', async () => {
+    const saved = service();
+    const experience = { ...info.experiences[0], alternativeNames: 'Modelize',
+      webLink: 'https://replique.io/', photos: 'https://example.com/photos', responsibilities: 'Frontend',
+      teamlead: 'Lead', developer: 'Ada', isUpdated: false };
+    const id = await saved.saveExperience(experience);
+    const linked = { ...experience, savedExperienceId: id };
+    const cvId = await saved.save({ ...info, experiences: [linked] }, null);
+    await saved.saveExperience({ ...linked, responsibilities: 'Updated responsibilities', isUpdated: true });
+    const records = await service().listExperiences();
+    expect(records.length).toBe(1);
+    expect(records[0].experience).toEqual({ ...linked, responsibilities: 'Updated responsibilities', isUpdated: true });
+    expect((await saved.load(cvId))?.experiences).toEqual([linked]);
+  });
+
+  it('deletes library experiences persistently without changing saved CV snapshots', async () => {
+    const saved = service();
+    const id = await saved.saveExperience(info.experiences[0]);
+    const linked = { ...info.experiences[0], savedExperienceId: id };
+    const cvId = await saved.save({ ...info, experiences: [linked] }, null);
+    await saved.deleteExperience(id);
+    expect(await service().listExperiences()).toEqual([]);
+    expect((await saved.load(cvId))?.experiences).toEqual([linked]);
+    expect((await saved.backupSnapshot()).experiences).toEqual([]);
+  });
+
+  it('imports new experience records as one batch without replacing existing saves or supplied IDs', async () => {
+    const saved = service();
+    const existingId = await saved.saveExperience(info.experiences[0]);
+    const cvId = await saved.save(info, null);
+    const imported = await saved.importExperiences([
+      { ...info.experiences[0], savedExperienceId: existingId, company: 'Imported 1' },
+      { ...info.experiences[0], company: 'Imported 2' }
+    ]);
+    expect(imported.length).toBe(2);
+    expect(imported[0].id).not.toBe(existingId);
+    expect(imported[0].experience.savedExperienceId).toBe(imported[0].id);
+    expect((await service().listExperiences()).map((record) => record.experience.company).sort())
+      .toEqual(['Example', 'Imported 1', 'Imported 2']);
+    expect(await saved.load(cvId)).toEqual(info);
+  });
+
+  it('rolls back every imported experience when one batch write fails', async () => {
+    const saved = service();
+    await saved.saveExperience(info.experiences[0]);
+    const before = await saved.backupSnapshot();
+    const add = IDBObjectStore.prototype.add;
+    let writes = 0;
+    spyOn(IDBObjectStore.prototype, 'add').and.callFake(function (this: IDBObjectStore, record: unknown, key?: IDBValidKey) {
+      if (this.name === 'experiences' && ++writes === 2) throw new Error('Write failed');
+      return add.call(this, record, key);
+    });
+    await expectAsync(saved.importExperiences([info.experiences[0], info.experiences[0]])).toBeRejected();
+    expect(await saved.backupSnapshot()).toEqual(before);
   });
 
   it('upgrades version 1 without losing existing CVs', async () => {

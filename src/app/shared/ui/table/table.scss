@@ -1,0 +1,18 @@
+@use 'styles/tokens' as tokens;
+
+:host {
+  display: block;
+  overflow: auto;
+  isolation: isolate;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$background-surface;
+  color: tokens.$text-primary;
+  font-size: tokens.$font-size-sm;
+  line-height: tokens.$line-height-normal;
+}
+
+:host:focus-visible {
+  outline: 2px solid tokens.$border-color-focus;
+  outline-offset: tokens.$spacing-1;
+}

@@ -1,6 +1,32 @@
 @use '../form-field/field';
 @use 'styles/tokens' as tokens;
 
+.leading-icon {
+  position: absolute;
+  left: tokens.$spacing-3;
+  top: 50%;
+  transform: translateY(-50%);
+  width: tokens.$spacing-5;
+  height: tokens.$spacing-5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  color: tokens.$text-muted;
+  pointer-events: none;
+  object-fit: contain;
+}
+.has-icon {
+  .control { padding-left: tokens.$spacing-12; }
+  label { left: tokens.$spacing-12; max-width: calc(100% - #{tokens.$spacing-12 + tokens.$spacing-10}); }
+  .control:focus ~ label,
+  .control:not(:placeholder-shown) ~ label,
+  &:focus-within label {
+    left: tokens.$input-padding-x;
+    max-width: calc(100% - #{tokens.$spacing-12});
+  }
+}
+
 .hint {
   margin: tokens.$spacing-1 0 0;
   color: tokens.$text-muted;

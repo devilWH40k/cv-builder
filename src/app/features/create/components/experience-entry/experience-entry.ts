@@ -24,6 +24,9 @@ import { startWith, switchMap } from 'rxjs';
 export class ExperienceEntry {
   readonly form = input.required<ReturnType<typeof createExperienceForm>>();
   readonly index = input.required<number>();
+  readonly showActions = input(true);
+  readonly showHeading = input(true);
+  readonly companyLabel = input('Company/Project');
   protected readonly formValue = toSignal(toObservable(this.form).pipe(
     switchMap((form) => form.valueChanges.pipe(startWith(form.getRawValue())))
   ));

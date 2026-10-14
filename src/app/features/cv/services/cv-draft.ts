@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { CvContactInfo } from '../helpers/cv-contact';
 import { CvLanguage } from '../constants/languages';
 import { CvExperience } from '../interfaces/experience';
 import { CvTheme } from '../constants/cv-themes';
@@ -19,6 +20,7 @@ export const DEFAULT_CV_STRUCTURE: CvStructure = {
 };
 
 export interface CvInfo {
+  readonly contact?: CvContactInfo;
   readonly customTechnologyIcons?: CustomEntryIcons;
   readonly structure?: CvStructure;
   readonly name: string;
@@ -51,6 +53,7 @@ export class CvDraft {
   save(info: CvInfo): void {
     this.info.set({
       ...info,
+      ...(info.contact ? { contact: { ...info.contact, socials: info.contact.socials.map((entry) => ({ ...entry })) } } : {}),
       ...(info.customTechnologyIcons ? { customTechnologyIcons: { ...info.customTechnologyIcons } } : {}),
       languages: info.languages.map((language) => ({ ...language })),
       technologies: [...info.technologies],

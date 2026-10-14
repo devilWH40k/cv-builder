@@ -1,6 +1,6 @@
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { Header } from '../../../../core/components/header/header';
 import { SavedCvs } from '../../services/saved-cvs';
 import { SavedTechnology } from '../../helpers/saved-technology';
@@ -33,10 +33,22 @@ describe('Header technologies dialog', () => {
     const host: HTMLElement = fixture.nativeElement;
     host.querySelector<HTMLButtonElement>('[aria-label="Settings"]')!.click();
     await fixture.whenStable();
-    host.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')[1].click();
+    Array.from(host.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'))
+      .find((button) => button.textContent?.trim() === 'Technologies')!.click();
     await fixture.whenStable();
     return document.querySelector<HTMLDialogElement>('dialog[aria-labelledby="technologies-title"]')!;
   }
+
+  it('places Experiences above Technologies and navigates to the library page', async () => {
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    const host: HTMLElement = fixture.nativeElement;
+    host.querySelector<HTMLButtonElement>('[aria-label="Settings"]')!.click();
+    await fixture.whenStable();
+    const items = Array.from(host.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
+    expect(items.map((button) => button.textContent?.trim())).toEqual(['Import / Export', 'Experiences', 'Technologies']);
+    items[1].click();
+    expect(navigate).toHaveBeenCalledOnceWith(['/experiences']);
+  });
 
   it('opens from Settings, lists and deletes saved technologies, and restores focus on close', async () => {
     const dialog = await open();

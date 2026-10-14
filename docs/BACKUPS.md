@@ -18,9 +18,9 @@ writing happen in one transaction. A failure rolls back all changes, including
 the clear. An empty valid backup with this option clears all four stores.
 Internal migration metadata is retained. The current editor draft is unchanged.
 
-## Archive format (version 4)
+## Archive format (version 5)
 
-- `manifest.json`: `format: "cv-builder"`, `schemaVersion: 4`, and an ISO `exportedAt`.
+- `manifest.json`: `format: "cv-builder"`, `schemaVersion: 5`, and an ISO `exportedAt`.
 - `cvs.json`: saved CV records (`id`, `updatedAt`, `info`).
 - `experiences.json`: saved experience records (`id`, `updatedAt`, `experience`).
 - `technologies.json`: saved technology records with optional custom icons.
@@ -29,14 +29,17 @@ Internal migration metadata is retained. The current editor draft is unchanged.
 
 Photos in JSON are null or objects containing `path`, `name`, `type`, and
 `lastModified`. CV content, layout settings, and experience links are preserved.
-Internal migration metadata is not transferred.
+Internal migration metadata is not transferred. Version 5 preserves optional
+contact information (`phone`, `email`, and `socials` entries with `network` and
+`value`). Older CVs without contact information remain supported. Invalid contact
+values can be restored for editing, but are omitted from preview and PDF links.
 
-Versions 1 through 3 remain importable. Version 1 contains CVs only, version 2 adds
+Versions 1 through 4 remain importable. Version 1 contains CVs only, version 2 adds
 saved experiences, and version 3 adds technologies. These versions have no folders.
 Version 4 requires all four JSON collections, even when empty. Folder names must
 be nonblank and at most 120 characters; membership must reference CVs in the archive,
 with no duplicate assignments or nested folders. Older apps must be updated to read
-version 4 backups.
+version 5 backups to preserve contact information.
 
 The codec loads on demand and uses fflate. JSON is compressed; JPEG and PNG are
 stored without recompression. Limits: 1,000 CVs, 1,000 saved experiences, 1,000

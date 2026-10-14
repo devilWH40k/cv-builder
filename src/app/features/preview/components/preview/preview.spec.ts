@@ -215,7 +215,7 @@ describe('CV preview', () => {
   it('shows live information in the editor and downloads a PDF on Export without navigating', async () => {
     const harness = await RouterTestingHarness.create();
     const create = await harness.navigateByUrl('/create', Create);
-    create.form.setValue({ ...info, customTechnologyIcons: {} });
+    create.form.setValue({ ...info, customTechnologyIcons: {}, contact: { phone: '', email: '', socials: [] } });
     await harness.fixture.whenStable();
     const page = harness.routeNativeElement!;
     expect(TestBed.inject(Router).url).toBe('/create');
@@ -371,7 +371,10 @@ describe('CV preview', () => {
     expect(section.getBoundingClientRect().right)
       .toBeLessThan(page.querySelector('.cv-languages')!.getBoundingClientRect().left);
     const create = await harness.navigateByUrl('/create', Create);
-    expect(create.form.controls.experiences.getRawValue()).toEqual(experiences.map((experience) => ({ ...experience, savedExperienceId: null, customTechnologyIcons: {} })));
+    expect(create.form.controls.experiences.getRawValue()).toEqual(experiences.map((experience) => ({
+      ...experience, savedExperienceId: null, customTechnologyIcons: {},
+      alternativeNames: '', webLink: '', photos: '', responsibilities: '', teamlead: '', developer: '', isUpdated: null
+    })));
     expect(harness.routeNativeElement?.querySelector('[contenteditable]')?.textContent).toContain('banking platform');
   });
 

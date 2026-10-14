@@ -25,6 +25,8 @@ p, small { color: tokens.$text-secondary; }
   overflow-wrap: anywhere;
 }
 .experience span { display: grid; min-width: 0; }
+.selection { display: flex; align-items: flex-start; gap: tokens.$spacing-3; flex: 1; min-width: 0; }
+.view { @include buttons.ghost; & { flex-shrink: 0; padding: tokens.$spacing-1; } }
 input { accent-color: tokens.$color-primary; }
 input:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: 2px; }
 footer { display: flex; justify-content: flex-end; gap: tokens.$spacing-2; margin-top: tokens.$spacing-6; }

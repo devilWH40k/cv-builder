@@ -22,11 +22,16 @@ export class Draggable {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.drag.cancelFor(this.element));
-    effect(() => { if (this.disabled()) this.drag.cancelFor(this.element); });
+
+    effect(() => {
+      if (this.disabled()) this.drag.cancelFor(this.element);
+    });
   }
 
   protected prepare(event: PointerEvent): void {
-    if (this.disabled() || event.target instanceof Element &&
+    if (
+      this.disabled() ||
+      event.target instanceof Element &&
       event.target.closest('button, input, select, textarea, [contenteditable="true"], [data-no-drag]')) return;
     this.drag.prepare(event, this.element, { type: this.dragType(), id: this.dragId() });
   }

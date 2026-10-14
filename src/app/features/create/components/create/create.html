@@ -49,6 +49,11 @@
       </app-textarea>
     </section>
 
+    <section aria-labelledby="contact-info-title">
+      <h3 id="contact-info-title">Contact Information</h3>
+      <app-contact-info [form]="form.controls.contact" />
+    </section>
+
     <app-expand-panel heading="Experience" panelId="experience-panel"
       [count]="form.controls.experiences.length">
       @for (row of form.controls.experiences.controls; track row; let index = $index) {

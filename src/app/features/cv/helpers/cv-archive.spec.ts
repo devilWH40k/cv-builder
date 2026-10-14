@@ -4,6 +4,41 @@ import { defaultBackupName } from '../services/cv-backup';
 import { SavedCv } from '../services/saved-cvs';
 
 describe('CV ZIP backups', () => {
+  it('round trips project metadata in saved experiences and CV snapshots', async () => {
+    const experience = { ...record.info.experiences[0], alternativeNames: 'Modelize',
+      webLink: 'https://replique.io/', photos: 'https://example.com/photos', responsibilities: 'Build the frontend',
+      teamlead: 'Team lead', developer: 'Ada', isUpdated: false };
+    const saved = { id: 'project', updatedAt: 1, experience };
+    const cv = { ...record, info: { ...record.info, experiences: [experience] } };
+    const restored = await readArchive(await createArchive([cv], [saved]));
+    expect(restored.experiences).toEqual([saved]);
+    expect(restored.cvs[0].info.experiences).toEqual([experience]);
+  });
+
+  it('rejects invalid metadata types and preserves unknown update status', async () => {
+    for (const metadata of [{ isUpdated: 'Yes' }, { alternativeNames: 123 }, { responsibilities: [] }]) {
+      await expectAsync(readArchive(archive([{ ...record, info: { ...record.info, photo: null,
+        experiences: [{ ...record.info.experiences[0], ...metadata }] } }]))).toBeRejected();
+    }
+    const experience = { ...record.info.experiences[0], isUpdated: null };
+    const restored = await readArchive(await createArchive([], [{ id: 'legacy', updatedAt: 1, experience }]));
+    expect(restored.experiences[0].experience.isUpdated).toBeNull();
+  });
+  it('round trips contact fields and social nicknames in version 5 backups', async () => {
+    const contact = { phone: '+380501234567', email: 'ada@example.com', socials: [
+      { network: 'LinkedIn', value: 'ada-lovelace' }, { network: 'Telegram', value: '@ada_dev' },
+    ] };
+    const restored = await readArchive(await createArchive([{ ...record, info: { ...record.info, contact } }]));
+    expect(restored.cvs[0].info.contact).toEqual(contact);
+  });
+
+  it('rejects malformed contact records and unknown social networks', async () => {
+    for (const contact of [null, { phone: 123, email: '', socials: [] },
+      { phone: '', email: '', socials: [{ network: 'Unknown', value: 'alex' }] },
+      { phone: '', email: '', socials: [{ network: 'X', value: 123 }] }]) {
+      await expectAsync(readArchive(archive([{ ...record, info: { ...record.info, photo: null, contact } }]))).toBeRejected();
+    }
+  });
   for (const technologiesPosition of ['top', 'bottom'] as const) {
     it(`preserves the ${technologiesPosition} used technologies position`, async () => {
       const saved = { ...record, info: { ...record.info,
@@ -100,7 +135,7 @@ describe('CV ZIP backups', () => {
   });
 
   it('rejects unsupported versions, malformed ZIPs and invalid nested fields', async () => {
-    await expectAsync(readArchive(archive([], 5))).toBeRejectedWithError(/version/);
+    await expectAsync(readArchive(archive([], 6))).toBeRejectedWithError(/version/);
     await expectAsync(readArchive(new Blob(['not a zip']))).toBeRejectedWithError();
     await expectAsync(readArchive(archive([{ ...record,
       info: { ...record.info, photo: null, experiences: [{ isCurrent: 'yes' }] }

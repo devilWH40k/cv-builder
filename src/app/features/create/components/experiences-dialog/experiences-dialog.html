@@ -9,16 +9,22 @@
   } @else {
     <div class="experiences">
       @for (record of visibleRecords(); track record.id) {
-        <label class="experience">
-          <input type="checkbox" [checked]="selected().includes(record.id) || linkedIds().includes(record.id)"
-            [disabled]="linkedIds().includes(record.id)" (change)="toggle(record.id)" />
-          <span>
-            <strong>{{ record.experience.company }}</strong>
-            @if (record.experience.position) { <span>{{ record.experience.position }}</span> }
-            <span>{{ record.experience.startDate }}{{ record.experience.startDate ? ' - ' : '' }}{{ record.experience.isCurrent ? 'Present' : record.experience.endDate }}</span>
-            @if (linkedIds().includes(record.id)) { <small>Already added</small> }
-          </span>
-        </label>
+        <div class="experience">
+          <label class="selection">
+            <input type="checkbox" [checked]="selected().includes(record.id) || linkedIds().includes(record.id)"
+              [disabled]="linkedIds().includes(record.id)" (change)="toggle(record.id)" />
+            <span>
+              <strong>{{ record.experience.company }}</strong>
+              @if (record.experience.position) { <span>{{ record.experience.position }}</span> }
+              <span>{{ record.experience.startDate }}{{ record.experience.startDate ? ' - ' : '' }}{{ record.experience.isCurrent ? 'Present' : record.experience.endDate }}</span>
+              @if (linkedIds().includes(record.id)) { <small>Already added</small> }
+            </span>
+          </label>
+          <button type="button" class="view" [attr.aria-label]="'View ' + record.experience.company"
+            appTooltip="View experience" (click)="viewing.set(record)">
+            <lucide-icon [img]="EyeIcon" [size]="20" aria-hidden="true" />
+          </button>
+        </div>
       } @empty {
         <p class="empty-state" role="status">
           @if (records().length) {
@@ -42,3 +48,6 @@
     <app-button [disabled]="loading() || failed() || !selected().length" (click)="apply()">Apply</app-button>
   </footer>
 </dialog>
+@if (viewing(); as record) {
+  <app-experience-dialog [record]="record" [readOnly]="true" (cancelled)="viewing.set(null)" />
+}

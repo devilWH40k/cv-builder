@@ -1,6 +1,16 @@
 import { createExperienceForm } from './cv-form';
 
 describe('Experience validation', () => {
+  it('preserves project metadata when loading a saved experience into a CV form', () => {
+    const experience = { company: 'Project', position: '', startDate: '', endDate: '', isCurrent: false,
+      technologies: ['Angular'], description: '<p>Project</p>', alternativeNames: 'Alternative',
+      webLink: 'https://example.com/', photos: 'https://example.com/photos', responsibilities: 'Frontend',
+      teamlead: 'Lead', developer: 'Developer', isUpdated: false };
+    expect(createExperienceForm(experience).getRawValue()).toEqual(jasmine.objectContaining(experience));
+    const legacy = createExperienceForm();
+    expect(legacy.controls.alternativeNames.value).toBe('');
+    expect(legacy.controls.isUpdated.value).toBeNull();
+  });
   it('requires company and accepts an optional position', () => {
     const form = createExperienceForm();
     expect(form.invalid).toBeTrue();
