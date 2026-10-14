@@ -712,8 +712,12 @@ Use muted text below the field.
 Helper text should explain useful constraints rather than repeat the label.
 
 For `app-input`, pass `helpText="..."` to display an accessible hint directly below
-the control. When helper text is present, empty error space is hidden; validation
-messages appear below the hint when the field is invalid and touched.
+the control. Error space is reserved below the hint, keeping the layout stable
+when validation messages appear after the field is touched.
+
+`app-input` supports an optional leading Lucide `icon` or an `iconSrc` image.
+The icon sits inside the field on the left, with padding for both the text and
+floating label. Icons are decorative; the associated label names the field.
 
 ---
 

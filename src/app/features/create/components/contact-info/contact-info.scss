@@ -1,0 +1,34 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+h4 { margin: tokens.$spacing-4 0 tokens.$spacing-2; font-weight: tokens.$font-weight-medium; }
+.empty-state { margin: tokens.$spacing-2 0 0; color: tokens.$text-muted; }
+.add-social { display: inline-block; margin-top: tokens.$spacing-4; }
+.social-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; gap: tokens.$spacing-3; align-items: start; }
+.network-field { min-width: 0; padding-top: tokens.$spacing-4; }
+details { position: relative; }
+summary { display: flex; align-items: center; gap: tokens.$spacing-2; cursor: pointer; padding: tokens.$spacing-2 tokens.$spacing-3; min-height: tokens.$input-height; border: 1px solid tokens.$input-border; border-radius: tokens.$input-radius; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary img { flex-shrink: 0; object-fit: contain; }
+summary span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.network-chevron { display: flex; flex-shrink: 0; margin-left: auto; }
+summary[aria-invalid='true'] { border-color: tokens.$color-danger; }
+summary:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: 2px; }
+.network-options {
+  position: absolute; top: 100%; left: 0; min-width: 100%; z-index: tokens.$z-dropdown;
+  padding: tokens.$spacing-2; background: tokens.$background-surface; border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md; box-shadow: tokens.$shadow-md;
+  button { @include buttons.ghost; }
+  button { width: 100%; justify-content: flex-start; gap: tokens.$spacing-2; }
+}
+.icon-button { @include buttons.ghost; }
+.icon-button { padding: tokens.$spacing-2; flex-shrink: 0; }
+.social-actions { display: flex; gap: tokens.$spacing-1; margin-top: tokens.$spacing-4; }
+.icon-button:disabled { color: tokens.$text-disabled; cursor: not-allowed; }
+.remove { color: tokens.$color-danger; }
+.error { margin: 0; min-height: tokens.$spacing-8; color: tokens.$text-danger; font-size: tokens.$font-size-xs; }
+@media (max-width: tokens.$breakpoint-sm) {
+  .social-row { grid-template-columns: minmax(0, 1fr) auto; }
+  app-input { grid-column: 1; }
+  .social-actions { grid-column: 2; grid-row: 1; }
+}

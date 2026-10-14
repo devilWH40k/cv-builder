@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Check, LucideAngularModule } from 'lucide-angular';
+import { Check, LucideAngularModule, LucideIconData } from 'lucide-angular';
 import { FormField } from '../form-field/form-field';
 
 @Component({
@@ -14,5 +14,7 @@ export class Input extends FormField<string> {
   readonly type = input<'text' | 'email' | 'tel' | 'url' | 'password'>('text');
   readonly autocomplete = input('off');
   readonly helpText = input('');
+  readonly icon = input<LucideIconData>();
+  readonly iconSrc = input('');
   protected readonly CheckIcon = Check;
 }

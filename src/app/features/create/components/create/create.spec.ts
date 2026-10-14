@@ -117,6 +117,7 @@ describe('CV form', () => {
     submit();
     expect(TestBed.inject(CvPdf).download).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(CvDraft).current()).toEqual({
+      contact: { phone: '', email: '', socials: [] },
       customTechnologyIcons: {},
       name: 'Alex Morgan',
       positionTitle: 'Designer',

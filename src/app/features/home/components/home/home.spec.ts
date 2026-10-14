@@ -249,7 +249,7 @@ describe('Saved CV navigation', () => {
     expect(down.defaultPrevented).toBeTrue();
     expect(document.activeElement).toBe(input);
     expect(input.getAttribute('aria-invalid')).toBe('false');
-    expect(dialog.querySelector<HTMLElement>('#folder-name-error')!.hidden).toBeTrue();
+    expect(dialog.querySelector<HTMLElement>('#folder-name-error')!.textContent?.trim()).toBe('');
     cancel.click();
     expect(dialog.open).toBeFalse();
     await harness.fixture.whenStable();

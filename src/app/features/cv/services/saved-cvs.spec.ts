@@ -17,6 +17,15 @@ describe('IndexedDB saved CVs', () => {
   };
   const service = () => TestBed.runInInjectionContext(() => new SavedCvs());
 
+  it('persists contact information through saves, loads and backup snapshots', async () => {
+    const contact = { phone: '+380501234567', email: 'ada@example.com',
+      socials: [{ network: 'Telegram', value: '@ada_dev' }] };
+    const saved = service();
+    const id = await saved.save({ ...info, contact }, null);
+    expect((await saved.load(id))?.contact).toEqual(contact);
+    expect((await saved.backupSnapshot()).cvs[0].info.contact).toEqual(contact);
+  });
+
   it('preserves custom icons when saving and loading CVs and reusable experiences', async () => {
     const customTechnologyIcons = { SDK: document.createElement('canvas').toDataURL('image/png') };
     const experience = { ...info.experiences[0], technologies: ['SDK'], customTechnologyIcons };

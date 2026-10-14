@@ -1,4 +1,6 @@
 import { cvPhotoSizeMm } from './cv-photo-size';
+import { contactLinks } from './cv-contact';
+import { Mail, Phone, LucideIconData } from 'lucide-angular';
 import { pdfTechnologyBlocks } from './cv-pdf-technology-blocks';
 import pdfMake from 'pdfmake/build/pdfmake';
 import fonts from 'pdfmake/build/vfs_fonts';
@@ -70,7 +72,7 @@ export function pdfRichText(html: string): Content {
   });
 }
 
-async function imageData(source: string, size: number, round = false): Promise<string> {
+async function imageData(source: string, size: number, round = false, tint?: string): Promise<string> {
   const image = new Image();
   image.src = source;
   await image.decode();
@@ -89,7 +91,19 @@ async function imageData(source: string, size: number, round = false): Promise<s
   const width = image.naturalWidth * scale;
   const height = image.naturalHeight * scale;
   context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+  if (tint) {
+    context.globalCompositeOperation = 'source-in';
+    context.fillStyle = tint;
+    context.fillRect(0, 0, size, size);
+  }
   return canvas.toDataURL('image/png');
+}
+
+function contactIconSvg(icon: LucideIconData, color: string): string {
+  const elements = icon.map(([tag, attributes]) =>
+    `<${tag} ${Object.entries(attributes).map(([name, value]) => `${name}="${value}"`).join(' ')} />`
+  ).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${elements}</svg>`;
 }
 
 export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
@@ -168,7 +182,15 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
     if (technologiesAtTop) main.push(pdfRichText(entry.description));
   }
 
-  const sidebar: Content[] = [];
+  const contacts = await Promise.all(contactLinks(cv.contact).map(async (link): Promise<Content> => ({
+    columns: [
+      link.icon
+        ? { image: await imageData(link.icon, 48, false, link.label === 'X' ? color : undefined), width: 12, height: 12, link: link.href }
+        : { svg: contactIconSvg(link.label === 'Phone' ? Phone : Mail, color), width: 12, height: 12, link: link.href },
+      { text: link.text, link: link.href, decoration: 'underline', fontSize: 10, width: '*' },
+    ], columnGap: 6, margin: [0, 0, 0, 6],
+  })));
+  const sidebar: Content[] = contacts.length ? [heading('Contacts'), ...contacts, { text: '', margin: [0, 0, 0, 16] }] : [];
   if (cv.languages.length) {
     sidebar.push(heading('Languages:'), ...cv.languages.map((language): Content => ({
       text: `${language.language} - ${language.level.split(' — ')[0]}`, margin: [0, 0, 0, 6],

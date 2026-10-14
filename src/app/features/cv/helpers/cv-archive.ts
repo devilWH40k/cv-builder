@@ -7,6 +7,19 @@ import { CV_THEMES } from '../constants/cv-themes';
 import { CustomEntryIcons } from '../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 import { SavedTechnology, technologyId } from './saved-technology';
 import type { CvFolder } from '../interfaces/cv-folder';
+import { CvContactInfo, SOCIAL_NETWORKS } from './cv-contact';
+
+function contactInfo(value: unknown): CvContactInfo | undefined {
+  if (value === undefined) return undefined;
+  const contact = object(value);
+  const socials = array(contact['socials']).map((value) => {
+    const entry = object(value);
+    const network = string(entry['network']);
+    if (!SOCIAL_NETWORKS.some((option) => option.name === network)) throw new Error(INVALID);
+    return { network, value: string(entry['value']) };
+  });
+  return { phone: string(contact['phone']), email: string(contact['email']), socials };
+}
 
 const MAX_BYTES = 100 * 1024 ** 2;
 const MAX_CVS = 1000;
@@ -121,7 +134,7 @@ export async function createArchive(
     });
   }
   const manifest = strToU8(JSON.stringify({
-    format: 'cv-builder', schemaVersion: 4, exportedAt: new Date().toISOString()
+    format: 'cv-builder', schemaVersion: 5, exportedAt: new Date().toISOString()
   }));
   const data = strToU8(JSON.stringify(cvs));
   const experienceData = strToU8(JSON.stringify(experiences));
@@ -219,7 +232,7 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
   const manifest = object(json('manifest.json'));
   if (manifest['format'] !== 'cv-builder') throw new Error(INVALID);
   const version = manifest['schemaVersion'];
-  if (version !== 1 && version !== 2 && version !== 3 && version !== 4) throw new Error('This backup version is not supported.');
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5) throw new Error('This backup version is not supported.');
   const savedExperiences = version >= 2 ? array(json('experiences.json')) : [];
   const savedTechnologies = version >= 3 ? array(json('technologies.json')) : [];
   if (savedTechnologies.length > MAX_TECHNOLOGIES) throw new Error(TOO_LARGE);
@@ -267,7 +280,9 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
       });
     }
     const layout = structure(info['structure']);
+    const contact = contactInfo(info['contact']);
     const restored: CvInfo = {
+      ...(contact ? { contact } : {}),
       name: string(info['name']), positionTitle: string(info['positionTitle']),
       description: string(info['description']), photo,
       technologies: array(info['technologies']).map(string),

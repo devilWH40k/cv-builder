@@ -13,7 +13,8 @@ import { Input } from '../../../../shared/ui/input/input';
 import { Textarea } from '../../../../shared/ui/textarea/textarea';
 import { FileUpload } from '../../../../shared/ui/file-upload/file-upload';
 import { Button } from '../../../../shared/ui/button/button';
-import { createCvForm, createExperienceForm, createLanguageForm } from '../../helpers/cv-form';
+import { createCvForm, createExperienceForm, createLanguageForm, createSocialForm } from '../../helpers/cv-form';
+import { ContactInfo } from '../contact-info/contact-info';
 import { ExperienceEntry } from '../experience-entry/experience-entry';
 import { CvDraft, CvInfo, DEFAULT_CV_STRUCTURE } from '../../../cv/services/cv-draft';
 import { Preview } from '../../../preview/components/preview/preview';
@@ -29,7 +30,7 @@ import { entryIcon } from '../../../../core/dialogs/custom-entry-dialog/custom-e
 
 @Component({
   selector: 'app-create',
-  imports: [ExperiencesDialog, ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, TechnologySelect, LucideAngularModule, ExperienceEntry],
+  imports: [ContactInfo, ExperiencesDialog, ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, TechnologySelect, LucideAngularModule, ExperienceEntry],
   templateUrl: './create.html',
   styleUrl: './create.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -117,14 +118,17 @@ export class Create {
 
   private populate(info: CvInfo | null): void {
     if (!info) return;
+    for (const social of info.contact?.socials ?? []) {
+      this.form.controls.contact.controls.socials.push(createSocialForm(social));
+    }
     for (const language of info.languages) {
       this.form.controls.languages.push(createLanguageForm(language));
     }
     for (const experience of info.experiences) {
       this.form.controls.experiences.push(createExperienceForm(experience));
     }
-    const { structure, ...fields } = info;
-    this.form.patchValue({ ...fields, languages: [...info.languages], experiences: [...info.experiences] });
+    const { structure, contact, ...fields } = info;
+    this.form.patchValue({ ...fields, ...(contact ? { contact: { ...contact, socials: this.form.controls.contact.controls.socials.getRawValue() } } : {}), languages: [...info.languages], experiences: [...info.experiences] });
   }
 
   protected readonly experiencesOpen = signal(false);

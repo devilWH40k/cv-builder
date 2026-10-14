@@ -71,6 +71,21 @@
             }
           </div>
           <aside class="cv-sidebar">
+            @if (contacts().length) {
+              <section class="cv-contacts" [attr.aria-labelledby]="'cv-contacts-title-' + page">
+                <h3 [id]="'cv-contacts-title-' + page">Contacts</h3>
+                @for (link of contacts(); track $index) {
+                  <a [href]="link.href" target="_blank" rel="noopener noreferrer" [attr.aria-label]="link.label + ': ' + link.text">
+                    @if (link.icon) {
+                      <img [src]="link.icon" [class.monochrome-icon]="link.label === 'X'" alt="" width="16" height="16" />
+                    } @else {
+                      <lucide-icon [img]="link.label === 'Phone' ? PhoneIcon : MailIcon" [size]="16" aria-hidden="true" />
+                    }
+                    <span>{{ link.text }}</span>
+                  </a>
+                }
+              </section>
+            }
             @if (cv.languages.length) {
             <section class="cv-languages" [attr.aria-labelledby]="'cv-languages-title-' + page">
               <h3 [id]="'cv-languages-title-' + page">Languages:</h3>

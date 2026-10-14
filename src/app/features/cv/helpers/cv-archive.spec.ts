@@ -4,6 +4,21 @@ import { defaultBackupName } from '../services/cv-backup';
 import { SavedCv } from '../services/saved-cvs';
 
 describe('CV ZIP backups', () => {
+  it('round trips contact fields and social nicknames in version 5 backups', async () => {
+    const contact = { phone: '+380501234567', email: 'ada@example.com', socials: [
+      { network: 'LinkedIn', value: 'ada-lovelace' }, { network: 'Telegram', value: '@ada_dev' },
+    ] };
+    const restored = await readArchive(await createArchive([{ ...record, info: { ...record.info, contact } }]));
+    expect(restored.cvs[0].info.contact).toEqual(contact);
+  });
+
+  it('rejects malformed contact records and unknown social networks', async () => {
+    for (const contact of [null, { phone: 123, email: '', socials: [] },
+      { phone: '', email: '', socials: [{ network: 'Unknown', value: 'alex' }] },
+      { phone: '', email: '', socials: [{ network: 'X', value: 123 }] }]) {
+      await expectAsync(readArchive(archive([{ ...record, info: { ...record.info, photo: null, contact } }]))).toBeRejected();
+    }
+  });
   for (const technologiesPosition of ['top', 'bottom'] as const) {
     it(`preserves the ${technologiesPosition} used technologies position`, async () => {
       const saved = { ...record, info: { ...record.info,
@@ -100,7 +115,7 @@ describe('CV ZIP backups', () => {
   });
 
   it('rejects unsupported versions, malformed ZIPs and invalid nested fields', async () => {
-    await expectAsync(readArchive(archive([], 5))).toBeRejectedWithError(/version/);
+    await expectAsync(readArchive(archive([], 6))).toBeRejectedWithError(/version/);
     await expectAsync(readArchive(new Blob(['not a zip']))).toBeRejectedWithError();
     await expectAsync(readArchive(archive([{ ...record,
       info: { ...record.info, photo: null, experiences: [{ isCurrent: 'yes' }] }
