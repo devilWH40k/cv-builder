@@ -1,0 +1,60 @@
+<app-input inputId="contact-phone" label="Phone" type="tel" autocomplete="tel"
+  [icon]="PhoneIcon" [control]="form().controls.phone" helpText="Use 7–15 digits; an international prefix is recommended.">
+  @if (form().controls.phone.touched && form().controls.phone.invalid) {
+    <span>Enter a valid phone number, e.g. +380 50 123 4567.</span>
+  }
+</app-input>
+<app-input inputId="contact-email" label="Email" type="email" autocomplete="email"
+  [icon]="MailIcon" [control]="form().controls.email">
+  @if (form().controls.email.touched && form().controls.email.invalid) {
+    <span>Enter a valid email address, e.g. name@example.com.</span>
+  }
+</app-input>
+<h4>Social networks</h4>
+@for (row of form().controls.socials.controls; track row; let index = $index) {
+  <div class="social-row">
+    <div class="network-field">
+      <details #picker (keydown.escape)="picker.open = false">
+        <summary [attr.aria-label]="'Social network ' + (index + 1)"
+          [attr.aria-invalid]="row.controls.network.touched && row.controls.network.invalid"
+          [attr.aria-describedby]="'social-network-error-' + index"
+          (blur)="row.controls.network.markAsTouched()">
+          @if (network(row.controls.network.value); as selected) {
+            <img [src]="selected.icon" alt="" width="20" height="20" /> <span>{{ selected.name }}</span>
+          } @else { <span>Choose a network</span> }
+          <lucide-icon class="network-chevron" [img]="ChevronDownIcon" [size]="18" aria-hidden="true" />
+        </summary>
+        <div class="network-options" aria-label="Social networks">
+          @for (option of networks; track option.name) {
+            <button type="button" (click)="selectNetwork(index, option.name, picker)"
+              [attr.aria-pressed]="row.controls.network.value === option.name">
+              <img [src]="option.icon" alt="" width="20" height="20" /> {{ option.name }}
+            </button>
+          }
+        </div>
+      </details>
+      <p class="error" [id]="'social-network-error-' + index" aria-live="polite">
+        @if (row.controls.network.touched && row.controls.network.invalid) { Choose a social network. }
+      </p>
+    </div>
+    <app-input [inputId]="'social-value-' + index" label="Nickname or URL" [control]="row.controls.value"
+      (paste)="paste($event, index)" (focusout)="normalize(index)"
+      [iconSrc]="network(row.controls.network.value)?.icon ?? ''" [required]="true"
+      [helpText]="network(row.controls.network.value)?.hint ?? 'Choose a network, then enter your contact.'">
+      @if (row.controls.value.touched && row.controls.value.invalid) {
+        <span>Enter a valid nickname, profile URL, or international phone number for this network.</span>
+      }
+    </app-input>
+    <div class="social-actions">
+      @let link = socialLink(row.getRawValue());
+      <button class="icon-button" type="button" appTooltip="Copy social link"
+        [attr.aria-label]="link ? 'Copy ' + link.label + ' link' : 'Copy social link'"
+        [disabled]="!link" (click)="link && copy(link.href)">
+        <lucide-icon [img]="CopyIcon" [size]="18" aria-hidden="true" />
+      </button>
+      <button class="icon-button remove" type="button" [attr.aria-label]="'Remove social network ' + (index + 1)"
+        (click)="remove(index)"><lucide-icon [img]="XIcon" [size]="18" aria-hidden="true" /></button>
+    </div>
+  </div>
+} @empty { <p class="empty-state">Add a social profile or messaging contact.</p> }
+<app-button class="add-social" (click)="add()" aria-label="Add social network">Add social network</app-button>

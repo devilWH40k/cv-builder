@@ -9,8 +9,10 @@ export class DropTarget {
   readonly appDropTarget = input.required<string>();
   readonly dropDisabled = input(false);
   readonly itemDropped = output<DragItem>();
+
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly drag = inject(DragDrop);
+
   protected readonly hovered = computed(() => this.drag.isOver(this.element));
 
   constructor() {
@@ -19,6 +21,7 @@ export class DropTarget {
       accepts: (item) => !this.dropDisabled() && item.type === this.appDropTarget(),
       dropped: (item) => this.itemDropped.emit(item)
     });
+
     inject(DestroyRef).onDestroy(unregister);
   }
 }

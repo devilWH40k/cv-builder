@@ -1,0 +1,8 @@
+@use 'styles/tokens' as tokens;
+
+:host {
+  --table-cell-background: #{tokens.$background-subtle};
+  background: tokens.$background-subtle;
+  color: tokens.$text-secondary;
+  font-weight: tokens.$font-weight-semibold;
+}

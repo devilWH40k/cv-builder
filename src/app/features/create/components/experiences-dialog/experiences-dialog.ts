@@ -8,15 +8,20 @@ import { DialogOverlay } from '../../../../shared/ui/dialog/dialog-overlay';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { SavedExperience } from '../../../cv/interfaces/experience';
+import { Eye, LucideAngularModule } from 'lucide-angular';
+import { ExperienceDialog } from '../../../experiences/components/experience-dialog/experience-dialog';
+import { Tooltip } from '../../../../shared/directories/tooltip';
 
 @Component({
   selector: 'app-experiences-dialog',
-  imports: [Button, DialogOverlay, Input],
+  imports: [Button, DialogOverlay, Input, LucideAngularModule, ExperienceDialog, Tooltip],
   templateUrl: './experiences-dialog.html',
   styleUrl: './experiences-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ExperiencesDialog {
+  protected readonly viewing = signal<SavedExperience | null>(null);
+  protected readonly EyeIcon = Eye;
   readonly linkedIds = input<readonly string[]>([]);
   readonly applied = output<readonly SavedExperience[]>();
   readonly cancelled = output<void>();

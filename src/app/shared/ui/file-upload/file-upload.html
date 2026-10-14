@@ -1,9 +1,9 @@
 <div class="field" [class.invalid]="invalid()" [class.success]="success()">
-  <div class="photo-preview" [class.icon-preview]="mode() === 'icon'">
+  <div class="photo-preview" [class.icon-preview]="mode() !== 'photo'">
     @if (previewUrl(); as url) {
     <img [src]="url" [alt]="mode() === 'icon' ? 'Selected icon preview' : 'Selected photo preview'" (error)="previewUrl.set(null)" />
     } @else {
-    <lucide-icon [img]="mode() === 'icon' ? ImageIcon : UserIcon" [size]="24" aria-hidden="true" />
+    <lucide-icon [img]="mode() === 'file' ? FileIcon : mode() === 'icon' ? ImageIcon : UserIcon" [size]="24" aria-hidden="true" />
     }
   </div>
   <div class="control-wrap upload">

@@ -1,12 +1,33 @@
 import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
+import { CvSocialLink, emailValidator, phoneValidator, socialLink, SOCIAL_NETWORKS } from '../../cv/helpers/cv-contact';
 import { imageFileValidator } from '../../../shared/ui/file-upload/image-file.validator';
 import { CvLanguage } from '../../cv/constants/languages';
 import { CvExperience } from '../../cv/interfaces/experience';
 import { parseCalendarDate } from '../../../shared/ui/date-picker/date-value';
 import { CustomEntryIcons } from '../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 
+export function createSocialForm(entry?: CvSocialLink) {
+  const form = new FormGroup({
+    network: new FormControl(entry?.network ?? '', { nonNullable: true, validators: [Validators.required,
+      (control) => SOCIAL_NETWORKS.some((network) => network.name === control.value) ? null : { network: true }] }),
+    value: new FormControl(entry ? socialLink(entry)?.text ?? entry.value : '', { nonNullable: true, validators: [Validators.required] }),
+  });
+  form.controls.value.addValidators(() => socialLink(form.getRawValue()) ? null : { social: true });
+  form.controls.value.updateValueAndValidity();
+  return form;
+}
+
+export type ContactForm = ReturnType<typeof createCvForm>['controls']['contact'];
+
 export function createExperienceForm(experience?: CvExperience) {
   const form = new FormGroup({
+    alternativeNames: new FormControl(experience?.alternativeNames ?? '', { nonNullable: true }),
+    webLink: new FormControl(experience?.webLink ?? '', { nonNullable: true }),
+    photos: new FormControl(experience?.photos ?? '', { nonNullable: true }),
+    responsibilities: new FormControl(experience?.responsibilities ?? '', { nonNullable: true }),
+    teamlead: new FormControl(experience?.teamlead ?? '', { nonNullable: true }),
+    developer: new FormControl(experience?.developer ?? '', { nonNullable: true }),
+    isUpdated: new FormControl<boolean | null>(experience?.isUpdated ?? null),
     customTechnologyIcons: new FormControl<CustomEntryIcons>(experience?.customTechnologyIcons ?? {}, { nonNullable: true }),
     savedExperienceId: new FormControl<string | null>(experience?.savedExperienceId ?? null),
     company: new FormControl(experience?.company ?? '', {
@@ -45,6 +66,11 @@ export function createLanguageForm(language?: CvLanguage) {
 
 export function createCvForm() {
   return new FormGroup({
+    contact: new FormGroup({
+      phone: new FormControl('', { nonNullable: true, validators: [phoneValidator] }),
+      email: new FormControl('', { nonNullable: true, validators: [emailValidator] }),
+      socials: new FormArray<ReturnType<typeof createSocialForm>>([]),
+    }),
     customTechnologyIcons: new FormControl<CustomEntryIcons>({}, { nonNullable: true }),
     name: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)] }),
     positionTitle: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)] }),

@@ -1,9 +1,14 @@
 <div class="field" [class.invalid]="invalid()" [class.success]="success()">
-  <div class="control-wrap">
+  <div class="control-wrap" [class.has-icon]="icon() || iconSrc()">
     <input class="control" [id]="inputId()" [type]="type()" [formControl]="control()"
       [autocomplete]="autocomplete()" [required]="required()" placeholder=" "
       [attr.aria-invalid]="invalid()" [attr.aria-describedby]="helpText() ? inputId() + '-hint ' + inputId() + '-error' : inputId() + '-error'" />
     <label [for]="inputId()">{{ label() }}{{ required() ? ' *' : '' }}</label>
+    @if (icon(); as leadingIcon) {
+      <span class="leading-icon" aria-hidden="true"><lucide-icon [img]="leadingIcon" [size]="20" /></span>
+    } @else if (iconSrc()) {
+      <img class="leading-icon" [src]="iconSrc()" alt="" width="20" height="20" />
+    }
     @if (success()) {
       <span class="success-icon" aria-hidden="true">
         <lucide-icon [img]="CheckIcon" [size]="18" />
@@ -13,7 +18,7 @@
   @if (helpText()) {
     <p class="hint" [id]="inputId() + '-hint'">{{ helpText() }}</p>
   }
-  <div class="error" [hidden]="!!helpText() && !invalid()" [id]="inputId() + '-error'" aria-live="polite">
+  <div class="error" [id]="inputId() + '-error'" aria-live="polite">
     <ng-content />
   </div>
 </div>

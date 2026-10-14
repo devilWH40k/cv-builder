@@ -14,6 +14,26 @@ const cv: CvInfo = {
 };
 
 describe('PDF export', () => {
+  it('exports readable contact text and real clickable PDF annotations', async () => {
+    const definition = await buildCvPdf({ ...cv, experiences: [], contact: {
+      phone: '+380 50 123 4567', email: 'alex@example.com',
+      socials: [{ network: 'LinkedIn', value: 'https://www.linkedin.com/in/alex-morgan' }],
+    } });
+    const content = JSON.stringify(definition.content);
+    expect(content).toContain('"text":"+380 50 123 4567"');
+    expect(content).not.toContain('Phone:');
+    expect(content).toContain('"text":"alex-morgan"');
+    expect(content).not.toContain('"text":"https://www.linkedin.com/in/alex-morgan"');
+    expect(content.indexOf('mailto:alex@example.com')).toBeLessThan(content.indexOf('Languages:'));
+    expect(content).toContain('"svg":');
+    expect(content).toContain('mailto:alex@example.com');
+    expect(content).toContain('https://www.linkedin.com/in/alex-morgan');
+    const bytes = await pdfMake.createPdf(definition).getBuffer();
+    const pdf = new TextDecoder('latin1').decode(bytes);
+    expect(pdf).toContain('/Subtype /Link');
+    expect(pdf).toContain('mailto:alex@example.com');
+    expect(pdf).toContain('https://www.linkedin.com/in/alex-morgan');
+  });
   for (const technologiesView of ['blocks', 'comma-separated'] as const) {
     for (const technologiesPosition of ['top', 'bottom'] as const) {
       it(`exports ${technologiesView} technologies at the ${technologiesPosition}`, async () => {

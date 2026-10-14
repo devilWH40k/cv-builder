@@ -1,0 +1,31 @@
+<app-dialog dialogId="experience-import" title="Import experiences" [wide]="true" [busy]="applying()"
+  (dismissed)="cancelled.emit()">
+  <app-file-upload inputId="experience-import-file" label="Choose an Excel file" mode="file"
+    accept=".xlsx" helpText="XLSX, up to 10 MB. Uses the first worksheet." [control]="file" />
+  <p class="help">Project Name is required. Separate technologies with commas. Is Updated accepts Yes/No or true/false.
+    Each valid row is added as a new experience.</p>
+  <section class="report-section" aria-labelledby="experience-import-report-title">
+    <h3 id="experience-import-report-title">Report</h3>
+    <div class="report" role="log" aria-labelledby="experience-import-report-title" [attr.aria-busy]="parsing()" tabindex="0">
+      @if (parsing()) {
+        <p class="muted" role="status">Parsing experiences...</p>
+      } @else {
+        @for (entry of report(); track $index) {
+          <p [class.success]="entry.type === 'success'" [class.error]="entry.type === 'error'">{{ entry.message }}</p>
+        } @empty {
+          <p class="muted">Choose an Excel file to see the parsing report.</p>
+        }
+      }
+    </div>
+  </section>
+  <div dialogActions class="actions">
+    <app-button class="download-template" variant="monochrome" [disabled]="downloading() || applying()" (click)="downloadTemplate()">
+      <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
+      {{ downloading() ? 'Downloading...' : 'Download template' }}
+    </app-button>
+    <div class="apply-actions">
+      <app-button class="cancel" variant="monochrome" [disabled]="applying()" (click)="cancelled.emit()">Cancel</app-button>
+      <app-button class="apply" [disabled]="!canApply()" (click)="apply()">{{ applying() ? 'Applying...' : 'Apply' }}</app-button>
+    </div>
+  </div>
+</app-dialog>

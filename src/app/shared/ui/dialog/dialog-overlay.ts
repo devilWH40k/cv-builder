@@ -82,6 +82,7 @@ export class DialogOverlay {
     if (this.dialog.dispatchEvent(new Event('cancel', { cancelable: true }))) this.close();
   }
   private readonly keydown = (event: KeyboardEvent) => {
+    if (this.layer?.inert) return;
     if (event.key === 'Escape') { event.preventDefault(); this.cancel(); }
     if (event.key !== 'Tab') return;
     const elements = Array.from(this.dialog.querySelectorAll<HTMLElement>(

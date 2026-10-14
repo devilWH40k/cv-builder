@@ -10,6 +10,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/home/components/home/home').then((m) => m.Home)
   },
   {
+    path: 'experiences',
+    title: 'Experiences | CV Builder',
+    loadComponent: () => import('./features/experiences/experiences').then((m) => m.Experiences)
+  },
+  {
     path: 'guides',
     title: 'Guides | CV Builder',
     loadComponent: () => import('./features/guides/guides').then((m) => m.Guides)

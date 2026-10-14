@@ -111,10 +111,11 @@ describe('Header backup dialog', () => {
     const error = page.querySelector<HTMLElement>('#backup-name-error')!;
     expect(hint.textContent).toBe('The .zip extension is added automatically.');
     expect(input.getAttribute('aria-describedby')).toContain(hint.id);
-    expect(error.hidden).toBeTrue();
+    expect(error.hidden).toBeFalse();
+    expect(error.getBoundingClientRect().height).toBeCloseTo(32, 0);
     expect(hint.getBoundingClientRect().top - input.getBoundingClientRect().bottom).toBeCloseTo(4, 0);
     const exportButton = page.querySelector<HTMLElement>('form app-button')!;
-    expect(exportButton.getBoundingClientRect().top - hint.getBoundingClientRect().bottom).toBeCloseTo(16, 0);
+    expect(exportButton.getBoundingClientRect().top - error.getBoundingClientRect().bottom).toBeCloseTo(16, 0);
     const importHint = page.querySelector<HTMLElement>('#backup-file-hint')!;
     const importButton = page.querySelector<HTMLElement>('.import-controls app-button')!;
     const checkbox = page.querySelector<HTMLElement>('app-checkbox')!;

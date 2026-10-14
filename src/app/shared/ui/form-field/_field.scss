@@ -63,6 +63,10 @@ label {
   border-color: tokens.$color-success;
 }
 
+.success .control-wrap label {
+  color: tokens.$color-success;
+}
+
 .invalid .control {
   border-color: tokens.$color-danger;
 }

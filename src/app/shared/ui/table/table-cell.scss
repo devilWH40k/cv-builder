@@ -1,0 +1,19 @@
+@use 'styles/tokens' as tokens;
+
+:host {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: tokens.$spacing-4;
+  border-inline-end: 1px solid tokens.$border-color;
+}
+
+:host:last-child { border-inline-end: 0; }
+
+:host(.sticky-right) {
+  position: sticky;
+  right: 0;
+  z-index: tokens.$z-sticky;
+  background: var(--table-cell-background, #{tokens.$background-surface});
+  border-inline-start: 1px solid tokens.$border-color;
+}
