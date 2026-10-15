@@ -1,0 +1,50 @@
+@if (settings().search || (settings().columnVisibility !== false && columnOptions().length)) {
+  <div class="table-toolbar">
+    @if (settings().search) {
+      <app-input class="table-search" [inputId]="tableId() + '-search'"
+        [label]="settings().searchLabel ?? 'Search records'" [control]="search" [icon]="SearchIcon" />
+      <app-select class="search-column" [inputId]="tableId() + '-search-column'"
+        label="Search in" [control]="searchColumn" [options]="searchColumnOptions()" />
+      <button type="button" class="restore-filters" aria-label="Restore filters to default"
+        appTooltip="Restore filters to default" (click)="restoreDefaults()">
+        <lucide-icon [img]="RestoreIcon" [size]="20" aria-hidden="true" />
+      </button>
+    }
+    @if (settings().columnVisibility !== false && columnOptions().length) {
+      <app-dropdown class="column-settings" [menuId]="tableId() + '-table-columns'"
+        label="Choose visible columns" [content]="columnChoices" [openOnHover]="false">
+        <lucide-icon [img]="SettingsIcon" [size]="20" aria-hidden="true" />
+      </app-dropdown>
+    }
+  </div>
+}
+<ng-template #columnChoices>
+  <div class="column-options">
+    @for (option of columnOptions(); track option.column.key) {
+      <app-checkbox [inputId]="tableId() + '-column-' + option.column.key"
+        [label]="option.column.label" [control]="option.control" />
+    }
+  </div>
+</ng-template>
+
+<app-table [label]="label()" [columns]="gridColumns()" [minWidth]="minWidth()">
+  <app-table-header [headers]="headers()" [stickyLastColumn]="stickyLastColumn()" />
+  @for (record of filteredData(); track trackBy()(record)) {
+    <app-table-row>
+      @for (column of visibleColumns(); track column.key) {
+        <app-table-cell class="cell" [stickyRight]="column.stickyRight ?? false">
+          @if (templateFor(column.key); as template) {
+            <ng-container [ngTemplateOutlet]="template" [ngTemplateOutletContext]="{ $implicit: record, column }" />
+          } @else {
+            <span>{{ text(record, column) }}</span>
+          }
+        </app-table-cell>
+      }
+    </app-table-row>
+  }
+</app-table>
+@if (!filteredData().length) {
+  <p class="empty-state" role="status">{{ data().length
+    ? (settings().noResultsMessage ?? 'No records match your search.')
+    : (settings().emptyMessage ?? 'No records to display.') }}</p>
+}

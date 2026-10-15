@@ -35,6 +35,11 @@ button {
   }
 }
 
+button.danger {
+  background: tokens.$color-danger;
+  &:hover:not(:disabled), &:active:not(:disabled) { background: tokens.$color-danger-hover; }
+}
+
 button.monochrome {
   background: #000;
   color: #fff;

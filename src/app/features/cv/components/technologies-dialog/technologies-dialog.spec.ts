@@ -57,7 +57,12 @@ describe('Header technologies dialog', () => {
     expect(parseFloat(getComputedStyle(dialog).minHeight)).toBeGreaterThan(0);
     dialog.querySelector<HTMLButtonElement>('[aria-label="Delete SDK"]')!.click();
     await fixture.whenStable();
+    expect(saved.deleteTechnology).not.toHaveBeenCalled();
+    expect(dialog.parentElement!.inert).toBeTrue();
+    document.querySelector<HTMLButtonElement>('#delete-confirmation .confirm-delete button')!.click();
+    await fixture.whenStable();
     expect(saved.deleteTechnology).toHaveBeenCalledOnceWith('sdk');
+    expect(dialog.parentElement!.inert).toBeFalse();
     expect(dialog.textContent).toContain('No saved technologies yet.');
     dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
     await fixture.whenStable();
@@ -71,6 +76,9 @@ describe('Header technologies dialog', () => {
     const dialog = await open();
     const button = dialog.querySelector<HTMLButtonElement>('[aria-label="Delete SDK"]')!;
     button.click();
+    await fixture.whenStable();
+    expect(saved.deleteTechnology).not.toHaveBeenCalled();
+    document.querySelector<HTMLButtonElement>('#delete-confirmation .confirm-delete button')!.click();
     await fixture.whenStable();
     expect(button.disabled).toBeTrue();
     button.click();

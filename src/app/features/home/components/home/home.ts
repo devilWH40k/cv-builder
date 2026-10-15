@@ -8,6 +8,7 @@ import { CvDragStore } from '../../state/cv-drag-store';
 import { CvCollection, CvMove } from '../cv-collection/cv-collection';
 import { CreateFolderDialog } from '../create-folder-dialog/create-folder-dialog';
 import { FolderDialog } from '../folder-dialog/folder-dialog';
+import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
 
 @Component({
   selector: 'app-home',
@@ -46,14 +47,20 @@ export class Home {
   private readonly pendingTasks = inject(PendingTasks);
   protected readonly deletingIds = signal<readonly string[]>([]);
   private readonly draft = inject(CvDraft);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmation = inject(DeleteConfirmationService);
 
   constructor() {
     this.pendingTasks.run(() => this.saved.refresh());
-    inject(DestroyRef).onDestroy(() => this.drag.end());
+    this.destroyRef.onDestroy(() => this.drag.end());
   }
 
   protected async deleteCv(id: string): Promise<void> {
     if (this.busyCvIds().includes(id)) return;
+    const cv = this.saved.all().find((cv) => cv.id === id);
+    if (!cv || !await this.confirmation.confirm({
+      title: 'Delete CV', itemName: cv.info.name || 'Untitled CV'
+    }, this.destroyRef) || this.destroyRef.destroyed || this.busyCvIds().includes(id)) return;
     const done = this.pendingTasks.add();
     this.deletingIds.update((ids) => [...ids, id]);
     this.deleteError.set('');
@@ -80,6 +87,10 @@ export class Home {
 
   protected async deleteFolder(id: string): Promise<void> {
     if (this.deletingFolderIds().includes(id)) return;
+    const folder = this.saved.folders().find((folder) => folder.id === id);
+    if (!folder || !await this.confirmation.confirm({
+      title: 'Delete folder', itemName: folder.name
+    }, this.destroyRef) || this.destroyRef.destroyed || this.deletingFolderIds().includes(id)) return;
     this.deletingFolderIds.update((ids) => [...ids, id]);
     this.folderError.set('');
     const done = this.pendingTasks.add();

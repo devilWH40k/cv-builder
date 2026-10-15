@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { DestroyRef, Directive, ElementRef, effect, inject, input } from '@angular/core';
+import { Router } from '@angular/router';
 
 let nextTooltipId = 0;
 
@@ -9,7 +10,7 @@ let nextTooltipId = 0;
     '(mouseenter)': 'show()',
     '(mouseleave)': 'leave($event)',
     '(focus)': 'show()',
-    '(blur)': 'hide()',
+    '(blur)': 'blur($event)',
     '(click)': 'show()',
     '(keydown.escape)': 'dismiss($event)',
     '(window:resize)': 'hide()'
@@ -17,9 +18,12 @@ let nextTooltipId = 0;
 })
 export class Tooltip {
   readonly appTooltip = input.required<string>();
+  readonly appTooltipLink = input('');
   private readonly document = inject(DOCUMENT);
+  private readonly router = inject(Router, { optional: true });
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly tooltip = this.document.createElement('span');
+  private readonly link = this.document.createElement('a');
 
   constructor() {
     this.tooltip.id = `app-tooltip-${nextTooltipId++}`;
@@ -27,12 +31,28 @@ export class Tooltip {
     this.tooltip.setAttribute('role', 'tooltip');
     this.tooltip.hidden = true;
     this.tooltip.addEventListener('mouseleave', this.leaveTooltip);
+    this.tooltip.addEventListener('focusout', this.leaveFocus);
+    this.tooltip.addEventListener('keydown', this.tooltipKeydown);
+    this.link.textContent = 'more';
+    this.link.addEventListener('click', this.followLink);
 
     effect(() => {
       const text = this.appTooltip();
+      const destination = this.appTooltipLink();
+      const hasLink = destination.startsWith('/') && !/^\/[/\\\s]/.test(destination)
+        && !/[\\\s]/.test(destination);
       this.tooltip.textContent = text;
+      // Linked help stays beside its control in the DOM so Tab reaches the link next.
+      // A note can contain an interactive link; the plain hint keeps tooltip semantics.
+      this.tooltip.setAttribute('role', hasLink ? 'note' : 'tooltip');
+      if (hasLink) {
+        this.link.setAttribute('href', destination);
+        this.link.setAttribute('aria-label', `Read more: ${text}`);
+        this.tooltip.append(' ', this.link);
+      }
       if (text.trim()) {
-        if (!this.tooltip.isConnected) this.document.body.append(this.tooltip);
+        if (hasLink) this.host.after(this.tooltip);
+        else if (this.tooltip.parentElement !== this.document.body) this.document.body.append(this.tooltip);
         this.describe(true);
         if (!this.tooltip.hidden) this.position();
       } else {
@@ -45,6 +65,9 @@ export class Tooltip {
       this.hide();
       this.describe(false);
       this.tooltip.removeEventListener('mouseleave', this.leaveTooltip);
+      this.tooltip.removeEventListener('focusout', this.leaveFocus);
+      this.tooltip.removeEventListener('keydown', this.tooltipKeydown);
+      this.link.removeEventListener('click', this.followLink);
       this.tooltip.remove();
     });
   }
@@ -62,8 +85,12 @@ export class Tooltip {
   }
 
   protected leave(event: MouseEvent): void {
-    if (event.relatedTarget === this.tooltip || this.document.activeElement === this.host) return;
+    if (this.inside(event.relatedTarget) || this.hasFocus()) return;
     this.hide();
+  }
+
+  protected blur(event: FocusEvent): void {
+    if (!this.inside(event.relatedTarget)) this.hide();
   }
 
   protected dismiss(event: Event): void {
@@ -73,12 +100,34 @@ export class Tooltip {
   }
 
   private readonly onScroll = () => {
-    if (this.document.activeElement === this.host) this.position();
+    if (this.hasFocus()) this.position();
     else this.hide();
   };
-  private readonly leaveTooltip = () => {
-    if (this.document.activeElement !== this.host) this.hide();
+  private readonly leaveTooltip = (event: MouseEvent) => {
+    if (event.relatedTarget !== this.host && !this.hasFocus()) this.hide();
   };
+  private readonly leaveFocus = (event: FocusEvent) => {
+    if (event.relatedTarget !== this.host && !this.inside(event.relatedTarget)) this.hide();
+  };
+  private readonly tooltipKeydown = (event: KeyboardEvent) => {
+    if (event.key !== 'Escape') return;
+    this.host.focus({ preventScroll: true });
+    this.dismiss(event);
+  };
+  private readonly followLink = (event: MouseEvent) => {
+    if (!this.router || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    this.hide();
+    void this.router.navigateByUrl(this.appTooltipLink());
+  };
+
+  private inside(target: EventTarget | null): boolean {
+    return target instanceof Node && this.tooltip.contains(target);
+  }
+
+  private hasFocus(): boolean {
+    return this.document.activeElement === this.host || this.inside(this.document.activeElement);
+  }
 
   private describe(include: boolean): void {
     const ids = (this.host.getAttribute('aria-describedby') ?? '').split(/\s+/)

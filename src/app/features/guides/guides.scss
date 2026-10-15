@@ -81,14 +81,14 @@ figure { margin: 0; }
 
 img {
   display: block;
-  max-width: 100%;
+  max-width: min(100%, 48rem);
   height: auto;
   border: 1px solid tokens.$border-color;
   border-radius: tokens.$radius-md;
 }
 
-.backup-screenshot, .folder-dialog-screenshot {
-  width: 36rem;
+.backup-screenshot, .folder-dialog-screenshot, .experience-dialog-screenshot {
+  width: 30rem;
 }
 
 figcaption {
