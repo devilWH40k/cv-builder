@@ -1202,6 +1202,12 @@ accessible `label`, and an `items` array of `{ id, label, disabled? }` entries.
 Project trigger content inside `app-dropdown` and handle its `selected` output.
 Menus open on hover or click, support arrow/Home/End navigation and Escape, and
 close when focus or the pointer leaves, or when the user clicks outside.
+Set `[openOnHover]="false"` for click-only dropdowns, such as the table's column
+settings. Pointer entry and departure do not open or close these dropdowns.
+
+For dropdowns containing form controls, pass a `TemplateRef` through `[content]`.
+The popup uses nonmodal dialog semantics and leaves checkbox changes open;
+arrow/Home/End keys move among inputs and buttons, and Escape restores trigger focus.
 
 Settings offers Import / Export and Technologies. Technologies uses the shared
 dialog overlay and a dialog with a 32rem minimum height, capped by the
@@ -1273,6 +1279,10 @@ Is Updated and its Yes/No controls on one row. Its Actions column contains edit
 and delete buttons and stays visible on the right while scrolling. Deleting a
 library experience preserves existing CV snapshots.
 
+The gear above the Experiences table opens column visibility controls using
+shared checkboxes. All data columns start visible; toggles update headers,
+cells, grid tracks and minimum width together. Actions remain visible and sticky.
+
 Import sits immediately right of Add experience. Its shared dialog uses
 `app-file-upload` with `mode="file"` and `.xlsx` filtering; file mode applies the
 file directly without image previews or cropping. The Report region has a fixed
@@ -1294,7 +1304,10 @@ description text is escaped before conversion to rich text. Formula cells are
 reported as errors and are never evaluated. The fflate parser and template
 generator load on demand. Import limits are 10 MB compressed and 1,000 records.
 
-`shared/ui/table` provides `Table`, `TableHeader`, `TableRow`, and `TableCell` with
+`shared/ui/table` keeps each component's source, styles and tests in its own named subfolder. The
+`table-wrapper/` folder contains the managed table, `models/` contains column and
+settings types, `directives/` contains typed cell templates, and `utils/` contains
+URL synchronization and its tests. `Table`, `TableHeader`, `TableRow`, and `TableCell` provide
 accessible table/row/columnheader/cell roles and CSS Grid. Supply `columns` as a grid column
 template and optional `minWidth` on `app-table`; header and rows inherit the same
 template. `app-table-header` takes a `headers` array and uses `app-table-cell`
@@ -1303,6 +1316,63 @@ it supplies the cell role and wrapping styles. Wide tables scroll horizontally i
 Cells supply padding and vertical borders. Set `[stickyRight]="true"` on a cell
 and `[stickyLastColumn]="true"` on the header to keep an actions column on the right.
 Project metadata is preserved in CV snapshots and ZIP backups.
+
+Use `TableWrapper` (`app-table-wrapper`) for a table managed from data and column
+definitions. Pass a unique `tableId`, an accessible `label`, `data`, typed
+`TableColumn<T>[]` definitions, and a `trackBy` function returning stable row IDs.
+The wrapper renders the existing table primitives and owns column visibility,
+grid tracks, minimum width, the click-only gear above the right edge, and empty states.
+Each column provides `key`, `label`, and an optional `value(record)` callback.
+`minWidth` is in rem (default 10), `grow` defaults to 1 (0 means fixed width),
+`initiallyVisible: false` hides a column initially, and `hideable: false` keeps it
+visible. Place a `stickyRight: true` actions column last. Checkbox selection is
+preserved by column key when column definitions or data change.
+
+Optional `TableSettings` enable `search`, change `searchLabel`, disable the gear
+with `columnVisibility: false`, or customize `emptyMessage` and `noResultsMessage`.
+Search trims whitespace and ignores case. The Search in select defaults to Any
+and lists visible searchable columns; `searchable: false` excludes a column.
+Any searches all visible searchable columns. Hiding or removing the selected
+column resets the select to Any. Experiences enables this search.
+
+Set `TableSettings.queryParams: true` to synchronize the search text, selected
+search column and visible columns with the URL. Keys use the table ID as their
+prefix: `experience.search`, `experience.searchIn` and `experience.columns`.
+A string value for `queryParams` supplies a custom prefix. Column values are
+comma-separated keys, for example
+`/experiences?experience.search=Engineer&experience.searchIn=position&experience.columns=company,position`.
+Missing parameters restore defaults. Unknown column keys are ignored, mandatory
+columns stay visible, and an invalid or hidden search scope falls back to Any.
+Default values are omitted when controls update the URL; unrelated parameters
+and fragments are preserved. Changes replace the current history entry. Links,
+parameter-only navigation and browser Back/Forward restore the controls and rows.
+URL sync is opt-in and requires an Angular Router context; other tables keep local state.
+
+Search, scope, restore and gear share one row aligned just above the table. The
+restore icon after Search in clears search, selects Any and restores each column's
+configured initial visibility, also clearing default-valued table URL parameters.
+Toolbar fields
+set `--field-error-height` and `--field-error-padding-top` to zero to remove unused
+validation space while keeping the shared floating-label layout.
+
+Shared Select options accept strings or `{ value, label }` entries. An explicit
+empty-value entry can represent Any; other selects keep the disabled empty placeholder.
+
+For custom cells, import `TableCellTemplate` and project a typed template:
+
+```html
+<app-table-wrapper tableId="people" label="People" [data]="people()"
+  [columns]="columns" [trackBy]="personKey" [settings]="{ search: true }">
+  <ng-template appTableCell="actions" [tableCellOf]="people()" let-person>
+    <button type="button" (click)="edit(person)">Edit</button>
+  </ng-template>
+</app-table-wrapper>
+```
+
+`tableCellOf` supplies the row type for template checking. `let-column="column"`
+exposes the column definition. An empty `appTableCell` supplies a fallback template;
+a template with a matching column key takes precedence. Default cells render plain
+text. Feature templates remain responsible for rich text, links and action callbacks.
 
 Experience entries can be saved independently in the IndexedDB `experiences`
 object store. Load experience opens a centered multi-select picker. Applying

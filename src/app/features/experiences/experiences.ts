@@ -1,9 +1,8 @@
 import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { LucideAngularModule, Pencil, Plus, Trash2, Upload } from 'lucide-angular';
-import { Table } from '../../shared/ui/table/table';
-import { TableHeader } from '../../shared/ui/table/table-header';
-import { TableRow } from '../../shared/ui/table/table-row';
-import { TableCell } from '../../shared/ui/table/table-cell';
+import { TableWrapper } from '../../shared/ui/table/table-wrapper/table-wrapper';
+import { TableCellTemplate } from '../../shared/ui/table/directives/table-cell-template';
+import { TableSettings } from '../../shared/ui/table/models/table-column';
 import { Button } from '../../shared/ui/button/button';
 import { Tooltip } from '../../shared/directories/tooltip';
 import { ToastService } from '../../shared/ui/toast/toast.service';
@@ -11,11 +10,11 @@ import { SavedExperience } from '../cv/interfaces/experience';
 import { SavedCvs } from '../cv/services/saved-cvs';
 import { ExperienceDialog } from './components/experience-dialog/experience-dialog';
 import { ExperienceImportDialog } from './components/experience-import-dialog/experience-import-dialog';
-import { EXPERIENCE_TABLE_COLUMNS, experienceCell, experienceLink } from './experience-columns';
+import { EXPERIENCE_TABLE_COLUMNS, experienceLink } from './experience-columns';
 
 @Component({
   selector: 'app-experiences',
-  imports: [Table, TableHeader, TableRow, TableCell, Button, Tooltip, LucideAngularModule, ExperienceDialog, ExperienceImportDialog],
+  imports: [TableWrapper, TableCellTemplate, Button, Tooltip, LucideAngularModule, ExperienceDialog, ExperienceImportDialog],
   templateUrl: './experiences.html',
   styleUrl: './experiences.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -30,18 +29,17 @@ export class Experiences {
   protected readonly loading = signal(true);
   protected readonly failed = signal(false);
   protected readonly columns = EXPERIENCE_TABLE_COLUMNS;
-  protected readonly headers = [...EXPERIENCE_TABLE_COLUMNS.map((column) => column.label), 'Actions'];
-  protected readonly gridColumns = [
-    'minmax(10rem, 1fr)', 'minmax(10rem, 1fr)', 'minmax(12rem, 1fr)',
-    'minmax(14rem, 1fr)', 'minmax(14rem, 1fr)', '8rem', '8rem',
-    'minmax(20rem, 2fr)', 'minmax(20rem, 2fr)',
-    'minmax(14rem, 1fr)', 'minmax(10rem, 1fr)', 'minmax(10rem, 1fr)', '6rem', '8rem'
-  ].join(' ');
+  protected readonly tableSettings: TableSettings = {
+    queryParams: true,
+    search: true,
+    searchLabel: 'Search experiences',
+    emptyMessage: 'You have no saved experiences. Add an experience here or save one in the CV editor.'
+  };
+  protected readonly recordKey = (record: SavedExperience): string => record.id;
   protected readonly EditIcon = Pencil;
   protected readonly DeleteIcon = Trash2;
   protected readonly AddIcon = Plus;
   protected readonly ImportIcon = Upload;
-  protected readonly cell = experienceCell;
   protected readonly link = experienceLink;
   private readonly saved = inject(SavedCvs);
   private readonly toasts = inject(ToastService);

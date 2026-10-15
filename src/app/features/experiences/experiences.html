@@ -18,46 +18,39 @@
     <app-button class="retry" (click)="load()">Try again</app-button>
   } @else {
     @if (deleteError()) { <p class="error" role="alert">{{ deleteError() }}</p> }
-    <app-table label="Saved experiences" [columns]="gridColumns" minWidth="180rem">
-      <app-table-header [headers]="headers" [stickyLastColumn]="true" />
-      @for (record of records(); track record.id) {
-        <app-table-row>
-          @for (column of columns; track column.key) {
-            @if (column.key === 'description') {
-              <app-table-cell class="cell description">
-                <div [innerHTML]="record.experience.description"></div>
-              </app-table-cell>
-            } @else if (column.key === 'webLink' || column.key === 'photos') {
-              <app-table-cell class="cell">
-                @if (link(record.experience[column.key]); as href) {
-                  <a [href]="href" target="_blank" rel="noopener noreferrer">{{ cell(record.experience, column.key) }}</a>
-                } @else {
-                  {{ cell(record.experience, column.key) }}
-                }
-              </app-table-cell>
-            } @else {
-              <app-table-cell class="cell">{{ cell(record.experience, column.key) }}</app-table-cell>
-            }
-          }
-          <app-table-cell [stickyRight]="true">
-            <div class="row-actions">
-              <button type="button" class="edit" [attr.aria-label]="'Edit ' + record.experience.company"
-                [disabled]="deletingIds().includes(record.id)" appTooltip="Edit experience" (click)="editing.set(record)">
-                <lucide-icon [img]="EditIcon" [size]="20" aria-hidden="true" />
-              </button>
-              <button type="button" class="delete" [attr.aria-label]="'Delete ' + record.experience.company"
-                [disabled]="deletingIds().includes(record.id)" [attr.aria-busy]="deletingIds().includes(record.id)"
-                appTooltip="Delete experience" (click)="deleteExperience(record.id)">
-                <lucide-icon [img]="DeleteIcon" [size]="20" aria-hidden="true" />
-              </button>
-            </div>
-          </app-table-cell>
-        </app-table-row>
-      }
-    </app-table>
-    @if (!records().length) {
-      <p class="empty-state" role="status">You have no saved experiences. Add an experience here or save one in the CV editor.</p>
-    }
+    <app-table-wrapper tableId="experience" label="Saved experiences" [data]="records()"
+      [columns]="columns" [settings]="tableSettings" [trackBy]="recordKey">
+      <ng-template appTableCell="description" [tableCellOf]="records()" let-record>
+        <div class="description" [innerHTML]="record.experience.description"></div>
+      </ng-template>
+      <ng-template appTableCell="webLink" [tableCellOf]="records()" let-record>
+        @if (link(record.experience.webLink); as href) {
+          <a [href]="href" target="_blank" rel="noopener noreferrer">{{ record.experience.webLink }}</a>
+        } @else {
+          {{ record.experience.webLink }}
+        }
+      </ng-template>
+      <ng-template appTableCell="photos" [tableCellOf]="records()" let-record>
+        @if (link(record.experience.photos); as href) {
+          <a [href]="href" target="_blank" rel="noopener noreferrer">{{ record.experience.photos }}</a>
+        } @else {
+          {{ record.experience.photos }}
+        }
+      </ng-template>
+      <ng-template appTableCell="actions" [tableCellOf]="records()" let-record>
+        <div class="row-actions">
+          <button type="button" class="edit" [attr.aria-label]="'Edit ' + record.experience.company"
+            [disabled]="deletingIds().includes(record.id)" appTooltip="Edit experience" (click)="editing.set(record)">
+            <lucide-icon [img]="EditIcon" [size]="20" aria-hidden="true" />
+          </button>
+          <button type="button" class="delete" [attr.aria-label]="'Delete ' + record.experience.company"
+            [disabled]="deletingIds().includes(record.id)" [attr.aria-busy]="deletingIds().includes(record.id)"
+            appTooltip="Delete experience" (click)="deleteExperience(record.id)">
+            <lucide-icon [img]="DeleteIcon" [size]="20" aria-hidden="true" />
+          </button>
+        </div>
+      </ng-template>
+    </app-table-wrapper>
   }
 </main>
 @if (importing()) {

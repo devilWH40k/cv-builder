@@ -80,10 +80,10 @@ label {
   pointer-events: none;
 }
 
-// Two lines are always reserved; longer projected messages scroll within this space.
+// Reserve two lines by default; toolbars without validation can override this space.
 .error {
-  height: tokens.$spacing-8;
-  padding-top: tokens.$spacing-1;
+  height: var(--field-error-height, #{tokens.$spacing-8});
+  padding-top: var(--field-error-padding-top, #{tokens.$spacing-1});
   overflow: auto;
   overflow-wrap: anywhere;
   color: tokens.$text-danger;
