@@ -8,7 +8,6 @@ h1 { margin: 0; color: tokens.$text-primary; font-size: tokens.$font-size-3xl; l
 .page-actions { display: flex; align-items: center; flex-wrap: wrap; gap: tokens.$spacing-2; }
 .page-heading lucide-icon { display: inline-flex; margin-right: tokens.$spacing-2; vertical-align: middle; }
 .intro { margin: tokens.$spacing-3 0 tokens.$spacing-6; color: tokens.$text-secondary; }
-.cell { white-space: pre-wrap; max-height: 12rem; overflow: auto; }
 .description { white-space: normal; }
 a {
   color: tokens.$color-primary;
@@ -25,7 +24,6 @@ a {
 }
 .delete { color: tokens.$color-danger; }
 .error { margin-bottom: tokens.$spacing-4; color: tokens.$text-danger; }
-.empty-state { padding: tokens.$spacing-6; color: tokens.$text-muted; text-align: center; }
 @media (max-width: tokens.$breakpoint-sm) {
   .experiences-page { padding: tokens.$spacing-8 tokens.$spacing-4; }
 }

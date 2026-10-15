@@ -1,5 +1,8 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { Guides } from '../../../guides/guides';
 import { ExperienceEntry } from './experience-entry';
 import { createExperienceForm } from '../../helpers/cv-form';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
@@ -44,5 +47,21 @@ describe('Save experience', () => {
     expect(form.controls.company.value).toBe('Example');
     expect(button.disabled).toBeFalse();
     expect(TestBed.inject(ToastService).messages().at(-1)?.theme).toBe('danger');
+  });
+
+  it('opens the experience guide from the Save hint without saving an experience', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([{ path: 'guides', component: Guides }])] });
+    const harness = await RouterTestingHarness.create();
+    const save = spyOn(TestBed.inject(SavedCvs), 'saveExperience');
+    const { button } = await setup();
+    button.focus();
+    const hint = document.getElementById(button.getAttribute('aria-describedby')!)!;
+    expect(hint.textContent).toBe('Save an experience to a storage for future use more');
+    hint.querySelector('a')!.click();
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/guides?guide=manage-experiences-guide');
+    expect(harness.routeNativeElement!.querySelector('#manage-experiences-guide-heading')!
+      .getAttribute('aria-expanded')).toBe('true');
+    expect(save).not.toHaveBeenCalled();
   });
 });

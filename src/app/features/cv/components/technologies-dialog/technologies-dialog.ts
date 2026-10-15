@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { LucideAngularModule, Plus, Trash2, X } from 'lucide-angular';
 import { CustomEntry, CustomEntryDialog } from '../../../../core/dialogs/custom-entry-dialog/custom-entry-dialog';
 import { Button } from '../../../../shared/ui/button/button';
 import { DialogOverlay } from '../../../../shared/ui/dialog/dialog-overlay';
 import { SavedCvs } from '../../services/saved-cvs';
+import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
 
 @Component({
   selector: 'app-technologies-dialog',
@@ -24,6 +25,8 @@ export class TechnologiesDialog {
   protected readonly adding = signal(false);
   protected readonly saveEntry = (entry: CustomEntry): Promise<CustomEntry> => this.saved.saveTechnology(entry);
   private readonly overlay = viewChild.required(DialogOverlay);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmation = inject(DeleteConfirmationService);
   private readonly closeButton = viewChild.required<ElementRef<HTMLButtonElement>>('closeButton');
   private readonly addButton = viewChild.required<Button, ElementRef<HTMLElement>>('addButton', { read: ElementRef });
 
@@ -62,6 +65,11 @@ export class TechnologiesDialog {
 
   protected async remove(id: string): Promise<void> {
     if (this.deletingIds().includes(id)) return;
+    const technology = this.saved.technologies().find((technology) => technology.id === id);
+    if (!technology || !await this.confirmation.confirm({
+      title: 'Delete technology', itemName: technology.name,
+      message: 'This removes the technology from your library. Existing CVs and experiences keep their saved copies.'
+    }, this.destroyRef) || this.destroyRef.destroyed || this.deletingIds().includes(id)) return;
     this.closeButton().nativeElement.focus();
     this.deletingIds.update((ids) => [...ids, id]);
     this.error.set('');

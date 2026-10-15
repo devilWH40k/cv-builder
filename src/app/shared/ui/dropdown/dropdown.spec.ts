@@ -70,4 +70,21 @@ describe('Dropdown', () => {
     expect(document.activeElement).toBe(trigger);
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
   });
+
+  it('opens and closes by click and ignores pointer entry and departure when hover is disabled', async () => {
+    fixture.componentRef.setInput('openOnHover', false);
+    await fixture.whenStable();
+    host.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    await fixture.whenStable();
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    trigger.click();
+    await fixture.whenStable();
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    host.dispatchEvent(new PointerEvent('pointerleave'));
+    await fixture.whenStable();
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    trigger.click();
+    await fixture.whenStable();
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
 });

@@ -6,6 +6,7 @@
     <div class="entry-actions">
       <button type="button" class="save-btn" [attr.aria-label]="'Save experience ' + (index() + 1)"
         appTooltip="Save an experience to a storage for future use"
+          appTooltipLink="/guides?guide=manage-experiences-guide"
         [disabled]="saving()" [attr.aria-busy]="saving()" (click)="save()">
         <span>Save</span>
         <lucide-icon [img]="SaveIcon" [size]="16" aria-hidden="true" />

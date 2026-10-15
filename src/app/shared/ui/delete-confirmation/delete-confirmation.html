@@ -1,0 +1,8 @@
+<app-dialog dialogId="delete-confirmation" [title]="title()" (dismissed)="cancelled.emit()">
+  <p>Are you sure you want to delete <strong>{{ itemName() }}</strong>?</p>
+  <p class="message">{{ message() }}</p>
+  <div dialogActions class="actions">
+    <app-button class="cancel" variant="monochrome" (click)="cancelled.emit()">Cancel</app-button>
+    <app-button class="confirm-delete" variant="danger" (click)="confirmed.emit()">Delete</app-button>
+  </div>
+</app-dialog>

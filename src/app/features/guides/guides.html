@@ -10,7 +10,8 @@
   </header>
 
   <div class="guide-list">
-    <app-expand-panel heading="How to Import/Export the DB" panelId="import-export-guide" [initiallyExpanded]="false">
+    <app-expand-panel heading="How to Import/Export the DB" panelId="import-export-guide"
+      [initiallyExpanded]="requestedGuide() === 'import-export-guide'">
       <article class="guide-content" aria-label="Database import and export instructions">
         <p>Back up your saved CVs, folders, experiences and technologies, or move them to another
           device. The backup includes icons, photos and CV layout settings.</p>
@@ -21,8 +22,7 @@
             <strong>Import / Export</strong>.</p>
           <figure>
             <img src="guides/how-to-import-export/import-export-menu-button.png"
-              alt="Settings menu with Import / Export highlighted" width="1984" height="866"
-              loading="lazy" />
+              alt="Settings menu with Import / Export highlighted" width="1984" height="866" loading="lazy" />
             <figcaption>Import / Export is available from the Settings menu on any page.</figcaption>
           </figure>
         </section>
@@ -71,7 +71,8 @@
         </section>
       </article>
     </app-expand-panel>
-    <app-expand-panel heading="How to manage folders" panelId="manage-folders-guide" [initiallyExpanded]="false">
+    <app-expand-panel heading="How to manage folders" panelId="manage-folders-guide"
+      [initiallyExpanded]="requestedGuide() === 'manage-folders-guide'">
       <article class="guide-content" aria-label="Folder management instructions">
         <p>Use folders to organize your saved CVs on the home page. Folders work in both list and
           card view and can contain CVs, but not other folders.</p>
@@ -146,10 +147,135 @@
         <section aria-labelledby="delete-folder-heading">
           <h4 id="delete-folder-heading">Delete an empty folder</h4>
           <p>Move all CVs out of the folder first, then close the folder dialog. Select the folder's
-            <strong>Delete folder</strong> trash icon in <strong>Your CVs</strong> to remove it.
+            <strong>Delete folder</strong> trash icon in <strong>Your CVs</strong>, then confirm with <strong>Delete</strong>.
             This button is disabled while the folder contains CVs.</p>
           <p>To keep a CV when removing it from a folder, drag it out as described above.
-            The trash icon on a CV deletes the saved CV itself.</p>
+            The trash icon on a CV asks you to confirm deletion of the saved CV itself.</p>
+        </section>
+      </article>
+    </app-expand-panel>
+    <app-expand-panel heading="How to manage experiences" panelId="manage-experiences-guide"
+      [initiallyExpanded]="requestedGuide() === 'manage-experiences-guide'">
+      <article class="guide-content" aria-label="Experience management instructions">
+        <p>Save projects and work experiences in your library, then reuse them when building a CV.
+          Your library is stored in this browser. Use <strong>Settings → Import / Export</strong>
+          to back it up or transfer it to another device.</p>
+
+        <section aria-labelledby="save-experience-heading">
+          <h4 id="save-experience-heading">Save an experience from the CV editor</h4>
+          <p>In the CV editor, select <strong>Add experience</strong> to create an experience block.</p>
+          <figure>
+            <img src="guides/how-to-manage-expiriences/add-experience-button.png"
+              alt="Add experience button below the experience description"
+              width="1484" height="636" loading="lazy" />
+            <figcaption>Add a new experience to your CV.</figcaption>
+          </figure>
+          <p>Enter a <strong>Company / Project</strong> name. You can also add your position, dates,
+            technologies and project description. Select <strong>Save</strong> in the experience
+            block to store it for future use. Saving it again updates that library entry.</p>
+          <figure>
+            <img class="experience-dialog-screenshot" src="guides/how-to-manage-expiriences/expirience-save-btn.png"
+              alt="An experience in the CV editor with its Save button circled"
+              width="1468" height="1262" loading="lazy" />
+            <figcaption>The experience Save button stores this experience in your library.</figcaption>
+          </figure>
+          <p>Use the CV editor's main <strong>Save</strong> button to save the whole CV as well.</p>
+        </section>
+
+        <section aria-labelledby="load-experiences-heading">
+          <h4 id="load-experiences-heading">Load saved experiences into a CV</h4>
+          <p>Select <strong>Load experiences</strong> below the experience blocks in the CV editor.</p>
+          <figure>
+            <img class="experience-dialog-screenshot" src="guides/how-to-manage-expiriences/experience-load-btn.png"
+              alt="Load experiences button highlighted below an experience in the CV editor"
+              width="1492" height="1840" loading="lazy" />
+            <figcaption>Load experiences opens your saved experience library.</figcaption>
+          </figure>
+          <ol>
+            <li>Search by company or position and use the page controls to browse saved experiences.</li>
+            <li>Select the <strong>eye</strong> icon to view an experience's details without editing it.</li>
+            <li>Select the checkboxes for the experiences you want, then select <strong>Apply</strong>
+              to add them to your CV. Experiences already added cannot be selected again.</li>
+          </ol>
+          <figure>
+            <img src="guides/how-to-manage-expiriences/load-experience-dialog-with-search.png"
+              alt="Saved experiences dialog with search, selection checkboxes, eye icons and Apply"
+              width="2100" height="908" loading="lazy" />
+            <figcaption>Preview details, select experiences, then apply your selection.</figcaption>
+          </figure>
+          <p>The description and responsibilities are combined in the CV's project description.
+            Save the CV to keep your changes.</p>
+        </section>
+
+        <section aria-labelledby="open-experiences-heading">
+          <h4 id="open-experiences-heading">Open the Experiences page</h4>
+          <p>Select the <strong>Settings</strong> icon in the header, then choose <strong>Experiences</strong>.</p>
+          <figure>
+            <img src="guides/how-to-manage-expiriences/experience-header-menu-btn.png"
+              alt="Settings menu with Experiences circled above Technologies"
+              width="1478" height="560" loading="lazy" />
+            <figcaption>Open Experiences from the Settings menu on any page.</figcaption>
+          </figure>
+          <p>The table shows your saved projects and their details. Scroll horizontally to see more
+            columns. The <strong>Actions</strong> column stays on the right. Web and photo links open in a new tab.</p>
+          <figure>
+            <img src="guides/how-to-manage-expiriences/experiences-page.png"
+              alt="Experiences page with Add experience, Import and a table with edit and delete actions"
+              width="3074" height="2058" loading="lazy" />
+            <figcaption>Manage your saved experience library from one table.</figcaption>
+          </figure>
+        </section>
+
+        <section aria-labelledby="edit-experiences-heading">
+          <h4 id="edit-experiences-heading">Add, edit or delete an experience</h4>
+          <ol>
+            <li>Select <strong>Add experience</strong> on the Experiences page to create a library entry,
+              or select a row's <strong>pencil</strong> icon to edit it.</li>
+            <li>Enter the required <strong>Project Name</strong>. Add a position, dates, technologies,
+              description and other project details as needed. For an ongoing role, select
+              <strong>I currently work here</strong>. Choose <strong>Yes</strong> or <strong>No</strong>
+              for <strong>Is Updated</strong>.</li>
+            <li>Select <strong>Add experience</strong> for a new entry or <strong>Save changes</strong>
+              for an existing one. Select <strong>Cancel</strong> to leave without saving.</li>
+          </ol>
+          <figure>
+            <img class="experience-dialog-screenshot" src="guides/how-to-manage-expiriences/add-experience-dialog-from-page.png"
+              alt="Add experience dialog with required Project Name and optional project details"
+              width="2866" height="2024" loading="lazy" />
+            <figcaption>Add or update an experience's details in the dialog.</figcaption>
+          </figure>
+          <p>To delete a library entry, select its <strong>trash</strong> icon, then confirm with <strong>Delete</strong>.
+            Editing or deleting a library entry does not change copies already saved in your CVs.</p>
+        </section>
+
+        <section aria-labelledby="import-experiences-heading">
+          <h4 id="import-experiences-heading">Import experiences from Excel</h4>
+          <ol>
+            <li>Select <strong>Import</strong> next to <strong>Add experience</strong> on the Experiences page.</li>
+            <li>Select <strong>Download template</strong> to download <strong>template.xlsx</strong>.
+              Keep its column headings and fill in one experience per row. <strong>Project Name</strong>
+              is required. Separate technologies with commas, use <strong>Yes/No</strong> or
+              <strong>true/false</strong> for <strong>Is Updated</strong>, and use full
+              <strong>http://</strong> or <strong>https://</strong> URLs for web and photo links.
+              Columns with empty headings are ignored.</li>
+            <li>Select <strong>Choose an Excel file</strong> and choose your <strong>.xlsx</strong> file.
+              The first worksheet is used; the file can be up to 10 MB.</li>
+            <li>Read the scrollable <strong>Report</strong>. Successful records appear in green;
+              invalid records appear in red with their issues. A broken file or incorrect structure
+              produces an error explaining the problem.</li>
+            <li>When at least one record is valid, select <strong>Apply</strong> to save the valid records
+              as new library entries. Invalid records are skipped. The dialog closes and the table
+              shows your imported experiences.</li>
+          </ol>
+          <figure>
+            <img src="guides/how-to-manage-expiriences/import-experiences-excel-dialog-with-download-template.png"
+              alt="Excel import dialog showing the selected file, parsing report, Download template and Apply"
+              width="2984" height="1570" loading="lazy" />
+            <figcaption>Review the report before applying the valid records.</figcaption>
+          </figure>
+          <p>Choosing a file only previews the import. Select <strong>Cancel</strong> to close without
+            adding records. Each applied row creates a new experience, so importing the same rows
+            again creates additional entries.</p>
         </section>
       </article>
     </app-expand-panel>
