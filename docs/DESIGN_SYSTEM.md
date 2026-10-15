@@ -1222,6 +1222,16 @@ close. It preserves existing `aria-describedby`
 references and removes its tooltip when the control is destroyed. Shared styles
 are loaded by `src/styles/styles.scss`; tooltip positioning stays within the viewport.
 
+Use `appTooltipLink="/guides?guide=manage-experiences-guide"` to append a small
+"more" link to internal help. Linked hints use note semantics and stay beside
+the control in DOM order so Tab reaches the link. Hovering or focusing the link
+keeps the hint open; Escape returns focus to the control and dismisses it.
+
+Guide links use `/guides?guide=<panelId>` to expand a guide and focus and scroll
+to its heading, including when changing parameters on the guides page. Available
+IDs are `import-export-guide`, `manage-folders-guide`, and `manage-experiences-guide`.
+Missing or unknown IDs leave the default collapsed view unchanged.
+
 ## CV document themes
 
 The Used technologies view section also controls Top / Bottom placement relative

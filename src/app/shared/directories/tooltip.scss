@@ -16,6 +16,18 @@
   font-size: tokens.$font-size-sm;
   line-height: tokens.$line-height-normal;
   overflow-wrap: anywhere;
+
+  a {
+    color: tokens.$color-primary;
+    text-decoration: underline;
+
+    &:hover { color: tokens.$color-primary-hover; }
+    &:focus-visible {
+      outline: 2px solid tokens.$border-color-focus;
+      outline-offset: tokens.$spacing-1;
+      border-radius: tokens.$radius-sm;
+    }
+  }
 }
 
 @media print {
