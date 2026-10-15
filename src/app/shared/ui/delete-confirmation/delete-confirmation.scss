@@ -1,0 +1,5 @@
+@use 'styles/tokens' as tokens;
+
+p { margin: 0; overflow-wrap: anywhere; }
+.message { margin-top: tokens.$spacing-3; color: tokens.$text-secondary; }
+.actions { display: flex; justify-content: flex-end; gap: tokens.$spacing-2; }

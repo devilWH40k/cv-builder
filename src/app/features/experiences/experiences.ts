@@ -4,6 +4,7 @@ import { TableWrapper } from '../../shared/ui/table/table-wrapper/table-wrapper'
 import { TableCellTemplate } from '../../shared/ui/table/directives/table-cell-template';
 import { TableSettings } from '../../shared/ui/table/models/table-column';
 import { Button } from '../../shared/ui/button/button';
+import { DeleteConfirmationService } from '../../shared/ui/delete-confirmation/delete-confirmation.service';
 import { Tooltip } from '../../shared/directories/tooltip';
 import { ToastService } from '../../shared/ui/toast/toast.service';
 import { SavedExperience } from '../cv/interfaces/experience';
@@ -44,6 +45,7 @@ export class Experiences {
   private readonly saved = inject(SavedCvs);
   private readonly toasts = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly confirmation = inject(DeleteConfirmationService);
 
   constructor() {
     afterNextRender(() => void this.load());
@@ -80,6 +82,11 @@ export class Experiences {
 
   protected async deleteExperience(id: string): Promise<void> {
     if (this.deletingIds().includes(id)) return;
+    const record = this.records().find((record) => record.id === id);
+    if (!record || !await this.confirmation.confirm({
+      title: 'Delete experience', itemName: record.experience.company,
+      message: 'This removes the experience from your library. Copies already saved in CVs are kept.'
+    }, this.destroyRef) || this.destroyRef.destroyed || this.deletingIds().includes(id)) return;
     this.deletingIds.update((ids) => [...ids, id]);
     this.deleteError.set('');
     try {

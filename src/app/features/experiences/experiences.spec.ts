@@ -260,6 +260,21 @@ describe('Experiences page', () => {
     expect(save).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the experience when deletion is cancelled', async () => {
+    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([record]);
+    const remove = spyOn(TestBed.inject(SavedCvs), 'deleteExperience');
+    const fixture = TestBed.createComponent(Experiences);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    root.querySelector<HTMLButtonElement>('[aria-label="Delete Project"]')!.click();
+    await fixture.whenStable();
+    document.querySelector<HTMLButtonElement>('#delete-confirmation .cancel button')!.click();
+    await fixture.whenStable();
+    expect(remove).not.toHaveBeenCalled();
+    expect(root.querySelector('app-table-row')).not.toBeNull();
+    expect(document.querySelector('#delete-confirmation')).toBeNull();
+  });
+
   it('waits for deletion to succeed and prevents duplicate requests', async () => {
     spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([record]);
     let complete!: () => void;
@@ -271,6 +286,10 @@ describe('Experiences page', () => {
     const button = root.querySelector<HTMLButtonElement>('[aria-label="Delete Project"]')!;
     button.click();
     button.click();
+    await fixture.whenStable();
+    expect(remove).not.toHaveBeenCalled();
+    expect(document.querySelector('#delete-confirmation')!.textContent).toContain('Project');
+    document.querySelector<HTMLButtonElement>('#delete-confirmation .confirm-delete button')!.click();
     await fixture.whenStable();
     expect(remove).toHaveBeenCalledOnceWith(record.id);
     expect(button.disabled).toBeTrue();
@@ -291,11 +310,16 @@ describe('Experiences page', () => {
     const button = root.querySelector<HTMLButtonElement>('[aria-label="Delete Project"]')!;
     button.click();
     await fixture.whenStable();
+    expect(remove).not.toHaveBeenCalled();
+    document.querySelector<HTMLButtonElement>('#delete-confirmation .confirm-delete button')!.click();
+    await fixture.whenStable();
     expect(root.querySelector('app-table-row')).not.toBeNull();
     expect(root.querySelector('[role="alert"]')?.textContent).toContain('could not be deleted');
     expect(button.disabled).toBeFalse();
     remove.and.resolveTo();
     button.click();
+    await fixture.whenStable();
+    document.querySelector<HTMLButtonElement>('#delete-confirmation .confirm-delete button')!.click();
     await fixture.whenStable();
     expect(root.querySelector('app-table-row')).toBeNull();
     expect(root.querySelector('[role="alert"]')).toBeNull();

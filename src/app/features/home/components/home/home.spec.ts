@@ -116,6 +116,8 @@ describe('Saved CV navigation', () => {
     }
     harness.routeNativeElement?.querySelector<HTMLButtonElement>('.delete-cv')!.click();
     await harness.fixture.whenStable();
+    document.querySelector<HTMLButtonElement>('#delete-confirmation .confirm-delete button')!.click();
+    await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/');
     expect(harness.routeNativeElement?.querySelector('.cv-card')).toBeNull();
     expect(harness.routeNativeElement?.textContent).toContain('No saved CVs yet.');
@@ -132,6 +134,8 @@ describe('Saved CV navigation', () => {
     const harness = await RouterTestingHarness.create('/');
     spyOn(IDBObjectStore.prototype, 'delete').and.throwError('Storage unavailable');
     harness.routeNativeElement?.querySelector<HTMLButtonElement>('.delete-cv')!.click();
+    await harness.fixture.whenStable();
+    document.querySelector<HTMLButtonElement>('#delete-confirmation .confirm-delete button')!.click();
     await harness.fixture.whenStable();
     expect(harness.routeNativeElement?.querySelector('.cv-card')).not.toBeNull();
     expect(harness.routeNativeElement?.querySelector('[role="alert"]')?.textContent)
@@ -202,6 +206,8 @@ describe('Saved CV navigation', () => {
     expect(TestBed.inject(SavedCvs).folders()[0].name).toBe('Applications');
     expect(harness.routeNativeElement!.querySelector('.folder-name')?.textContent).toBe('Applications');
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('.delete-folder')!.click();
+    await harness.fixture.whenStable();
+    document.querySelector<HTMLButtonElement>('#delete-confirmation .confirm-delete button')!.click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(SavedCvs).folders()).toEqual([]);
     expect(TestBed.inject(Router).url).toBe('/');
@@ -383,6 +389,8 @@ describe('Saved CV navigation', () => {
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
     await harness.fixture.whenStable();
     document.querySelector<HTMLButtonElement>('#folder-dialog .delete-cv')!.click();
+    await harness.fixture.whenStable();
+    document.querySelector<HTMLButtonElement>('#delete-confirmation .confirm-delete button')!.click();
     await harness.fixture.whenStable();
     expect(saved.folders()[0].cvIds).toEqual([]);
     expect(await saved.load(id)).toBeNull();

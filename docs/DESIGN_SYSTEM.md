@@ -943,6 +943,16 @@ Do not use dialogs for normal navigation.
 
 Destructive dialogs must clearly identify the destructive action.
 
+Stored CVs, empty folders, experiences, and technologies use the shared
+`DeleteConfirmationService` before deletion. Call `confirm({ title, itemName,
+message? }, destroyRef)` and continue only when it resolves to `true`. The
+requesting component's `DestroyRef` cancels the dialog when that component is
+destroyed. Only one confirmation is shown at a time.
+
+The confirmation reuses `Dialog` and `Button`, names the item, and offers Cancel
+and a `danger` variant Delete button. Cancel, Close, Escape, and backdrop clicks
+resolve to `false`. Existing storage progress and errors remain with the caller.
+
 ---
 
 # 24. Accessibility
