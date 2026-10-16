@@ -1,0 +1,66 @@
+@use '../form-field/field';
+@use '../../../../styles/tokens' as tokens;
+
+.select-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: tokens.$spacing-10;
+  height: tokens.$input-height;
+  padding: 0;
+  border: 0;
+  border-radius: tokens.$input-radius;
+  background: transparent;
+  color: tokens.$text-primary;
+  cursor: pointer;
+
+  &:disabled { color: tokens.$text-disabled; cursor: not-allowed; }
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + #{tokens.$spacing-1});
+  inset-inline: 0;
+  z-index: tokens.$z-dropdown;
+  padding: tokens.$spacing-1;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md;
+  background: tokens.$background-surface;
+  box-shadow: tokens.$shadow-md;
+}
+
+.options {
+  max-height: tokens.$sidebar-width;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.option {
+  display: block;
+  width: 100%;
+  min-height: tokens.$input-height;
+  padding: tokens.$spacing-2 tokens.$spacing-3;
+  border: 0;
+  border-radius: tokens.$radius-sm;
+  background: transparent;
+  color: tokens.$text-primary;
+  font: inherit;
+  text-align: start;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+
+  &:hover, &.active { background: tokens.$background-primary-subtle; }
+  &[aria-selected='true'] { color: tokens.$color-primary; font-weight: tokens.$font-weight-medium; }
+}
+
+.hint, .status {
+  margin: tokens.$spacing-1 0 0;
+  color: tokens.$text-muted;
+  font-size: tokens.$font-size-xs;
+  line-height: tokens.$line-height-normal;
+}
+
+.status { margin: 0; padding: tokens.$spacing-2 tokens.$spacing-3; }

@@ -131,6 +131,7 @@ describe('CV form', () => {
       photo: null,
       languages: [],
       experiences: [],
+      education: [],
       technologies: []
     });
   });

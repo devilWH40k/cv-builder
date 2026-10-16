@@ -1401,6 +1401,29 @@ stays below the global toast outlet. Photo preview and mobile drawers use the
 same overlay; desktop drawers remain inline.
 
 
+## Education
+
+Education follows Experience in the editor and the CV document. Entries use the
+shared input, select, and date picker controls for University, Degree, Field of
+study, Start date, and End date. Only University is required; dates are optional
+and must be valid and ordered when supplied. Date format supports year, month
+and year, or full dates. Education is preserved in saved CVs and ZIP backups and
+included in preview, print, and PDF export. Older CVs start with no education.
+
+University uses the shared `app-async-select`, an editable combobox styled like
+`app-select`. Pass asynchronous string `options`, `loading`, `helpText`, and
+`emptyText` alongside the standard form field inputs. Suggestions filter
+immediately against every typed word, ignoring case, including while a newer
+request is pending. Clicking an option or using Arrow keys and Enter selects it;
+Escape, Tab, and blur close the list without changing manual text. The control
+supports loading and empty states, disabled controls, and listbox accessibility.
+The dedicated `UniversitiesApi` service searches the public HTTPS ROR v2 API
+(`https://api.ror.org/v2/organizations`) with `filter=types:education`. Searches
+start after three characters, wait 300ms, cancel obsolete requests, time out after
+five seconds, and show at most ten unique display names. A failed request or no
+matches leaves manual entry available, with an inline hint. No credentials are
+required. See [ROR API documentation](https://ror.readme.io/docs/rest-api).
+
 ## Resizable CV photo
 
 The preview photo uses the shared `app-resizable` square wrapper. Drag the photo

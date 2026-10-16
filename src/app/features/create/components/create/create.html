@@ -67,6 +67,16 @@
       </div>
     </app-expand-panel>
 
+    <app-expand-panel heading="Education" panelId="education-panel"
+      [count]="form.controls.education.length">
+      @for (row of form.controls.education.controls; track row; let index = $index) {
+        <app-education-entry [form]="row" [index]="index" (remove)="removeEducation(index)" />
+      } @empty {
+        <p class="empty-state">Add your education to highlight your qualifications</p>
+      }
+      <app-button class="add-entry" aria-label="Add education" (click)="addEducation()">Add education</app-button>
+    </app-expand-panel>
+
     <app-expand-panel heading="Languages" panelId="languages-panel"
       [count]="form.controls.languages.length">
       @for (row of form.controls.languages.controls; track row; let index = $index) {

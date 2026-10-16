@@ -4,6 +4,22 @@ import { defaultBackupName } from '../services/cv-backup';
 import { SavedCv } from '../services/saved-cvs';
 
 describe('CV ZIP backups', () => {
+  it('round trips education while accepting older backups without education', async () => {
+    const education = [{ university: 'University', degree: 'Master', field: 'Cybersecurity',
+      startDate: '2019-09', endDate: '2021-06' }];
+    const restored = await readArchive(await createArchive([{ ...record, info: { ...record.info, education } }]));
+    expect(restored.cvs[0].info.education).toEqual(education);
+    const legacy = await readArchive(archive([{ ...record, info: { ...record.info, photo: null } }]));
+    expect(legacy.cvs[0].info.education).toBeUndefined();
+  });
+
+  it('rejects malformed education records in backups', async () => {
+    const entry = { university: 'University', degree: 'Bachelor', field: 'Cybersecurity', startDate: '', endDate: '' };
+    for (const education of [null, {}, [null], [{ ...entry, university: 123 }], [{ ...entry, field: [] }]]) {
+      await expectAsync(readArchive(archive([{ ...record, info: { ...record.info, photo: null, education } }])))
+        .toBeRejected();
+    }
+  });
   it('round trips project metadata in saved experiences and CV snapshots', async () => {
     const experience = { ...record.info.experiences[0], alternativeNames: 'Modelize',
       webLink: 'https://replique.io/', photos: 'https://example.com/photos', responsibilities: 'Build the frontend',

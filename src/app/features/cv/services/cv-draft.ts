@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { CvContactInfo } from '../helpers/cv-contact';
 import { CvLanguage } from '../constants/languages';
 import { CvExperience } from '../interfaces/experience';
+import { CvEducation } from '../interfaces/education';
 import { CvTheme } from '../constants/cv-themes';
 import { CustomEntryIcons } from '../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 
@@ -30,6 +31,7 @@ export interface CvInfo {
   readonly languages: readonly CvLanguage[];
   readonly technologies: readonly string[];
   readonly experiences: readonly CvExperience[];
+  readonly education?: readonly CvEducation[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -56,6 +58,7 @@ export class CvDraft {
       ...(info.contact ? { contact: { ...info.contact, socials: info.contact.socials.map((entry) => ({ ...entry })) } } : {}),
       ...(info.customTechnologyIcons ? { customTechnologyIcons: { ...info.customTechnologyIcons } } : {}),
       languages: info.languages.map((language) => ({ ...language })),
+      ...(info.education ? { education: info.education.map((entry) => ({ ...entry })) } : {}),
       technologies: [...info.technologies],
       experiences: info.experiences.map((experience) => ({
         ...experience, technologies: [...experience.technologies],
