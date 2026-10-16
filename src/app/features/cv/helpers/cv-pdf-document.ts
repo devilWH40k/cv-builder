@@ -182,6 +182,20 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
     if (technologiesAtTop) main.push(pdfRichText(entry.description));
   }
 
+  if (cv.education?.length) {
+    main.push({ text: 'Education:', fontSize: 13, bold: true,
+      margin: [0, main.length ? 23 : 0, 0, 9], headlineLevel: 1 });
+    for (const entry of cv.education) {
+      const qualification = [entry.degree, entry.field].filter(Boolean).join(' | ');
+      const period = [entry.startDate, entry.endDate].map(formatCalendarDate).filter(Boolean).join(' – ');
+      main.push({ stack: [
+        { text: entry.university, fontSize: 14, bold: true, margin: [0, 0, 0, 6] },
+        ...(qualification ? [{ text: qualification, margin: [0, 0, 0, 6] } satisfies Content] : []),
+        ...(period ? [{ text: period, fontSize: 10, color: muted } satisfies Content] : [])
+      ], unbreakable: true, margin: [0, 0, 0, 20] });
+    }
+  }
+
   const contacts = await Promise.all(contactLinks(cv.contact).map(async (link): Promise<Content> => ({
     columns: [
       link.icon

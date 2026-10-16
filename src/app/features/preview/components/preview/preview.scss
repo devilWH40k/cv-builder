@@ -14,7 +14,7 @@
 }
 
 .page-title {
-  color: tokens.$color-primary;
+  color: tokens.$text-accent;
   margin-bottom: tokens.$spacing-8;
   text-align: center;
   font-size: tokens.$font-size-4xl;
@@ -192,13 +192,15 @@ h2 {
   .cv-main { grid-column: 2; grid-row: 1; }
 }
 .technologies-inline { margin: 0 0 3mm; font-size: 10pt; }
-.cv-experience {
+.cv-experience, .cv-education {
   margin-top: 8mm;
   overflow-wrap: anywhere;
   h3 { margin: 0 0 3mm; font-size: 13pt; break-after: avoid; }
   h4 { margin: 0 0 2mm; font-size: 14pt; break-after: avoid; }
 }
 .experience-entry { margin-bottom: 7mm; }
+.education-entry { margin-bottom: 7mm; break-inside: avoid; }
+.qualification { margin: 0 0 2mm; font-size: 11pt; }
 .period { margin: 0 0 3mm; font-size: 10pt; color: tokens.$text-secondary; }
 .project-description { font-size: 11pt; line-height: tokens.$line-height-normal; }
 .embedded {

@@ -18,10 +18,10 @@
   overflow-wrap: anywhere;
 
   a {
-    color: tokens.$color-primary;
+    color: tokens.$text-accent;
     text-decoration: underline;
 
-    &:hover { color: tokens.$color-primary-hover; }
+    &:hover { color: tokens.$text-accent-hover; }
     &:focus-visible {
       outline: 2px solid tokens.$border-color-focus;
       outline-offset: tokens.$spacing-1;

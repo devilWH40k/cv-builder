@@ -17,7 +17,7 @@ main {
 h1 {
   margin: 0;
   text-align: left;
-  color: tokens.$color-primary;
+  color: tokens.$text-accent;
   font-size: tokens.$font-size-3xl;
   line-height: tokens.$line-height-tight;
 }
@@ -210,7 +210,7 @@ a, .mobile-switch, .icon-button, .skill-chip button {
     width: tokens.$input-height;
     padding: tokens.$spacing-2;
     border-radius: 0 tokens.$radius-md tokens.$radius-md 0;
-    color: tokens.$color-primary;
+    color: tokens.$text-accent;
     box-shadow: tokens.$shadow-sm;
   }
   .editor-layout { grid-template-columns: minmax(0, 1fr); }

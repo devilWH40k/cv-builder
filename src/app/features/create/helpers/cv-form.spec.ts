@@ -1,4 +1,31 @@
-import { createExperienceForm } from './cv-form';
+import { createEducationForm, createExperienceForm } from './cv-form';
+
+describe('Education validation', () => {
+  it('accepts manually entered universities and optional qualifications and dates', () => {
+    const form = createEducationForm();
+    expect(form.invalid).toBeTrue();
+    form.controls.university.setValue('   ');
+    expect(form.invalid).toBeTrue();
+    form.controls.university.setValue('My local university');
+    expect(form.valid).toBeTrue();
+    form.patchValue({ degree: 'Bachelor', field: 'Cybersecurity', startDate: '2020', endDate: '' });
+    expect(form.valid).toBeTrue();
+  });
+
+  it('rejects invalid dates and reversed periods while respecting partial date precision', () => {
+    const form = createEducationForm({ university: 'University', degree: 'Master', field: 'Cybersecurity',
+      startDate: '2024-06', endDate: '2023-06' });
+    expect(form.hasError('dateOrder')).toBeTrue();
+    form.controls.endDate.setValue('2024');
+    expect(form.valid).toBeTrue();
+    form.controls.endDate.setValue('2024-06');
+    expect(form.valid).toBeTrue();
+    form.controls.startDate.setValue('2024-02-30');
+    expect(form.hasError('invalidDate')).toBeTrue();
+    form.patchValue({ startDate: '', endDate: 'invalid' });
+    expect(form.hasError('invalidDate')).toBeTrue();
+  });
+});
 
 describe('Experience validation', () => {
   it('preserves project metadata when loading a saved experience into a CV form', () => {

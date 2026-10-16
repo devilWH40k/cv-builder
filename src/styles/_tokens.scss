@@ -6,10 +6,10 @@
 // Brand colors
 // --------------------------------------------------------------------------
 
-$color-primary: #5465ff;
-$color-primary-hover: #4353e6;
-$color-primary-active: #3544cc;
-$color-primary-light: #eef0ff;
+$color-primary: #36d4f7;
+$color-primary-hover: #21c5ea;
+$color-primary-active: #10b3d6;
+$color-primary-light: #e9faff;
 
 $color-secondary: #d1faff;
 $color-secondary-hover: #b8f6fc;
@@ -59,6 +59,7 @@ $background-surface: $color-white;
 $background-subtle: $color-gray-100;
 $background-primary-subtle: $color-primary-light;
 $background-secondary: $color-secondary;
+$background-footer: #11214d;
 
 // --------------------------------------------------------------------------
 // Text
@@ -68,7 +69,10 @@ $text-primary: $color-gray-900;
 $text-secondary: $color-gray-600;
 $text-muted: $color-gray-500;
 $text-disabled: $color-gray-400;
-$text-on-primary: $color-white;
+$text-on-primary: $color-gray-900;
+$text-accent: $color-primary;
+$text-accent-hover: $color-primary;
+$text-on-danger: $color-white;
 $text-danger: $color-danger;
 $text-success: $color-success;
 
@@ -78,7 +82,7 @@ $text-success: $color-success;
 
 $border-color: $color-gray-200;
 $border-color-strong: $color-gray-300;
-$border-color-focus: $color-primary;
+$border-color-focus: $text-accent;
 $border-color-danger: $color-danger;
 
 // --------------------------------------------------------------------------
@@ -160,7 +164,7 @@ $shadow-lg:
 $input-height: 2.75rem; // 44px
 $input-padding-x: $spacing-3;
 $input-border: $border-color;
-$input-border-focus: $color-primary;
+$input-border-focus: $border-color-focus;
 $input-radius: $radius-md;
 
 // --------------------------------------------------------------------------

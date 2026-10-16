@@ -2,6 +2,7 @@ import { AsyncUnzipInflate, strFromU8, strToU8, Unzip, zip } from 'fflate';
 import type { AsyncZippable, UnzipFile } from 'fflate';
 import type { CvInfo, CvStructure } from '../services/cv-draft';
 import type { CvExperience, SavedExperience } from '../interfaces/experience';
+import type { CvEducation } from '../interfaces/education';
 import type { CvDatabaseSnapshot, SavedCv } from '../services/saved-cvs';
 import { CV_THEMES } from '../constants/cv-themes';
 import { CustomEntryIcons } from '../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
@@ -84,6 +85,14 @@ function customIcons(value: unknown): { customTechnologyIcons?: CustomEntryIcons
     return [name, icon];
   });
   return { customTechnologyIcons: Object.fromEntries(entries) };
+}
+
+function education(value: unknown): CvEducation {
+  const entry = object(value);
+  return {
+    university: string(entry['university']), degree: string(entry['degree']),
+    field: string(entry['field']), startDate: string(entry['startDate']), endDate: string(entry['endDate'])
+  };
 }
 
 function structure(value: unknown): CvStructure | undefined {
@@ -299,6 +308,7 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
         return { language: string(language['language']), level: string(language['level']) };
       }),
       experiences: array(info['experiences']).map(experience),
+      ...(info['education'] !== undefined ? { education: array(info['education']).map(education) } : {}),
       ...(layout ? { structure: layout } : {})
     };
     return { id, updatedAt: number(record['updatedAt']), info: restored };

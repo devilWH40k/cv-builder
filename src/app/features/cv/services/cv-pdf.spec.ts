@@ -14,6 +14,20 @@ const cv: CvInfo = {
 };
 
 describe('PDF export', () => {
+  it('exports education after experience and supports education without work experience', async () => {
+    const education = [{ university: 'Independent University', degree: 'Bachelor', field: 'Cybersecurity',
+      startDate: '2018-09', endDate: '2022-06' }];
+    for (const experiences of [cv.experiences, []]) {
+      const definition = await buildCvPdf({ ...cv, experiences, education });
+      const content = JSON.stringify(definition.content);
+      expect(content).toContain('Education:');
+      expect(content).toContain('Independent University');
+      expect(content).toContain('Bachelor | Cybersecurity');
+      expect(content).toContain('September 2018 – June 2022');
+      if (experiences.length) expect(content.indexOf('Education:')).toBeGreaterThan(content.indexOf('Built'));
+      expect((await pdfMake.createPdf(definition).getBuffer()).length).toBeGreaterThan(0);
+    }
+  });
   it('exports readable contact text and real clickable PDF annotations', async () => {
     const definition = await buildCvPdf({ ...cv, experiences: [], contact: {
       phone: '+380 50 123 4567', email: 'alex@example.com',

@@ -17,6 +17,15 @@ describe('IndexedDB saved CVs', () => {
   };
   const service = () => TestBed.runInInjectionContext(() => new SavedCvs());
 
+  it('persists education through saves, loads, and backup snapshots', async () => {
+    const education = [{ university: 'Independent University', degree: 'Bachelor', field: 'Cybersecurity',
+      startDate: '2018', endDate: '2022' }];
+    const saved = service();
+    const id = await saved.save({ ...info, education }, null);
+    expect((await saved.load(id))?.education).toEqual(education);
+    expect((await saved.backupSnapshot()).cvs[0].info.education).toEqual(education);
+  });
+
   it('persists contact information through saves, loads and backup snapshots', async () => {
     const contact = { phone: '+380501234567', email: 'ada@example.com',
       socials: [{ network: 'Telegram', value: '@ada_dev' }] };

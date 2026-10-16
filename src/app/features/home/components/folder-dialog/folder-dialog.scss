@@ -1,5 +1,5 @@
 @use 'styles/tokens' as tokens;
 .hint, .empty-state { color: tokens.$text-muted; font-size: tokens.$font-size-sm; }
 .hint { margin: 0 0 tokens.$spacing-4; }
-.dragging { color: tokens.$color-primary; }
+.dragging { color: tokens.$text-accent; }
 [role='alert'] { color: tokens.$text-danger; }

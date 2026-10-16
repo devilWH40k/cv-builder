@@ -1,0 +1,36 @@
+<div class="field" [class.invalid]="invalid()" [class.success]="success()">
+  <div class="control-wrap" [class.filled]="value()">
+    <input #textInput class="control" type="text" role="combobox" autocomplete="off"
+      [id]="inputId()" [formControl]="control()" [required]="required()" placeholder=" "
+      aria-autocomplete="list" aria-haspopup="listbox" [attr.aria-expanded]="expanded()"
+      [attr.aria-controls]="expanded() ? inputId() + '-listbox' : null"
+      [attr.aria-activedescendant]="activeId()" [attr.aria-invalid]="invalid()"
+      [attr.aria-describedby]="helpText() ? inputId() + '-hint ' + inputId() + '-error' : inputId() + '-error'"
+      (focus)="show()" (click)="show()" (input)="typing()" (blur)="blur()" (keydown)="keydown($event)" />
+    <label [for]="inputId()">{{ label() }}{{ required() ? ' *' : '' }}</label>
+    <button class="select-toggle" type="button" tabindex="-1" [disabled]="disabled()"
+      [attr.aria-label]="(expanded() ? 'Hide ' : 'Show ') + label() + ' suggestions'"
+      [attr.aria-expanded]="expanded()" (pointerdown)="$event.preventDefault()" (click)="toggle(textInput)">
+      <lucide-icon [img]="ChevronDownIcon" [size]="18" aria-hidden="true" />
+    </button>
+    @if (expanded()) {
+      <div class="panel">
+        @if (loading()) { <p class="status" role="status">Loading suggestions…</p> }
+        <div class="options" role="listbox" [id]="inputId() + '-listbox'"
+          [attr.aria-label]="label() + ' suggestions'" [attr.aria-busy]="loading()">
+          @for (choice of filteredOptions(); track choice; let index = $index) {
+            <button #option type="button" role="option" tabindex="-1" class="option"
+              [id]="inputId() + '-option-' + index" [class.active]="activeIndex() === index"
+              [attr.aria-selected]="value() === choice" (pointerdown)="$event.preventDefault()"
+              (pointerenter)="highlight(choice)" (click)="select(choice)">{{ choice }}</button>
+          }
+        </div>
+        @if (!loading() && !filteredOptions().length) {
+          <p class="status" role="status">{{ emptyText() }}</p>
+        }
+      </div>
+    }
+  </div>
+  @if (helpText()) { <p class="hint" [id]="inputId() + '-hint'">{{ helpText() }}</p> }
+  <div class="error" [id]="inputId() + '-error'" aria-live="polite"><ng-content /></div>
+</div>
