@@ -937,6 +937,12 @@ Messages should be concise and actionable.
 
 Avoid showing a success notification for every trivial interaction.
 
+Each toast stack shows at most the five newest notifications. A new notification
+replaces the oldest when the stack is full, regardless of theme. Replaced
+notifications are removed rather than queued, and their auto-dismiss timers are
+cleared. Success notifications still expire after five seconds and pause on
+hover or focus; danger and alert notifications remain until dismissed or replaced.
+
 ---
 
 # 23. Dialogs
