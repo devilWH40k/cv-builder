@@ -53,7 +53,7 @@
   cursor: pointer;
 
   &:hover, &.active { background: tokens.$background-primary-subtle; }
-  &[aria-selected='true'] { color: tokens.$color-primary; font-weight: tokens.$font-weight-medium; }
+  &[aria-selected='true'] { color: tokens.$text-accent; font-weight: tokens.$font-weight-medium; }
 }
 
 .hint, .status {

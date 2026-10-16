@@ -1,19 +1,24 @@
 <header class="app-header">
   <div class="header-content">
     <a class="brand" routerLink="/" aria-label="CV Builder home">
-      <img src="logo.png" alt="" width="40" height="40" />
-      <span>CV Builder</span>
+      <img src="usense-logo.svg" alt="Usense" width="57" height="68" />
+      <span class="brand-title"><span>CV</span><span>Builder</span></span>
     </a>
+    <nav class="header-menu" aria-label="Main navigation">
+      <button class="menu-item" type="button" aria-label="Import / Export" aria-haspopup="dialog"
+        (click)="backup.open()">Import / Export</button>
+      <a class="menu-item" routerLink="/experiences" routerLinkActive="active"
+        ariaCurrentWhenActive="page">Experiences</a>
+      <button class="menu-item" type="button" aria-label="Technologies" aria-haspopup="dialog"
+        (click)="technologies.open()">Technologies</button>
+    </nav>
     <div class="header-actions">
       <a class="guides-link" routerLink="/guides" routerLinkActive="active"
         ariaCurrentWhenActive="page" aria-label="Guides" title="Guides">
         <lucide-icon [img]="GuidesIcon" [size]="20" aria-hidden="true" />
       </a>
-      <app-dropdown menuId="header-settings" label="Settings" [items]="settingsItems" (selected)="selectSetting($event)">
-        <lucide-icon [img]="SettingsIcon" [size]="20" aria-hidden="true" />
-      </app-dropdown>
     </div>
   </div>
 </header>
-<app-backup-dialog />
-<app-technologies-dialog />
+<app-backup-dialog #backup />
+<app-technologies-dialog #technologies />

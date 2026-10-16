@@ -37,6 +37,7 @@ button {
 
 button.danger {
   background: tokens.$color-danger;
+  color: tokens.$text-on-danger;
   &:hover:not(:disabled), &:active:not(:disabled) { background: tokens.$color-danger-hover; }
 }
 

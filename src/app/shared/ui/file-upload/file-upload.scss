@@ -84,7 +84,7 @@
   display: block;
   flex-shrink: 1;
   max-width: 100%;
-  color: tokens.$color-primary;
+  color: tokens.$text-accent;
   font-size: tokens.$font-size-md;
   transform: none;
   transition: none;
@@ -103,7 +103,7 @@
 lucide-icon {
   display: flex;
   flex-shrink: 0;
-  color: tokens.$color-primary;
+  color: tokens.$text-accent;
 }
 
 .file-input:focus-visible + .control {

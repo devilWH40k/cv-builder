@@ -95,12 +95,12 @@ Do not create tokens solely to support a single arbitrary value.
 
 Primary brand color:
 
-`#5465FF`
+`#36D4F7`
 
 Token:
 
 ```scss id="59sl0r"
-$color-primary: #5465ff;
+$color-primary: #36d4f7;
 ```
 
 Primary is used for:
@@ -116,10 +116,16 @@ Primary is used for:
 Supporting primary colors:
 
 ```scss id="f5wt49"
-$color-primary-hover: #4353e6;
-$color-primary-active: #3544cc;
-$color-primary-light: #eef0ff;
+$color-primary-hover: #21c5ea;
+$color-primary-active: #10b3d6;
+$color-primary-light: #e9faff;
 ```
+
+Primary surfaces use dark foreground text (`$text-on-primary: $color-gray-900`).
+Primary links, labels, icons, and headings use `#36d4f7` through `$color-primary`
+or `$text-accent`. `$text-accent-hover` uses the same primary color. Focus borders
+and outlines use `$border-color-focus`, which follows `$text-accent`. Danger
+buttons retain white text through `$text-on-danger`.
 
 Do not use the primary color for large areas unnecessarily.
 
@@ -498,7 +504,7 @@ Typical appearance:
 
 ```text id="ctj94s"
 Background: Primary
-Text: White
+Text: Dark ($text-on-primary)
 Radius: Medium
 Height: 40px or 44px
 ```
@@ -1205,9 +1211,18 @@ for an IndexedDB transaction before selecting it. Failed saves leave the dialog
 open for retry. Unrelated multi-selects do not receive the library or save action.
 Selected icons remain snapshots, so library updates do not rewrite existing CVs.
 
-## Settings menu and saved technologies
+## Header, footer, and saved technologies
 
-The header Settings icon uses `shared/ui/dropdown`. Pass a unique `menuId`, an
+The header is transparent with the Usense SVG logo and a two-line CV / Builder
+title on the left. Import / Export, Experiences, and Technologies sit in centered
+navigation, with the Guides icon button on the right. Navigation is black by
+default and uses the primary color for hover, pressed, and active-route states.
+Active routes have a rounded primary underline and `aria-current="page"`.
+Import / Export and Technologies keep their dialogs; Experiences is a route link.
+On smaller screens, navigation wraps onto a centered second row. The footer uses
+`$background-footer: #11214d` and white text. Both header and footer hide in print.
+
+Shared dropdowns use `shared/ui/dropdown`. Pass a unique `menuId`, an
 accessible `label`, and an `items` array of `{ id, label, disabled? }` entries.
 Project trigger content inside `app-dropdown` and handle its `selected` output.
 Menus open on hover or click, support arrow/Home/End navigation and Escape, and
@@ -1219,7 +1234,7 @@ For dropdowns containing form controls, pass a `TemplateRef` through `[content]`
 The popup uses nonmodal dialog semantics and leaves checkbox changes open;
 arrow/Home/End keys move among inputs and buttons, and Escape restores trigger focus.
 
-Settings offers Import / Export and Technologies. Technologies uses the shared
+The Technologies navigation button opens the shared
 dialog overlay and a dialog with a 32rem minimum height, capped by the
 viewport. The technology list scrolls above the bottom-anchored Add button.
 Deleting a saved technology updates the library after storage succeeds;
@@ -1269,7 +1284,7 @@ The selected theme is stored in CvStructure.theme; older CVs default to Basic.
 
 ## Saved experiences and dialog overlays
 
-The Settings menu opens the lazy-loaded Experiences page above Technologies.
+The Experiences navigation link opens the lazy-loaded Experiences page.
 The experience library includes the example workbook's named columns: Project Name
 (the existing Company/Project), Alternative names, Web link, Photos, Description,
 Responsibilities, Technologies, Teamlead, Developer, and Is Updated. Photos holds
