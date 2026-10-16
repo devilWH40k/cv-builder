@@ -515,6 +515,11 @@ There should normally be only one visually dominant primary action in a local co
 
 ## Secondary Button
 
+`app-button` supports `variant="outline"` for primary outline actions: a
+transparent background with a primary border and text, a subtle primary hover
+fill, and a secondary pressed fill. The CV editor uses this variant for Add social
+network, Add experience, Load experiences, Add education, and Add language.
+
 Use for important but non-primary actions.
 
 Typical appearance:

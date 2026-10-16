@@ -35,6 +35,15 @@ button {
   }
 }
 
+button.outline {
+  border: 1px solid tokens.$color-primary;
+  background: transparent;
+  color: tokens.$color-primary;
+
+  &:hover:not(:disabled) { background: tokens.$background-primary-subtle; }
+  &:active:not(:disabled) { background: tokens.$background-secondary; }
+}
+
 button.danger {
   background: tokens.$color-danger;
   color: tokens.$text-on-danger;
