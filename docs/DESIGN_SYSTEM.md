@@ -95,12 +95,12 @@ Do not create tokens solely to support a single arbitrary value.
 
 Primary brand color:
 
-`#5465FF`
+`#36D4F7`
 
 Token:
 
 ```scss id="59sl0r"
-$color-primary: #5465ff;
+$color-primary: #36d4f7;
 ```
 
 Primary is used for:
@@ -116,10 +116,16 @@ Primary is used for:
 Supporting primary colors:
 
 ```scss id="f5wt49"
-$color-primary-hover: #4353e6;
-$color-primary-active: #3544cc;
-$color-primary-light: #eef0ff;
+$color-primary-hover: #21c5ea;
+$color-primary-active: #10b3d6;
+$color-primary-light: #e9faff;
 ```
+
+Primary surfaces use dark foreground text (`$text-on-primary: $color-gray-900`).
+Primary links, labels, icons, and headings use `#36d4f7` through `$color-primary`
+or `$text-accent`. `$text-accent-hover` uses the same primary color. Focus borders
+and outlines use `$border-color-focus`, which follows `$text-accent`. Danger
+buttons retain white text through `$text-on-danger`.
 
 Do not use the primary color for large areas unnecessarily.
 
@@ -498,7 +504,7 @@ Typical appearance:
 
 ```text id="ctj94s"
 Background: Primary
-Text: White
+Text: Dark ($text-on-primary)
 Radius: Medium
 Height: 40px or 44px
 ```
@@ -508,6 +514,11 @@ There should normally be only one visually dominant primary action in a local co
 ---
 
 ## Secondary Button
+
+`app-button` supports `variant="outline"` for primary outline actions: a
+transparent background with a primary border and text, a subtle primary hover
+fill, and a secondary pressed fill. The CV editor uses this variant for Add social
+network, Add experience, Load experiences, Add education, and Add language.
 
 Use for important but non-primary actions.
 
@@ -1205,9 +1216,18 @@ for an IndexedDB transaction before selecting it. Failed saves leave the dialog
 open for retry. Unrelated multi-selects do not receive the library or save action.
 Selected icons remain snapshots, so library updates do not rewrite existing CVs.
 
-## Settings menu and saved technologies
+## Header, footer, and saved technologies
 
-The header Settings icon uses `shared/ui/dropdown`. Pass a unique `menuId`, an
+The header is transparent with the Usense SVG logo and a two-line CV / Builder
+title on the left. Import / Export, Experiences, and Technologies sit in centered
+navigation, with the Guides icon button on the right. Navigation is black by
+default and uses the primary color for hover, pressed, and active-route states.
+Active routes have a rounded primary underline and `aria-current="page"`.
+Import / Export and Technologies keep their dialogs; Experiences is a route link.
+On smaller screens, navigation wraps onto a centered second row. The footer uses
+`$background-footer: #11214d` and white text. Both header and footer hide in print.
+
+Shared dropdowns use `shared/ui/dropdown`. Pass a unique `menuId`, an
 accessible `label`, and an `items` array of `{ id, label, disabled? }` entries.
 Project trigger content inside `app-dropdown` and handle its `selected` output.
 Menus open on hover or click, support arrow/Home/End navigation and Escape, and
@@ -1219,7 +1239,7 @@ For dropdowns containing form controls, pass a `TemplateRef` through `[content]`
 The popup uses nonmodal dialog semantics and leaves checkbox changes open;
 arrow/Home/End keys move among inputs and buttons, and Escape restores trigger focus.
 
-Settings offers Import / Export and Technologies. Technologies uses the shared
+The Technologies navigation button opens the shared
 dialog overlay and a dialog with a 32rem minimum height, capped by the
 viewport. The technology list scrolls above the bottom-anchored Add button.
 Deleting a saved technology updates the library after storage succeeds;
@@ -1269,7 +1289,7 @@ The selected theme is stored in CvStructure.theme; older CVs default to Basic.
 
 ## Saved experiences and dialog overlays
 
-The Settings menu opens the lazy-loaded Experiences page above Technologies.
+The Experiences navigation link opens the lazy-loaded Experiences page.
 The experience library includes the example workbook's named columns: Project Name
 (the existing Company/Project), Alternative names, Web link, Photos, Description,
 Responsibilities, Technologies, Teamlead, Developer, and Is Updated. Photos holds
@@ -1400,6 +1420,29 @@ focus, Escape/backdrop dismissal, focus restoration, and cleanup. Its z-index
 stays below the global toast outlet. Photo preview and mobile drawers use the
 same overlay; desktop drawers remain inline.
 
+
+## Education
+
+Education follows Experience in the editor and the CV document. Entries use the
+shared input, select, and date picker controls for University, Degree, Field of
+study, Start date, and End date. Only University is required; dates are optional
+and must be valid and ordered when supplied. Date format supports year, month
+and year, or full dates. Education is preserved in saved CVs and ZIP backups and
+included in preview, print, and PDF export. Older CVs start with no education.
+
+University uses the shared `app-async-select`, an editable combobox styled like
+`app-select`. Pass asynchronous string `options`, `loading`, `helpText`, and
+`emptyText` alongside the standard form field inputs. Suggestions filter
+immediately against every typed word, ignoring case, including while a newer
+request is pending. Clicking an option or using Arrow keys and Enter selects it;
+Escape, Tab, and blur close the list without changing manual text. The control
+supports loading and empty states, disabled controls, and listbox accessibility.
+The dedicated `UniversitiesApi` service searches the public HTTPS ROR v2 API
+(`https://api.ror.org/v2/organizations`) with `filter=types:education`. Searches
+start after three characters, wait 300ms, cancel obsolete requests, time out after
+five seconds, and show at most ten unique display names. A failed request or no
+matches leaves manual entry available, with an inline hint. No credentials are
+required. See [ROR API documentation](https://ror.readme.io/docs/rest-api).
 
 ## Resizable CV photo
 

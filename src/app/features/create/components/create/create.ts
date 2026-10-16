@@ -13,10 +13,11 @@ import { Input } from '../../../../shared/ui/input/input';
 import { Textarea } from '../../../../shared/ui/textarea/textarea';
 import { FileUpload } from '../../../../shared/ui/file-upload/file-upload';
 import { Button } from '../../../../shared/ui/button/button';
-import { createCvForm, createExperienceForm, createLanguageForm, createSocialForm } from '../../helpers/cv-form';
+import { createCvForm, createEducationForm, createExperienceForm, createLanguageForm, createSocialForm } from '../../helpers/cv-form';
 import { appliedExperienceDescription } from '../../helpers/applied-experience-description';
 import { ContactInfo } from '../contact-info/contact-info';
 import { ExperienceEntry } from '../experience-entry/experience-entry';
+import { EducationEntry } from '../education-entry/education-entry';
 import { CvDraft, CvInfo, DEFAULT_CV_STRUCTURE } from '../../../cv/services/cv-draft';
 import { Preview } from '../../../preview/components/preview/preview';
 import { StructureOptions } from '../../../preview/components/structure-options/structure-options';
@@ -31,7 +32,7 @@ import { entryIcon } from '../../../../core/dialogs/custom-entry-dialog/custom-e
 
 @Component({
   selector: 'app-create',
-  imports: [ContactInfo, ExperiencesDialog, ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, TechnologySelect, LucideAngularModule, ExperienceEntry],
+  imports: [ContactInfo, ExperiencesDialog, ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, TechnologySelect, LucideAngularModule, ExperienceEntry, EducationEntry],
   templateUrl: './create.html',
   styleUrl: './create.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -128,8 +129,11 @@ export class Create {
     for (const experience of info.experiences) {
       this.form.controls.experiences.push(createExperienceForm(experience));
     }
+    for (const education of info.education ?? []) {
+      this.form.controls.education.push(createEducationForm(education));
+    }
     const { structure, contact, ...fields } = info;
-    this.form.patchValue({ ...fields, ...(contact ? { contact: { ...contact, socials: this.form.controls.contact.controls.socials.getRawValue() } } : {}), languages: [...info.languages], experiences: [...info.experiences] });
+    this.form.patchValue({ ...fields, ...(contact ? { contact: { ...contact, socials: this.form.controls.contact.controls.socials.getRawValue() } } : {}), languages: [...info.languages], experiences: [...info.experiences], education: [...(info.education ?? [])] });
   }
 
   protected readonly experiencesOpen = signal(false);
@@ -168,6 +172,16 @@ export class Create {
     this.form.controls.languages.push(createLanguageForm());
   }
 
+  protected addEducation(): void {
+    this.form.controls.education.push(createEducationForm());
+    this.form.markAsDirty();
+  }
+
+  protected removeEducation(index: number): void {
+    this.form.controls.education.removeAt(index);
+    this.form.markAsDirty();
+  }
+
   protected removeLanguage(index: number): void {
     this.form.controls.languages.removeAt(index);
   }
@@ -188,6 +202,7 @@ export class Create {
 
       for (const panel of this.panels()) {
         if ((panel.panelId() === 'experience-panel' && this.form.controls.experiences.invalid) ||
+          (panel.panelId() === 'education-panel' && this.form.controls.education.invalid) ||
           (panel.panelId() === 'languages-panel' && this.form.controls.languages.invalid)) {
           panel.expand();
         }

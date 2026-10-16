@@ -1,0 +1,40 @@
+<div class="entry">
+  <div class="heading">
+    <h4>Education {{ index() + 1 }}</h4>
+    <button class="remove" type="button" [attr.aria-label]="'Remove education ' + (index() + 1)"
+      (click)="remove.emit()">
+      <lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" />
+    </button>
+  </div>
+  <app-async-select [inputId]="'university-' + index()" label="University" [control]="form().controls.university"
+    [required]="true" [options]="lookup().suggestions" [loading]="lookup().status === 'loading'"
+    [helpText]="universityHint()" [emptyText]="universityEmptyText()">
+    @if (form().controls.university.touched && form().controls.university.invalid) {
+      <span>Please enter a university.</span>
+    }
+  </app-async-select>
+  <div class="columns">
+    <app-select [inputId]="'education-degree-' + index()" label="Degree"
+      [control]="form().controls.degree" [options]="degrees" />
+    <app-input [inputId]="'education-field-' + index()" label="Field of study"
+      [control]="form().controls.field" helpText="For example, Cybersecurity" />
+  </div>
+  <fieldset class="period" tabindex="-1" [attr.aria-invalid]="!!dateError()"
+    [attr.aria-describedby]="dateError() ? 'education-period-error-' + index() : null">
+    <legend>Period</legend>
+    <app-select [inputId]="'education-date-format-' + index()" label="Date format"
+      [control]="dateFormat" [options]="dateFormats" />
+    <div class="columns">
+      <app-date-picker [inputId]="'education-start-date-' + index()" label="Start date"
+        [control]="form().controls.startDate" [mode]="dateMode()"
+        [startViewMode]="dateMode() === 'year' ? 'year' : 'month'" />
+      <app-date-picker [inputId]="'education-end-date-' + index()" label="End date"
+        [control]="form().controls.endDate" [mode]="dateMode()"
+        [startFromDate]="parseDate(form().controls.startDate.value)"
+        [startViewMode]="dateMode() === 'year' ? 'year' : 'month'" />
+    </div>
+    @if (dateError()) {
+      <p class="error" [id]="'education-period-error-' + index()" role="alert">{{ dateError() }}</p>
+    }
+  </fieldset>
+</div>

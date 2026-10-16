@@ -10,10 +10,10 @@ h1 { margin: 0; color: tokens.$text-primary; font-size: tokens.$font-size-3xl; l
 .intro { margin: tokens.$spacing-3 0 tokens.$spacing-6; color: tokens.$text-secondary; }
 .description { white-space: normal; }
 a {
-  color: tokens.$color-primary;
+  color: tokens.$text-accent;
   text-decoration: underline;
   text-underline-offset: tokens.$spacing-1;
-  &:hover { color: tokens.$color-primary-hover; }
+  &:hover { color: tokens.$text-accent-hover; }
   &:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: tokens.$spacing-1; }
 }
 .row-actions { display: flex; gap: tokens.$spacing-2; }

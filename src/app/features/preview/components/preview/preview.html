@@ -69,6 +69,22 @@
               }
             </section>
             }
+            @if (cv.education?.length) {
+            <section class="cv-education" [attr.aria-labelledby]="'cv-education-title-' + page">
+              <h3 [id]="'cv-education-title-' + page">Education:</h3>
+              @for (education of cv.education; track $index) {
+              <article class="education-entry">
+                <h4>{{ education.university }}</h4>
+                @if (education.degree || education.field) {
+                  <p class="qualification">{{ education.degree }}@if (education.degree && education.field) { | }{{ education.field }}</p>
+                }
+                @if (education.startDate || education.endDate) {
+                  <p class="period">{{ formatDate(education.startDate) }}@if (education.startDate && education.endDate) { &ndash; }{{ formatDate(education.endDate) }}</p>
+                }
+              </article>
+              }
+            </section>
+            }
           </div>
           <aside class="cv-sidebar">
             @if (contacts().length) {

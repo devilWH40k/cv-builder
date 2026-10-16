@@ -49,6 +49,7 @@ body {
   place-items: center;
   background: rgba(tokens.$color-gray-900, 0.4);
 }
+
 .dialog-overlay > dialog {
   position: relative;
   inset: auto;
@@ -56,5 +57,7 @@ body {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+
 .dialog-overlay.drop-target { background: rgba(tokens.$color-primary, 0.2); }
+
 @media print { .dialog-overlay { display: none; } }

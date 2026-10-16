@@ -2,6 +2,7 @@
   <div class="control-wrap" [class.has-icon]="icon() || iconSrc()">
     <input class="control" [id]="inputId()" [type]="type()" [formControl]="control()"
       [autocomplete]="autocomplete()" [required]="required()" placeholder=" "
+      [attr.list]="suggestions().length ? inputId() + '-suggestions' : null"
       [attr.aria-invalid]="invalid()" [attr.aria-describedby]="helpText() ? inputId() + '-hint ' + inputId() + '-error' : inputId() + '-error'" />
     <label [for]="inputId()">{{ label() }}{{ required() ? ' *' : '' }}</label>
     @if (icon(); as leadingIcon) {
@@ -15,6 +16,13 @@
       </span>
     }
   </div>
+  @if (suggestions().length) {
+    <datalist [id]="inputId() + '-suggestions'">
+      @for (suggestion of suggestions(); track suggestion) {
+        <option [value]="suggestion"></option>
+      }
+    </datalist>
+  }
   @if (helpText()) {
     <p class="hint" [id]="inputId() + '-hint'">{{ helpText() }}</p>
   }

@@ -31,26 +31,24 @@ describe('Header technologies dialog', () => {
 
   async function open(): Promise<HTMLDialogElement> {
     const host: HTMLElement = fixture.nativeElement;
-    host.querySelector<HTMLButtonElement>('[aria-label="Settings"]')!.click();
-    await fixture.whenStable();
-    Array.from(host.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'))
-      .find((button) => button.textContent?.trim() === 'Technologies')!.click();
+    const button = host.querySelector<HTMLButtonElement>('.header-menu [aria-label="Technologies"]')!;
+    button.focus();
+    button.click();
     await fixture.whenStable();
     return document.querySelector<HTMLDialogElement>('dialog[aria-labelledby="technologies-title"]')!;
   }
 
-  it('places Experiences above Technologies and navigates to the library page', async () => {
-    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+  it('places Experiences before Technologies and navigates to the library page', async () => {
+    const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
     const host: HTMLElement = fixture.nativeElement;
-    host.querySelector<HTMLButtonElement>('[aria-label="Settings"]')!.click();
-    await fixture.whenStable();
-    const items = Array.from(host.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
+    const items = Array.from(host.querySelectorAll<HTMLElement>('.header-menu .menu-item'));
     expect(items.map((button) => button.textContent?.trim())).toEqual(['Import / Export', 'Experiences', 'Technologies']);
     items[1].click();
-    expect(navigate).toHaveBeenCalledOnceWith(['/experiences']);
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate.calls.mostRecent().args[0].toString()).toBe('/experiences');
   });
 
-  it('opens from Settings, lists and deletes saved technologies, and restores focus on close', async () => {
+  it('opens from navigation, lists and deletes saved technologies, and restores focus on close', async () => {
     const dialog = await open();
     expect(dialog.open).toBeTrue();
     expect(dialog.querySelector('h2')!.textContent).toBe('Technologies');
@@ -67,7 +65,7 @@ describe('Header technologies dialog', () => {
     dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
     await fixture.whenStable();
     expect(dialog.open).toBeFalse();
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Settings');
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Technologies');
   });
 
   it('retains failed deletions and allows retry without duplicate requests', async () => {
@@ -132,7 +130,7 @@ describe('Header technologies dialog', () => {
     expect(records().length).toBe(1);
     library.querySelector<HTMLButtonElement>('[aria-label="Close technologies"]')!.click();
     await fixture.whenStable();
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Settings');
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Technologies');
   });
 
   it('shows loading, reports load errors, and allows retry', async () => {

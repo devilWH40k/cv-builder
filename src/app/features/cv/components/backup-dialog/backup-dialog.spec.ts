@@ -25,9 +25,9 @@ describe('Header backup dialog', () => {
   });
 
   async function openBackup(): Promise<void> {
-    page.querySelector<HTMLButtonElement>('[aria-label="Settings"]')!.click();
-    await fixture.whenStable();
-    page.querySelector<HTMLButtonElement>('[role="menuitem"]')!.click();
+    const button = page.querySelector<HTMLButtonElement>('.header-menu [aria-label="Import / Export"]')!;
+    button.focus();
+    button.click();
     await fixture.whenStable();
   }
 

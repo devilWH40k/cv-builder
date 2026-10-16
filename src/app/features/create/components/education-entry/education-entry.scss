@@ -1,0 +1,66 @@
+@use '../../../../../styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+:host {
+  display: block;
+  min-width: 0;
+  margin-bottom: tokens.$spacing-6;
+}
+
+.entry {
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  padding: tokens.$spacing-5;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+h4 {
+  margin: 0;
+  font-size: tokens.$font-size-md;
+  font-weight: tokens.$font-weight-semibold;
+}
+
+button {
+  @include buttons.ghost;
+}
+
+.remove {
+  color: tokens.$text-danger;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: tokens.$spacing-4;
+}
+
+.period {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+legend {
+  margin-bottom: tokens.$spacing-3;
+  font-weight: tokens.$font-weight-medium;
+}
+
+.period:focus-visible {
+  outline: 2px solid tokens.$border-color-focus;
+  outline-offset: 2px;
+}
+
+.error {
+  color: tokens.$text-danger;
+  font-size: tokens.$font-size-sm;
+}
+
+@media (max-width: tokens.$breakpoint-sm) {
+  .columns { grid-template-columns: minmax(0, 1fr); }
+}

@@ -31,10 +31,10 @@ h1 { line-height: tokens.$line-height-tight; }
   flex-shrink: 0;
   width: tokens.$spacing-16;
   height: tokens.$spacing-16;
-  border: 2px solid tokens.$color-primary;
+  border: 2px solid tokens.$background-footer;
   border-radius: tokens.$radius-full;
   color: tokens.$color-primary;
-  background: tokens.$color-secondary;
+  background: tokens.$background-footer;
   cursor: pointer;
   text-decoration: none;
   transition: background tokens.$transition-normal, border-color tokens.$transition-normal;
@@ -44,9 +44,9 @@ h1 { line-height: tokens.$line-height-tight; }
     content: '';
     position: absolute;
     inset: -2px;
-    border: 2px solid tokens.$color-secondary-active;
+    border: 2px solid tokens.$color-primary;
     border-radius: inherit;
-    box-shadow: 0 0 tokens.$spacing-5 tokens.$color-secondary;
+    box-shadow: 0 0 tokens.$spacing-5 tokens.$color-primary;
     pointer-events: none;
     animation: glow-ring 3s ease-out infinite;
   }
@@ -55,13 +55,8 @@ h1 { line-height: tokens.$line-height-tight; }
     animation-delay: -1.5s;
   }
 
-  &:hover {
-    background: tokens.$color-secondary-hover;
-    border-color: tokens.$color-primary-hover;
-  }
-
-  &:active {
-    background: tokens.$color-secondary-active;
+  &:hover, &:active {
+    border-color: tokens.$color-primary;
   }
 
   &:focus-visible {

@@ -5,6 +5,30 @@ import { CvLanguage } from '../../cv/constants/languages';
 import { CvExperience } from '../../cv/interfaces/experience';
 import { parseCalendarDate } from '../../../shared/ui/date-picker/date-value';
 import { CustomEntryIcons } from '../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
+import { CvEducation } from '../../cv/interfaces/education';
+
+export function createEducationForm(education?: CvEducation) {
+  const form = new FormGroup({
+    university: new FormControl(education?.university ?? '', {
+      nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)]
+    }),
+    degree: new FormControl(education?.degree ?? '', { nonNullable: true }),
+    field: new FormControl(education?.field ?? '', { nonNullable: true }),
+    startDate: new FormControl(education?.startDate ?? '', { nonNullable: true }),
+    endDate: new FormControl(education?.endDate ?? '', { nonNullable: true })
+  });
+  form.addValidators(() => {
+    const { startDate, endDate } = form.getRawValue();
+    const start = parseCalendarDate(startDate);
+    const end = parseCalendarDate(endDate);
+    if ((startDate && !start) || (endDate && !end)) return { invalidDate: true };
+    const precision = Math.min(startDate.length, endDate.length);
+    return start && end && startDate.slice(0, precision) > endDate.slice(0, precision)
+      ? { dateOrder: true } : null;
+  });
+  form.updateValueAndValidity();
+  return form;
+}
 
 export function createSocialForm(entry?: CvSocialLink) {
   const form = new FormGroup({
@@ -78,6 +102,7 @@ export function createCvForm() {
     photo: new FormControl<File | null>(null, { validators: [imageFileValidator] }),
     languages: new FormArray<ReturnType<typeof createLanguageForm>>([]),
     experiences: new FormArray<ReturnType<typeof createExperienceForm>>([]),
+    education: new FormArray<ReturnType<typeof createEducationForm>>([]),
     technologies: new FormControl<readonly string[]>([], { nonNullable: true })
   });
 }

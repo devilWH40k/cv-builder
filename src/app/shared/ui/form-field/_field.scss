@@ -56,7 +56,7 @@ label {
 .filled label,
 .control-wrap:focus-within label {
   transform: translateY(-#{tokens.$spacing-8}) scale(0.875);
-  color: tokens.$color-primary;
+  color: tokens.$text-accent;
 }
 
 .success .control {
