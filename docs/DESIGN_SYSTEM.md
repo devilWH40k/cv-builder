@@ -1420,6 +1420,10 @@ focus, Escape/backdrop dismissal, focus restoration, and cleanup. Its z-index
 stays below the global toast outlet. Photo preview and mobile drawers use the
 same overlay; desktop drawers remain inline.
 
+Import / Export also uses `DialogOverlay`. Clicking its backdrop, pressing Escape,
+or using Close dismisses it and restores focus to the header action. Import and
+export operations block all dismissal until the operation finishes or fails.
+
 
 ## Education
 

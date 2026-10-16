@@ -7,10 +7,11 @@ import { Input } from '../../../../shared/ui/input/input';
 import { CvBackup, defaultBackupName } from '../../services/cv-backup';
 import { Toasts } from '../../../../shared/ui/toast/toast';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
+import { DialogOverlay } from '../../../../shared/ui/dialog/dialog-overlay';
 
 @Component({
   selector: 'app-backup-dialog',
-  imports: [Button, Input, Checkbox, ReactiveFormsModule, LucideAngularModule, Toasts],
+  imports: [Button, Input, Checkbox, ReactiveFormsModule, LucideAngularModule, Toasts, DialogOverlay],
   providers: [ToastService],
   templateUrl: './backup-dialog.html',
   styleUrl: './backup-dialog.scss',
@@ -20,6 +21,7 @@ export class BackupDialog {
   private readonly backup = inject(CvBackup);
   private readonly toasts = inject(ToastService);
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+  private readonly overlay = viewChild.required(DialogOverlay);
   private readonly fileInput = viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
   protected readonly DownloadIcon = Download;
   protected readonly UploadIcon = Upload;
@@ -42,15 +44,16 @@ export class BackupDialog {
     this.fileInput().nativeElement.value = '';
     this.selectedFile.set(null);
     this.clearFeedback();
-    this.dialog().nativeElement.showModal();
+    this.overlay().open();
   }
 
   protected close(): void {
-    if (!this.busy()) this.dialog().nativeElement.close();
+    if (!this.busy()) this.overlay().close();
   }
 
   protected cancel(event: Event): void {
-    if (this.busy()) event.preventDefault();
+    event.preventDefault();
+    this.close();
   }
 
   protected selectFile(event: Event): void {
