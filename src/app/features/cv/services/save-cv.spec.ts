@@ -29,7 +29,7 @@ describe('CV save feedback', () => {
   });
 
   it('announces committed saves and updates the existing record on subsequent saves', async () => {
-    await save.save(info);
+    expect(await save.save(info)).toBeTrue();
     expect(draft.savedId()).toBe('saved-id');
     expect(draft.current()).toEqual(info);
     expect(toasts.messages()[0].theme).toBe('success');
@@ -76,6 +76,22 @@ describe('CV save feedback', () => {
     await pending;
     expect(draft.savedId()).toBe('saved-id');
     expect(draft.current()?.name).toBe('Newer edits');
+    expect(draft.hasUnsavedChanges()).toBeTrue();
+  });
+
+  it('keeps the same immutable photo and clears unsaved state only after a successful commit', async () => {
+    const photo = new File(['photo'], 'portrait.png', { type: 'image/png' });
+    draft.beginEditing(info);
+    const changed = { ...info, photo };
+    draft.save(changed);
+    storage.save.and.rejectWith(new Error('Storage unavailable'));
+    expect(await save.save(changed)).toBeFalse();
+    expect(draft.hasUnsavedChanges()).toBeTrue();
+    storage.save.and.resolveTo('saved-id');
+    expect(await save.save(changed)).toBeTrue();
+    expect(draft.current()?.photo).toBe(photo);
+    draft.save({ ...changed });
+    expect(draft.hasUnsavedChanges()).toBeFalse();
   });
 
   it('shows a danger toast on failure and allows retry without changing the draft', async () => {

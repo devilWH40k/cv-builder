@@ -9,6 +9,10 @@
 .page-label { margin-bottom: tokens.$spacing-2; }
 .preview-sheet + .preview-sheet { margin-top: tokens.$spacing-6; }
 
+@media screen {
+  .embedded .page-stack { zoom: min(var(--preview-scale, 1), var(--preview-max-scale, 1)); }
+}
+
 .page-content {
   width: 178mm;
   height: 265mm;

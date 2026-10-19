@@ -13,6 +13,7 @@ import { createExperienceForm } from '../../helpers/cv-form';
 import { Tooltip } from '../../../../shared/directories/tooltip';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { startWith, switchMap } from 'rxjs';
+import { ThemeStore } from '../../../../core/theme/theme-store';
 
 @Component({
   selector: 'app-experience-entry',
@@ -51,6 +52,7 @@ export class ExperienceEntry {
   private readonly saved = inject(SavedCvs);
   private readonly toasts = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly themeStore = inject(ThemeStore);
 
   protected async save(): Promise<void> {
     if (this.saving()) return;
@@ -79,7 +81,7 @@ export class ExperienceEntry {
   protected readonly dateMode = signal<DateMode>('month-year');
   protected readonly parseDate = parseCalendarDate;
   protected readonly editorConfig = computed<AteEditorConfig>(() => ({
-    locale: 'en', theme: 'light', minHeight: 200, autofocus: false,
+    locale: 'en', theme: this.themeStore.theme(), minHeight: 200, autofocus: false,
     placeholder: 'Describe the project, your responsibilities, and achievements...',
     showToolbar: false, showEditToggle: false, showFooter: false, enableSlashCommands: false,
     showBubbleMenu: false, blockControls: 'none',

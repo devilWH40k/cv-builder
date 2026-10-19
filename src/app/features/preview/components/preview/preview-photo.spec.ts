@@ -80,4 +80,19 @@ describe('Preview photo visibility', () => {
     await fixture.whenStable();
     expect(page.querySelector('.portrait')).toBeNull();
   });
+
+  it('preserves saved photo sizing without resize controls in a read-only preview', async () => {
+    const draft = TestBed.inject(CvDraft);
+    draft.save({ ...info, structure: { ...info.structure!, photoSizeMm: 32 } });
+    const fixture = TestBed.createComponent(Preview);
+    fixture.componentRef.setInput('embedded', true);
+    fixture.componentRef.setInput('readOnly', true);
+    await fixture.whenStable();
+    const page: HTMLElement = fixture.nativeElement;
+    const photo = page.querySelector<HTMLImageElement>('.portrait')!;
+    expect(photo.style.width).toBe('32mm');
+    expect(photo.style.height).toBe('32mm');
+    expect(page.querySelector('app-resizable')).toBeNull();
+    expect(draft.current()?.structure?.photoSizeMm).toBe(32);
+  });
 });

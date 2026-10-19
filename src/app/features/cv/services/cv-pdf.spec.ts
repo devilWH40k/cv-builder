@@ -154,6 +154,32 @@ describe('PDF export', () => {
     expect(JSON.stringify(definition.content)).toContain(cv.name);
   });
 
+  it('shows success only after starting the download and ignores duplicate requests while exporting', async () => {
+    const service = TestBed.inject(CvPdf);
+    const toast = spyOn(TestBed.inject(ToastService), 'show');
+    const pdf = pdfMake.createPdf({ content: [] });
+    let finishDownload!: () => void;
+    const completion = new Promise<void>((resolve) => { finishDownload = resolve; });
+    let downloadStarted!: () => void;
+    const started = new Promise<void>((resolve) => { downloadStarted = resolve; });
+    const download = spyOn(pdf, 'download').and.callFake(() => {
+      downloadStarted();
+      return completion;
+    });
+    spyOn(pdfMake, 'createPdf').and.returnValue(pdf);
+
+    const exporting = service.download({ ...cv, technologies: [], experiences: [] });
+    await started;
+    expect(service.exporting()).toBeTrue();
+    expect(toast).not.toHaveBeenCalled();
+    await service.download(cv);
+    expect(download).toHaveBeenCalledOnceWith('Alex Morgan-CV.pdf');
+    finishDownload();
+    await exporting;
+    expect(toast).toHaveBeenCalledOnceWith('success', 'Your PDF download has started.');
+    expect(service.exporting()).toBeFalse();
+  });
+
   it('reports export failures and restores the ability to retry', async () => {
     const service = TestBed.inject(CvPdf);
     const toast = spyOn(TestBed.inject(ToastService), 'show');

@@ -1,6 +1,9 @@
-<div class="cv-grid" [class.cv-list]="isListView()">
+<div #collection class="cv-grid" [class.cv-list]="isListView()"
+  (contextmenu)="openBackgroundMenu($event)"
+  [cvCollectionMotion]="cvs()" [motionInsertion]="insertion()" [motionDragging]="canReorder()"
+  [appDropTarget]="dragType" [dropDisabled]="!canReorder()" (itemDropped)="dropInCollection($event)">
   @for (folder of folders(); track folder.id) {
-    <article class="saved-card saved-folder" [appDropTarget]="dragType"
+    <article class="saved-card saved-folder" [appDropTarget]="dragType" (contextmenu)="openFolderMenu($event, folder)"
       [dropDisabled]="deletingFolderIds().includes(folder.id)" (itemDropped)="dropOnFolder($event, folder.id)">
       <button class="cv-card folder-card" type="button" (click)="folderOpened.emit(folder.id)"
         [attr.aria-label]="'Open folder ' + folder.name">
@@ -19,8 +22,23 @@
     </article>
   }
   @for (cv of cvs(); track cv.id) {
-    <app-draggable [dragId]="cv.id" [dragType]="dragType" [disabled]="deletingIds().includes(cv.id)">
-    <article class="saved-card" [attr.data-cv-id]="cv.id">
+    @if (insertion()?.targetId === cv.id && insertion()?.position === 'before') {
+      <div class="cv-placeholder" aria-hidden="true" [style.height.px]="dragSize()?.height">
+        <span class="placeholder-hit" [cvInsertionTarget]="cv.id" position="before" [appDropTarget]="dragType"
+          (itemDropped)="dropBetween($event, cv.id, 'before')"></span>
+      </div>
+    }
+    <app-draggable [dragId]="cv.id" [dragType]="dragType" [disabled]="deletingIds().includes(cv.id) || reorderDisabled()">
+    <article class="saved-card" [attr.data-cv-id]="cv.id" [class.is-cut]="clipboard.cutId() === cv.id"
+      (contextmenu)="openCvMenu($event, cv)">
+      @if (canReorder()) {
+        <span class="insert-target insert-before" aria-hidden="true" [appDropTarget]="dragType"
+          [cvInsertionTarget]="cv.id" position="before"
+          [dropDisabled]="deletingIds().includes(cv.id)" (itemDropped)="dropBetween($event, cv.id, 'before')"></span>
+        <span class="insert-target insert-after" aria-hidden="true" [appDropTarget]="dragType"
+          [cvInsertionTarget]="cv.id" position="after"
+          [dropDisabled]="deletingIds().includes(cv.id)" (itemDropped)="dropBetween($event, cv.id, 'after')"></span>
+      }
       <a class="cv-card" routerLink="/create" (click)="openCv()" [queryParams]="{ id: cv.id }"
         [draggable]="false"
         [attr.aria-label]="'Edit ' + (cv.info.name || 'Untitled CV')">
@@ -48,11 +66,34 @@
           <span class="cv-caption">{{ cv.info.name || 'Untitled CV' }}</span>
         }
       </a>
-      <button class="delete-cv" type="button" [disabled]="deletingIds().includes(cv.id)"
+      <div class="cv-actions">
+      <button class="cv-action preview-cv" type="button" [disabled]="deletingIds().includes(cv.id)"
+        (click)="previewCv.set(cv)" title="Preview CV" [attr.aria-label]="'Preview ' + (cv.info.name || 'Untitled CV')">
+        <lucide-icon [img]="PreviewIcon" [size]="18" aria-hidden="true" />
+      </button>
+      <button class="cv-action download-cv" type="button" [disabled]="deletingIds().includes(cv.id) || pdf.exporting()"
+        (click)="pdf.download(cv.info)" [title]="pdf.exporting() ? 'Exporting PDF…' : 'Download PDF'"
+        [attr.aria-label]="'Download ' + (cv.info.name || 'Untitled CV') + ' as PDF'">
+        <lucide-icon [img]="DownloadIcon" [size]="18" aria-hidden="true" />
+      </button>
+      <button class="cv-action delete-cv" type="button" [disabled]="deletingIds().includes(cv.id)"
         (click)="cvDeleted.emit(cv.id)" [attr.aria-label]="'Delete ' + (cv.info.name || 'Untitled CV')">
         <lucide-icon [img]="DeleteIcon" [size]="18" aria-hidden="true" />
       </button>
+      </div>
     </article>
     </app-draggable>
+    @if (insertion()?.targetId === cv.id && insertion()?.position === 'after') {
+      <div class="cv-placeholder" aria-hidden="true" [style.height.px]="dragSize()?.height">
+        <span class="placeholder-hit" [cvInsertionTarget]="cv.id" position="after" [appDropTarget]="dragType"
+          (itemDropped)="dropBetween($event, cv.id, 'after')"></span>
+      </div>
+    }
   }
 </div>
+<app-context-menu [items]="menuItems()" label="CV actions" (selected)="selectMenuItem($event)" />
+@defer (when previewCv()) {
+  @if (previewCv(); as cv) {
+    <app-cv-preview-dialog [cv]="cv" (dismissed)="previewCv.set(null)" />
+  }
+}

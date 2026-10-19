@@ -7,6 +7,7 @@ import { ExperienceEntry } from './experience-entry';
 import { createExperienceForm } from '../../helpers/cv-form';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
+import { ThemeStore } from '../../../../core/theme/theme-store';
 
 describe('Save experience', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] }));
@@ -20,6 +21,26 @@ describe('Save experience', () => {
     const button: HTMLButtonElement = fixture.nativeElement.querySelector('[aria-label="Save experience 1"]');
     return { fixture, form, button };
   }
+
+  it('updates the rich-text editor theme while preserving the description', async () => {
+    const originalTheme = document.documentElement.dataset['theme'];
+    spyOn(Storage.prototype, 'getItem').and.returnValue('light');
+    spyOn(Storage.prototype, 'setItem').and.stub();
+    try {
+      const { fixture, form } = await setup();
+      form.controls.description.setValue('<p>Project work in progress</p>');
+      await fixture.whenStable();
+      TestBed.inject(ThemeStore).toggleTheme();
+      await fixture.whenStable();
+      const editor: HTMLElement = fixture.nativeElement.querySelector('angular-tiptap-editor');
+      expect(editor.classList.contains('dark')).toBeTrue();
+      expect(editor.querySelector('.ProseMirror')?.textContent).toBe('Project work in progress');
+      expect(form.controls.description.value).toBe('<p>Project work in progress</p>');
+    } finally {
+      if (originalTheme === undefined) delete document.documentElement.dataset['theme'];
+      else document.documentElement.dataset['theme'] = originalTheme;
+    }
+  });
 
   it('validates, stores the returned ID, and uses it on subsequent saves', async () => {
     const save = spyOn(TestBed.inject(SavedCvs), 'saveExperience').and.resolveTo('saved-1');

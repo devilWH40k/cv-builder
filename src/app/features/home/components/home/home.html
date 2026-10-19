@@ -35,10 +35,15 @@
     }
     @if (deleteError()) { <p role="alert">{{ deleteError() }}</p> }
     @if (folderError()) { <p role="alert">{{ folderError() }}</p> }
-    <app-cv-collection [cvs]="rootCvs()" [folders]="saved.folders()" [isListView]="isListView()"
+    @if (orderError()) { <p role="alert">{{ orderError() }}</p> }
+    <app-cv-collection #rootCollection [class.root-collection]="rootCvs().length > 0 || saved.folders().length > 0"
+      [cvs]="rootCvs()" [folders]="saved.folders()" [isListView]="isListView()"
+      (contextmenu)="rootCollection.openBackgroundMenu($event)"
+      (pasteRequested)="pasteCv($event)"
       [deletingIds]="busyCvIds()" [deletingFolderIds]="deletingFolderIds()"
       (cvDeleted)="deleteCv($event)" (folderOpened)="openFolder($event)"
-      (folderDeleted)="deleteFolder($event)" (moved)="moveCv($event)" />
+      (folderDeleted)="deleteFolder($event)" (moved)="moveCv($event)"
+      [reorderDisabled]="reordering()" (reordered)="reorderCv($event)" />
     @if (!rootCvs().length && !saved.folders().length && !saved.error() && !saved.loading()) {
       <p>No saved CVs yet. Create a CV and choose Save to keep it here.</p>
     }
@@ -49,6 +54,8 @@
 }
 @if (activeFolder(); as folder) {
   <app-folder-dialog [folder]="folder" [cvs]="folderCvs()" [isListView]="isListView()"
-    [deletingIds]="busyCvIds()" [error]="folderError() || deleteError()"
+    (pasteRequested)="pasteCv($event)"
+    [deletingIds]="busyCvIds()" [error]="folderError() || deleteError() || orderError()"
+    [reorderDisabled]="reordering()" (reordered)="reorderCv($event)"
     (dismissed)="activeFolderId.set(null)" (cvDeleted)="deleteCv($event)" (moved)="moveCv($event)" />
 }

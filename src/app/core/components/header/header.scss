@@ -8,7 +8,7 @@
 
 .app-header {
   background: transparent;
-  color: tokens.$color-black;
+  color: tokens.$text-primary;
 }
 
 .header-content {
@@ -68,7 +68,7 @@ img {
   border: 0;
   border-radius: tokens.$radius-sm;
   background: transparent;
-  color: tokens.$color-black;
+  color: tokens.$text-primary;
   font: inherit;
   font-weight: tokens.$font-weight-medium;
   text-decoration: none;
@@ -95,13 +95,42 @@ img {
   }
 }
 
-.header-actions { justify-self: end; }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-2;
+  justify-self: end;
+}
 
-.guides-link {
+.guides-link, .theme-toggle {
   @include buttons.secondary;
-  & { padding-inline: tokens.$spacing-3; color: tokens.$color-black; }
+  & { padding-inline: tokens.$spacing-3; color: tokens.$text-primary; }
   &:hover, &:active, &.active { color: tokens.$color-primary; }
   &.active { border-color: tokens.$color-primary; background: tokens.$background-primary-subtle; }
+}
+
+.theme-icons {
+  position: relative;
+  display: block;
+  width: tokens.$spacing-5;
+  height: tokens.$spacing-5;
+  overflow: hidden;
+}
+
+.theme-icon {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  transition: transform tokens.$transition-slow, opacity tokens.$transition-slow;
+}
+
+.sun-icon { transform: translateY(0); opacity: 1; }
+.moon-icon { transform: translateY(150%); opacity: 0; }
+.is-dark .sun-icon { transform: translateY(-150%); opacity: 0; }
+.is-dark .moon-icon { transform: translateY(0); opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-icon { transition: none; }
 }
 
 @media (max-width: tokens.$breakpoint-md) {

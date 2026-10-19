@@ -1,0 +1,6 @@
+@use 'styles/tokens' as tokens;
+
+.saved-card.is-cut {
+  opacity: 0.5;
+  > .cv-card { border-style: dashed; border-color: tokens.$color-primary; }
+}

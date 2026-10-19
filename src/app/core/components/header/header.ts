@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { CircleQuestionMark, LucideAngularModule } from 'lucide-angular';
+import { CircleQuestionMark, LucideAngularModule, Moon, Sun } from 'lucide-angular';
+import { ThemeStore } from '../../theme/theme-store';
 import { BackupDialog } from '../../../features/cv/components/backup-dialog/backup-dialog';
 import { TechnologiesDialog } from '../../../features/cv/components/technologies-dialog/technologies-dialog';
 
@@ -12,5 +13,8 @@ import { TechnologiesDialog } from '../../../features/cv/components/technologies
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Header {
+  protected readonly themeStore = inject(ThemeStore);
+  protected readonly SunIcon = Sun;
+  protected readonly MoonIcon = Moon;
   protected readonly GuidesIcon = CircleQuestionMark;
 }

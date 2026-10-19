@@ -1,0 +1,33 @@
+@use 'styles/tokens' as tokens;
+@use '../button/variants' as buttons;
+
+:host { display: contents; }
+
+.context-menu {
+  position: fixed;
+  z-index: tokens.$z-modal + 1;
+  min-width: min(14rem, calc(100vw - #{tokens.$spacing-8}));
+  max-width: calc(100vw - #{tokens.$spacing-8});
+  max-height: calc(100dvh - #{tokens.$spacing-8});
+  overflow-y: auto;
+  padding: tokens.$spacing-1;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md;
+  color: tokens.$text-primary;
+  background: tokens.$background-surface;
+  box-shadow: tokens.$shadow-md;
+}
+button, a {
+  @include buttons.ghost;
+  & {
+    width: 100%;
+    justify-content: flex-start;
+    gap: tokens.$spacing-2;
+    padding-inline: tokens.$spacing-3;
+    font: inherit;
+    font-size: tokens.$font-size-sm;
+    text-align: left;
+  }
+  &:disabled { color: tokens.$text-disabled; cursor: default; }
+}
+lucide-icon { display: flex; flex-shrink: 0; }

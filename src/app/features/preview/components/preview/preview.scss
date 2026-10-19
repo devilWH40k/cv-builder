@@ -3,8 +3,8 @@
 
 :host {
   display: block;
-  color: #000;
-  background: #fff;
+  color: tokens.$text-primary;
+  background: tokens.$background-surface;
 }
 
 .preview-root {
@@ -208,13 +208,10 @@ h2 {
   background: tokens.$background-app;
   .preview-layout { display: block; }
   .document-viewport {
-    max-height: calc(100dvh - 15rem);
+    max-height: var(--preview-max-height, calc(100dvh - 15rem));
     overflow: auto;
     scrollbar-gutter: stable;
   }
-}
-@media screen {
-  .embedded .page-stack { zoom: var(--preview-scale, 1); }
 }
 @media print {
   .embedded {

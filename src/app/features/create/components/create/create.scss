@@ -36,7 +36,6 @@ form {
 
 section {
   margin-bottom: tokens.$spacing-6;
-  color: tokens.$color-black;
 }
 
 h3 {
@@ -70,9 +69,7 @@ a, .mobile-switch, .icon-button, .skill-chip button {
 .icon-button {
   & {
     width: tokens.$button-height-lg;
-    height: tokens.$button-height-lg;
     padding: 0;
-    color: tokens.$color-black;
   }
 }
 

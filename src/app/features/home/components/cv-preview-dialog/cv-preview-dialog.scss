@@ -1,0 +1,7 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+.edit-cv {
+  @include buttons.ghost;
+  & { padding: tokens.$spacing-2; }
+}
