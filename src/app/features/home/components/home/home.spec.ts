@@ -122,6 +122,9 @@ describe('Saved CV navigation', () => {
     expect(TestBed.inject(Router).url).toBe('/');
     expect(harness.routeNativeElement?.querySelector('.cv-card')).toBeNull();
     expect(harness.routeNativeElement?.textContent).toContain('No saved CVs yet.');
+    const emptyCollection = harness.routeNativeElement!.querySelector<HTMLElement>('app-cv-collection')!;
+    expect(emptyCollection.classList.contains('root-collection')).toBeFalse();
+    expect(emptyCollection.getBoundingClientRect().height).toBe(0);
     expect(await saved.load(id)).toBeNull();
     expect(TestBed.inject(CvDraft).savedId()).toBeNull();
   });

@@ -36,7 +36,8 @@
     @if (deleteError()) { <p role="alert">{{ deleteError() }}</p> }
     @if (folderError()) { <p role="alert">{{ folderError() }}</p> }
     @if (orderError()) { <p role="alert">{{ orderError() }}</p> }
-    <app-cv-collection #rootCollection class="root-collection" [cvs]="rootCvs()" [folders]="saved.folders()" [isListView]="isListView()"
+    <app-cv-collection #rootCollection [class.root-collection]="rootCvs().length > 0 || saved.folders().length > 0"
+      [cvs]="rootCvs()" [folders]="saved.folders()" [isListView]="isListView()"
       (contextmenu)="rootCollection.openBackgroundMenu($event)"
       (pasteRequested)="pasteCv($event)"
       [deletingIds]="busyCvIds()" [deletingFolderIds]="deletingFolderIds()"
