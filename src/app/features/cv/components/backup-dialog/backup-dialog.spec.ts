@@ -6,7 +6,8 @@ import { CvBackup, defaultBackupName, ImportCounts } from '../../services/cv-bac
 
 describe('Header backup dialog', () => {
   let fixture: ComponentFixture<Header>;
-  let page: HTMLElement;
+  let page: HTMLDialogElement;
+  let header: HTMLElement;
   let backup: jasmine.SpyObj<CvBackup>;
 
   beforeEach(async () => {
@@ -19,16 +20,17 @@ describe('Header backup dialog', () => {
     });
     fixture = TestBed.createComponent(Header);
     await fixture.whenStable();
-    page = fixture.nativeElement;
+    header = fixture.nativeElement;
     await openBackup();
     await fixture.whenStable();
   });
 
   async function openBackup(): Promise<void> {
-    const button = page.querySelector<HTMLButtonElement>('.header-menu [aria-label="Import / Export"]')!;
+    const button = header.querySelector<HTMLButtonElement>('.header-menu [aria-label="Import / Export"]')!;
     button.focus();
     button.click();
     await fixture.whenStable();
+    page = document.querySelector<HTMLDialogElement>('dialog[aria-labelledby="backup-title"]')!;
   }
 
   function selectFile(): File {
@@ -42,13 +44,41 @@ describe('Header backup dialog', () => {
   }
 
   it('opens from the header with both options and a dated filename, and closes', async () => {
-    expect(page.querySelector('dialog')!.open).toBeTrue();
+    expect(page.open).toBeTrue();
     expect(page.querySelector('#import-title')!.textContent).toBe('Import DB');
     expect(page.querySelector('#export-title')!.textContent).toBe('Export DB');
     expect(page.querySelector<HTMLInputElement>('#backup-name')!.value).toBe(defaultBackupName());
     page.querySelector<HTMLButtonElement>('.close')!.click();
     await fixture.whenStable();
-    expect(page.querySelector('dialog')!.open).toBeFalse();
+    expect(page.open).toBeFalse();
+  });
+
+  it('closes only on backdrop clicks and restores focus to the header action', async () => {
+    const overlay = page.parentElement!;
+    expect(overlay.classList.contains('dialog-overlay')).toBeTrue();
+    expect(page.getAttribute('aria-modal')).toBe('true');
+    page.querySelector('h2')!.click();
+    page.click();
+    await fixture.whenStable();
+    expect(page.open).toBeTrue();
+    overlay.click();
+    await fixture.whenStable();
+    expect(page.open).toBeFalse();
+    expect(document.querySelector('.dialog-overlay')).toBeNull();
+    expect(document.activeElement).toBe(header.querySelector('[aria-label="Import / Export"]'));
+    expect(header.closest('[inert]')).toBeNull();
+  });
+
+  it('closes on Escape and removes an open overlay when the header is destroyed', async () => {
+    page.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    expect(page.open).toBeFalse();
+    expect(document.querySelector('.dialog-overlay')).toBeNull();
+    await openBackup();
+    expect(page.open).toBeTrue();
+    fixture.destroy();
+    expect(document.querySelector('.dialog-overlay')).toBeNull();
+    expect(document.querySelector('[inert]')).toBeNull();
   });
 
   it('exports with the edited filename and reports success', async () => {
@@ -58,7 +88,7 @@ describe('Header backup dialog', () => {
     page.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await fixture.whenStable();
     expect(backup.export).toHaveBeenCalledOnceWith('my-backup');
-    expect(page.querySelector('dialog app-toasts .toast.success')!.textContent).toContain('download has started');
+    expect(page.querySelector('app-toasts .toast.success')!.textContent).toContain('download has started');
   });
 
   it('does not export blank or unsafe filenames', async () => {
@@ -79,7 +109,7 @@ describe('Header backup dialog', () => {
     page.querySelector<HTMLButtonElement>('section app-button button')!.click();
     await fixture.whenStable();
     expect(backup.import).toHaveBeenCalledOnceWith(file, false);
-    expect(page.querySelector('dialog app-toasts .toast.success')!.textContent).toContain('Imported 2 CVs, 1 saved experience and 3 technologies.');
+    expect(page.querySelector('app-toasts .toast.success')!.textContent).toContain('Imported 2 CVs, 1 saved experience and 3 technologies.');
     expect(page.querySelector<HTMLInputElement>('#backup-file')!.value).toBe('');
     expect(page.querySelector<HTMLButtonElement>('section app-button button')!.disabled).toBeTrue();
   });
@@ -95,14 +125,39 @@ describe('Header backup dialog', () => {
     expect(button.disabled).toBeTrue();
     expect(page.querySelector<HTMLInputElement>('#wipe-previous-data')!.disabled).toBeTrue();
     const cancel = new Event('cancel', { cancelable: true });
-    page.querySelector('dialog')!.dispatchEvent(cancel);
+    page.dispatchEvent(cancel);
     expect(cancel.defaultPrevented).toBeTrue();
+    page.parentElement!.click();
+    page.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    page.querySelector<HTMLButtonElement>('.close')!.click();
+    await fixture.whenStable();
+    expect(page.open).toBeTrue();
     button.click();
     expect(backup.import).toHaveBeenCalledTimes(1);
     rejectImport(new Error('Invalid backup.'));
+    await new Promise<void>((resolve) => setTimeout(resolve));
     await fixture.whenStable();
-    expect(page.querySelector('dialog app-toasts .toast.danger .content p')!.textContent).toBe('Invalid backup.');
+    expect(page.querySelector('app-toasts .toast.danger .content p')!.textContent).toBe('Invalid backup.');
     expect(button.disabled).toBeFalse();
+  });
+
+  it('prevents backdrop and Escape dismissal during export and allows dismissal after completion', async () => {
+    let finishExport!: () => void;
+    backup.export.and.returnValue(new Promise<void>((resolve) => { finishExport = resolve; }));
+    page.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    const overlay = page.parentElement!;
+    overlay.click();
+    page.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await fixture.whenStable();
+    expect(page.open).toBeTrue();
+    expect(page.querySelector<HTMLButtonElement>('.close')!.disabled).toBeTrue();
+    finishExport();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    await fixture.whenStable();
+    overlay.click();
+    await fixture.whenStable();
+    expect(page.open).toBeFalse();
   });
 
   it('keeps helper text directly below the input with consistent space before actions', () => {

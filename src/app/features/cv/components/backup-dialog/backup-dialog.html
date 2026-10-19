@@ -1,4 +1,4 @@
-<dialog #dialog aria-labelledby="backup-title" aria-describedby="backup-description" (cancel)="cancel($event)">
+<dialog #dialog appDialogOverlay aria-labelledby="backup-title" aria-describedby="backup-description" (cancel)="cancel($event)">
   <div class="dialog-heading">
     <h2 id="backup-title">Import / Export</h2>
     <button class="close" type="button" aria-label="Close Import / Export" [disabled]="!!busy()" (click)="close()" autofocus>
