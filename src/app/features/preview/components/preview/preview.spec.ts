@@ -236,6 +236,16 @@ describe('CV preview', () => {
     expect(TestBed.inject(Router).url).toBe('/create');
     expect(page.querySelector<HTMLInputElement>('#name')?.value).toBe(info.name);
     page.querySelector<HTMLAnchorElement>('a[routerLink="/"]')!.click();
+    let leave: HTMLButtonElement | undefined;
+    for (let attempt = 0; attempt < 50; attempt++) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
+      harness.fixture.detectChanges();
+      leave = Array.from(page.ownerDocument.querySelectorAll<HTMLButtonElement>('#leave-create app-button button'))
+        .find((button) => button.textContent?.trim() === 'Leave');
+      if (leave) break;
+    }
+    expect(leave).toBeDefined();
+    leave!.click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/');
   });

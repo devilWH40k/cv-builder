@@ -792,7 +792,16 @@ Home, and End keys. On smaller screens, a toggle switches between editor and
 preview.
 
 Save and Export remain in the bottom action bar. A back arrow beside the editor
-heading and the header brand link navigate home. Export remains enabled; when the CV info form is invalid, it reveals the editor,
+heading and the header brand link navigate home. Leaving `/create` with unsaved
+changes opens a dialog with Save and leave, Leave, and Cancel. Successful saves
+and loaded CVs establish a clean snapshot; form, photo, collection, and structure
+changes are compared against it. Save and leave waits for storage to commit;
+failed saves keep the dialog open for retry. Cancel, Close, Escape, and backdrop
+clicks keep the editor open, and all dismissal is blocked while saving. Browser
+reloads, closing the tab, and external navigation use the native unsaved-changes
+warning because browsers do not allow a custom three-action dialog on unload.
+
+Export remains enabled; when the CV info form is invalid, it reveals the editor,
 expands invalid sections, and focuses and scrolls to the first error instead of printing. The embedded preview scales to its available
 width on screen; print styles restore full document sizing and hide editor UI.
 The standalone preview route remains available for existing links.
