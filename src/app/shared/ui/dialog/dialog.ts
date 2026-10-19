@@ -22,6 +22,7 @@ export class Dialog {
   readonly backdropDropType = input('');
   readonly dismissed = output<void>();
   readonly backdropDropped = output<DragItem>();
+  readonly contextRequested = output<MouseEvent>();
   protected readonly CloseIcon = X;
   private readonly overlay = viewChild.required(DialogOverlay);
 

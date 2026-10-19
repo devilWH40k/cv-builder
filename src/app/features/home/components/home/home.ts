@@ -6,6 +6,7 @@ import { CvDraft } from '../../../cv/services/cv-draft';
 import { CvReorder } from '../../../cv/interfaces/cv-reorder';
 import { HomeViewStore } from '../../state/home-view-store';
 import { CvDragStore } from '../../state/cv-drag-store';
+import { CvClipboard } from '../../state/cv-clipboard';
 import { CvCollection, CvMove } from '../cv-collection/cv-collection';
 import { CreateFolderDialog } from '../create-folder-dialog/create-folder-dialog';
 import { FolderDialog } from '../folder-dialog/folder-dialog';
@@ -52,6 +53,7 @@ export class Home {
   private readonly draft = inject(CvDraft);
   private readonly destroyRef = inject(DestroyRef);
   private readonly confirmation = inject(DeleteConfirmationService);
+  private readonly clipboard = inject(CvClipboard);
 
   constructor() {
     this.pendingTasks.run(() => this.saved.refresh());
@@ -69,6 +71,7 @@ export class Home {
     this.deleteError.set('');
     try {
       await this.saved.delete(id);
+      this.clipboard.clear(id);
       if (this.draft.savedId() === id) this.draft.reset();
     } catch {
       this.deleteError.set('Could not delete this CV. Browser storage may be unavailable. Please try again.');
@@ -110,7 +113,10 @@ export class Home {
     this.movingIds.update((ids) => [...ids, cvId]);
     this.folderError.set('');
     const done = this.pendingTasks.add();
-    try { await this.saved.moveCv(cvId, folderId); }
+    try {
+      await this.saved.moveCv(cvId, folderId);
+      this.clipboard.clear(cvId);
+    }
     catch { this.folderError.set('This CV could not be moved. Browser storage may be unavailable. Please try again.'); }
     finally {
       this.movingIds.update((ids) => ids.filter((entry) => entry !== cvId));
@@ -126,5 +132,14 @@ export class Home {
     try { await this.saved.reorderCv(reorder); }
     catch { this.orderError.set('The CV order could not be saved. Please try again.'); }
     finally { this.reordering.set(false); done(); }
+  }
+
+  protected async pasteCv(folderId: string | null): Promise<void> {
+    const cvId = this.clipboard.cutId();
+    if (!cvId || this.busyCvIds().includes(cvId) || this.reordering() ||
+      folderId !== null && (this.deletingFolderIds().includes(folderId) || !this.saved.folders().some((folder) => folder.id === folderId))) return;
+    const currentFolder = this.saved.folders().find((folder) => folder.cvIds.includes(cvId))?.id ?? null;
+    if (currentFolder === folderId) { this.clipboard.clear(cvId); return; }
+    await this.moveCv({ cvId, folderId });
   }
 }

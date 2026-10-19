@@ -1,7 +1,9 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, linkedSignal, output, signal, viewChild, viewChildren } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { Download, Eye, FileText, Folder, LucideAngularModule, Trash2 } from 'lucide-angular';
+import { Router, RouterLink } from '@angular/router';
+import { ClipboardPaste, Download, ExternalLink, Eye, FileText, Folder, LucideAngularModule, Scissors, Trash2 } from 'lucide-angular';
+import { ContextMenu, ContextMenuItem } from '../../../../shared/ui/context-menu/context-menu';
+import { CvClipboard } from '../../state/cv-clipboard';
 import { CvFolder } from '../../../cv/interfaces/cv-folder';
 import { CvDraft } from '../../../cv/services/cv-draft';
 import { SavedCv } from '../../../cv/services/saved-cvs';
@@ -28,11 +30,15 @@ interface InsertionSource {
   readonly overCollection: boolean;
 }
 
+type CvMenuContext = { readonly kind: 'cv'; readonly cv: SavedCv }
+  | { readonly kind: 'folder'; readonly folder: CvFolder }
+  | { readonly kind: 'background' };
+
 @Component({
   selector: 'app-cv-collection',
-  imports: [RouterLink, LucideAngularModule, Draggable, DropTarget, CvInsertionTarget, CvCollectionMotion, DatePipe, CvPreviewDialog],
+  imports: [RouterLink, LucideAngularModule, Draggable, DropTarget, CvInsertionTarget, CvCollectionMotion, DatePipe, CvPreviewDialog, ContextMenu],
   templateUrl: './cv-collection.html',
-  styleUrls: ['./cv-collection.scss', './cv-collection-order.scss'],
+  styleUrls: ['./cv-collection.scss', './cv-collection-order.scss', './cv-collection-clipboard.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CvCollection {
@@ -42,11 +48,38 @@ export class CvCollection {
   readonly deletingIds = input<readonly string[]>([]);
   readonly deletingFolderIds = input<readonly string[]>([]);
   readonly reorderDisabled = input(false);
+  readonly folderId = input<string | null>(null);
   readonly folderOpened = output<string>();
   readonly folderDeleted = output<string>();
   readonly cvDeleted = output<string>();
   readonly moved = output<CvMove>();
   readonly reordered = output<CvReorder>();
+  readonly pasteRequested = output<string | null>();
+  protected readonly clipboard = inject(CvClipboard);
+  private readonly router = inject(Router);
+  private readonly location = inject(Location);
+  private readonly contextMenu = viewChild.required(ContextMenu);
+  private readonly menuContext = signal<CvMenuContext>({ kind: 'background' });
+  protected readonly menuItems = computed<readonly ContextMenuItem[]>(() => {
+    const context = this.menuContext();
+    const cutId = this.clipboard.cutId();
+    const destination = context.kind === 'folder' ? context.folder.id : this.folderId();
+    const paste: ContextMenuItem = {
+      id: 'paste', label: 'Paste', icon: ClipboardPaste,
+      disabled: !cutId || this.deletingIds().includes(cutId) || this.reorderDisabled() ||
+        !!destination && this.deletingFolderIds().includes(destination)
+    };
+    if (context.kind !== 'cv') return [paste];
+    const disabled = this.deletingIds().includes(context.cv.id) || this.reorderDisabled();
+    const href = this.location.prepareExternalUrl(this.router.serializeUrl(
+      this.router.createUrlTree(['/create'], { queryParams: { id: context.cv.id } })
+    ));
+    return [
+      { id: 'open', label: 'Open CV in new tab', icon: ExternalLink, href, newTab: true, disabled },
+      { id: 'cut', label: 'Cut', icon: Scissors, disabled },
+      paste
+    ];
+  });
   protected readonly FileIcon = FileText;
   protected readonly FolderIcon = Folder;
   protected readonly DeleteIcon = Trash2;
@@ -99,6 +132,30 @@ export class CvCollection {
   }
 
   protected openCv(): void { this.draft.reset(); }
+
+  protected openCvMenu(event: MouseEvent, cv: SavedCv): void {
+    this.menuContext.set({ kind: 'cv', cv });
+    this.contextMenu().open(event);
+  }
+
+  protected openFolderMenu(event: MouseEvent, folder: CvFolder): void {
+    this.menuContext.set({ kind: 'folder', folder });
+    this.contextMenu().open(event);
+  }
+
+  openBackgroundMenu(event: MouseEvent): void {
+    if (event.target instanceof Element && event.target.closest('a, button, input, select, textarea, [contenteditable="true"]')) return;
+    this.menuContext.set({ kind: 'background' });
+    this.contextMenu().open(event);
+  }
+
+  protected selectMenuItem(id: string): void {
+    const context = this.menuContext();
+    if (id === 'cut' && context.kind === 'cv') this.clipboard.cut(context.cv.id);
+    if (id === 'paste' && this.clipboard.cutId()) {
+      this.pasteRequested.emit(context.kind === 'folder' ? context.folder.id : this.folderId());
+    }
+  }
 
   protected dropOnFolder(item: DragItem, folderId: string): void {
     const cvId = this.drag.takeDrop(item);

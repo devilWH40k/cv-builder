@@ -36,7 +36,9 @@
     @if (deleteError()) { <p role="alert">{{ deleteError() }}</p> }
     @if (folderError()) { <p role="alert">{{ folderError() }}</p> }
     @if (orderError()) { <p role="alert">{{ orderError() }}</p> }
-    <app-cv-collection [cvs]="rootCvs()" [folders]="saved.folders()" [isListView]="isListView()"
+    <app-cv-collection #rootCollection class="root-collection" [cvs]="rootCvs()" [folders]="saved.folders()" [isListView]="isListView()"
+      (contextmenu)="rootCollection.openBackgroundMenu($event)"
+      (pasteRequested)="pasteCv($event)"
       [deletingIds]="busyCvIds()" [deletingFolderIds]="deletingFolderIds()"
       (cvDeleted)="deleteCv($event)" (folderOpened)="openFolder($event)"
       (folderDeleted)="deleteFolder($event)" (moved)="moveCv($event)"
@@ -51,6 +53,7 @@
 }
 @if (activeFolder(); as folder) {
   <app-folder-dialog [folder]="folder" [cvs]="folderCvs()" [isListView]="isListView()"
+    (pasteRequested)="pasteCv($event)"
     [deletingIds]="busyCvIds()" [error]="folderError() || deleteError() || orderError()"
     [reorderDisabled]="reordering()" (reordered)="reorderCv($event)"
     (dismissed)="activeFolderId.set(null)" (cvDeleted)="deleteCv($event)" (moved)="moveCv($event)" />

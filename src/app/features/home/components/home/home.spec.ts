@@ -148,6 +148,164 @@ describe('Saved CV navigation', () => {
     languages: [], experiences: [], technologies: []
   };
 
+  function openContextMenu(target: Element): void {
+    target.dispatchEvent(new MouseEvent('contextmenu', {
+      bubbles: true, cancelable: true, button: 2, clientX: 100, clientY: 100
+    }));
+  }
+
+  for (const view of ['card', 'list']) {
+    it(`shows disabled Paste on ${view} folders and collection backgrounds when nothing is cut`, async () => {
+      const saved = TestBed.inject(SavedCvs);
+      await saved.createFolder('Applications');
+      const harness = await RouterTestingHarness.create('/');
+      if (view === 'card') {
+        harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+        await harness.fixture.whenStable();
+      }
+      const expectDisabledPaste = async (target: Element) => {
+        openContextMenu(target);
+        await harness.fixture.whenStable();
+        const items = document.querySelectorAll<HTMLButtonElement>('.context-menu [role="menuitem"]');
+        expect(items.length).toBe(1);
+        expect(items[0].textContent?.trim()).toBe('Paste');
+        expect(items[0].disabled).toBeTrue();
+        items[0].click();
+        await harness.fixture.whenStable();
+        expect(document.querySelector('.context-menu')).not.toBeNull();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        await harness.fixture.whenStable();
+      };
+      for (const selector of ['main', '.saved-cvs', '#saved-title', '.saved-toolbar']) {
+        const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+        harness.routeNativeElement!.querySelector(selector)!.dispatchEvent(event);
+        await harness.fixture.whenStable();
+        expect(event.defaultPrevented).toBeFalse();
+        expect(document.querySelector('.context-menu')).toBeNull();
+      }
+      await expectDisabledPaste(harness.routeNativeElement!.querySelector('.root-collection')!);
+      await expectDisabledPaste(harness.routeNativeElement!.querySelector('.root-collection .cv-grid')!);
+      const folder = harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!;
+      await expectDisabledPaste(folder);
+      folder.click();
+      await harness.fixture.whenStable();
+      const dialog = document.querySelector<HTMLDialogElement>('#folder-dialog')!;
+      await expectDisabledPaste(dialog);
+      await expectDisabledPaste(dialog.querySelector('h2')!);
+      await expectDisabledPaste(dialog.querySelector('.empty-state')!);
+      expect(dialog.open).toBeTrue();
+      expect(saved.folders()[0].cvIds).toEqual([]);
+    });
+
+    it(`cuts and pastes a ${view} CV into a folder and back without changing CV contents`, async () => {
+      const saved = TestBed.inject(SavedCvs);
+      const id = await saved.save(cvInfo, null);
+      const folder = await saved.createFolder('Applications');
+      const harness = await RouterTestingHarness.create('/');
+      if (view === 'card') {
+        harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+        await harness.fixture.whenStable();
+      }
+      const source = harness.routeNativeElement!.querySelector<HTMLElement>('[data-cv-id]')!;
+      openContextMenu(source.querySelector('a.cv-card')!);
+      await harness.fixture.whenStable();
+      const menu = document.querySelector<HTMLElement>('.context-menu')!;
+      const newTab = menu.querySelector<HTMLAnchorElement>('[data-menu-id="open"]')!;
+      expect(newTab.getAttribute('href')).toBe('/create?id=' + id);
+      expect(newTab.target).toBe('_blank');
+      expect(menu.querySelector<HTMLButtonElement>('[data-menu-id="paste"]')!.disabled).toBeTrue();
+      menu.querySelector<HTMLButtonElement>('[data-menu-id="cut"]')!.click();
+      await harness.fixture.whenStable();
+      expect(source.classList.contains('is-cut')).toBeTrue();
+      expect(getComputedStyle(source).opacity).toBe('0.5');
+      expect(getComputedStyle(source.querySelector('a.cv-card')!).borderStyle).toBe('dashed');
+      openContextMenu(harness.routeNativeElement!.querySelector('.folder-card')!);
+      await harness.fixture.whenStable();
+      const paste = document.querySelector<HTMLButtonElement>('.context-menu [data-menu-id="paste"]')!;
+      expect(paste.disabled).toBeFalse();
+      paste.click();
+      await harness.fixture.whenStable();
+      expect(saved.folders()[0].cvIds).toEqual([id]);
+      expect(harness.routeNativeElement!.querySelector('[data-cv-id]')).toBeNull();
+      harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+      await harness.fixture.whenStable();
+      const dialog = document.querySelector<HTMLDialogElement>('#folder-dialog')!;
+      const inside = dialog.querySelector<HTMLElement>('[data-cv-id]')!;
+      expect(inside.classList.contains('is-cut')).toBeFalse();
+      openContextMenu(inside.querySelector('a.cv-card')!);
+      await harness.fixture.whenStable();
+      expect(document.querySelector('.context-menu')?.closest('[inert]')).toBeNull();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      await harness.fixture.whenStable();
+      expect(dialog.open).toBeTrue();
+      expect(document.querySelector('.context-menu')).toBeNull();
+      openContextMenu(inside.querySelector('a.cv-card')!);
+      await harness.fixture.whenStable();
+      document.querySelector<HTMLButtonElement>('.context-menu [data-menu-id="cut"]')!.click();
+      await harness.fixture.whenStable();
+      dialog.querySelector<HTMLButtonElement>('.close')!.click();
+      await harness.fixture.whenStable();
+      openContextMenu(harness.routeNativeElement!.querySelector('.root-collection')!);
+      await harness.fixture.whenStable();
+      document.querySelector<HTMLButtonElement>('.context-menu [data-menu-id="paste"]')!.click();
+      await harness.fixture.whenStable();
+      expect(saved.folders().find((item) => item.id === folder.id)?.cvIds).toEqual([]);
+      expect(harness.routeNativeElement!.querySelector('[data-cv-id]')?.classList.contains('is-cut')).toBeFalse();
+      expect(await saved.load(id)).toEqual(cvInfo);
+      expect(saved.all().length).toBe(1);
+    });
+  }
+
+  it('clears cut styling on a same-location paste without duplicating or moving the CV', async () => {
+    const saved = TestBed.inject(SavedCvs);
+    const id = await saved.save(cvInfo, null);
+    const move = spyOn(saved, 'moveCv').and.callThrough();
+    const harness = await RouterTestingHarness.create('/');
+    const source = harness.routeNativeElement!.querySelector('a.cv-card')!;
+    openContextMenu(source);
+    await harness.fixture.whenStable();
+    document.querySelector<HTMLButtonElement>('.context-menu [data-menu-id="cut"]')!.click();
+    await harness.fixture.whenStable();
+    openContextMenu(source);
+    await harness.fixture.whenStable();
+    document.querySelector<HTMLButtonElement>('.context-menu [data-menu-id="paste"]')!.click();
+    await harness.fixture.whenStable();
+    expect(move).not.toHaveBeenCalled();
+    expect(saved.all().map((cv) => cv.id)).toEqual([id]);
+    expect(harness.routeNativeElement!.querySelector('.is-cut')).toBeNull();
+  });
+
+  it('allows paste into an empty open folder and keeps the cut CV when a move fails', async () => {
+    const saved = TestBed.inject(SavedCvs);
+    const id = await saved.save(cvInfo, null);
+    const folder = await saved.createFolder('Applications');
+    const harness = await RouterTestingHarness.create('/');
+    openContextMenu(harness.routeNativeElement!.querySelector('a.cv-card')!);
+    await harness.fixture.whenStable();
+    document.querySelector<HTMLButtonElement>('.context-menu [data-menu-id="cut"]')!.click();
+    await harness.fixture.whenStable();
+    harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+    await harness.fixture.whenStable();
+    const move = spyOn(saved, 'moveCv').and.rejectWith(new Error('Storage unavailable'));
+    openContextMenu(document.querySelector('#folder-dialog')!);
+    await harness.fixture.whenStable();
+    document.querySelector<HTMLButtonElement>('.context-menu [data-menu-id="paste"]')!.click();
+    await harness.fixture.whenStable();
+    expect(move).toHaveBeenCalledOnceWith(id, folder.id);
+    expect(saved.folders()[0].cvIds).toEqual([]);
+    expect(harness.routeNativeElement!.querySelector('[data-cv-id]')?.classList.contains('is-cut')).toBeTrue();
+    expect(document.querySelector('#folder-dialog [role="alert"]')?.textContent).toContain('could not be moved');
+    move.and.callThrough();
+    openContextMenu(document.querySelector('#folder-dialog .empty-state')!);
+    await harness.fixture.whenStable();
+    const paste = document.querySelector<HTMLButtonElement>('.context-menu [data-menu-id="paste"]')!;
+    expect(paste.disabled).toBeFalse();
+    paste.click();
+    await harness.fixture.whenStable();
+    expect(document.querySelector('#folder-dialog [data-cv-id]')?.classList.contains('is-cut')).toBeFalse();
+    expect(saved.folders()[0].cvIds).toEqual([id]);
+  });
+
   function startDrag(source: Element): void {
     source.scrollIntoView({ block: 'center' });
     const rect = source.getBoundingClientRect();

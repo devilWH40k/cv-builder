@@ -25,6 +25,7 @@ export class FolderDialog {
   readonly cvDeleted = output<string>();
   readonly moved = output<CvMove>();
   readonly reordered = output<CvReorder>();
+  readonly pasteRequested = output<string | null>();
   protected readonly drag = inject(CvDragStore);
   protected readonly dragType = CV_DRAG_TYPE;
 

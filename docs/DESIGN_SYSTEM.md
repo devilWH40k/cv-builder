@@ -1543,6 +1543,26 @@ editing. New CVs appear first. Reordering does not change contents or updated ti
 failed writes keep the previous order. Replacing the database with an import resets
 the manual order; ZIP backups retain their existing content and folder format.
 
+## Shared context menus
+
+The shared `app-context-menu` takes typed `items`, an accessible `label`, and emits
+`selected` action IDs. Call `open($event)` from a context-menu trigger. Optional
+icons, disabled actions, and safe new-tab links are supported. The menu is mounted
+at body level above dialogs, fits within the viewport, supports keyboard navigation,
+and dismisses on Escape, outside interaction, scrolling, or resize. Escape closes
+the menu before an enclosing dialog; dismissal restores focus to the trigger.
+
+CV context menus provide Open CV in new tab, Cut, and Paste. Cut marks one CV with
+a muted appearance and dashed border. Right-click a folder, the main collection,
+or folder-dialog background to paste there, including empty folders. The main
+collection has compact padding and a neutral border marking its context-menu area;
+the page heading and toolbar keep their normal browser menu. These menus
+always show Paste, disabled while nothing is cut. The dialog shell forwards
+`contextRequested` from its overlay so folder menus also cover its title and padding.
+Cut is kept in session state and is cleared
+after a successful move, a same-location paste, or deletion. A failed move retains
+the selection for retry. The move uses existing IndexedDB folder persistence.
+
 ## Shared pointer dragging
 
 Wrap draggable content in `shared/ui/draggable/draggable` (`app-draggable`) and

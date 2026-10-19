@@ -1,8 +1,9 @@
 <div #collection class="cv-grid" [class.cv-list]="isListView()"
+  (contextmenu)="openBackgroundMenu($event)"
   [cvCollectionMotion]="cvs()" [motionInsertion]="insertion()" [motionDragging]="canReorder()"
   [appDropTarget]="dragType" [dropDisabled]="!canReorder()" (itemDropped)="dropInCollection($event)">
   @for (folder of folders(); track folder.id) {
-    <article class="saved-card saved-folder" [appDropTarget]="dragType"
+    <article class="saved-card saved-folder" [appDropTarget]="dragType" (contextmenu)="openFolderMenu($event, folder)"
       [dropDisabled]="deletingFolderIds().includes(folder.id)" (itemDropped)="dropOnFolder($event, folder.id)">
       <button class="cv-card folder-card" type="button" (click)="folderOpened.emit(folder.id)"
         [attr.aria-label]="'Open folder ' + folder.name">
@@ -28,7 +29,8 @@
       </div>
     }
     <app-draggable [dragId]="cv.id" [dragType]="dragType" [disabled]="deletingIds().includes(cv.id) || reorderDisabled()">
-    <article class="saved-card" [attr.data-cv-id]="cv.id">
+    <article class="saved-card" [attr.data-cv-id]="cv.id" [class.is-cut]="clipboard.cutId() === cv.id"
+      (contextmenu)="openCvMenu($event, cv)">
       @if (canReorder()) {
         <span class="insert-target insert-before" aria-hidden="true" [appDropTarget]="dragType"
           [cvInsertionTarget]="cv.id" position="before"
@@ -89,6 +91,7 @@
     }
   }
 </div>
+<app-context-menu [items]="menuItems()" label="CV actions" (selected)="selectMenuItem($event)" />
 @defer (when previewCv()) {
   @if (previewCv(); as cv) {
     <app-cv-preview-dialog [cv]="cv" (dismissed)="previewCv.set(null)" />
