@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { LucideAngularModule, Plus, FolderPlus, List, LayoutGrid } from 'lucide-angular';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { CvDraft } from '../../../cv/services/cv-draft';
+import { CvReorder } from '../../../cv/interfaces/cv-reorder';
 import { HomeViewStore } from '../../state/home-view-store';
 import { CvDragStore } from '../../state/cv-drag-store';
 import { CvCollection, CvMove } from '../cv-collection/cv-collection';
@@ -40,6 +41,8 @@ export class Home {
     return this.saved.all().filter((cv) => ids.has(cv.id) && !movingIds.has(cv.id));
   });
   protected readonly folderError = signal('');
+  protected readonly orderError = signal('');
+  protected readonly reordering = signal(false);
   protected readonly deletingFolderIds = signal<readonly string[]>([]);
   private readonly movingIds = signal<readonly string[]>([]);
   protected readonly busyCvIds = computed(() => [...this.deletingIds(), ...this.movingIds()]);
@@ -113,5 +116,15 @@ export class Home {
       this.movingIds.update((ids) => ids.filter((entry) => entry !== cvId));
       done();
     }
+  }
+
+  protected async reorderCv(reorder: CvReorder): Promise<void> {
+    if (this.reordering() || this.busyCvIds().includes(reorder.cvId) || this.busyCvIds().includes(reorder.targetId)) return;
+    this.reordering.set(true);
+    this.orderError.set('');
+    const done = this.pendingTasks.add();
+    try { await this.saved.reorderCv(reorder); }
+    catch { this.orderError.set('The CV order could not be saved. Please try again.'); }
+    finally { this.reordering.set(false); done(); }
   }
 }

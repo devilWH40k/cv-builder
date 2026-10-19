@@ -5,6 +5,8 @@ import { parseLegacyCvs, LEGACY_STORAGE_KEY } from '../helpers/legacy-saved-cvs'
 import { SavedTechnology, technologyId } from '../helpers/saved-technology';
 import { CustomEntry } from '../../../core/dialogs/custom-entry-dialog/custom-entry-dialog';
 import { CvFolder } from '../interfaces/cv-folder';
+import { CvReorder } from '../interfaces/cv-reorder';
+import { orderSavedCvs } from '../helpers/cv-order';
 
 export interface SavedCv {
   readonly id: string;
@@ -59,11 +61,12 @@ export class SavedCvs {
     this.loading.set(true);
     try {
       const database = await this.open();
-      const transaction = database.transaction(['cvs', 'folders'], 'readonly');
+      const transaction = database.transaction(['cvs', 'folders', 'metadata'], 'readonly');
       const records: IDBRequest<SavedCv[]> = transaction.objectStore('cvs').getAll();
       const folders: IDBRequest<CvFolder[]> = transaction.objectStore('folders').getAll();
+      const order: IDBRequest<unknown> = transaction.objectStore('metadata').get('cv-order');
       await completed(transaction);
-      this.records.set(records.result.sort((first, second) => second.updatedAt - first.updatedAt));
+      this.records.set(orderSavedCvs(records.result, order.result));
       this.folderRecords.set(folders.result.sort((a, b) => a.name.localeCompare(b.name)));
       this.error.set('');
     } catch {
@@ -128,6 +131,35 @@ export class SavedCvs {
         } catch (error: unknown) { abort(error); }
       };
     });
+    await this.refresh();
+  }
+
+  async reorderCv({ cvId, targetId, position }: CvReorder): Promise<void> {
+    if (cvId === targetId) return;
+    const database = await this.open();
+    const transaction = database.transaction(['cvs', 'folders', 'metadata'], 'readwrite');
+    const done = completed(transaction);
+    let operationError: unknown;
+    const cvs: IDBRequest<SavedCv[]> = transaction.objectStore('cvs').getAll();
+    const folders: IDBRequest<CvFolder[]> = transaction.objectStore('folders').getAll();
+    const metadata = transaction.objectStore('metadata');
+    const order: IDBRequest<unknown> = metadata.get('cv-order');
+    order.onsuccess = () => {
+      try {
+        if (![cvId, targetId].every((id) => cvs.result.some((cv) => cv.id === id))) {
+          throw new Error('This CV no longer exists.');
+        }
+        const folderOf = (id: string) => folders.result.find((folder) => folder.cvIds.includes(id))?.id;
+        if (folderOf(cvId) !== folderOf(targetId)) throw new Error('These CVs are in different collections.');
+        const remaining = orderSavedCvs(cvs.result, order.result).map((cv) => cv.id).filter((id) => id !== cvId);
+        const index = remaining.indexOf(targetId) + (position === 'after' ? 1 : 0);
+        metadata.put([...remaining.slice(0, index), cvId, ...remaining.slice(index)], 'cv-order');
+      } catch (error: unknown) {
+        operationError = error;
+        transaction.abort();
+      }
+    };
+    await done.catch((error: unknown) => { throw operationError ?? error; });
     await this.refresh();
   }
 
@@ -244,7 +276,7 @@ export class SavedCvs {
     wipePreviousData = false, technologies: readonly SavedTechnology[] = [], folders: readonly CvFolder[] = []
   ): Promise<void> {
     const database = await this.open();
-    const transaction = database.transaction(['cvs', 'experiences', 'technologies', 'folders'], 'readwrite');
+    const transaction = database.transaction(['cvs', 'experiences', 'technologies', 'folders', 'metadata'], 'readwrite');
     const done = completed(transaction);
     let importedTechnologies: SavedTechnology[] = [];
     try {
@@ -257,6 +289,7 @@ export class SavedCvs {
         experiencesStore.clear();
         technologiesStore.clear();
         foldersStore.clear();
+        transaction.objectStore('metadata').delete('cv-order');
       }
       for (const record of records) cvsStore.put(record);
       for (const record of technologies) technologiesStore.put(record);

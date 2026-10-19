@@ -1,4 +1,6 @@
-<div class="cv-grid" [class.cv-list]="isListView()">
+<div #collection class="cv-grid" [class.cv-list]="isListView()"
+  [cvCollectionMotion]="cvs()" [motionInsertion]="insertion()" [motionDragging]="canReorder()"
+  [appDropTarget]="dragType" [dropDisabled]="!canReorder()" (itemDropped)="dropInCollection($event)">
   @for (folder of folders(); track folder.id) {
     <article class="saved-card saved-folder" [appDropTarget]="dragType"
       [dropDisabled]="deletingFolderIds().includes(folder.id)" (itemDropped)="dropOnFolder($event, folder.id)">
@@ -19,8 +21,22 @@
     </article>
   }
   @for (cv of cvs(); track cv.id) {
-    <app-draggable [dragId]="cv.id" [dragType]="dragType" [disabled]="deletingIds().includes(cv.id)">
+    @if (insertion()?.targetId === cv.id && insertion()?.position === 'before') {
+      <div class="cv-placeholder" aria-hidden="true" [style.height.px]="dragSize()?.height">
+        <span class="placeholder-hit" [cvInsertionTarget]="cv.id" position="before" [appDropTarget]="dragType"
+          (itemDropped)="dropBetween($event, cv.id, 'before')"></span>
+      </div>
+    }
+    <app-draggable [dragId]="cv.id" [dragType]="dragType" [disabled]="deletingIds().includes(cv.id) || reorderDisabled()">
     <article class="saved-card" [attr.data-cv-id]="cv.id">
+      @if (canReorder()) {
+        <span class="insert-target insert-before" aria-hidden="true" [appDropTarget]="dragType"
+          [cvInsertionTarget]="cv.id" position="before"
+          [dropDisabled]="deletingIds().includes(cv.id)" (itemDropped)="dropBetween($event, cv.id, 'before')"></span>
+        <span class="insert-target insert-after" aria-hidden="true" [appDropTarget]="dragType"
+          [cvInsertionTarget]="cv.id" position="after"
+          [dropDisabled]="deletingIds().includes(cv.id)" (itemDropped)="dropBetween($event, cv.id, 'after')"></span>
+      }
       <a class="cv-card" routerLink="/create" (click)="openCv()" [queryParams]="{ id: cv.id }"
         [draggable]="false"
         [attr.aria-label]="'Edit ' + (cv.info.name || 'Untitled CV')">
@@ -65,6 +81,12 @@
       </div>
     </article>
     </app-draggable>
+    @if (insertion()?.targetId === cv.id && insertion()?.position === 'after') {
+      <div class="cv-placeholder" aria-hidden="true" [style.height.px]="dragSize()?.height">
+        <span class="placeholder-hit" [cvInsertionTarget]="cv.id" position="after" [appDropTarget]="dragType"
+          (itemDropped)="dropBetween($event, cv.id, 'after')"></span>
+      </div>
+    }
   }
 </div>
 @defer (when previewCv()) {

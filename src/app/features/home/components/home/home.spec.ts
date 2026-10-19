@@ -351,6 +351,106 @@ describe('Saved CV navigation', () => {
     });
   }
 
+  for (const view of ['card', 'list']) {
+    for (const location of ['main collection', 'folder']) {
+      it(`reorders ${view} CVs in the ${location}, highlights insertion points, and keeps order after navigation`, async () => {
+        const saved = TestBed.inject(SavedCvs);
+        await saved.importRecords(['a', 'b', 'c'].map((id, index) => ({
+          id, updatedAt: 3 - index, info: { ...cvInfo, name: id }
+        })));
+        let folderId: string | null = null;
+        if (location === 'folder') {
+          const folder = await saved.createFolder('Applications');
+          folderId = folder.id;
+          for (const id of ['a', 'b', 'c']) await saved.moveCv(id, folder.id);
+        }
+        const harness = await RouterTestingHarness.create('/');
+        if (view === 'card') {
+          harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+          await harness.fixture.whenStable();
+        }
+        if (folderId) {
+          harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+          await harness.fixture.whenStable();
+        }
+        const collection = () => folderId ? document.querySelector('#folder-dialog')! : harness.routeNativeElement!;
+        const ids = () => Array.from(collection().querySelectorAll<HTMLElement>('[data-cv-id]')).map((cv) => cv.dataset['cvId']);
+        expect(ids()).toEqual(['a', 'b', 'c']);
+        expect(collection().querySelector('.insert-target')).toBeNull();
+        const source = collection().querySelector<HTMLElement>('[data-cv-id="c"]')!;
+        const sourceBounds = source.getBoundingClientRect();
+        startDrag(source.querySelector('a.cv-card')!);
+        await harness.fixture.whenStable();
+        const target = collection().querySelector<HTMLElement>('[data-cv-id="b"] .insert-before')!;
+        target.scrollIntoView({ block: 'center' });
+        const rect = target.getBoundingClientRect();
+        const x = rect.left + rect.width * (view === 'list' ? 0.5 : 0.25);
+        const y = rect.top + (view === 'list' ? 2 : rect.height / 2);
+        document.dispatchEvent(new PointerEvent('pointermove', {
+          pointerId: 1, clientX: x, clientY: y, bubbles: true, cancelable: true
+        }));
+        await harness.fixture.whenStable();
+        expect(target.classList.contains('drop-target')).toBeTrue();
+        const placeholder = collection().querySelector<HTMLElement>('.cv-placeholder')!;
+        const placeholderStyle = getComputedStyle(placeholder);
+        expect(placeholderStyle.borderColor).toBe('rgb(54, 212, 247)');
+        expect(placeholderStyle.borderStyle).toBe('solid');
+        expect(placeholderStyle.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+        expect(placeholder.getBoundingClientRect().height).toBeCloseTo(sourceBounds.height, 0);
+        expect(placeholder.getBoundingClientRect().width).toBeCloseTo(sourceBounds.width, 0);
+        const hit = placeholder.querySelector<HTMLElement>('.placeholder-hit')!;
+        overTarget(hit);
+        await harness.fixture.whenStable();
+        expect(collection().querySelectorAll('.cv-placeholder').length).toBe(1);
+        const card = collection().querySelector<HTMLElement>('[data-cv-id="b"]')!;
+        overTarget(card);
+        await harness.fixture.whenStable();
+        expect(collection().querySelector('.cv-placeholder')).toBe(placeholder);
+        const targetBounds = target.getBoundingClientRect();
+        const itemBounds = target.parentElement!.getBoundingClientRect();
+        expect(view === 'list' ? targetBounds.top < itemBounds.top : targetBounds.left < itemBounds.left).toBeTrue();
+        releaseOn(card);
+        await harness.fixture.whenStable();
+        expect(ids()).toEqual(['a', 'c', 'b']);
+        expect(collection().querySelector('.insert-target')).toBeNull();
+        expect(collection().querySelector('.cv-placeholder')).toBeNull();
+        expect(document.querySelector('.app-drag-preview')).toBeNull();
+        if (folderId) expect(saved.folders()[0].cvIds).toEqual(['a', 'b', 'c']);
+        await harness.navigateByUrl('/guides');
+        await harness.navigateByUrl('/');
+        await harness.fixture.whenStable();
+        if (folderId) {
+          harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+          await harness.fixture.whenStable();
+        }
+        expect(ids()).toEqual(['a', 'c', 'b']);
+      });
+    }
+  }
+
+  it('keeps CV order unchanged when insertion is cancelled or storage fails', async () => {
+    const saved = TestBed.inject(SavedCvs);
+    await saved.importRecords(['a', 'b', 'c'].map((id, index) => ({ id, updatedAt: 3 - index, info: cvInfo })));
+    const harness = await RouterTestingHarness.create('/');
+    const root = harness.routeNativeElement!;
+    const ids = () => Array.from(root.querySelectorAll<HTMLElement>('[data-cv-id]')).map((cv) => cv.dataset['cvId']);
+    startDrag(root.querySelector('[data-cv-id="c"] a.cv-card')!);
+    await harness.fixture.whenStable();
+    overTarget(root.querySelector('[data-cv-id="a"] .insert-before')!);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await harness.fixture.whenStable();
+    expect(ids()).toEqual(['a', 'b', 'c']);
+    expect(root.querySelector('.insert-target')).toBeNull();
+    expect(root.querySelector('.cv-placeholder')).toBeNull();
+    spyOn(saved, 'reorderCv').and.rejectWith(new Error('Storage unavailable'));
+    startDrag(root.querySelector('[data-cv-id="c"] a.cv-card')!);
+    await harness.fixture.whenStable();
+    releaseOn(root.querySelector('[data-cv-id="a"] .insert-before')!);
+    await harness.fixture.whenStable();
+    expect(ids()).toEqual(['a', 'b', 'c']);
+    expect(root.querySelector('[role="alert"]')?.textContent).toContain('order could not be saved');
+  });
+
   it('cancels drags and ignores external drops without changing folder membership', async () => {
     const saved = TestBed.inject(SavedCvs);
     await saved.save(cvInfo, null);

@@ -87,7 +87,7 @@ lucide-icon { display: flex; flex-shrink: 0; }
   text-align: center;
   > lucide-icon { color: tokens.$text-accent; }
 }
-.drop-target .folder-card { border-color: tokens.$color-primary; background: tokens.$background-primary-subtle; }
+.saved-folder.drop-target .folder-card { border-color: tokens.$color-primary; background: tokens.$background-primary-subtle; }
 .folder-count { color: tokens.$text-muted; }
 .cv-list {
   grid-template-columns: minmax(0, 1fr);

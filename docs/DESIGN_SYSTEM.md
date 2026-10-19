@@ -1528,6 +1528,21 @@ in version 4 backups. CV moves and empty-folder deletion checks are transactiona
 Dropping a CV outside its folder dialog returns it to the main collection;
 canceling the drag leaves membership unchanged. Folders cannot contain folders.
 
+CVs can also be reordered within the main collection and within a folder. While
+dragging, the space beside cards or above and below list rows accepts insertion
+with an empty primary-color rectangular placeholder matching the dragged item's
+size and marking the drop position. The placeholder occupies an item slot while
+hovered and stays stable while crossing the collection until another insertion
+point is chosen. Neighboring card contents animate into position without moving
+the insertion hit areas; reduced-motion preferences disable these animations.
+The placeholder disappears when leaving the collection, dropping, or cancelling.
+Dropping on a folder
+still moves the CV into it. Manual CV order is saved in IndexedDB metadata and is
+shared by card/list views, survives navigation and reloads, and stays stable after
+editing. New CVs appear first. Reordering does not change contents or updated times;
+failed writes keep the previous order. Replacing the database with an import resets
+the manual order; ZIP backups retain their existing content and folder format.
+
 ## Shared pointer dragging
 
 Wrap draggable content in `shared/ui/draggable/draggable` (`app-draggable`) and
