@@ -1,8 +1,10 @@
-<dialog appDialogOverlay [class.wide]="wide()" [id]="dialogId()" [style.--dialog-min-height]="minHeight()"
+<dialog appDialogOverlay [class.wide]="wide()" [class.full-height]="fullHeight()" [class.title-hidden]="!showTitle()"
+  [id]="dialogId()" [style.--dialog-min-height]="minHeight()"
   [attr.aria-labelledby]="dialogId() + '-title'" [attr.aria-busy]="busy()" [backdropDropType]="backdropDropType()"
   (backdropDropped)="backdropDropped.emit($event)" (cancel)="$event.preventDefault(); close()">
   <header>
-    <h2 [id]="dialogId() + '-title'">{{ title() }}</h2>
+    <h2 [id]="dialogId() + '-title'" [hidden]="!showTitle()">{{ title() }}</h2>
+    <ng-content select="[dialogHeaderActions]" />
     @if (showClose()) {
     <button class="close" type="button" [attr.aria-label]="'Close ' + title()" [disabled]="busy()" (click)="close()">
       <lucide-icon [img]="CloseIcon" [size]="20" aria-hidden="true" />

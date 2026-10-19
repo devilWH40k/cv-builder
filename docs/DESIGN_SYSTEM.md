@@ -1512,8 +1512,13 @@ default to List; if browser storage is blocked, switches still work for the sess
 New dialogs can use `shared/ui/dialog/dialog` (`app-dialog`). Supply a unique
 `dialogId` and `title`, project the body normally, and project actions with
 `dialogActions`. Optional `wide`, `minHeight`, `busy`, and `showClose` inputs control the shell;
+project optional header actions with `dialogHeaderActions` to place them before Close.
 `dismissed` handles Close, Escape, and backdrop dismissal. It reuses `DialogOverlay`
-for focus, inertness, and cleanup. `minHeight` is capped by the viewport; folder
+for focus, inertness, and cleanup. `fullHeight` fills the available height with viewport
+gutters to keep rounded corners visible; `showTitle` can hide the visible heading
+while retaining the dialog's accessible name. The saved CV preview keeps its Preview
+heading and uses smaller pages with scrolling in the dialog body.
+`minHeight` is capped by the viewport; folder
 dialogs use 32rem. `backdropDropType` opts into accepting a shared drag item type
 on the backdrop; `backdropDropped` delivers the `{ type, id }` item without
 dismissing the dialog. Drops inside the dialog do not trigger that output.

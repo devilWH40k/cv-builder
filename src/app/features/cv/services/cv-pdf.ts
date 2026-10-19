@@ -14,6 +14,7 @@ export class CvPdf {
     try {
       const { downloadCvPdf } = await import('../helpers/cv-pdf-document');
       await downloadCvPdf(cv);
+      this.toasts.show('success', 'Your PDF download has finished.');
     } catch {
       this.toasts.show('danger', 'Your PDF could not be exported. Please try again.');
     } finally {

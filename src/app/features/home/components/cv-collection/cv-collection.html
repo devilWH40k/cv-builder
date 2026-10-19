@@ -48,11 +48,27 @@
           <span class="cv-caption">{{ cv.info.name || 'Untitled CV' }}</span>
         }
       </a>
-      <button class="delete-cv" type="button" [disabled]="deletingIds().includes(cv.id)"
+      <div class="cv-actions">
+      <button class="cv-action preview-cv" type="button" [disabled]="deletingIds().includes(cv.id)"
+        (click)="previewCv.set(cv)" title="Preview CV" [attr.aria-label]="'Preview ' + (cv.info.name || 'Untitled CV')">
+        <lucide-icon [img]="PreviewIcon" [size]="18" aria-hidden="true" />
+      </button>
+      <button class="cv-action download-cv" type="button" [disabled]="deletingIds().includes(cv.id) || pdf.exporting()"
+        (click)="pdf.download(cv.info)" [title]="pdf.exporting() ? 'Exporting PDF…' : 'Download PDF'"
+        [attr.aria-label]="'Download ' + (cv.info.name || 'Untitled CV') + ' as PDF'">
+        <lucide-icon [img]="DownloadIcon" [size]="18" aria-hidden="true" />
+      </button>
+      <button class="cv-action delete-cv" type="button" [disabled]="deletingIds().includes(cv.id)"
         (click)="cvDeleted.emit(cv.id)" [attr.aria-label]="'Delete ' + (cv.info.name || 'Untitled CV')">
         <lucide-icon [img]="DeleteIcon" [size]="18" aria-hidden="true" />
       </button>
+      </div>
     </article>
     </app-draggable>
   }
 </div>
+@defer (when previewCv()) {
+  @if (previewCv(); as cv) {
+    <app-cv-preview-dialog [cv]="cv" (dismissed)="previewCv.set(null)" />
+  }
+}

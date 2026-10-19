@@ -1,10 +1,12 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { FileText, Folder, LucideAngularModule, Trash2 } from 'lucide-angular';
+import { Download, Eye, FileText, Folder, LucideAngularModule, Trash2 } from 'lucide-angular';
 import { CvFolder } from '../../../cv/interfaces/cv-folder';
 import { CvDraft } from '../../../cv/services/cv-draft';
 import { SavedCv } from '../../../cv/services/saved-cvs';
+import { CvPdf } from '../../../cv/services/cv-pdf';
+import { CvPreviewDialog } from '../cv-preview-dialog/cv-preview-dialog';
 import { CvDragStore, CV_DRAG_TYPE } from '../../state/cv-drag-store';
 import { Draggable } from '../../../../shared/ui/draggable/draggable';
 import { DropTarget } from '../../../../shared/ui/draggable/drop-target';
@@ -18,7 +20,7 @@ export interface CvMove {
 
 @Component({
   selector: 'app-cv-collection',
-  imports: [RouterLink, LucideAngularModule, Draggable, DropTarget, DatePipe],
+  imports: [RouterLink, LucideAngularModule, Draggable, DropTarget, DatePipe, CvPreviewDialog],
   templateUrl: './cv-collection.html',
   styleUrl: './cv-collection.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -36,6 +38,10 @@ export class CvCollection {
   protected readonly FileIcon = FileText;
   protected readonly FolderIcon = Folder;
   protected readonly DeleteIcon = Trash2;
+  protected readonly PreviewIcon = Eye;
+  protected readonly DownloadIcon = Download;
+  protected readonly pdf = inject(CvPdf);
+  protected readonly previewCv = signal<SavedCv | null>(null);
   protected readonly drag = inject(CvDragStore);
   protected readonly dragType = CV_DRAG_TYPE;
   private readonly now = signal(Date.now());

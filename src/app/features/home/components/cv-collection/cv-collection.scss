@@ -50,21 +50,34 @@
 }
 .cv-caption, .folder-name { font-weight: tokens.$font-weight-medium; overflow-wrap: anywhere; }
 lucide-icon { display: flex; flex-shrink: 0; }
-.delete-cv {
+.cv-actions {
+  position: absolute;
+  top: tokens.$spacing-2;
+  right: tokens.$spacing-2;
+  display: flex;
+  gap: tokens.$spacing-1;
+}
+.cv-action, .delete-folder {
   @include buttons.ghost;
   & {
-    position: absolute;
-    top: tokens.$spacing-2;
-    right: tokens.$spacing-2;
     width: tokens.$button-height-md;
     height: tokens.$button-height-md;
     padding: 0;
     background: tokens.$background-surface;
-    color: tokens.$color-danger;
   }
-  &:hover { color: tokens.$color-danger-hover; background: tokens.$color-danger-light; }
   &:disabled { opacity: 0.4; cursor: not-allowed; }
 }
+.cv-actions .cv-action { border-color: tokens.$color-primary; }
+.cv-actions .delete-cv { border-color: tokens.$color-danger; }
+.preview-cv:hover:enabled, .download-cv:hover:enabled {
+  background: tokens.$color-primary;
+  color: tokens.$text-on-primary;
+}
+.delete-cv {
+  color: tokens.$color-danger;
+  &:hover { color: tokens.$color-danger-hover; background: tokens.$color-danger-light; }
+}
+.delete-folder { position: absolute; top: tokens.$spacing-2; right: tokens.$spacing-2; }
 .folder-card {
   align-items: center;
   justify-content: center;
@@ -81,6 +94,10 @@ lucide-icon { display: flex; flex-shrink: 0; }
   gap: tokens.$spacing-2;
   > * { max-width: none; }
   .cv-card { flex-direction: row; align-items: center; padding-right: tokens.$spacing-16; text-align: left; }
+  .saved-card:has(.cv-actions) > .cv-card {
+    padding-bottom: tokens.$spacing-4;
+    padding-right: calc(3 * #{tokens.$button-height-lg} + 2 * #{tokens.$spacing-1} + #{tokens.$spacing-4});
+  }
   .folder-card { min-height: 0; }
   .folder-name { flex: 1; min-width: 0; }
   .cv-details {
@@ -93,8 +110,10 @@ lucide-icon { display: flex; flex-shrink: 0; }
   }
   .cv-position { color: tokens.$text-secondary; }
   .cv-updated { flex-shrink: 0; color: tokens.$text-muted; font-size: tokens.$font-size-xs; white-space: nowrap; }
-  .delete-cv { top: 50%; transform: translateY(-50%); }
+  .cv-actions, .delete-folder { top: 50%; bottom: auto; transform: translateY(-50%); }
   @media (max-width: tokens.$breakpoint-sm) {
+    .saved-card:has(.cv-actions) > .cv-card { padding-right: tokens.$spacing-4; padding-bottom: tokens.$spacing-16; }
+    .cv-actions { top: auto; bottom: tokens.$spacing-2; transform: none; }
     .cv-details { grid-template-columns: minmax(0, 1fr); gap: tokens.$spacing-1; }
   }
 }

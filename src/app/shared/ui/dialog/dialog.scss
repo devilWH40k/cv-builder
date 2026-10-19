@@ -13,6 +13,12 @@ dialog {
   box-shadow: tokens.$shadow-lg;
   text-align: left;
   &.wide { width: min(tokens.$breakpoint-lg, calc(100% - #{tokens.$spacing-8})); }
+  &.full-height {
+    height: calc(100dvh - #{tokens.$spacing-8});
+    padding: tokens.$spacing-4;
+    .content { flex: 1; }
+  }
+  &.title-hidden header { justify-content: flex-end; margin-bottom: tokens.$spacing-2; }
 }
 dialog[open] { display: flex; flex-direction: column; overflow: hidden; }
 header { display: flex; flex-shrink: 0; align-items: center; gap: tokens.$spacing-4; margin-bottom: tokens.$spacing-4; }

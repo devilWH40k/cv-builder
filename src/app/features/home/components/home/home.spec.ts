@@ -1,10 +1,11 @@
 import { provideZonelessChangeDetection } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { provideRouter, Router } from '@angular/router';
 import { routes } from '../../../../app.routes';
 import { CV_DATABASE_NAME, SavedCvs } from '../../../cv/services/saved-cvs';
 import { CvDraft } from '../../../cv/services/cv-draft';
+import { CvPdf } from '../../../cv/services/cv-pdf';
 import { Create } from '../../../create/components/create/create';
 
 describe('Saved CV navigation', () => {
@@ -398,6 +399,86 @@ describe('Saved CV navigation', () => {
     expect(TestBed.inject(CvDraft).savedId()).toBeNull();
     expect(TestBed.inject(Router).url).toBe('/');
   });
+
+  for (const view of ['card', 'list']) {
+    it(`previews and downloads a folder CV in ${view} view while preserving the folder dialog`, async () => {
+      const saved = TestBed.inject(SavedCvs);
+      const id = await saved.save(cvInfo, null);
+      const folder = await saved.createFolder('Applications');
+      await saved.moveCv(id, folder.id);
+      const download = spyOn(TestBed.inject(CvPdf), 'download').and.resolveTo();
+      const harness = await RouterTestingHarness.create('/');
+      if (view === 'card') {
+        harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+        await harness.fixture.whenStable();
+      }
+      harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+      await harness.fixture.whenStable();
+      const folderDialog = document.querySelector<HTMLDialogElement>('#folder-dialog')!;
+      const button = folderDialog.querySelector<HTMLButtonElement>('.preview-cv')!;
+      button.focus();
+      button.click();
+      for (const block of await harness.fixture.getDeferBlocks()) {
+        await block.render(DeferBlockState.Complete);
+      }
+      await harness.fixture.whenStable();
+      const preview = document.getElementById('cv-preview-' + id)!;
+      expect(preview.querySelector('.cv-info h2')?.textContent).toBe('Ada');
+      expect(folderDialog.parentElement!.inert).toBeTrue();
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      await harness.fixture.whenStable();
+      expect(document.getElementById('cv-preview-' + id)).toBeNull();
+      expect(folderDialog.open).toBeTrue();
+      expect(folderDialog.parentElement!.inert).toBeFalse();
+      expect(document.activeElement).toBe(button);
+      folderDialog.querySelector<HTMLButtonElement>('.download-cv')!.click();
+      expect(download).toHaveBeenCalledOnceWith(saved.all()[0].info);
+      expect(saved.folders()[0].cvIds).toEqual([id]);
+      expect(TestBed.inject(Router).url).toBe('/');
+    });
+  }
+
+  for (const view of ['card', 'list']) {
+    for (const location of ['main collection', 'folder']) {
+      it(`edits the previewed ${view} CV from the ${location} and clears its overlays`, async () => {
+        const saved = TestBed.inject(SavedCvs);
+        await saved.save(cvInfo, null);
+        const id = await saved.save({ ...cvInfo, name: 'Grace' }, null);
+        if (location === 'folder') {
+          const folder = await saved.createFolder('Applications');
+          await saved.moveCv(id, folder.id);
+        }
+        const draft = TestBed.inject(CvDraft);
+        draft.save({ ...cvInfo, name: 'Stale editor draft' });
+        draft.savedId.set(id);
+        const harness = await RouterTestingHarness.create('/');
+        if (view === 'card') {
+          harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+          await harness.fixture.whenStable();
+        }
+        if (location === 'folder') {
+          harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
+          await harness.fixture.whenStable();
+        }
+        document.querySelector<HTMLButtonElement>(`[data-cv-id="${id}"] .preview-cv`)!.click();
+        for (const block of await harness.fixture.getDeferBlocks()) {
+          await block.render(DeferBlockState.Complete);
+        }
+        await harness.fixture.whenStable();
+        const preview = document.getElementById('cv-preview-' + id)!;
+        expect(preview.querySelector('.cv-info h2')?.textContent).toBe('Grace');
+        expect(draft.current()?.name).toBe('Stale editor draft');
+        preview.querySelector<HTMLAnchorElement>('header .edit-cv')!.click();
+        await harness.fixture.whenStable();
+        expect(TestBed.inject(Router).url).toBe('/create?id=' + id);
+        expect((harness.routeDebugElement!.componentInstance as Create).form.controls.name.value).toBe('Grace');
+        expect(draft.savedId()).toBe(id);
+        expect(draft.hasUnsavedChanges()).toBeFalse();
+        expect(document.querySelector('.dialog-overlay')).toBeNull();
+        expect(document.querySelector('[inert]')).toBeNull();
+      });
+    }
+  }
 
   it('keeps a CV in its folder when a move out fails', async () => {
     const saved = TestBed.inject(SavedCvs);
