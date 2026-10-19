@@ -28,14 +28,17 @@ import { Select } from '../../../../shared/ui/select/select';
 import { ArrowLeft, Download, Eye, Pencil, LucideAngularModule, X } from 'lucide-angular';
 import { TechnologySelect } from '../../../cv/components/technology-select/technology-select';
 import { TECHNOLOGY_GROUPS } from '../../../cv/constants/technologies';
+import { SaveCv } from '../../../cv/services/save-cv';
+import { LeaveCreateDecision, LeaveCreateDialog } from '../leave-create-dialog/leave-create-dialog';
 import { entryIcon } from '../../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 
 @Component({
   selector: 'app-create',
-  imports: [ContactInfo, ExperiencesDialog, ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, TechnologySelect, LucideAngularModule, ExperienceEntry, EducationEntry],
+  imports: [ContactInfo, ExperiencesDialog, LeaveCreateDialog, ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, TechnologySelect, LucideAngularModule, ExperienceEntry, EducationEntry],
   templateUrl: './create.html',
   styleUrl: './create.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(window:beforeunload)': 'beforeUnload($event)' }
 })
 export class Create {
   protected readonly entryIcon = entryIcon;
@@ -78,6 +81,11 @@ export class Create {
   private readonly destroyRef = inject(DestroyRef);
   protected readonly loading = signal(false);
   protected readonly loadError = signal('');
+  protected readonly saveCv = inject(SaveCv);
+  protected readonly leaveOpen = signal(false);
+  protected readonly leaveError = signal('');
+  private leaveDecision: Promise<boolean> | null = null;
+  private resolveLeave: ((leave: boolean) => void) | null = null;
   protected readonly snapshot = (): CvInfo => {
     const structure = this.draft.current()?.structure;
     return { ...this.form.getRawValue(), ...(structure ? { structure } : {}) };
@@ -91,11 +99,52 @@ export class Create {
       inject(PendingTasks).run(() => this.loadSaved(id));
     } else {
       this.populate(this.draft.current());
-      this.draft.save(this.snapshot());
+      this.draft.beginEditing(this.snapshot());
     }
     this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       this.draft.save(this.snapshot());
     });
+    this.destroyRef.onDestroy(() => this.finishLeaving(false));
+  }
+
+  canDeactivate(): boolean | Promise<boolean> {
+    if (!this.draft.hasUnsavedChanges()) return true;
+    if (this.leaveDecision) return this.leaveDecision;
+    this.leaveError.set('');
+    this.leaveOpen.set(true);
+    this.leaveDecision = new Promise((resolve) => { this.resolveLeave = resolve; });
+    return this.leaveDecision;
+  }
+
+  protected async handleLeaveDecision(decision: LeaveCreateDecision): Promise<void> {
+    if (this.saveCv.saving()) return;
+    if (decision !== 'save') {
+      this.finishLeaving(decision === 'leave');
+      return;
+    }
+    this.leaveError.set('');
+    const saved = await this.saveCv.save(this.snapshot());
+    if (this.destroyRef.destroyed) return;
+    if (!saved) {
+      this.leaveError.set('Your CV could not be saved. Try again, leave without saving, or cancel.');
+    } else if (this.draft.hasUnsavedChanges()) {
+      this.leaveError.set('Your CV has newer changes. Save again before leaving.');
+    } else {
+      this.finishLeaving(true);
+    }
+  }
+
+  protected beforeUnload(event: BeforeUnloadEvent): void {
+    if (!this.draft.hasUnsavedChanges()) return;
+    event.preventDefault();
+    event.returnValue = '';
+  }
+
+  private finishLeaving(leave: boolean): void {
+    this.leaveOpen.set(false);
+    this.resolveLeave?.(leave);
+    this.resolveLeave = null;
+    this.leaveDecision = null;
   }
 
   private async loadSaved(id: string): Promise<void> {
@@ -106,6 +155,7 @@ export class Create {
         this.draft.save(info);
         this.draft.savedId.set(id);
         this.populate(info);
+        this.draft.beginEditing(this.snapshot());
       } else {
         this.loadError.set('This saved CV could not be found.');
       }

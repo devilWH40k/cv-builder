@@ -21,6 +21,8 @@ interface PointerDrag {
   readonly startY: number;
   readonly offsetX: number;
   readonly offsetY: number;
+  readonly width: number;
+  readonly height: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -35,6 +37,10 @@ export class DragDrop {
   private clickTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly active = computed(() => this.session()?.item ?? null);
+  readonly size = computed(() => {
+    const drag = this.session();
+    return drag ? { width: drag.width, height: drag.height } : null;
+  });
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
@@ -68,7 +74,8 @@ export class DragDrop {
 
     this.candidate = {
       source, item, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY,
-      offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top
+      offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top,
+      width: rect.width, height: rect.height
     };
 
     this.document.addEventListener('pointermove', this.move, { passive: false });

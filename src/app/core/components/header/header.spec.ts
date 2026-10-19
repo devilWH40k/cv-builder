@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Footer } from '../footer/footer';
 import { Header } from './header';
+import { THEME_STORAGE_KEY } from '../../theme/theme-store';
 
 @Component({ template: '' })
 class NavigationPage {}
@@ -10,8 +11,15 @@ class NavigationPage {}
 describe('Header navigation', () => {
   let fixture: ComponentFixture<Header>;
   let page: HTMLElement;
+  let originalTheme: string | undefined;
 
   beforeEach(async () => {
+    originalTheme = document.documentElement.dataset['theme'];
+    const getItem = Storage.prototype.getItem;
+    spyOn(Storage.prototype, 'getItem').and.callFake(function (this: Storage, key) {
+      return key === THEME_STORAGE_KEY ? 'light' : getItem.call(this, key);
+    });
+    spyOn(Storage.prototype, 'setItem').and.stub();
     TestBed.configureTestingModule({
       imports: [Header, Footer],
       providers: [provideZonelessChangeDetection(), provideRouter([
@@ -23,6 +31,35 @@ describe('Header navigation', () => {
     fixture = TestBed.createComponent(Header);
     page = fixture.nativeElement;
     await fixture.whenStable();
+  });
+
+  afterEach(() => {
+    if (originalTheme === undefined) delete document.documentElement.dataset['theme'];
+    else document.documentElement.dataset['theme'] = originalTheme;
+  });
+
+  it('places an accessible animated theme switch immediately before Guides', async () => {
+    const toggle = page.querySelector<HTMLButtonElement>('.theme-toggle')!;
+    expect(toggle.nextElementSibling?.getAttribute('aria-label')).toBe('Guides');
+    expect(toggle.getAttribute('role')).toBe('switch');
+    expect(toggle.getAttribute('aria-label')).toBe('Dark theme');
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+    expect(toggle.title).toBe('Switch to dark theme');
+    const sun = toggle.querySelector('.sun-icon')!;
+    const moon = toggle.querySelector('.moon-icon')!;
+    expect(getComputedStyle(sun).opacity).toBe('1');
+    expect(getComputedStyle(moon).opacity).toBe('0');
+    toggle.click();
+    await fixture.whenStable();
+    await Promise.all(toggle.getAnimations({ subtree: true }).map((animation) => animation.finished));
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+    expect(toggle.title).toBe('Switch to light theme');
+    expect(getComputedStyle(sun).opacity).toBe('0');
+    expect(getComputedStyle(moon).opacity).toBe('1');
+    expect(Storage.prototype.setItem).toHaveBeenCalledWith(THEME_STORAGE_KEY, 'dark');
+    toggle.click();
+    await fixture.whenStable();
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
   });
 
   it('shows the Usense logo, stacked title, direct menu actions, and Guides', () => {
@@ -82,13 +119,15 @@ describe('Header navigation', () => {
         const nav = target.querySelector('nav')!.getBoundingClientRect();
         const brand = target.querySelector('.brand')!.getBoundingClientRect();
         const guides = target.querySelector('.guides-link')!.getBoundingClientRect();
+        const toggle = target.querySelector('.theme-toggle')!.getBoundingClientRect();
         expect((nav.left + nav.right) / 2).toBeCloseTo((header.left + header.right) / 2, 0);
-        expect(brand.right).toBeLessThanOrEqual(guides.left);
+        expect(brand.right).toBeLessThanOrEqual(toggle.left);
+        expect(toggle.right).toBeLessThanOrEqual(guides.left);
         expect(target.documentElement.scrollWidth).toBeLessThanOrEqual(width);
         if (width <= 768) expect(nav.top).toBeGreaterThanOrEqual(brand.bottom);
         else {
           expect(nav.left).toBeGreaterThanOrEqual(brand.right);
-          expect(nav.right).toBeLessThanOrEqual(guides.left);
+          expect(nav.right).toBeLessThanOrEqual(toggle.left);
         }
         for (const item of target.querySelectorAll('.menu-item')) {
           const bounds = item.getBoundingClientRect();

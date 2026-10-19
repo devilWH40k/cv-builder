@@ -155,3 +155,8 @@
   <app-experiences-dialog [linkedIds]="linkedExperienceIds" (applied)="applyExperiences($event)"
     (cancelled)="experiencesOpen.set(false)" />
 }
+
+@if (leaveOpen()) {
+  <app-leave-create-dialog [busy]="saveCv.saving()" [error]="leaveError()"
+    (decision)="handleLeaveDecision($event)" />
+}

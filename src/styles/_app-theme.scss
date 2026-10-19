@@ -1,0 +1,63 @@
+@use './tokens' as tokens;
+
+@mixin light {
+  --app-bg: #{tokens.$color-gray-50};
+  --bg: #{tokens.$color-white};
+  --subtle: #{tokens.$color-gray-100};
+  --pressed: #{tokens.$color-gray-200};
+  --primary-subtle: #{tokens.$color-primary-light};
+  --secondary-bg: #{tokens.$color-secondary};
+  --fg: #{tokens.$color-gray-900};
+  --text-dim: #{tokens.$color-gray-600};
+  --muted: #{tokens.$color-gray-500};
+  --disabled: #{tokens.$color-gray-400};
+  --danger-text: #{tokens.$color-danger};
+  --success-text: #{tokens.$color-success};
+  --line: #{tokens.$color-gray-200};
+  --line-strong: #{tokens.$color-gray-300};
+  --success-bg: #dcfce7;
+  --warning-bg: #fef3c7;
+  --danger-bg: #fee2e2;
+  --info-bg: #e0f2fe;
+}
+
+:root {
+  @include light;
+  color-scheme: light;
+  background: tokens.$background-surface;
+}
+
+:root[data-theme='dark'] {
+  --app-bg: #0b1220;
+  --bg: #{tokens.$color-gray-900};
+  --subtle: #{tokens.$color-gray-800};
+  --pressed: #{tokens.$color-gray-700};
+  --primary-subtle: #123341;
+  --secondary-bg: #164454;
+  --fg: #{tokens.$color-gray-50};
+  --text-dim: #{tokens.$color-gray-300};
+  --muted: #{tokens.$color-gray-400};
+  --disabled: #{tokens.$color-gray-500};
+  --danger-text: #f87171;
+  --success-text: #4ade80;
+  --line: #{tokens.$color-gray-700};
+  --line-strong: #{tokens.$color-gray-500};
+  --success-bg: #123226;
+  --warning-bg: #392b13;
+  --danger-bg: #3c1d29;
+  --info-bg: #122e43;
+  color-scheme: dark;
+}
+
+// Document themes remain independent of the application's appearance.
+.cv-document {
+  @include light;
+  color-scheme: light;
+}
+
+@media print {
+  :root[data-theme] {
+    @include light;
+    color-scheme: light;
+  }
+}

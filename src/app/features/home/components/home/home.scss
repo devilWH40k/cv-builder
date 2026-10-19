@@ -103,6 +103,12 @@ lucide-icon {
   gap: tokens.$spacing-2;
   margin: tokens.$spacing-3 0 tokens.$spacing-6;
 }
+.root-collection {
+  min-height: tokens.$spacing-16;
+  padding: tokens.$spacing-3;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+}
 .view-actions { display: flex; justify-content: flex-end; }
 :is(.view-toggle, .folder-add) {
   @include buttons.ghost;

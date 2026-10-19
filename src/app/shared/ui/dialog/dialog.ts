@@ -14,12 +14,15 @@ export class Dialog {
   readonly dialogId = input.required<string>();
   readonly title = input.required<string>();
   readonly wide = input(false);
+  readonly fullHeight = input(false);
   readonly minHeight = input('0px');
   readonly busy = input(false);
   readonly showClose = input(true);
+  readonly showTitle = input(true);
   readonly backdropDropType = input('');
   readonly dismissed = output<void>();
   readonly backdropDropped = output<DragItem>();
+  readonly contextRequested = output<MouseEvent>();
   protected readonly CloseIcon = X;
   private readonly overlay = viewChild.required(DialogOverlay);
 

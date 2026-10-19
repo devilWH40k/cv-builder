@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
+import { cvInfoEqual } from '../helpers/cv-info-equal';
 import { CvContactInfo } from '../helpers/cv-contact';
 import { CvLanguage } from '../constants/languages';
 import { CvExperience } from '../interfaces/experience';
@@ -37,10 +38,30 @@ export interface CvInfo {
 @Injectable({ providedIn: 'root' })
 export class CvDraft {
   private readonly info = signal<CvInfo | null>(null);
+  private readonly cleanInfo = signal<CvInfo | null>(null);
   private readonly sessionId = signal(0);
   readonly session = this.sessionId.asReadonly();
   readonly current = this.info.asReadonly();
   readonly savedId = signal<string | null>(null);
+  readonly hasUnsavedChanges = computed(() => {
+    const clean = this.cleanInfo();
+    const current = this.current();
+    if (!clean) return false;
+    return !cvInfoEqual(
+      { ...clean, structure: { ...DEFAULT_CV_STRUCTURE, ...clean.structure } },
+      current ? { ...current, structure: { ...DEFAULT_CV_STRUCTURE, ...current.structure } } : null
+    );
+  });
+
+  beginEditing(info: CvInfo): void {
+    const wasClean = !this.hasUnsavedChanges();
+    this.save(info);
+    if (wasClean) this.cleanInfo.set(this.current());
+  }
+
+  markSaved(info: CvInfo): void {
+    this.cleanInfo.set(info);
+  }
 
   updateStructure(structure: CvStructure): void {
     this.info.update((info) => info ? { ...info, structure: { ...structure } } : null);
@@ -49,6 +70,7 @@ export class CvDraft {
   reset(): void {
     this.sessionId.update((id) => id + 1);
     this.info.set(null);
+    this.cleanInfo.set(null);
     this.savedId.set(null);
   }
 

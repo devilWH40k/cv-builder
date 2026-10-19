@@ -25,6 +25,7 @@ import { formatCalendarDate } from '../../../../shared/ui/date-picker/date-value
 export class Preview {
   protected readonly pdf = inject(CvPdf);
   readonly embedded = input(false);
+  readonly readOnly = input(false);
   private readonly pageCount = signal(1);
   protected readonly pages = computed(() => Array.from({ length: this.pageCount() }, (_, index) => index));
   private readonly pageFlows = viewChildren<ElementRef<HTMLElement>>('pageFlow');

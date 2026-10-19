@@ -59,6 +59,22 @@ The source of truth for design values is:
 
 Do not duplicate token values inside component styles.
 
+Application colors resolve through CSS custom properties so shared controls support
+light and dark appearance. `_app-theme.scss` defines both palettes; use semantic
+tokens such as `$text-primary` and `$background-surface` instead of fixed neutrals.
+CV document themes keep their own colors independently of the application theme.
+
+The header's sun/moon switch sits immediately before Guides. Icons slide vertically
+and fade, with motion disabled for reduced-motion preferences. `ThemeStore` saves
+`light` or `dark` under `cv-builder.theme` in local storage. Without a valid saved
+choice, the browser's color preference is used on load; blocked storage still allows
+switching for the session. A small script and fallback backgrounds in `src/index.html`
+apply the choice before Angular loads and set the native `color-scheme` and
+`theme-color` metadata. Keep its key, colors, and theme selection logic aligned with
+`ThemeStore` and the application palette.
+Production critical CSS inlining is disabled in `angular.json` so startup waits
+for the full palette stylesheet rather than painting an extracted light-only palette.
+
 Use Sass modules:
 
 ```scss id="af4r2p"
@@ -776,7 +792,16 @@ Home, and End keys. On smaller screens, a toggle switches between editor and
 preview.
 
 Save and Export remain in the bottom action bar. A back arrow beside the editor
-heading and the header brand link navigate home. Export remains enabled; when the CV info form is invalid, it reveals the editor,
+heading and the header brand link navigate home. Leaving `/create` with unsaved
+changes opens a dialog with Save and leave, Leave, and Cancel. Successful saves
+and loaded CVs establish a clean snapshot; form, photo, collection, and structure
+changes are compared against it. Save and leave waits for storage to commit;
+failed saves keep the dialog open for retry. Cancel, Close, Escape, and backdrop
+clicks keep the editor open, and all dismissal is blocked while saving. Browser
+reloads, closing the tab, and external navigation use the native unsaved-changes
+warning because browsers do not allow a custom three-action dialog on unload.
+
+Export remains enabled; when the CV info form is invalid, it reveals the editor,
 expands invalid sections, and focuses and scrolls to the first error instead of printing. The embedded preview scales to its available
 width on screen; print styles restore full document sizing and hide editor UI.
 The standalone preview route remains available for existing links.
@@ -1425,7 +1450,9 @@ Saving a linked entry updates its library record; CVs retain their own editable
 snapshots and the library ID, so library updates do not silently rewrite other CVs.
 
 Dialogs use the shared `DialogOverlay` directive to move their Angular-owned DOM
-into a body-level overlay. The overlay manages background inertness, keyboard
+into a body-level overlay. The shared `Dialog` shell keeps its header and actions
+visible while its content scrolls inside the padded, rounded border. The overlay
+manages background inertness, keyboard
 focus, Escape/backdrop dismissal, focus restoration, and cleanup. Its z-index
 stays below the global toast outlet. Photo preview and mobile drawers use the
 same overlay; desktop drawers remain inline.
@@ -1485,8 +1512,13 @@ default to List; if browser storage is blocked, switches still work for the sess
 New dialogs can use `shared/ui/dialog/dialog` (`app-dialog`). Supply a unique
 `dialogId` and `title`, project the body normally, and project actions with
 `dialogActions`. Optional `wide`, `minHeight`, `busy`, and `showClose` inputs control the shell;
+project optional header actions with `dialogHeaderActions` to place them before Close.
 `dismissed` handles Close, Escape, and backdrop dismissal. It reuses `DialogOverlay`
-for focus, inertness, and cleanup. `minHeight` is capped by the viewport; folder
+for focus, inertness, and cleanup. `fullHeight` fills the available height with viewport
+gutters to keep rounded corners visible; `showTitle` can hide the visible heading
+while retaining the dialog's accessible name. The saved CV preview keeps its Preview
+heading and uses smaller pages with scrolling in the dialog body.
+`minHeight` is capped by the viewport; folder
 dialogs use 32rem. `backdropDropType` opts into accepting a shared drag item type
 on the backdrop; `backdropDropped` delivers the `{ type, id }` item without
 dismissing the dialog. Drops inside the dialog do not trigger that output.
@@ -1495,6 +1527,41 @@ Folder organization is persisted in IndexedDB's `folders` store and included
 in version 4 backups. CV moves and empty-folder deletion checks are transactional.
 Dropping a CV outside its folder dialog returns it to the main collection;
 canceling the drag leaves membership unchanged. Folders cannot contain folders.
+
+CVs can also be reordered within the main collection and within a folder. While
+dragging, the space beside cards or above and below list rows accepts insertion
+with an empty primary-color rectangular placeholder matching the dragged item's
+size and marking the drop position. The placeholder occupies an item slot while
+hovered and stays stable while crossing the collection until another insertion
+point is chosen. Neighboring card contents animate into position without moving
+the insertion hit areas; reduced-motion preferences disable these animations.
+The placeholder disappears when leaving the collection, dropping, or cancelling.
+Dropping on a folder
+still moves the CV into it. Manual CV order is saved in IndexedDB metadata and is
+shared by card/list views, survives navigation and reloads, and stays stable after
+editing. New CVs appear first. Reordering does not change contents or updated times;
+failed writes keep the previous order. Replacing the database with an import resets
+the manual order; ZIP backups retain their existing content and folder format.
+
+## Shared context menus
+
+The shared `app-context-menu` takes typed `items`, an accessible `label`, and emits
+`selected` action IDs. Call `open($event)` from a context-menu trigger. Optional
+icons, disabled actions, and safe new-tab links are supported. The menu is mounted
+at body level above dialogs, fits within the viewport, supports keyboard navigation,
+and dismisses on Escape, outside interaction, scrolling, or resize. Escape closes
+the menu before an enclosing dialog; dismissal restores focus to the trigger.
+
+CV context menus provide Open CV in new tab, Cut, and Paste. Cut marks one CV with
+a muted appearance and dashed border. Right-click a folder, the main collection,
+or folder-dialog background to paste there, including empty folders. The main
+collection has compact padding and a neutral border marking its context-menu area;
+the page heading and toolbar keep their normal browser menu. These menus
+always show Paste, disabled while nothing is cut. The dialog shell forwards
+`contextRequested` from its overlay so folder menus also cover its title and padding.
+Cut is kept in session state and is cleared
+after a successful move, a same-location paste, or deletion. A failed move retains
+the selection for retry. The move uses existing IndexedDB folder persistence.
 
 ## Shared pointer dragging
 

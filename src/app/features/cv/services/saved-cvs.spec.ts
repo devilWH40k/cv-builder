@@ -184,6 +184,73 @@ describe('IndexedDB saved CVs', () => {
     expect(saved.all().length).toBe(2);
   });
 
+  it('persists manual order through fresh service loads, edits, new saves, and deletion without altering CV data', async () => {
+    const saved = service();
+    await saved.importRecords(['a', 'b', 'c'].map((id, index) => ({ id, info: { ...info, name: id }, updatedAt: 3 - index })));
+    const original = await saved.backupSnapshot();
+    await saved.reorderCv({ cvId: 'c', targetId: 'a', position: 'before' });
+    expect(saved.all().map((cv) => cv.id)).toEqual(['c', 'a', 'b']);
+    expect(await saved.backupSnapshot()).toEqual(original);
+    const reloaded = service();
+    await reloaded.refresh();
+    expect(reloaded.all().map((cv) => cv.id)).toEqual(['c', 'a', 'b']);
+    await reloaded.save({ ...info, name: 'Edited' }, 'a');
+    expect(reloaded.all().map((cv) => cv.id)).toEqual(['c', 'a', 'b']);
+    const newId = await reloaded.save(info, null);
+    expect(reloaded.all().map((cv) => cv.id)).toEqual([newId, 'c', 'a', 'b']);
+    await reloaded.reorderCv({ cvId: 'c', targetId: 'b', position: 'after' });
+    expect(reloaded.all().map((cv) => cv.id)).toEqual([newId, 'a', 'b', 'c']);
+    await reloaded.delete('b');
+    const anotherLoad = service();
+    await anotherLoad.refresh();
+    expect(anotherLoad.all().map((cv) => cv.id)).toEqual([newId, 'a', 'c']);
+  });
+
+  it('reorders folder CVs independently and rejects cross-collection or stale targets', async () => {
+    const saved = service();
+    await saved.importRecords(['a', 'b', 'c', 'd'].map((id, index) => ({ id, info, updatedAt: 4 - index })));
+    const folder = await saved.createFolder('Applications');
+    await saved.moveCv('b', folder.id);
+    await saved.moveCv('d', folder.id);
+    await saved.reorderCv({ cvId: 'd', targetId: 'b', position: 'before' });
+    const reloaded = service();
+    await reloaded.refresh();
+    const folderIds = new Set(reloaded.folders()[0].cvIds);
+    expect(reloaded.all().filter((cv) => folderIds.has(cv.id)).map((cv) => cv.id)).toEqual(['d', 'b']);
+    expect(reloaded.all().filter((cv) => !folderIds.has(cv.id)).map((cv) => cv.id)).toEqual(['a', 'c']);
+    const before = reloaded.all();
+    await expectAsync(reloaded.reorderCv({ cvId: 'a', targetId: 'b', position: 'before' })).toBeRejected();
+    await expectAsync(reloaded.reorderCv({ cvId: 'a', targetId: 'missing', position: 'after' })).toBeRejected();
+    await expectAsync(reloaded.reorderCv({ cvId: 'missing', targetId: 'a', position: 'after' })).toBeRejected();
+    expect(reloaded.all()).toEqual(before);
+    expect(reloaded.folders()).toEqual(saved.folders());
+  });
+
+  it('retains the last committed order when a new order cannot be written', async () => {
+    const saved = service();
+    await saved.importRecords(['a', 'b', 'c'].map((id, index) => ({ id, info, updatedAt: 3 - index })));
+    await saved.reorderCv({ cvId: 'c', targetId: 'a', position: 'before' });
+    const put = IDBObjectStore.prototype.put;
+    spyOn(IDBObjectStore.prototype, 'put').and.callFake(function (this: IDBObjectStore, value: unknown, key?: IDBValidKey) {
+      if (this.name === 'metadata' && key === 'cv-order') throw new Error('Storage unavailable');
+      return put.call(this, value, key);
+    });
+    await expectAsync(saved.reorderCv({ cvId: 'c', targetId: 'b', position: 'after' })).toBeRejected();
+    const reloaded = service();
+    await reloaded.refresh();
+    expect(reloaded.all().map((cv) => cv.id)).toEqual(['c', 'a', 'b']);
+    expect(saved.all()).toEqual(reloaded.all());
+  });
+
+  it('clears manual order when replacing the database with an import', async () => {
+    const saved = service();
+    const records = ['a', 'b', 'c'].map((id, index) => ({ id, info, updatedAt: 3 - index }));
+    await saved.importRecords(records);
+    await saved.reorderCv({ cvId: 'c', targetId: 'a', position: 'before' });
+    await saved.importRecords(records, [], true);
+    expect(saved.all().map((cv) => cv.id)).toEqual(['a', 'b', 'c']);
+  });
+
   it('creates persistent empty folders with trimmed names and validates names', async () => {
     const saved = service();
     const folder = await saved.createFolder('  Applications  ');

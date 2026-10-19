@@ -38,50 +38,51 @@ $color-gray-900: #0f172a;
 // --------------------------------------------------------------------------
 
 $color-success: #16a34a;
-$color-success-light: #dcfce7;
+$color-success-light: var(--success-bg);
 
 $color-warning: #d97706;
-$color-warning-light: #fef3c7;
+$color-warning-light: var(--warning-bg);
 
 $color-danger: #dc2626;
 $color-danger-hover: #b91c1c;
-$color-danger-light: #fee2e2;
+$color-danger-light: var(--danger-bg);
 
 $color-info: #0284c7;
-$color-info-light: #e0f2fe;
+$color-info-light: var(--info-bg);
 
 // --------------------------------------------------------------------------
 // Backgrounds
 // --------------------------------------------------------------------------
 
-$background-app: $color-gray-50;
-$background-surface: $color-white;
-$background-subtle: $color-gray-100;
-$background-primary-subtle: $color-primary-light;
-$background-secondary: $color-secondary;
+$background-app: var(--app-bg);
+$background-surface: var(--bg);
+$background-subtle: var(--subtle);
+$background-pressed: var(--pressed);
+$background-primary-subtle: var(--primary-subtle);
+$background-secondary: var(--secondary-bg);
 $background-footer: #11214d;
 
 // --------------------------------------------------------------------------
 // Text
 // --------------------------------------------------------------------------
 
-$text-primary: $color-gray-900;
-$text-secondary: $color-gray-600;
-$text-muted: $color-gray-500;
-$text-disabled: $color-gray-400;
+$text-primary: var(--fg);
+$text-secondary: var(--text-dim);
+$text-muted: var(--muted);
+$text-disabled: var(--disabled);
 $text-on-primary: $color-gray-900;
 $text-accent: $color-primary;
 $text-accent-hover: $color-primary;
 $text-on-danger: $color-white;
-$text-danger: $color-danger;
-$text-success: $color-success;
+$text-danger: var(--danger-text);
+$text-success: var(--success-text);
 
 // --------------------------------------------------------------------------
 // Borders
 // --------------------------------------------------------------------------
 
-$border-color: $color-gray-200;
-$border-color-strong: $color-gray-300;
+$border-color: var(--line);
+$border-color-strong: var(--line-strong);
 $border-color-focus: $text-accent;
 $border-color-danger: $color-danger;
 

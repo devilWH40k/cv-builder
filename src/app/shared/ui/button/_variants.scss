@@ -33,7 +33,7 @@
   }
 
   &:active {
-    background: tokens.$color-gray-200;
+    background: tokens.$background-pressed;
   }
 
   &:focus-visible {

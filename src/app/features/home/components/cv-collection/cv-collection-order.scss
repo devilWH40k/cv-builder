@@ -1,0 +1,30 @@
+@use 'styles/tokens' as tokens;
+@use 'sass:list';
+
+.cv-grid { --cv-reorder-duration: #{list.nth(tokens.$transition-fast, 1)}; }
+
+.insert-target {
+  position: absolute;
+  z-index: 1;
+  inset-block: 0;
+  width: tokens.$spacing-6;
+}
+.insert-before { left: -#{tokens.$spacing-3}; }
+.insert-after { right: -#{tokens.$spacing-3}; }
+.cv-placeholder {
+  position: relative;
+  border: 2px solid tokens.$color-primary;
+  border-radius: tokens.$radius-lg;
+  background: transparent;
+}
+.placeholder-hit { position: absolute; z-index: 1; inset: 0 -#{tokens.$spacing-3}; }
+.cv-list {
+  .insert-target {
+    inset: auto 0;
+    width: auto;
+    height: tokens.$spacing-4;
+  }
+  .insert-before { top: -#{tokens.$spacing-1}; }
+  .insert-after { bottom: -#{tokens.$spacing-1}; }
+  .placeholder-hit { inset: -#{tokens.$spacing-1} 0; }
+}
