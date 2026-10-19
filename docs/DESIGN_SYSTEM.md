@@ -937,6 +937,12 @@ Messages should be concise and actionable.
 
 Avoid showing a success notification for every trivial interaction.
 
+Each toast stack shows at most the five newest notifications. A new notification
+replaces the oldest when the stack is full, regardless of theme. Replaced
+notifications are removed rather than queued, and their auto-dismiss timers are
+cleared. Success notifications still expire after five seconds and pause on
+hover or focus; danger and alert notifications remain until dismissed or replaced.
+
 ---
 
 # 23. Dialogs
@@ -1290,6 +1296,10 @@ The selected theme is stored in CvStructure.theme; older CVs default to Basic.
 ## Saved experiences and dialog overlays
 
 The Experiences navigation link opens the lazy-loaded Experiences page.
+The open page reloads its list after a successful ZIP backup import, including
+merge and wipe imports. `SavedCvs.importRevision` changes only after the database
+transaction commits. Failed imports retain the current table, and older pending
+loads cannot overwrite the refreshed records.
 The experience library includes the example workbook's named columns: Project Name
 (the existing Company/Project), Alternative names, Web link, Photos, Description,
 Responsibilities, Technologies, Teamlead, Developer, and Is Updated. Photos holds
@@ -1419,6 +1429,10 @@ into a body-level overlay. The overlay manages background inertness, keyboard
 focus, Escape/backdrop dismissal, focus restoration, and cleanup. Its z-index
 stays below the global toast outlet. Photo preview and mobile drawers use the
 same overlay; desktop drawers remain inline.
+
+Import / Export also uses `DialogOverlay`. Clicking its backdrop, pressing Escape,
+or using Close dismisses it and restores focus to the header action. Import and
+export operations block all dismissal until the operation finishes or fails.
 
 
 ## Education

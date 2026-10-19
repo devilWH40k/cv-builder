@@ -39,6 +39,8 @@ export class SavedCvs {
   readonly all = this.records.asReadonly();
   private readonly folderRecords = signal<readonly CvFolder[]>([]);
   readonly folders = this.folderRecords.asReadonly();
+  private readonly completedImports = signal(0);
+  readonly importRevision = this.completedImports.asReadonly();
   readonly error = signal('');
   readonly migrationWarning = signal('');
   readonly loading = signal(false);
@@ -282,6 +284,7 @@ export class SavedCvs {
       transaction.abort();
     }
     await done;
+    this.completedImports.update((revision) => revision + 1);
     await this.refresh();
     this.technologyRecords.set(importedTechnologies.sort((a, b) => a.name.localeCompare(b.name)));
   }

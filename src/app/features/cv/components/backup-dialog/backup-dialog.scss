@@ -11,7 +11,6 @@ dialog {
   border: 1px solid tokens.$border-color;
   border-radius: tokens.$radius-lg;
   box-shadow: tokens.$shadow-lg;
-  &::backdrop { background: rgba(tokens.$color-gray-900, 0.4); }
 }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: tokens.$spacing-4; }
 h2 { margin: 0; font-size: tokens.$font-size-xl; }

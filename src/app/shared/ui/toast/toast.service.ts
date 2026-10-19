@@ -10,6 +10,7 @@ export interface ToastMessage {
 
 @Injectable({ providedIn: 'root' })
 export class ToastService {
+  private readonly maxVisibleToasts = 5;
   private readonly items = signal<readonly ToastMessage[]>([]);
   readonly messages = this.items.asReadonly();
   private readonly timers = new Map<number, ReturnType<typeof setTimeout>>();
@@ -23,7 +24,9 @@ export class ToastService {
 
   show(theme: ToastTheme, message: string): number {
     const id = ++this.nextId;
-    this.items.update((items) => [...items, { id, theme, message }]);
+    const oldest = this.items()[0];
+    if (this.items().length >= this.maxVisibleToasts && oldest) this.pause(oldest.id);
+    this.items.update((items) => [...items, { id, theme, message }].slice(-this.maxVisibleToasts));
     this.resume(id);
     return id;
   }
