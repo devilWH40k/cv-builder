@@ -92,4 +92,50 @@ describe('Experience details dialog', () => {
     expect(save).not.toHaveBeenCalled();
     expect(saved).not.toHaveBeenCalled();
   });
+
+  it('scrolls content inside the rounded shell and keeps the header and actions visible', async () => {
+    const { dialog } = await setup();
+    const frame = document.createElement('iframe');
+    frame.style.position = 'fixed';
+    frame.style.inset = '0 auto auto 0';
+    document.body.append(frame);
+    try {
+      const target = frame.contentDocument!;
+      for (const style of document.querySelectorAll('style, link[rel="stylesheet"]')) {
+        target.head.append(style.cloneNode(true));
+      }
+      target.body.append(dialog.parentElement!.cloneNode(true));
+      const shell = target.querySelector<HTMLDialogElement>('#experience-details')!;
+      const content = shell.querySelector<HTMLElement>(':scope > .content')!;
+      const header = shell.querySelector<HTMLElement>(':scope > header')!;
+      const footer = shell.querySelector<HTMLElement>(':scope > footer')!;
+      for (const theme of ['light', 'dark']) {
+        target.documentElement.dataset['theme'] = theme;
+        for (const [width, height] of [[1024, 600], [375, 360]]) {
+          frame.style.width = `${width}px`;
+          frame.style.height = `${height}px`;
+          content.scrollTop = 0;
+          const bounds = shell.getBoundingClientRect();
+          const headerTop = header.getBoundingClientRect().top;
+          const footerBottom = footer.getBoundingClientRect().bottom;
+          expect(bounds.top).toBeGreaterThanOrEqual(0);
+          expect(bounds.bottom).toBeLessThanOrEqual(height);
+          expect(getComputedStyle(shell).overflowY).toBe('hidden');
+          expect(getComputedStyle(content).overflowY).toBe('auto');
+          expect(content.scrollHeight).toBeGreaterThan(content.clientHeight);
+          expect(content.getBoundingClientRect().right).toBeLessThan(bounds.right);
+          content.scrollTop = content.scrollHeight;
+          expect(content.scrollTop).toBeGreaterThan(0);
+          expect(content.scrollTop + content.clientHeight).toBeCloseTo(content.scrollHeight, 0);
+          expect(header.getBoundingClientRect().top).toBe(headerTop);
+          expect(footer.getBoundingClientRect().bottom).toBe(footerBottom);
+          expect(headerTop).toBeGreaterThan(bounds.top);
+          expect(footerBottom).toBeLessThan(bounds.bottom);
+          expect(target.documentElement.scrollWidth).toBeLessThanOrEqual(width);
+        }
+      }
+    } finally {
+      frame.remove();
+    }
+  });
 });

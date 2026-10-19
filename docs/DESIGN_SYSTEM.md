@@ -1450,7 +1450,9 @@ Saving a linked entry updates its library record; CVs retain their own editable
 snapshots and the library ID, so library updates do not silently rewrite other CVs.
 
 Dialogs use the shared `DialogOverlay` directive to move their Angular-owned DOM
-into a body-level overlay. The overlay manages background inertness, keyboard
+into a body-level overlay. The shared `Dialog` shell keeps its header and actions
+visible while its content scrolls inside the padded, rounded border. The overlay
+manages background inertness, keyboard
 focus, Escape/backdrop dismissal, focus restoration, and cleanup. Its z-index
 stays below the global toast outlet. Photo preview and mobile drawers use the
 same overlay; desktop drawers remain inline.
