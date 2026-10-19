@@ -1296,6 +1296,10 @@ The selected theme is stored in CvStructure.theme; older CVs default to Basic.
 ## Saved experiences and dialog overlays
 
 The Experiences navigation link opens the lazy-loaded Experiences page.
+The open page reloads its list after a successful ZIP backup import, including
+merge and wipe imports. `SavedCvs.importRevision` changes only after the database
+transaction commits. Failed imports retain the current table, and older pending
+loads cannot overwrite the refreshed records.
 The experience library includes the example workbook's named columns: Project Name
 (the existing Company/Project), Alternative names, Web link, Photos, Description,
 Responsibilities, Technologies, Teamlead, Developer, and Is Updated. Photos holds

@@ -1,4 +1,4 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { LucideAngularModule, Pencil, Plus, Trash2, Upload } from 'lucide-angular';
 import { TableWrapper } from '../../shared/ui/table/table-wrapper/table-wrapper';
 import { TableCellTemplate } from '../../shared/ui/table/directives/table-cell-template';
@@ -46,24 +46,30 @@ export class Experiences {
   private readonly toasts = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly confirmation = inject(DeleteConfirmationService);
+  private loadId = 0;
 
   constructor() {
+    const initialImportRevision = this.saved.importRevision();
     afterNextRender(() => void this.load());
+    effect(() => {
+      if (this.saved.importRevision() !== initialImportRevision) untracked(() => void this.load());
+    });
   }
 
   protected async load(): Promise<void> {
+    const loadId = ++this.loadId;
     this.loading.set(true);
     this.failed.set(false);
     try {
       const records = await this.saved.listExperiences();
-      if (!this.destroyRef.destroyed) this.records.set(records);
+      if (!this.destroyRef.destroyed && loadId === this.loadId) this.records.set(records);
     } catch {
-      if (!this.destroyRef.destroyed) {
+      if (!this.destroyRef.destroyed && loadId === this.loadId) {
         this.failed.set(true);
         this.toasts.show('danger', 'Saved experiences could not be loaded. Please try again.');
       }
     } finally {
-      if (!this.destroyRef.destroyed) this.loading.set(false);
+      if (!this.destroyRef.destroyed && loadId === this.loadId) this.loading.set(false);
     }
   }
 
