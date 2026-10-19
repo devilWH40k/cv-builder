@@ -6,6 +6,7 @@ import { routes } from '../../../../app.routes';
 import { CvDraft, CvInfo } from '../../../cv/services/cv-draft';
 import { Create } from '../../../create/components/create/create';
 import { Preview } from './preview';
+import { ThemeStore } from '../../../../core/theme/theme-store';
 
 describe('CV themes', () => {
   const info: CvInfo = {
@@ -34,6 +35,30 @@ describe('CV themes', () => {
     expect(getComputedStyle(document).color).toBe('rgb(0, 0, 0)');
     expect(page.querySelector<HTMLInputElement>('input[name="cv-theme"][value="basic"]')!.checked).toBeTrue();
     expect(getComputedStyle(page.querySelector('.cv-info h2')!).backgroundImage).toBe('none');
+  });
+
+  it('keeps Basic document colors when the application switches to dark mode', async () => {
+    const originalTheme = document.documentElement.dataset['theme'];
+    spyOn(Storage.prototype, 'getItem').and.returnValue('light');
+    spyOn(Storage.prototype, 'setItem').and.stub();
+    try {
+      TestBed.inject(CvDraft).save(info);
+      const harness = await RouterTestingHarness.create('/preview');
+      const page = harness.routeNativeElement!;
+      const period = page.querySelector('.period')!;
+      const periodColor = getComputedStyle(period).color;
+      TestBed.inject(ThemeStore).toggleTheme();
+      await harness.fixture.whenStable();
+      const sheet = page.querySelector('.cv-document')!;
+      expect(getComputedStyle(document.body).backgroundColor).toBe('rgb(15, 23, 42)');
+      expect(getComputedStyle(sheet).backgroundColor).toBe('rgb(255, 255, 255)');
+      expect(getComputedStyle(sheet).color).toBe('rgb(0, 0, 0)');
+      expect(getComputedStyle(period).color).toBe(periodColor);
+      expect(getComputedStyle(sheet).colorScheme).toBe('light');
+    } finally {
+      if (originalTheme === undefined) delete document.documentElement.dataset['theme'];
+      else document.documentElement.dataset['theme'] = originalTheme;
+    }
   });
 
   it('switches theme colors immediately without changing layout choices or control styling', async () => {

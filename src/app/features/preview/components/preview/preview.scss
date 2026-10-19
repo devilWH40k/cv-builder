@@ -3,8 +3,8 @@
 
 :host {
   display: block;
-  color: #000;
-  background: #fff;
+  color: tokens.$text-primary;
+  background: tokens.$background-surface;
 }
 
 .preview-root {

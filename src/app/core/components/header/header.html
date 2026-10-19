@@ -13,6 +13,16 @@
         (click)="technologies.open()">Technologies</button>
     </nav>
     <div class="header-actions">
+      <button class="theme-toggle" type="button" role="switch"
+        [class.is-dark]="themeStore.isDark()" [attr.aria-checked]="themeStore.isDark()"
+        aria-label="Dark theme"
+        [title]="themeStore.isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
+        (click)="themeStore.toggleTheme()">
+        <span class="theme-icons" aria-hidden="true">
+          <lucide-icon class="theme-icon sun-icon" [img]="SunIcon" [size]="20" />
+          <lucide-icon class="theme-icon moon-icon" [img]="MoonIcon" [size]="20" />
+        </span>
+      </button>
       <a class="guides-link" routerLink="/guides" routerLinkActive="active"
         ariaCurrentWhenActive="page" aria-label="Guides" title="Guides">
         <lucide-icon [img]="GuidesIcon" [size]="20" aria-hidden="true" />

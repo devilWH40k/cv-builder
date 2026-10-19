@@ -59,6 +59,22 @@ The source of truth for design values is:
 
 Do not duplicate token values inside component styles.
 
+Application colors resolve through CSS custom properties so shared controls support
+light and dark appearance. `_app-theme.scss` defines both palettes; use semantic
+tokens such as `$text-primary` and `$background-surface` instead of fixed neutrals.
+CV document themes keep their own colors independently of the application theme.
+
+The header's sun/moon switch sits immediately before Guides. Icons slide vertically
+and fade, with motion disabled for reduced-motion preferences. `ThemeStore` saves
+`light` or `dark` under `cv-builder.theme` in local storage. Without a valid saved
+choice, the browser's color preference is used on load; blocked storage still allows
+switching for the session. A small script and fallback backgrounds in `src/index.html`
+apply the choice before Angular loads and set the native `color-scheme` and
+`theme-color` metadata. Keep its key, colors, and theme selection logic aligned with
+`ThemeStore` and the application palette.
+Production critical CSS inlining is disabled in `angular.json` so startup waits
+for the full palette stylesheet rather than painting an extracted light-only palette.
+
 Use Sass modules:
 
 ```scss id="af4r2p"
