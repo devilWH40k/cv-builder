@@ -9,21 +9,29 @@
   } @else {
     <div class="experiences">
       @for (record of visibleRecords(); track record.id) {
-        <div class="experience">
+        <div class="experience" [class.is-selected]="selected().includes(record.id)">
           <label class="selection">
-            <input type="checkbox" [checked]="selected().includes(record.id) || linkedIds().includes(record.id)"
-              [disabled]="linkedIds().includes(record.id)" (change)="toggle(record.id)" />
+            <input type="checkbox" [checked]="selected().includes(record.id)"
+              (change)="toggle(record.id)" />
             <span>
               <strong>{{ record.experience.company }}</strong>
               @if (record.experience.position) { <span>{{ record.experience.position }}</span> }
               <span>{{ record.experience.startDate }}{{ record.experience.startDate ? ' - ' : '' }}{{ record.experience.isCurrent ? 'Present' : record.experience.endDate }}</span>
-              @if (linkedIds().includes(record.id)) { <small>Already added</small> }
             </span>
           </label>
-          <button type="button" class="view" [attr.aria-label]="'View ' + record.experience.company"
-            appTooltip="View experience" (click)="viewing.set(record)">
-            <lucide-icon [img]="EyeIcon" [size]="20" aria-hidden="true" />
-          </button>
+          <div class="experience-actions">
+            @if (linkedIds().includes(record.id)) {
+              <button type="button" class="update-warning"
+                aria-label="This experience will be updated with new data"
+                appTooltip="This experience will be updated with new data">
+                <lucide-icon [img]="WarningIcon" [size]="20" aria-hidden="true" />
+              </button>
+            }
+            <button type="button" class="view" [attr.aria-label]="'View ' + record.experience.company"
+              appTooltip="View experience" (click)="viewing.set(record)">
+              <lucide-icon [img]="EyeIcon" [size]="20" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       } @empty {
         <p class="empty-state" role="status">

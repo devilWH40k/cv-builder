@@ -224,12 +224,40 @@ export class SavedCvs {
     this.technologyRecords.update((records) => records.filter((record) => record.id !== id));
   }
 
-  async saveExperience(experience: CvExperience): Promise<string> {
+  async saveExperience(experience: CvExperience, cvId: string | null = null): Promise<string> {
     const id = experience.savedExperienceId ?? crypto.randomUUID();
     const record: SavedExperience = {
       id, experience: structuredClone({ ...experience, savedExperienceId: id }), updatedAt: Date.now()
     };
-    await this.request('readwrite', (store) => store.put(record), 'experiences');
+    if (cvId === null) {
+      await this.request('readwrite', (store) => store.put(record), 'experiences');
+      return id;
+    }
+    const database = await this.open();
+    const transaction = database.transaction(['cvs', 'experiences'], 'readwrite');
+    const done = completed(transaction);
+    let operationError: unknown;
+    const cvs = transaction.objectStore('cvs');
+    const request: IDBRequest<SavedCv | undefined> = cvs.get(cvId);
+    request.onsuccess = () => {
+      try {
+        const cv = request.result;
+        if (!cv) throw new Error('This CV no longer exists.');
+        transaction.objectStore('experiences').put(record);
+        if (cv.info.experiences.some((entry) => entry.savedExperienceId === id)) {
+          cvs.put({
+            ...cv, updatedAt: record.updatedAt,
+            info: { ...cv.info, experiences: cv.info.experiences.map((entry) =>
+              entry.savedExperienceId === id ? record.experience : entry) }
+          } satisfies SavedCv);
+        }
+      } catch (error: unknown) {
+        operationError = error;
+        transaction.abort();
+      }
+    };
+    await done.catch((error: unknown) => { throw operationError ?? error; });
+    await this.refresh();
     return id;
   }
 

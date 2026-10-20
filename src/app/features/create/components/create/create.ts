@@ -196,17 +196,27 @@ export class Create {
   }
 
   protected applyExperiences(records: readonly SavedExperience[]): void {
-    const ids = new Set(this.linkedExperienceIds);
+    const appliedIds = new Set<string>();
     for (const record of records) {
-      if (ids.has(record.id)) continue;
-      this.form.controls.experiences.push(createExperienceForm({
+      if (appliedIds.has(record.id)) continue;
+      const replacement = createExperienceForm({
         ...record.experience, description: appliedExperienceDescription(record.experience), savedExperienceId: record.id
-      }));
-      ids.add(record.id);
+      });
+      const linkedRows = this.form.controls.experiences.controls.filter((row) =>
+        row.controls.savedExperienceId.value === record.id);
+      if (linkedRows.length) {
+        for (const row of linkedRows) {
+          row.setValue(replacement.getRawValue());
+          row.markAsDirty();
+        }
+      } else {
+        this.form.controls.experiences.push(replacement);
+      }
+      appliedIds.add(record.id);
     }
     this.form.markAsDirty();
     this.experiencesOpen.set(false);
-    this.toasts.show('success', 'Selected experiences have been added.');
+    this.toasts.show('success', 'Selected experiences have been applied.');
   }
 
   protected addExperience(): void {

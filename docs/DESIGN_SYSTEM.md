@@ -1441,13 +1441,19 @@ text. Feature templates remain responsible for rich text, links and action callb
 
 Experience entries can be saved independently in the IndexedDB `experiences`
 object store. Load experience opens a centered multi-select picker. Applying
-entries retains their library IDs and prevents adding the same ID twice.
+entries retains their library IDs. Already linked experiences show a warning icon
+beside Preview with the tooltip "This experience will be updated with new data".
+Apply replaces their CV fields
+in place, preserving its position and ID instead of adding a duplicate. Unselected
+entries stay unchanged. Apply edits the draft; use the main CV Save to persist it.
 Applying an entry combines its rich-text description with responsibilities in
 the CV's Project description field. Responsibilities become escaped paragraphs
 with their line breaks preserved. Already appended responsibilities are not
 duplicated when the same combined description is reused.
-Saving a linked entry updates its library record; CVs retain their own editable
-snapshots and the library ID, so library updates do not silently rewrite other CVs.
+Saving a linked entry from the CV editor updates both its library record and its
+snapshot in the current saved CV in one transaction. Other CVs and unrelated edits
+stay unchanged. New experience blocks still need the main CV Save to add them to
+the saved CV. Saves made directly in the library retain other CV snapshots.
 
 Dialogs use the shared `DialogOverlay` directive to move their Angular-owned DOM
 into a body-level overlay. The shared `Dialog` shell keeps its header and actions

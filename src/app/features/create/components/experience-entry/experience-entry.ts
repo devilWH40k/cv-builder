@@ -1,6 +1,6 @@
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, output, PendingTasks, signal, viewChild } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AngularTiptapEditorComponent, AteEditorCommandsService, AteEditorConfig } from '@flogeez/angular-tiptap-editor';
 import { Bold, Italic, List, ListOrdered, LucideAngularModule, Redo2, Save, TriangleAlert, Underline, Undo2, X } from 'lucide-angular';
@@ -14,6 +14,7 @@ import { Tooltip } from '../../../../shared/directories/tooltip';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { startWith, switchMap } from 'rxjs';
 import { ThemeStore } from '../../../../core/theme/theme-store';
+import { CvDraft } from '../../../cv/services/cv-draft';
 
 @Component({
   selector: 'app-experience-entry',
@@ -53,6 +54,8 @@ export class ExperienceEntry {
   private readonly toasts = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly themeStore = inject(ThemeStore);
+  private readonly draft = inject(CvDraft);
+  private readonly pendingTasks = inject(PendingTasks);
 
   protected async save(): Promise<void> {
     if (this.saving()) return;
@@ -63,8 +66,15 @@ export class ExperienceEntry {
       return;
     }
     this.saving.set(true);
+    const snapshot = structuredClone(form.getRawValue());
+    const cvId = this.draft.savedId();
+    const session = this.draft.session();
+    const done = this.pendingTasks.add();
     try {
-      const id = await this.saved.saveExperience(form.getRawValue());
+      const id = await this.saved.saveExperience(snapshot, cvId);
+      if (cvId && this.draft.savedId() === cvId && this.draft.session() === session) {
+        this.draft.markExperienceSaved({ ...snapshot, savedExperienceId: id });
+      }
       if (this.destroyRef.destroyed) return;
       form.controls.savedExperienceId.setValue(id);
       form.markAsDirty();
@@ -73,6 +83,7 @@ export class ExperienceEntry {
       if (!this.destroyRef.destroyed) this.toasts.show('danger', 'Your experience could not be saved. Please try again.');
     } finally {
       if (!this.destroyRef.destroyed) this.saving.set(false);
+      done();
     }
   }
 
