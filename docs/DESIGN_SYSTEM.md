@@ -1505,7 +1505,22 @@ pixel sizes and compensates for preview scaling during pointer interaction.
 
 Home uses the feature-specific `app-cv-collection` for both the main collection
 and folder contents, keeping card/list styles, edit links, and delete actions
-consistent. Folders use Lucide Folder/FolderPlus icons; list folders display a
+consistent. The main collection initially requests 24 combined folders/CVs,
+folders first, and appends the next 24 when its end enters the viewport. A status
+at the end shows "Loading more folders and CVs…" while a batch is pending. Batches
+pause during dragging, reordering, storage refreshes, and open folder dialogs.
+Switching card/list views preserves the loaded count; returning to Home starts
+at 24. `CvCollectionApi.getPage(offset, limit, folderId)` queries IndexedDB for
+each batch using a scope/position index and cursor `advance(offset)`, then reads
+only that page's CV/folder records. `CvDatabase` owns the connection and legacy
+migration. A lightweight collection index is initialized once using CV keys and
+timestamps (without deserializing every CV), and rebuilt after mutations to retain
+folder membership and manual ordering. `HomeCollection` owns page state, retries,
+and stale-response protection. Home avoids the full `SavedCvs.refresh()` read on
+entry; cache refreshes after edits touch only previously fetched records. Folder
+contents are fetched on demand when their dialog opens. Explicit backups still
+read the full database.
+Folders use Lucide Folder/FolderPlus icons; list folders display a
 CV count, while card folders display a large icon and their name. Nonempty folder
 delete buttons are disabled. The folder-plus button sits immediately left of
 the view switch, with storage text centered on wider screens.

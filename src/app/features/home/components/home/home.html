@@ -27,24 +27,37 @@
     @if (saved.migrationWarning()) {
     <p role="alert">{{ saved.migrationWarning() }}</p>
     }
-    @if (saved.loading() && !saved.all().length && !saved.folders().length) {
+    @if (collection.loading() && !collection.cvs().length && !collection.folders().length) {
       <p role="status">Loading saved CVs…</p>
     }
     @if (saved.error()) {
     <p role="alert">{{ saved.error() }}</p>
     }
+    @if (collection.error()) {
+      <p role="alert">{{ collection.error() }}</p>
+      <button class="load-retry" type="button" (click)="collection.reload()">Try again</button>
+    }
     @if (deleteError()) { <p role="alert">{{ deleteError() }}</p> }
     @if (folderError()) { <p role="alert">{{ folderError() }}</p> }
     @if (orderError()) { <p role="alert">{{ orderError() }}</p> }
-    <app-cv-collection #rootCollection [class.root-collection]="rootCvs().length > 0 || saved.folders().length > 0"
-      [cvs]="rootCvs()" [folders]="saved.folders()" [isListView]="isListView()"
+    <app-cv-collection #rootCollection [class.root-collection]="rootCvs().length > 0 || visibleFolders().length > 0"
+      [cvs]="visibleCvs()" [folders]="visibleFolders()" [isListView]="isListView()"
       (contextmenu)="rootCollection.openBackgroundMenu($event)"
       (pasteRequested)="pasteCv($event)"
       [deletingIds]="busyCvIds()" [deletingFolderIds]="deletingFolderIds()"
       (cvDeleted)="deleteCv($event)" (folderOpened)="openFolder($event)"
       (folderDeleted)="deleteFolder($event)" (moved)="moveCv($event)"
       [reorderDisabled]="reordering()" (reordered)="reorderCv($event)" />
-    @if (!rootCvs().length && !saved.folders().length && !saved.error() && !saved.loading()) {
+    @if (hasMore()) {
+      <div #collectionEnd class="collection-end" role="status" [attr.aria-busy]="loadingMore()">
+        @if (loadingMore()) { Loading more folders and CVs… }
+      </div>
+      @if (collection.moreError()) {
+        <p role="alert">{{ collection.moreError() }}</p>
+        <button class="load-retry" type="button" (click)="collection.loadMore()">Try again</button>
+      }
+    }
+    @if (!collection.total() && !collection.error() && !saved.error() && !collection.loading()) {
       <p>No saved CVs yet. Create a CV and choose Save to keep it here.</p>
     }
   </section>
@@ -55,7 +68,7 @@
 @if (activeFolder(); as folder) {
   <app-folder-dialog [folder]="folder" [cvs]="folderCvs()" [isListView]="isListView()"
     (pasteRequested)="pasteCv($event)"
-    [deletingIds]="busyCvIds()" [error]="folderError() || deleteError() || orderError()"
+    [deletingIds]="busyCvIds()" [loading]="folderLoading()" [error]="folderError() || deleteError() || orderError()"
     [reorderDisabled]="reordering()" (reordered)="reorderCv($event)"
     (dismissed)="activeFolderId.set(null)" (cvDeleted)="deleteCv($event)" (moved)="moveCv($event)" />
 }
