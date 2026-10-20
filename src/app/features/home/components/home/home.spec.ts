@@ -638,7 +638,20 @@ describe('Saved CV navigation', () => {
         const targetBounds = target.getBoundingClientRect();
         const itemBounds = target.parentElement!.getBoundingClientRect();
         expect(view === 'list' ? targetBounds.top < itemBounds.top : targetBounds.left < itemBounds.left).toBeTrue();
+        const persistOrder = saved.reorderCv.bind(saved);
+        let finishSave!: () => void;
+        const saveReady = new Promise<void>((resolve) => { finishSave = resolve; });
+        spyOn(saved, 'reorderCv').and.callFake(async (reorder) => {
+          await saveReady;
+          await persistOrder(reorder);
+        });
         releaseOn(card);
+        harness.fixture.detectChanges();
+        // The drop replaces its placeholder before storage finishes, without restoring the old order.
+        expect(ids()).toEqual(['a', 'c', 'b']);
+        expect(collection().querySelector('[data-cv-id="c"] .cv-card')!.getAnimations().length).toBe(0);
+        expect(collection().querySelector('.cv-placeholder')).toBeNull();
+        finishSave();
         await harness.fixture.whenStable();
         expect(ids()).toEqual(['a', 'c', 'b']);
         expect(collection().querySelector('.insert-target')).toBeNull();
@@ -673,10 +686,14 @@ describe('Saved CV navigation', () => {
     expect(ids()).toEqual(['a', 'b', 'c']);
     expect(root.querySelector('.insert-target')).toBeNull();
     expect(root.querySelector('.cv-placeholder')).toBeNull();
-    spyOn(saved, 'reorderCv').and.rejectWith(new Error('Storage unavailable'));
+    let failSave!: (error: Error) => void;
+    spyOn(saved, 'reorderCv').and.returnValue(new Promise<void>((_, reject) => { failSave = reject; }));
     startDrag(root.querySelector('[data-cv-id="c"] a.cv-card')!);
     await harness.fixture.whenStable();
     releaseOn(root.querySelector('[data-cv-id="a"] .insert-before')!);
+    harness.fixture.detectChanges();
+    expect(ids()).toEqual(['c', 'a', 'b']);
+    failSave(new Error('Storage unavailable'));
     await harness.fixture.whenStable();
     expect(ids()).toEqual(['a', 'b', 'c']);
     expect(root.querySelector('[role="alert"]')?.textContent).toContain('order could not be saved');

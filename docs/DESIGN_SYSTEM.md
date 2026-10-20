@@ -1566,7 +1566,11 @@ with an empty primary-color rectangular placeholder matching the dragged item's
 size and marking the drop position. The placeholder occupies an item slot while
 hovered and stays stable while crossing the collection until another insertion
 point is chosen. Neighboring card contents animate into position without moving
-the insertion hit areas; reduced-motion preferences disable these animations.
+the insertion hit areas. Motion is limited to nearby cards intersecting the viewport;
+long-distance moves settle directly, and unchanged destinations do not restart active
+animations. Reduced-motion preferences disable these animations.
+On drop, the displayed CV order changes immediately and stays in place while
+IndexedDB saves and refreshes the collection; a failed save restores the previous order.
 The placeholder disappears when leaving the collection, dropping, or cancelling.
 Dropping on a folder
 still moves the CV into it. Manual CV order is saved in IndexedDB metadata and is
