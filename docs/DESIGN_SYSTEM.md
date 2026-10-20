@@ -1439,15 +1439,32 @@ exposes the column definition. An empty `appTableCell` supplies a fallback templ
 a template with a matching column key takes precedence. Default cells render plain
 text. Feature templates remain responsible for rich text, links and action callbacks.
 
+The Experiences page uses `ExperiencesApi` to read batches of 24 from IndexedDB
+when its end enters the viewport. `ExperienceCollection` owns offsets, loading,
+retry, cancellation, and a 200ms search debounce. Changing search text or scope
+starts at offset zero; subsequent scroll requests retrieve only the next page of
+matches. A separate normalized search index preserves newest-first order and
+supports Any visible column or a selected Search in column without reading every
+experience body. Existing records are indexed once; saves, imports, and deletes
+maintain that index transactionally. Late responses cannot replace newer results.
+The shared table opts into `externalSearch`, emits `searchChanged`, and keeps
+its controls and URL state while displaying the supplied page without local filtering.
+
 Experience entries can be saved independently in the IndexedDB `experiences`
 object store. Load experience opens a centered multi-select picker. Applying
-entries retains their library IDs and prevents adding the same ID twice.
+entries retains their library IDs. Already linked experiences show a warning icon
+beside Preview with the tooltip "This experience will be updated with new data".
+Apply replaces their CV fields
+in place, preserving its position and ID instead of adding a duplicate. Unselected
+entries stay unchanged. Apply edits the draft; use the main CV Save to persist it.
 Applying an entry combines its rich-text description with responsibilities in
 the CV's Project description field. Responsibilities become escaped paragraphs
 with their line breaks preserved. Already appended responsibilities are not
 duplicated when the same combined description is reused.
-Saving a linked entry updates its library record; CVs retain their own editable
-snapshots and the library ID, so library updates do not silently rewrite other CVs.
+Saving a linked entry from the CV editor updates both its library record and its
+snapshot in the current saved CV in one transaction. Other CVs and unrelated edits
+stay unchanged. New experience blocks still need the main CV Save to add them to
+the saved CV. Saves made directly in the library retain other CV snapshots.
 
 Dialogs use the shared `DialogOverlay` directive to move their Angular-owned DOM
 into a body-level overlay. The shared `Dialog` shell keeps its header and actions
@@ -1499,7 +1516,22 @@ pixel sizes and compensates for preview scaling during pointer interaction.
 
 Home uses the feature-specific `app-cv-collection` for both the main collection
 and folder contents, keeping card/list styles, edit links, and delete actions
-consistent. Folders use Lucide Folder/FolderPlus icons; list folders display a
+consistent. The main collection initially requests 24 combined folders/CVs,
+folders first, and appends the next 24 when its end enters the viewport. A status
+at the end shows "Loading more folders and CVs…" while a batch is pending. Batches
+pause during dragging, reordering, storage refreshes, and open folder dialogs.
+Switching card/list views preserves the loaded count; returning to Home starts
+at 24. `CvCollectionApi.getPage(offset, limit, folderId)` queries IndexedDB for
+each batch using a scope/position index and cursor `advance(offset)`, then reads
+only that page's CV/folder records. `CvDatabase` owns the connection and legacy
+migration. A lightweight collection index is initialized once using CV keys and
+timestamps (without deserializing every CV), and rebuilt after mutations to retain
+folder membership and manual ordering. `HomeCollection` owns page state, retries,
+and stale-response protection. Home avoids the full `SavedCvs.refresh()` read on
+entry; cache refreshes after edits touch only previously fetched records. Folder
+contents are fetched on demand when their dialog opens. Explicit backups still
+read the full database.
+Folders use Lucide Folder/FolderPlus icons; list folders display a
 CV count, while card folders display a large icon and their name. Nonempty folder
 delete buttons are disabled. The folder-plus button sits immediately left of
 the view switch, with storage text centered on wider screens.
@@ -1534,7 +1566,11 @@ with an empty primary-color rectangular placeholder matching the dragged item's
 size and marking the drop position. The placeholder occupies an item slot while
 hovered and stays stable while crossing the collection until another insertion
 point is chosen. Neighboring card contents animate into position without moving
-the insertion hit areas; reduced-motion preferences disable these animations.
+the insertion hit areas. Motion is limited to nearby cards intersecting the viewport;
+long-distance moves settle directly, and unchanged destinations do not restart active
+animations. Reduced-motion preferences disable these animations.
+On drop, the displayed CV order changes immediately and stays in place while
+IndexedDB saves and refreshes the collection; a failed save restores the previous order.
 The placeholder disappears when leaving the collection, dropping, or cancelling.
 Dropping on a folder
 still moves the CV into it. Manual CV order is saved in IndexedDB metadata and is

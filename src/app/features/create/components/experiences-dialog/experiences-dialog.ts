@@ -8,7 +8,7 @@ import { DialogOverlay } from '../../../../shared/ui/dialog/dialog-overlay';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { SavedExperience } from '../../../cv/interfaces/experience';
-import { Eye, LucideAngularModule } from 'lucide-angular';
+import { Eye, LucideAngularModule, TriangleAlert } from 'lucide-angular';
 import { ExperienceDialog } from '../../../experiences/components/experience-dialog/experience-dialog';
 import { Tooltip } from '../../../../shared/directories/tooltip';
 
@@ -22,6 +22,7 @@ import { Tooltip } from '../../../../shared/directories/tooltip';
 export class ExperiencesDialog {
   protected readonly viewing = signal<SavedExperience | null>(null);
   protected readonly EyeIcon = Eye;
+  protected readonly WarningIcon = TriangleAlert;
   readonly linkedIds = input<readonly string[]>([]);
   readonly applied = output<readonly SavedExperience[]>();
   readonly cancelled = output<void>();

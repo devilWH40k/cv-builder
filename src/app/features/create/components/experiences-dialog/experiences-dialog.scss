@@ -25,8 +25,26 @@ p, small { color: tokens.$text-secondary; }
   overflow-wrap: anywhere;
 }
 .experience span { display: grid; min-width: 0; }
+.experience.is-selected { border-color: tokens.$color-primary; }
 .selection { display: flex; align-items: flex-start; gap: tokens.$spacing-3; flex: 1; min-width: 0; }
-.view { @include buttons.ghost; & { flex-shrink: 0; padding: tokens.$spacing-1; } }
+.selection input[type='checkbox'] {
+  font: inherit;
+  flex-shrink: 0;
+  width: tokens.$spacing-4;
+  height: tokens.$spacing-4;
+  margin: 0;
+  margin-top: calc((1lh - #{tokens.$spacing-4}) / 2);
+}
+.experience-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: tokens.$spacing-1;
+  margin-top: calc((1lh - #{tokens.$button-height-lg}) / 2);
+  lucide-icon { display: flex; }
+}
+.view, .update-warning { @include buttons.ghost; & { flex-shrink: 0; padding: tokens.$spacing-1; } }
+.update-warning { color: tokens.$color-warning; }
 input { accent-color: tokens.$color-primary; }
 input:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: 2px; }
 footer { display: flex; justify-content: flex-end; gap: tokens.$spacing-2; margin-top: tokens.$spacing-6; }

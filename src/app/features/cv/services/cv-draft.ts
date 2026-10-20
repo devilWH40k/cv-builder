@@ -63,6 +63,14 @@ export class CvDraft {
     this.cleanInfo.set(info);
   }
 
+  markExperienceSaved(experience: CvExperience): void {
+    if (!experience.savedExperienceId) return;
+    this.cleanInfo.update((info) => info ? {
+      ...info, experiences: info.experiences.map((entry) =>
+        entry.savedExperienceId === experience.savedExperienceId ? structuredClone(experience) : entry)
+    } : null);
+  }
+
   updateStructure(structure: CvStructure): void {
     this.info.update((info) => info ? { ...info, structure: { ...structure } } : null);
   }

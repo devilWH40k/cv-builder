@@ -24,6 +24,7 @@ a {
 }
 .delete { color: tokens.$color-danger; }
 .error { margin-bottom: tokens.$spacing-4; color: tokens.$text-danger; }
+.experiences-end { min-height: tokens.$spacing-6; margin-top: tokens.$spacing-3; color: tokens.$text-muted; }
 @media (max-width: tokens.$breakpoint-sm) {
   .experiences-page { padding: tokens.$spacing-8 tokens.$spacing-4; }
 }

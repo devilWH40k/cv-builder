@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, contentChildren, effect, input, linkedSignal, TemplateRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, contentChildren, effect, input, linkedSignal, output, TemplateRef } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
 import { combineLatest, map, of, startWith, switchMap } from 'rxjs';
@@ -12,7 +12,7 @@ import { Select, SelectOption } from '../../select/select';
 import { Table } from '../table/table';
 import { TableCell } from '../table-cell/table-cell';
 import { TableCellTemplate } from '../directives/table-cell-template';
-import { TableCellContext, TableColumn, TableSettings } from '../models/table-column';
+import { TableCellContext, TableColumn, TableSearch, TableSettings } from '../models/table-column';
 import { TableHeader } from '../table-header/table-header';
 import { TableRow } from '../table-row/table-row';
 import { syncTableQueryParams } from '../utils/table-query-params';
@@ -36,12 +36,14 @@ export class TableWrapper<T> {
   readonly columns = input.required<readonly TableColumn<T>[]>();
   readonly trackBy = input.required<(record: T) => string | number>();
   readonly settings = input<TableSettings>({});
+  readonly loading = input(false);
+  readonly searchChanged = output<TableSearch>();
   protected readonly SettingsIcon = Settings;
   protected readonly SearchIcon = Search;
   protected readonly RestoreIcon = RotateCcw;
   protected readonly search = new FormControl('', { nonNullable: true });
   protected readonly searchColumn = new FormControl('', { nonNullable: true });
-  private readonly query = toSignal(this.search.valueChanges, { initialValue: '' });
+  protected readonly query = toSignal(this.search.valueChanges, { initialValue: '' });
   private readonly selectedSearchColumn = toSignal(this.searchColumn.valueChanges, { initialValue: '' });
   private readonly templates = contentChildren<TableCellTemplate<T>>(TableCellTemplate);
   protected readonly columnOptions = linkedSignal<readonly TableColumn<T>[], readonly ColumnOption<T>[]>({
@@ -78,6 +80,7 @@ export class TableWrapper<T> {
     ...this.searchableColumns().map((column) => ({ value: column.key, label: column.label }))
   ]);
   protected readonly filteredData = computed(() => {
+    if (this.settings().externalSearch) return this.data();
     const query = this.settings().search ? this.query().trim().toLocaleLowerCase() : '';
     if (!query) return this.data();
     const selected = this.searchableColumns().find((column) => column.key === this.selectedSearchColumn());
@@ -106,6 +109,12 @@ export class TableWrapper<T> {
       if (selected && !this.searchableColumns().some((column) => column.key === selected)) {
         this.searchColumn.setValue('');
       }
+    });
+    effect(() => {
+      if (!this.settings().externalSearch) return;
+      const selected = this.searchableColumns().find((column) => column.key === this.selectedSearchColumn());
+      this.searchChanged.emit({ query: this.query(),
+        columns: (selected ? [selected] : this.searchableColumns()).map((column) => column.key) });
     });
   }
 

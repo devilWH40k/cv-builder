@@ -35,7 +35,15 @@ describe('Experiences dialog', () => {
     expect(bounds.left + bounds.width / 2).toBeCloseTo(window.innerWidth / 2, 0);
     expect(bounds.top + bounds.height / 2).toBeCloseTo(window.innerHeight / 2, 0);
     const apply = dialog.querySelector<HTMLButtonElement>('app-button button')!;
+    const card = dialog.querySelector<HTMLElement>('.experience')!;
+    const normalBorder = getComputedStyle(card).borderColor;
     expect(apply.disabled).toBeTrue();
+    dialog.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click();
+    await fixture.whenStable();
+    expect(getComputedStyle(card).borderColor).toBe('rgb(54, 212, 247)');
+    dialog.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click();
+    await fixture.whenStable();
+    expect(getComputedStyle(card).borderColor).toBe(normalBorder);
     dialog.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click();
     await fixture.whenStable();
     apply.click();
@@ -100,10 +108,38 @@ describe('Experiences dialog', () => {
     expect(applied).toHaveBeenCalledWith([records[0], records[6]]);
   });
 
-  it('disables entries already linked to the CV', async () => {
-    const { dialog } = await setup([record], [record.id]);
-    expect(dialog.querySelector<HTMLInputElement>('input[type="checkbox"]')!.disabled).toBeTrue();
-    expect(dialog.textContent).toContain('Already added');
+  it('allows selecting linked entries to update and describes the overwrite warning', async () => {
+    const { fixture, dialog, applied } = await setup([record], [record.id]);
+    const checkbox = dialog.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    const apply = dialog.querySelector<HTMLButtonElement>('footer app-button button')!;
+    expect(checkbox.disabled).toBeFalse();
+    expect(checkbox.checked).toBeFalse();
+    expect(apply.disabled).toBeTrue();
+    const warning = dialog.querySelector<HTMLButtonElement>('.update-warning')!;
+    expect(warning.parentElement).toBe(dialog.querySelector('.view')!.parentElement);
+    const name = dialog.querySelector<HTMLElement>('.selection strong')!;
+    const nameCenter = name.getBoundingClientRect().top + parseFloat(getComputedStyle(name).lineHeight) / 2;
+    for (const element of [checkbox, ...dialog.querySelectorAll<HTMLElement>('.experience-actions lucide-icon')]) {
+      const bounds = element.getBoundingClientRect();
+      expect(bounds.top + bounds.height / 2).toBeCloseTo(nameCenter, 0);
+    }
+    expect(dialog.textContent).not.toContain('This experience will be updated with new data');
+    warning.focus();
+    const tooltip = document.getElementById(warning.getAttribute('aria-describedby')!)!;
+    expect(tooltip.textContent).toBe('This experience will be updated with new data');
+    expect(tooltip.hidden).toBeFalse();
+    expect(checkbox.checked).toBeFalse();
+    expect(applied).not.toHaveBeenCalled();
+    checkbox.click();
+    await fixture.whenStable();
+    expect(apply.disabled).toBeFalse();
+    checkbox.click();
+    await fixture.whenStable();
+    expect(apply.disabled).toBeTrue();
+    checkbox.click();
+    await fixture.whenStable();
+    apply.click();
+    expect(applied).toHaveBeenCalledOnceWith([record]);
   });
 
   it('opens read-only details without selecting an experience and restores the picker', async () => {

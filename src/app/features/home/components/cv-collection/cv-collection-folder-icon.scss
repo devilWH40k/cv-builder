@@ -1,0 +1,33 @@
+@use 'styles/tokens' as tokens;
+
+.folder-icon {
+  display: grid;
+  flex-shrink: 0;
+  color: tokens.$text-accent;
+
+  > lucide-icon {
+    grid-area: 1 / 1;
+    transition: opacity tokens.$transition-normal, transform tokens.$transition-normal;
+  }
+
+  .folder-open {
+    opacity: 0;
+    transform: translateY(tokens.$spacing-1) scale(0.9);
+  }
+}
+
+.saved-folder.drop-target .folder-icon {
+  .folder-closed {
+    opacity: 0;
+    transform: translateY(-#{tokens.$spacing-1}) scale(0.9);
+  }
+
+  .folder-open {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .folder-icon > lucide-icon { transition: none; }
+}

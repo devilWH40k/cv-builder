@@ -25,21 +25,36 @@ export class CvCollectionMotion {
         const [x, y] = translate.split(' ').map((part) => parseFloat(part) || 0);
         return [card, { x: x ?? 0, y: y ?? 0 }] as const;
       }));
-      this.cancelAnimations();
       const bounds = this.element.getBoundingClientRect();
-      const nextPositions = new Map(cards.map((card) => {
+      const measurements = new Map(cards.map((card) => {
         const rect = card.getBoundingClientRect();
-        return [card, { left: rect.left - bounds.left, top: rect.top - bounds.top }] as const;
+        const offset = offsets.get(card)!;
+        return [card, { left: rect.left - offset.x, top: rect.top - offset.y, width: rect.width, height: rect.height }] as const;
       }));
+      const nextPositions = new Map(Array.from(measurements, ([card, rect]) =>
+        [card, { left: rect.left - bounds.left, top: rect.top - bounds.top }] as const));
       const duration = parseFloat(getComputedStyle(this.element).getPropertyValue('--cv-reorder-duration')) || 0;
-      if (duration && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const motionAllowed = duration > 0 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      for (const card of this.animations.keys()) {
+        if (!nextPositions.has(card) || !motionAllowed) this.cancelAnimation(card);
+      }
+      if (motionAllowed) {
         for (const [card, next] of nextPositions) {
           const previous = this.positions.get(card);
           if (!previous) continue;
+          // An unchanged destination must not restart an animation already in progress.
+          if (Math.abs(previous.left - next.left) < 1 && Math.abs(previous.top - next.top) < 1) continue;
           const offset = offsets.get(card);
           const x = previous.left - next.left + (offset?.x ?? 0);
           const y = previous.top - next.top + (offset?.y ?? 0);
+          this.cancelAnimation(card);
           if (Math.abs(x) < 1 && Math.abs(y) < 1) continue;
+          const rect = measurements.get(card)!;
+          // Large reorders should settle at their destination instead of flying across the collection.
+          if (Math.abs(x) > rect.width * 2 || Math.abs(y) > rect.height * 2) continue;
+          const visible = (left: number, top: number) =>
+            left < window.innerWidth && left + rect.width > 0 && top < window.innerHeight && top + rect.height > 0;
+          if (!visible(rect.left, rect.top) && !visible(rect.left + x, rect.top + y)) continue;
           const animation = card.animate([{ translate: `${x}px ${y}px` }, { translate: '0px 0px' }], {
             duration, easing: 'ease-out'
           });
@@ -52,10 +67,14 @@ export class CvCollectionMotion {
   }
 
   private cancelAnimations(): void {
-    for (const animation of this.animations.values()) {
-      animation.onfinish = null;
-      animation.cancel();
-    }
-    this.animations.clear();
+    for (const card of this.animations.keys()) this.cancelAnimation(card);
+  }
+
+  private cancelAnimation(card: HTMLElement): void {
+    const animation = this.animations.get(card);
+    if (!animation) return;
+    animation.onfinish = null;
+    animation.cancel();
+    this.animations.delete(card);
   }
 }

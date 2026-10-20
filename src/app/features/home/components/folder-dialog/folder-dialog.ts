@@ -21,6 +21,7 @@ export class FolderDialog {
   readonly deletingIds = input<readonly string[]>([]);
   readonly reorderDisabled = input(false);
   readonly error = input('');
+  readonly loading = input(false);
   readonly dismissed = output<void>();
   readonly cvDeleted = output<string>();
   readonly moved = output<CvMove>();

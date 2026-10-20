@@ -111,6 +111,50 @@ describe('IndexedDB saved CVs', () => {
     expect((await saved.backupSnapshot()).experiences).toEqual([]);
   });
 
+  it('saves a linked experience in the library and current CV without changing other saved fields or CVs', async () => {
+    const saved = service();
+    const id = await saved.saveExperience(info.experiences[0]);
+    const linked = { ...info.experiences[0], savedExperienceId: id };
+    const original = { ...info, experiences: [linked, { ...linked, savedExperienceId: 'other', company: 'Other' }] };
+    const cvId = await saved.save(original, null);
+    const otherCv = await saved.save(original, null);
+    const folder = await saved.createFolder('Applications');
+    await saved.moveCv(cvId, folder.id);
+    const updated = { ...linked, company: 'Updated', technologies: ['Angular'], description: '<p>New work</p>' };
+    expect(await saved.saveExperience(updated, cvId)).toBe(id);
+    const reopened = service();
+    expect(await reopened.load(cvId)).toEqual({ ...original, experiences: [updated, original.experiences[1]] });
+    expect(await reopened.load(otherCv)).toEqual(original);
+    expect((await reopened.listExperiences())[0].experience).toEqual(updated);
+    expect(saved.all().find((cv) => cv.id === cvId)?.info.experiences[0]).toEqual(updated);
+    expect(saved.folders()[0].cvIds).toEqual([cvId]);
+  });
+
+  it('rolls back the library save if updating the linked CV fails', async () => {
+    const saved = service();
+    const id = await saved.saveExperience(info.experiences[0]);
+    const linked = { ...info.experiences[0], savedExperienceId: id };
+    const original = { ...info, experiences: [linked] };
+    const cvId = await saved.save(original, null);
+    const put = IDBObjectStore.prototype.put;
+    spyOn(IDBObjectStore.prototype, 'put').and.callFake(function (this: IDBObjectStore, value: unknown, key?: IDBValidKey) {
+      if (this.name === 'cvs') throw new Error('Storage unavailable');
+      return key === undefined ? put.call(this, value) : put.call(this, value, key);
+    });
+    await expectAsync(saved.saveExperience({ ...linked, company: 'Updated' }, cvId)).toBeRejected();
+    expect(await saved.load(cvId)).toEqual(original);
+    expect((await saved.listExperiences())[0].experience).toEqual(linked);
+  });
+
+  it('does not save the library update or recreate a deleted current CV', async () => {
+    const saved = service();
+    const id = await saved.saveExperience(info.experiences[0]);
+    const linked = { ...info.experiences[0], savedExperienceId: id };
+    await expectAsync(saved.saveExperience({ ...linked, company: 'Updated' }, 'missing-cv')).toBeRejected();
+    expect(await saved.load('missing-cv')).toBeNull();
+    expect((await saved.listExperiences())[0].experience).toEqual(linked);
+  });
+
   it('imports new experience records as one batch without replacing existing saves or supplied IDs', async () => {
     const saved = service();
     const existingId = await saved.saveExperience(info.experiences[0]);

@@ -39,6 +39,7 @@ describe('Saved CV navigation', () => {
       languages: [{ language: 'English', level: 'Native' }], experiences: []
     }, null);
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     expect(harness.routeNativeElement?.querySelector('.cv-name')?.textContent).toContain('Ada');
     if (view === 'card') {
       harness.routeNativeElement?.querySelector<HTMLButtonElement>('.view-toggle')!.click();
@@ -56,6 +57,7 @@ describe('Saved CV navigation', () => {
     expect((await saved.load(id))?.name).toBe('Updated');
     expect(saved.all().length).toBe(1);
     await harness.navigateByUrl('/');
+    await harness.fixture.whenStable();
     expect(harness.routeNativeElement?.querySelector('.cv-list') !== null).toBe(view === 'list');
     expect(harness.routeNativeElement?.querySelector('.view-toggle')?.getAttribute('aria-label'))
       .toBe(view === 'list' ? 'Switch to card view' : 'Switch to list view');
@@ -74,6 +76,7 @@ describe('Saved CV navigation', () => {
       languages: [], experiences: [], technologies: ['Angular']
     }, null);
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     const toggle = harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!;
     expect(toggle.getAttribute('aria-label')).toBe('Switch to card view');
     const row = harness.routeNativeElement!.querySelector('.cv-list .cv-card')!;
@@ -111,6 +114,7 @@ describe('Saved CV navigation', () => {
     }, null);
     TestBed.inject(CvDraft).savedId.set(id);
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     if (view === 'card') {
       harness.routeNativeElement?.querySelector<HTMLButtonElement>('.view-toggle')!.click();
       await harness.fixture.whenStable();
@@ -136,6 +140,7 @@ describe('Saved CV navigation', () => {
       languages: [], experiences: [], technologies: []
     }, null);
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     spyOn(IDBObjectStore.prototype, 'delete').and.throwError('Storage unavailable');
     harness.routeNativeElement?.querySelector<HTMLButtonElement>('.delete-cv')!.click();
     await harness.fixture.whenStable();
@@ -151,6 +156,38 @@ describe('Saved CV navigation', () => {
     languages: [], experiences: [], technologies: []
   };
 
+  for (const view of ['card', 'list']) {
+    it(`truncates long ${view} folder names responsively without increasing folder height`, async () => {
+      const saved = TestBed.inject(SavedCvs);
+      const longName = 'Applications '.repeat(10).slice(0, 120);
+      await saved.createFolder('Short');
+      await saved.createFolder(longName);
+      const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
+      if (view === 'card') {
+        harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+        await harness.fixture.whenStable();
+      }
+      const collection = harness.routeNativeElement!.querySelector<HTMLElement>('.root-collection')!;
+      const cards = Array.from(collection.querySelectorAll<HTMLButtonElement>('.folder-card'));
+      const long = cards.find((card) => card.querySelector('.folder-name')!.textContent === longName)!;
+      const short = cards.find((card) => card.querySelector('.folder-name')!.textContent === 'Short')!;
+      const name = long.querySelector<HTMLElement>('.folder-name')!;
+      let narrowWidth = 0;
+      for (const width of [240, 320]) {
+        collection.style.width = width + 'px';
+        expect(long.getBoundingClientRect().height).toBe(short.getBoundingClientRect().height);
+        expect(name.scrollWidth).toBeGreaterThan(name.clientWidth);
+        expect(getComputedStyle(name).textOverflow).toBe('ellipsis');
+        expect(getComputedStyle(name).whiteSpace).toBe('nowrap');
+        expect(name.title).toBe(longName);
+        expect(long.getAttribute('aria-label')).toBe('Open folder ' + longName);
+        if (width === 240) narrowWidth = name.clientWidth;
+        else expect(name.clientWidth).not.toBe(narrowWidth);
+      }
+    });
+  }
+
   function openContextMenu(target: Element): void {
     target.dispatchEvent(new MouseEvent('contextmenu', {
       bubbles: true, cancelable: true, button: 2, clientX: 100, clientY: 100
@@ -162,6 +199,7 @@ describe('Saved CV navigation', () => {
       const saved = TestBed.inject(SavedCvs);
       await saved.createFolder('Applications');
       const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
       if (view === 'card') {
         harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
         await harness.fixture.whenStable();
@@ -205,6 +243,7 @@ describe('Saved CV navigation', () => {
       const id = await saved.save(cvInfo, null);
       const folder = await saved.createFolder('Applications');
       const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
       if (view === 'card') {
         harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
         await harness.fixture.whenStable();
@@ -264,6 +303,7 @@ describe('Saved CV navigation', () => {
     const id = await saved.save(cvInfo, null);
     const move = spyOn(saved, 'moveCv').and.callThrough();
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     const source = harness.routeNativeElement!.querySelector('a.cv-card')!;
     openContextMenu(source);
     await harness.fixture.whenStable();
@@ -283,6 +323,7 @@ describe('Saved CV navigation', () => {
     const id = await saved.save(cvInfo, null);
     const folder = await saved.createFolder('Applications');
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     openContextMenu(harness.routeNativeElement!.querySelector('a.cv-card')!);
     await harness.fixture.whenStable();
     document.querySelector<HTMLButtonElement>('.context-menu [data-menu-id="cut"]')!.click();
@@ -358,6 +399,7 @@ describe('Saved CV navigation', () => {
 
   it('creates a named empty folder and allows deleting it without navigation', async () => {
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     await newFolder(harness, '  Applications  ');
     const dialog = document.querySelector<HTMLDialogElement>('#create-folder-dialog')!;
     expect(dialog.open).toBeTrue();
@@ -377,6 +419,7 @@ describe('Saved CV navigation', () => {
 
   it('rejects blank names and cancels without storing folders, including Escape and backdrop dismissal', async () => {
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     for (const dismissal of ['cancel', 'escape', 'backdrop']) {
       await newFolder(harness, '   ');
       expect(document.querySelector<HTMLButtonElement>('#create-folder-dialog app-button button')!.disabled).toBeTrue();
@@ -392,6 +435,7 @@ describe('Saved CV navigation', () => {
 
   it('keeps the folder creation dialog open for retry when storage fails', async () => {
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     await newFolder(harness, 'Applications');
     const add = spyOn(IDBObjectStore.prototype, 'add').and.throwError('Storage unavailable');
     document.querySelector<HTMLButtonElement>('#create-folder-dialog app-button button')!.click();
@@ -407,6 +451,7 @@ describe('Saved CV navigation', () => {
 
   it('cancels folder creation without flashing required-field validation', async () => {
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     await newFolder(harness, '');
     const dialog = document.querySelector<HTMLDialogElement>('#create-folder-dialog')!;
     const input = dialog.querySelector<HTMLInputElement>('#folder-name')!;
@@ -432,6 +477,7 @@ describe('Saved CV navigation', () => {
       const id = await saved.save(cvInfo, null);
       const folder = await saved.createFolder('Applications');
       const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
       if (view === 'card') {
         harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
         await harness.fixture.whenStable();
@@ -444,11 +490,30 @@ describe('Saved CV navigation', () => {
       expect(getComputedStyle(source.closest('app-draggable')!).display).toBe('none');
       expect(document.querySelector('.app-drag-preview')?.textContent).toContain('Ada');
       const target = root.querySelector('.saved-folder')!;
+      const closedIcon = target.querySelector<HTMLElement>('.folder-closed')!;
+      const openIcon = target.querySelector<HTMLElement>('.folder-open')!;
+      const expectFolderOpen = (open: boolean) => {
+        for (const icon of [closedIcon, openIcon]) {
+          getComputedStyle(icon).opacity;
+          icon.getAnimations().forEach((animation) => animation.finish());
+        }
+        expect(getComputedStyle(closedIcon).opacity).toBe(open ? '0' : '1');
+        expect(getComputedStyle(openIcon).opacity).toBe(open ? '1' : '0');
+      };
+      expectFolderOpen(false);
       overTarget(target);
       await harness.fixture.whenStable();
       expect(target.classList.contains('drop-target')).toBeTrue();
+      expectFolderOpen(true);
+      overTarget(root.querySelector('#saved-title')!);
+      await harness.fixture.whenStable();
+      expectFolderOpen(false);
+      overTarget(target);
+      await harness.fixture.whenStable();
+      expectFolderOpen(true);
       releaseOn(target);
       await harness.fixture.whenStable();
+      expectFolderOpen(false);
       expect(root.querySelector('a.cv-card')).toBeNull();
       expect(saved.folders()[0].cvIds).toEqual([id]);
       expect(document.querySelector('.app-drag-preview')).toBeNull();
@@ -488,6 +553,7 @@ describe('Saved CV navigation', () => {
       const folder = await saved.createFolder('Applications');
       await saved.moveCv(id, folder.id);
       const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
       if (view === 'card') {
         harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
         await harness.fixture.whenStable();
@@ -503,6 +569,7 @@ describe('Saved CV navigation', () => {
       harness.routeNativeElement!.querySelector<HTMLButtonElement>('app-save-cv-button button')!.click();
       await harness.fixture.whenStable();
       await harness.navigateByUrl('/');
+    await harness.fixture.whenStable();
       expect(harness.routeNativeElement!.querySelector('.cv-list') !== null).toBe(view === 'list');
       expect(harness.routeNativeElement!.querySelector('a.cv-card')).toBeNull();
       expect(saved.folders()[0].cvIds).toEqual([id]);
@@ -526,6 +593,7 @@ describe('Saved CV navigation', () => {
           for (const id of ['a', 'b', 'c']) await saved.moveCv(id, folder.id);
         }
         const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
         if (view === 'card') {
           harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
           await harness.fixture.whenStable();
@@ -570,7 +638,20 @@ describe('Saved CV navigation', () => {
         const targetBounds = target.getBoundingClientRect();
         const itemBounds = target.parentElement!.getBoundingClientRect();
         expect(view === 'list' ? targetBounds.top < itemBounds.top : targetBounds.left < itemBounds.left).toBeTrue();
+        const persistOrder = saved.reorderCv.bind(saved);
+        let finishSave!: () => void;
+        const saveReady = new Promise<void>((resolve) => { finishSave = resolve; });
+        spyOn(saved, 'reorderCv').and.callFake(async (reorder) => {
+          await saveReady;
+          await persistOrder(reorder);
+        });
         releaseOn(card);
+        harness.fixture.detectChanges();
+        // The drop replaces its placeholder before storage finishes, without restoring the old order.
+        expect(ids()).toEqual(['a', 'c', 'b']);
+        expect(collection().querySelector('[data-cv-id="c"] .cv-card')!.getAnimations().length).toBe(0);
+        expect(collection().querySelector('.cv-placeholder')).toBeNull();
+        finishSave();
         await harness.fixture.whenStable();
         expect(ids()).toEqual(['a', 'c', 'b']);
         expect(collection().querySelector('.insert-target')).toBeNull();
@@ -579,6 +660,7 @@ describe('Saved CV navigation', () => {
         if (folderId) expect(saved.folders()[0].cvIds).toEqual(['a', 'b', 'c']);
         await harness.navigateByUrl('/guides');
         await harness.navigateByUrl('/');
+    await harness.fixture.whenStable();
         await harness.fixture.whenStable();
         if (folderId) {
           harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
@@ -593,6 +675,7 @@ describe('Saved CV navigation', () => {
     const saved = TestBed.inject(SavedCvs);
     await saved.importRecords(['a', 'b', 'c'].map((id, index) => ({ id, updatedAt: 3 - index, info: cvInfo })));
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     const root = harness.routeNativeElement!;
     const ids = () => Array.from(root.querySelectorAll<HTMLElement>('[data-cv-id]')).map((cv) => cv.dataset['cvId']);
     startDrag(root.querySelector('[data-cv-id="c"] a.cv-card')!);
@@ -603,10 +686,14 @@ describe('Saved CV navigation', () => {
     expect(ids()).toEqual(['a', 'b', 'c']);
     expect(root.querySelector('.insert-target')).toBeNull();
     expect(root.querySelector('.cv-placeholder')).toBeNull();
-    spyOn(saved, 'reorderCv').and.rejectWith(new Error('Storage unavailable'));
+    let failSave!: (error: Error) => void;
+    spyOn(saved, 'reorderCv').and.returnValue(new Promise<void>((_, reject) => { failSave = reject; }));
     startDrag(root.querySelector('[data-cv-id="c"] a.cv-card')!);
     await harness.fixture.whenStable();
     releaseOn(root.querySelector('[data-cv-id="a"] .insert-before')!);
+    harness.fixture.detectChanges();
+    expect(ids()).toEqual(['c', 'a', 'b']);
+    failSave(new Error('Storage unavailable'));
     await harness.fixture.whenStable();
     expect(ids()).toEqual(['a', 'b', 'c']);
     expect(root.querySelector('[role="alert"]')?.textContent).toContain('order could not be saved');
@@ -617,6 +704,7 @@ describe('Saved CV navigation', () => {
     await saved.save(cvInfo, null);
     await saved.createFolder('Applications');
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     const source = harness.routeNativeElement!.querySelector('a.cv-card')!;
     startDrag(source);
     document.dispatchEvent(new PointerEvent('pointercancel', { pointerId: 1 }));
@@ -631,6 +719,7 @@ describe('Saved CV navigation', () => {
     await saved.save(cvInfo, null);
     await saved.createFolder('Applications');
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     spyOn(IDBObjectStore.prototype, 'put').and.throwError('Storage unavailable');
     startDrag(harness.routeNativeElement!.querySelector('a.cv-card')!);
     await harness.fixture.whenStable();
@@ -648,6 +737,7 @@ describe('Saved CV navigation', () => {
     await saved.moveCv(id, folder.id);
     TestBed.inject(CvDraft).savedId.set(id);
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
     await harness.fixture.whenStable();
     document.querySelector<HTMLButtonElement>('#folder-dialog .delete-cv')!.click();
@@ -669,6 +759,7 @@ describe('Saved CV navigation', () => {
       await saved.moveCv(id, folder.id);
       const download = spyOn(TestBed.inject(CvPdf), 'download').and.resolveTo();
       const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
       if (view === 'card') {
         harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
         await harness.fixture.whenStable();
@@ -713,6 +804,7 @@ describe('Saved CV navigation', () => {
         draft.save({ ...cvInfo, name: 'Stale editor draft' });
         draft.savedId.set(id);
         const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
         if (view === 'card') {
           harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
           await harness.fixture.whenStable();
@@ -747,6 +839,7 @@ describe('Saved CV navigation', () => {
     const folder = await saved.createFolder('Applications');
     await saved.moveCv(id, folder.id);
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
     await harness.fixture.whenStable();
     spyOn(IDBObjectStore.prototype, 'put').and.throwError('Membership write failed');
@@ -766,6 +859,7 @@ describe('Saved CV navigation', () => {
     const folder = await saved.createFolder('Applications');
     await saved.moveCv(id, folder.id);
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
     await harness.fixture.whenStable();
     const dialog = document.querySelector<HTMLDialogElement>('#folder-dialog')!;
@@ -793,6 +887,7 @@ describe('Saved CV navigation', () => {
         const folder = await saved.createFolder('Applications');
         if (direction === 'out of') await saved.moveCv(id, folder.id);
         const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
         const root = harness.routeNativeElement!;
         if (view === 'card') {
           root.querySelector<HTMLButtonElement>('.view-toggle')!.click();
@@ -855,6 +950,7 @@ describe('Saved CV navigation', () => {
     const folder = await saved.createFolder('Applications');
     await saved.moveCv(id, folder.id);
     const harness = await RouterTestingHarness.create('/');
+    await harness.fixture.whenStable();
     harness.routeNativeElement!.querySelector<HTMLButtonElement>('.folder-card')!.click();
     await harness.fixture.whenStable();
     let rejectMove!: (error: Error) => void;

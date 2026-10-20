@@ -1,9 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, PendingTasks, signal } from '@angular/core';
+import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, linkedSignal, PendingTasks, signal, untracked, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule, Plus, FolderPlus, List, LayoutGrid } from 'lucide-angular';
-import { SavedCvs } from '../../../cv/services/saved-cvs';
+import { SavedCv, SavedCvs } from '../../../cv/services/saved-cvs';
+import { CvCollectionApi } from '../../../cv/services/cv-collection-api';
+import { HomeCollection } from '../../state/home-collection';
 import { CvDraft } from '../../../cv/services/cv-draft';
 import { CvReorder } from '../../../cv/interfaces/cv-reorder';
+import { reorderCvs } from '../../../cv/helpers/cv-order';
 import { HomeViewStore } from '../../state/home-view-store';
 import { CvDragStore } from '../../state/cv-drag-store';
 import { CvClipboard } from '../../state/cv-clipboard';
@@ -17,7 +20,8 @@ import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirma
   imports: [RouterLink, LucideAngularModule, CvCollection, CreateFolderDialog, FolderDialog],
   templateUrl: './home.html',
   styleUrl: './home.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [HomeCollection]
 })
 export class Home {
   protected readonly PlusIcon = Plus;
@@ -28,18 +32,40 @@ export class Home {
   private readonly viewStore = inject(HomeViewStore);
   protected readonly isListView = this.viewStore.isListView;
   protected readonly saved = inject(SavedCvs);
+  protected readonly collection = inject(HomeCollection);
+  private readonly collectionApi = inject(CvCollectionApi);
   protected readonly createFolderOpen = signal(false);
   protected readonly activeFolderId = signal<string | null>(null);
   protected readonly activeFolder = computed(() => this.saved.folders().find((folder) => folder.id === this.activeFolderId()) ?? null);
   protected readonly rootCvs = computed(() => {
-    const filedIds = new Set(this.saved.folders().flatMap((folder) => [...folder.cvIds]));
     const movingIds = new Set(this.movingIds());
-    return this.saved.all().filter((cv) => !filedIds.has(cv.id) && !movingIds.has(cv.id));
+    return this.orderedCvs(this.collection.cvs()).filter((cv) => !movingIds.has(cv.id));
   });
+  protected readonly visibleFolders = this.collection.folders;
+  protected readonly visibleCvs = this.rootCvs;
+  protected readonly hasMore = this.collection.hasMore;
+  protected readonly loadingMore = this.collection.loadingMore;
+  private readonly collectionEnd = viewChild<ElementRef<HTMLElement>>('collectionEnd');
+  private readonly folderRecords = signal<readonly SavedCv[]>([]);
+  protected readonly folderLoading = signal(false);
+  private folderGeneration = 0;
   protected readonly folderCvs = computed(() => {
-    const ids = new Set(this.activeFolder()?.cvIds ?? []);
     const movingIds = new Set(this.movingIds());
-    return this.saved.all().filter((cv) => ids.has(cv.id) && !movingIds.has(cv.id));
+    return this.orderedCvs(this.folderRecords()).filter((cv) => !movingIds.has(cv.id));
+  });
+  private readonly pendingReorder = linkedSignal<{
+    records: readonly SavedCv[]; folderId: string | null;
+  }, CvReorder | null>({
+    source: () => ({
+      records: this.activeFolderId() ? this.folderRecords() : this.collection.cvs(),
+      folderId: this.activeFolderId()
+    }),
+    computation: (source, previous) => {
+      const reorder = previous?.value;
+      if (!reorder || source.folderId !== previous.source.folderId) return null;
+      // Keep the drop visible until the paged storage refresh confirms its position.
+      return reorderCvs(source.records, reorder) === source.records ? null : reorder;
+    }
   });
   protected readonly folderError = signal('');
   protected readonly orderError = signal('');
@@ -56,8 +82,51 @@ export class Home {
   private readonly clipboard = inject(CvClipboard);
 
   constructor() {
-    this.pendingTasks.run(() => this.saved.refresh());
-    this.destroyRef.onDestroy(() => this.drag.end());
+    this.destroyRef.onDestroy(() => {
+      this.drag.end();
+      this.folderGeneration++;
+    });
+    effect(() => {
+      this.saved.revision();
+      const id = this.activeFolderId();
+      if (id) void this.pendingTasks.run(() => untracked(() => this.loadFolder(id)));
+      else { this.folderGeneration++; this.folderRecords.set([]); }
+    });
+    afterRenderEffect((onCleanup) => {
+      const end = this.collectionEnd()?.nativeElement;
+      this.collection.cvs();
+      this.collection.folders();
+      if (!end || this.saved.loading() || this.collection.loading() || this.collection.moreError() || this.loadingMore() || this.activeFolderId() !== null ||
+        this.reordering() || this.drag.draggedId()) return;
+      const observer = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        this.loadNextBatch();
+      });
+      observer.observe(end);
+      onCleanup(() => observer.disconnect());
+    });
+  }
+
+  private loadNextBatch(): void {
+    if (!this.destroyRef.destroyed) void this.collection.loadMore();
+  }
+
+  private async loadFolder(id: string): Promise<void> {
+    const generation = ++this.folderGeneration;
+    this.folderLoading.set(true);
+    try {
+      const records = await this.collectionApi.getFolderCvs(id);
+      if (this.destroyRef.destroyed || generation !== this.folderGeneration || this.activeFolderId() !== id) return;
+      this.folderRecords.set(records);
+      this.saved.cacheCollection(records, []);
+    } catch {
+      if (!this.destroyRef.destroyed && generation === this.folderGeneration) {
+        this.folderError.set('This folder could not be loaded. Please close it and try again.');
+      }
+    } finally {
+      if (!this.destroyRef.destroyed && generation === this.folderGeneration) this.folderLoading.set(false);
+    }
   }
 
   protected async deleteCv(id: string): Promise<void> {
@@ -127,19 +196,34 @@ export class Home {
   protected async reorderCv(reorder: CvReorder): Promise<void> {
     if (this.reordering() || this.busyCvIds().includes(reorder.cvId) || this.busyCvIds().includes(reorder.targetId)) return;
     this.reordering.set(true);
+    this.pendingReorder.set(reorder);
     this.orderError.set('');
     const done = this.pendingTasks.add();
     try { await this.saved.reorderCv(reorder); }
-    catch { this.orderError.set('The CV order could not be saved. Please try again.'); }
+    catch {
+      this.pendingReorder.set(null);
+      this.orderError.set('The CV order could not be saved. Please try again.');
+    }
     finally { this.reordering.set(false); done(); }
+  }
+
+  private orderedCvs(cvs: readonly SavedCv[]): readonly SavedCv[] {
+    const reorder = this.pendingReorder();
+    return reorder ? reorderCvs(cvs, reorder) : cvs;
   }
 
   protected async pasteCv(folderId: string | null): Promise<void> {
     const cvId = this.clipboard.cutId();
     if (!cvId || this.busyCvIds().includes(cvId) || this.reordering() ||
       folderId !== null && (this.deletingFolderIds().includes(folderId) || !this.saved.folders().some((folder) => folder.id === folderId))) return;
-    const currentFolder = this.saved.folders().find((folder) => folder.cvIds.includes(cvId))?.id ?? null;
-    if (currentFolder === folderId) { this.clipboard.clear(cvId); return; }
-    await this.moveCv({ cvId, folderId });
+    const done = this.pendingTasks.add();
+    try {
+      const currentFolder = await this.collectionApi.getLocation(cvId);
+      if (currentFolder === undefined) { this.clipboard.clear(cvId); return; }
+      if (currentFolder === folderId) { this.clipboard.clear(cvId); return; }
+      await this.moveCv({ cvId, folderId });
+    } catch {
+      this.folderError.set('This CV could not be moved. Please try again.');
+    } finally { done(); }
   }
 }
