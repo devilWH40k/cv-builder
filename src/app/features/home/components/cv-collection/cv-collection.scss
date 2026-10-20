@@ -49,6 +49,13 @@
   strong { font-size: tokens.$font-size-sm; }
 }
 .cv-caption, .folder-name { font-weight: tokens.$font-weight-medium; overflow-wrap: anywhere; }
+.folder-name {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 lucide-icon { display: flex; flex-shrink: 0; }
 .cv-actions {
   position: absolute;
@@ -88,7 +95,7 @@ lucide-icon { display: flex; flex-shrink: 0; }
   > lucide-icon { color: tokens.$text-accent; }
 }
 .saved-folder.drop-target .folder-card { border-color: tokens.$color-primary; background: tokens.$background-primary-subtle; }
-.folder-count { color: tokens.$text-muted; }
+.folder-count { color: tokens.$text-muted; flex-shrink: 0; }
 .cv-list {
   grid-template-columns: minmax(0, 1fr);
   gap: tokens.$spacing-2;

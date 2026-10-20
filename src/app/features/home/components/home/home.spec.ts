@@ -151,6 +151,37 @@ describe('Saved CV navigation', () => {
     languages: [], experiences: [], technologies: []
   };
 
+  for (const view of ['card', 'list']) {
+    it(`truncates long ${view} folder names responsively without increasing folder height`, async () => {
+      const saved = TestBed.inject(SavedCvs);
+      const longName = 'Applications '.repeat(10).slice(0, 120);
+      await saved.createFolder('Short');
+      await saved.createFolder(longName);
+      const harness = await RouterTestingHarness.create('/');
+      if (view === 'card') {
+        harness.routeNativeElement!.querySelector<HTMLButtonElement>('.view-toggle')!.click();
+        await harness.fixture.whenStable();
+      }
+      const collection = harness.routeNativeElement!.querySelector<HTMLElement>('.root-collection')!;
+      const cards = Array.from(collection.querySelectorAll<HTMLButtonElement>('.folder-card'));
+      const long = cards.find((card) => card.querySelector('.folder-name')!.textContent === longName)!;
+      const short = cards.find((card) => card.querySelector('.folder-name')!.textContent === 'Short')!;
+      const name = long.querySelector<HTMLElement>('.folder-name')!;
+      let narrowWidth = 0;
+      for (const width of [240, 320]) {
+        collection.style.width = width + 'px';
+        expect(long.getBoundingClientRect().height).toBe(short.getBoundingClientRect().height);
+        expect(name.scrollWidth).toBeGreaterThan(name.clientWidth);
+        expect(getComputedStyle(name).textOverflow).toBe('ellipsis');
+        expect(getComputedStyle(name).whiteSpace).toBe('nowrap');
+        expect(name.title).toBe(longName);
+        expect(long.getAttribute('aria-label')).toBe('Open folder ' + longName);
+        if (width === 240) narrowWidth = name.clientWidth;
+        else expect(name.clientWidth).not.toBe(narrowWidth);
+      }
+    });
+  }
+
   function openContextMenu(target: Element): void {
     target.dispatchEvent(new MouseEvent('contextmenu', {
       bubbles: true, cancelable: true, button: 2, clientX: 100, clientY: 100

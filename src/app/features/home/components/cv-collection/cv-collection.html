@@ -8,7 +8,7 @@
       <button class="cv-card folder-card" type="button" (click)="folderOpened.emit(folder.id)"
         [attr.aria-label]="'Open folder ' + folder.name">
         <lucide-icon [img]="FolderIcon" [size]="isListView() ? 24 : 64" aria-hidden="true" />
-        <span class="folder-name">{{ folder.name }}</span>
+        <span class="folder-name" [title]="folder.name">{{ folder.name }}</span>
         @if (isListView()) {
           <span class="folder-count" [attr.aria-label]="folder.cvIds.length + ' CVs'">{{ folder.cvIds.length }}</span>
         }
