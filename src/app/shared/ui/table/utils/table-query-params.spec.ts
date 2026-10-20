@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Experiences } from '../../../../features/experiences/experiences';
-import { SavedCvs } from '../../../../features/cv/services/saved-cvs';
+import { ExperiencesApi } from '../../../../features/experiences/services/experiences-api';
 import { TableColumn, TableSettings } from '../models/table-column';
 import { TableWrapper } from '../table-wrapper/table-wrapper';
 
@@ -160,10 +160,10 @@ describe('Table query parameters', () => {
   });
 
   it('restores the Experiences table after its records load', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([
+    spyOn(TestBed.inject(ExperiencesApi), 'getPage').and.resolveTo({ records: [
       { id: '1', updatedAt: 1, experience: { company: 'Project', position: 'Engineer',
         startDate: '', endDate: '', isCurrent: false, description: '', technologies: [] } }
-    ]);
+    ], nextOffset: 1, hasMore: false });
     const harness = await RouterTestingHarness.create('/experiences?experience.search=Engineer&experience.searchIn=position&experience.columns=company,position');
     await settle(harness);
     expect(field<HTMLInputElement>(harness, '#experience-search').value).toBe('Engineer');

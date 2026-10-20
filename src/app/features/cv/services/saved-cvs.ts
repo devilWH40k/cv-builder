@@ -1,12 +1,15 @@
-import { DestroyRef, inject, Injectable, InjectionToken, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+import { completed, CvDatabase } from './cv-database';
+export { CV_DATABASE_NAME } from './cv-database';
 import { CvExperience, SavedExperience } from '../interfaces/experience';
 import { CvInfo } from './cv-draft';
-import { parseLegacyCvs, LEGACY_STORAGE_KEY } from '../helpers/legacy-saved-cvs';
 import { SavedTechnology, technologyId } from '../helpers/saved-technology';
 import { CustomEntry } from '../../../core/dialogs/custom-entry-dialog/custom-entry-dialog';
 import { CvFolder } from '../interfaces/cv-folder';
 import { CvReorder } from '../interfaces/cv-reorder';
 import { orderSavedCvs } from '../helpers/cv-order';
+import { CvCollectionApi, readCvHeaders } from './cv-collection-api';
+import { putExperience } from '../helpers/experience-search';
 
 export interface SavedCv {
   readonly id: string;
@@ -21,22 +24,13 @@ export interface CvDatabaseSnapshot {
   readonly folders?: readonly CvFolder[];
 }
 
-export const CV_DATABASE_NAME = new InjectionToken<string>('CV database name', {
-  providedIn: 'root', factory: () => 'cv-builder'
-});
-
-function completed(transaction: IDBTransaction): Promise<void> {
-  return new Promise((resolve, reject) => {
-    transaction.oncomplete = () => resolve();
-    transaction.onabort = () => reject(transaction.error ?? new Error('Storage transaction aborted.'));
-    transaction.onerror = () => reject(transaction.error ?? new Error('Storage transaction failed.'));
-  });
-}
-
 @Injectable({ providedIn: 'root' })
 export class SavedCvs {
-  private readonly databaseName = inject(CV_DATABASE_NAME);
-  private database: Promise<IDBDatabase> | null = null;
+  private readonly database = inject(CvDatabase);
+  private readonly collectionApi = inject(CvCollectionApi);
+  private pagedCache = false;
+  private readonly changes = signal(0);
+  readonly revision = this.changes.asReadonly();
   private readonly records = signal<readonly SavedCv[]>([]);
   readonly all = this.records.asReadonly();
   private readonly folderRecords = signal<readonly CvFolder[]>([]);
@@ -44,22 +38,36 @@ export class SavedCvs {
   private readonly completedImports = signal(0);
   readonly importRevision = this.completedImports.asReadonly();
   readonly error = signal('');
-  readonly migrationWarning = signal('');
+  readonly migrationWarning = this.database.migrationWarning;
   readonly loading = signal(false);
   readonly storageEstimate = signal<{ usedMb: string; quotaGb: string } | null>(null);
   private readonly technologyRecords = signal<readonly SavedTechnology[]>([]);
   readonly technologies = this.technologyRecords.asReadonly();
   private technologyLoad: Promise<void> | null = null;
 
-  constructor() {
-    inject(DestroyRef).onDestroy(() => {
-      void this.database?.then((database) => database.close(), () => undefined);
-    });
+  usePagedCache(keepCvId: string | null = null): void {
+    this.pagedCache = true;
+    this.records.update((records) => records.filter((record) => record.id === keepCvId));
+    this.folderRecords.set([]);
+    this.error.set('');
+  }
+
+  cacheCollection(cvs: readonly SavedCv[], folders: readonly CvFolder[]): void {
+    this.records.update((records) => [...new Map([...records, ...cvs].map((record) => [record.id, record])).values()]);
+    this.folderRecords.update((records) => [...new Map([...records, ...folders].map((record) => [record.id, record])).values()]
+      .sort((a, b) => a.name.localeCompare(b.name)));
   }
 
   async refresh(): Promise<void> {
     this.loading.set(true);
     try {
+      await this.collectionApi.refreshIndex();
+      if (this.pagedCache) {
+        await this.refreshCached();
+        this.changes.update((revision) => revision + 1);
+        this.error.set('');
+        return;
+      }
       const database = await this.open();
       const transaction = database.transaction(['cvs', 'folders', 'metadata'], 'readonly');
       const records: IDBRequest<SavedCv[]> = transaction.objectStore('cvs').getAll();
@@ -69,6 +77,7 @@ export class SavedCvs {
       this.records.set(orderSavedCvs(records.result, order.result));
       this.folderRecords.set(folders.result.sort((a, b) => a.name.localeCompare(b.name)));
       this.error.set('');
+      this.changes.update((revision) => revision + 1);
     } catch {
       this.error.set('Saved CVs could not be read. Browser storage may be unavailable.');
     } finally {
@@ -77,11 +86,24 @@ export class SavedCvs {
     }
   }
 
+  private async refreshCached(): Promise<void> {
+    const database = await this.open();
+    const transaction = database.transaction(['cvs', 'folders', 'metadata'], 'readonly');
+    const cvs = this.records().map((record): IDBRequest<SavedCv | undefined> => transaction.objectStore('cvs').get(record.id));
+    const folders = this.folderRecords().map((record): IDBRequest<CvFolder | undefined> => transaction.objectStore('folders').get(record.id));
+    const order = transaction.objectStore('metadata').get('cv-order');
+    await completed(transaction);
+    this.records.set(orderSavedCvs(cvs.map((request) => request.result).filter((record) => record !== undefined), order.result));
+    this.folderRecords.set(folders.map((request) => request.result).filter((record) => record !== undefined)
+      .sort((a, b) => a.name.localeCompare(b.name)));
+  }
+
   async save(info: CvInfo, id: string | null): Promise<string> {
     const record: SavedCv = {
       id: id ?? crypto.randomUUID(), info: structuredClone(info), updatedAt: Date.now()
     };
     await this.request('readwrite', (store) => store.put(record));
+    if (this.pagedCache) this.cacheCollection([record], []);
     await this.refresh();
     return record.id;
   }
@@ -101,6 +123,7 @@ export class SavedCvs {
     if (!trimmed || trimmed.length > 120) throw new Error('Enter a folder name of up to 120 characters.');
     const folder: CvFolder = { id: crypto.randomUUID(), name: trimmed, cvIds: [] };
     await this.request('readwrite', (store) => store.add(folder), 'folders');
+    if (this.pagedCache) this.cacheCollection([], [folder]);
     await this.refresh();
     return folder;
   }
@@ -140,25 +163,24 @@ export class SavedCvs {
     const transaction = database.transaction(['cvs', 'folders', 'metadata'], 'readwrite');
     const done = completed(transaction);
     let operationError: unknown;
-    const cvs: IDBRequest<SavedCv[]> = transaction.objectStore('cvs').getAll();
     const folders: IDBRequest<CvFolder[]> = transaction.objectStore('folders').getAll();
     const metadata = transaction.objectStore('metadata');
     const order: IDBRequest<unknown> = metadata.get('cv-order');
-    order.onsuccess = () => {
+    readCvHeaders(transaction, (cvs) => {
       try {
-        if (![cvId, targetId].every((id) => cvs.result.some((cv) => cv.id === id))) {
+        if (![cvId, targetId].every((id) => cvs.some((cv) => cv.id === id))) {
           throw new Error('This CV no longer exists.');
         }
         const folderOf = (id: string) => folders.result.find((folder) => folder.cvIds.includes(id))?.id;
         if (folderOf(cvId) !== folderOf(targetId)) throw new Error('These CVs are in different collections.');
-        const remaining = orderSavedCvs(cvs.result, order.result).map((cv) => cv.id).filter((id) => id !== cvId);
+        const remaining = orderSavedCvs(cvs, order.result).map((cv) => cv.id).filter((id) => id !== cvId);
         const index = remaining.indexOf(targetId) + (position === 'after' ? 1 : 0);
         metadata.put([...remaining.slice(0, index), cvId, ...remaining.slice(index)], 'cv-order');
       } catch (error: unknown) {
         operationError = error;
         transaction.abort();
       }
-    };
+    });
     await done.catch((error: unknown) => { throw operationError ?? error; });
     await this.refresh();
   }
@@ -224,17 +246,57 @@ export class SavedCvs {
     this.technologyRecords.update((records) => records.filter((record) => record.id !== id));
   }
 
-  async saveExperience(experience: CvExperience): Promise<string> {
+  async saveExperience(experience: CvExperience, cvId: string | null = null): Promise<string> {
     const id = experience.savedExperienceId ?? crypto.randomUUID();
     const record: SavedExperience = {
       id, experience: structuredClone({ ...experience, savedExperienceId: id }), updatedAt: Date.now()
     };
-    await this.request('readwrite', (store) => store.put(record), 'experiences');
+    if (cvId === null) {
+      const database = await this.open();
+      const transaction = database.transaction(['experiences', 'experience-search'], 'readwrite');
+      const done = completed(transaction);
+      try { putExperience(transaction, record); }
+      catch { transaction.abort(); }
+      await done;
+      return id;
+    }
+    const database = await this.open();
+    const transaction = database.transaction(['cvs', 'experiences', 'experience-search'], 'readwrite');
+    const done = completed(transaction);
+    let operationError: unknown;
+    const cvs = transaction.objectStore('cvs');
+    const request: IDBRequest<SavedCv | undefined> = cvs.get(cvId);
+    request.onsuccess = () => {
+      try {
+        const cv = request.result;
+        if (!cv) throw new Error('This CV no longer exists.');
+        putExperience(transaction, record);
+        if (cv.info.experiences.some((entry) => entry.savedExperienceId === id)) {
+          cvs.put({
+            ...cv, updatedAt: record.updatedAt,
+            info: { ...cv.info, experiences: cv.info.experiences.map((entry) =>
+              entry.savedExperienceId === id ? record.experience : entry) }
+          } satisfies SavedCv);
+        }
+      } catch (error: unknown) {
+        operationError = error;
+        transaction.abort();
+      }
+    };
+    await done.catch((error: unknown) => { throw operationError ?? error; });
+    await this.refresh();
     return id;
   }
 
   async deleteExperience(id: string): Promise<void> {
-    await this.request('readwrite', (store) => store.delete(id), 'experiences');
+    const database = await this.open();
+    const transaction = database.transaction(['experiences', 'experience-search'], 'readwrite');
+    const done = completed(transaction);
+    try {
+      transaction.objectStore('experiences').delete(id);
+      transaction.objectStore('experience-search').delete(id);
+    } catch { transaction.abort(); }
+    await done;
   }
 
   async importExperiences(experiences: readonly CvExperience[]): Promise<readonly SavedExperience[]> {
@@ -244,11 +306,10 @@ export class SavedCvs {
       return { id, updatedAt: Date.now(), experience: structuredClone({ ...experience, savedExperienceId: id }) };
     });
     const database = await this.open();
-    const transaction = database.transaction('experiences', 'readwrite');
+    const transaction = database.transaction(['experiences', 'experience-search'], 'readwrite');
     const done = completed(transaction);
     try {
-      const store = transaction.objectStore('experiences');
-      for (const record of records) store.add(record);
+      for (const record of records) putExperience(transaction, record, true);
     } catch {
       transaction.abort();
     }
@@ -276,7 +337,7 @@ export class SavedCvs {
     wipePreviousData = false, technologies: readonly SavedTechnology[] = [], folders: readonly CvFolder[] = []
   ): Promise<void> {
     const database = await this.open();
-    const transaction = database.transaction(['cvs', 'experiences', 'technologies', 'folders', 'metadata'], 'readwrite');
+    const transaction = database.transaction(['cvs', 'experiences', 'experience-search', 'technologies', 'folders', 'metadata'], 'readwrite');
     const done = completed(transaction);
     let importedTechnologies: SavedTechnology[] = [];
     try {
@@ -287,6 +348,8 @@ export class SavedCvs {
       if (wipePreviousData) {
         cvsStore.clear();
         experiencesStore.clear();
+        transaction.objectStore('experience-search').clear();
+        transaction.objectStore('metadata').put(true, 'experience-search-ready');
         technologiesStore.clear();
         foldersStore.clear();
         transaction.objectStore('metadata').delete('cv-order');
@@ -307,7 +370,7 @@ export class SavedCvs {
         } catch { transaction.abort(); }
       };
       for (const record of experiences) {
-        experiencesStore.put({
+        putExperience(transaction, {
           ...record, experience: { ...record.experience, savedExperienceId: record.id }
         });
       }
@@ -322,7 +385,7 @@ export class SavedCvs {
     this.technologyRecords.set(importedTechnologies.sort((a, b) => a.name.localeCompare(b.name)));
   }
 
-  private async updateStorageEstimate(): Promise<void> {
+  async updateStorageEstimate(): Promise<void> {
     try {
       const estimate = await navigator.storage?.estimate?.();
       const usage = estimate?.usage;
@@ -348,91 +411,5 @@ export class SavedCvs {
     return request.result;
   }
 
-  private open(): Promise<IDBDatabase> {
-    if (!this.database) {
-      this.database = this.connect().then(async (database) => {
-        try {
-          await this.migrate(database);
-        } catch {
-          this.migrationWarning.set(
-            'Some older CVs could not be migrated. Their original local storage data has been kept.'
-          );
-        }
-        return database;
-      }).catch((error: unknown) => {
-        this.database = null;
-        throw error;
-      });
-    }
-    return this.database;
-  }
-
-  private connect(version?: number): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.databaseName, version);
-      let blocked = false;
-      request.onupgradeneeded = () => {
-        const database = request.result;
-        if (!database.objectStoreNames.contains('cvs')) database.createObjectStore('cvs', { keyPath: 'id' });
-        if (!database.objectStoreNames.contains('metadata')) database.createObjectStore('metadata');
-        if (!database.objectStoreNames.contains('experiences')) database.createObjectStore('experiences', { keyPath: 'id' });
-        if (!database.objectStoreNames.contains('technologies')) database.createObjectStore('technologies', { keyPath: 'id' });
-        if (!database.objectStoreNames.contains('folders')) database.createObjectStore('folders', { keyPath: 'id' });
-      };
-      request.onerror = () => reject(request.error);
-      request.onblocked = () => {
-        blocked = true;
-        reject(new Error('Close other CV Builder tabs and try again.'));
-      };
-      request.onsuccess = () => {
-        const database = request.result;
-        if (blocked) {
-          database.close();
-          return;
-        }
-        if (['cvs', 'metadata', 'experiences', 'technologies', 'folders'].some((name) => !database.objectStoreNames.contains(name))) {
-          const nextVersion = database.version + 1;
-          database.close();
-          void this.connect(nextVersion).then(resolve, reject);
-          return;
-        }
-        database.onversionchange = () => {
-          database.close();
-          this.database = null;
-        };
-        resolve(database);
-      };
-    });
-  }
-
-  private async migrate(database: IDBDatabase): Promise<void> {
-    const check = database.transaction('metadata', 'readonly');
-    const marker = check.objectStore('metadata').get('local-storage-migrated');
-    await completed(check);
-    if (marker.result === true) return;
-    const original = localStorage.getItem(LEGACY_STORAGE_KEY);
-    if (original === null) return;
-    const records = parseLegacyCvs(original);
-    const transaction = database.transaction(['cvs', 'metadata'], 'readwrite');
-    const done = completed(transaction);
-    const store = transaction.objectStore('cvs');
-    for (const record of records) {
-      const existing = store.get(record.id);
-      existing.onsuccess = () => {
-        try {
-          if (!existing.result) store.put(record);
-        } catch {
-          transaction.abort();
-        }
-      };
-    }
-    transaction.objectStore('metadata').put(true, 'local-storage-migrated');
-    await done;
-    if (localStorage.getItem(LEGACY_STORAGE_KEY) === original) {
-      localStorage.removeItem(LEGACY_STORAGE_KEY);
-    } else {
-      this.migrationWarning.set('Older local saves changed in another tab and have been kept.');
-    }
-  }
+  private open(): Promise<IDBDatabase> { return this.database.open(); }
 }
-

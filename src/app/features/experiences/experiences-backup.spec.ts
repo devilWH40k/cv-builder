@@ -7,6 +7,7 @@ import { SavedExperience } from '../cv/interfaces/experience';
 import { CvBackup } from '../cv/services/cv-backup';
 import { CV_DATABASE_NAME, SavedCvs } from '../cv/services/saved-cvs';
 import { Experiences } from './experiences';
+import { ExperiencePage, ExperiencesApi } from './services/experiences-api';
 
 const experience = { company: 'Original project', position: 'Engineer', startDate: '', endDate: '',
   isCurrent: false, technologies: [], description: '<p>Project</p>' };
@@ -18,7 +19,7 @@ describe('ZIP imports on the open Experiences page', () => {
   let header: ComponentFixture<Header>;
   let page: ComponentFixture<Experiences>;
   let saved: SavedCvs;
-  let list: jasmine.Spy<SavedCvs['listExperiences']>;
+  let list: jasmine.Spy<ExperiencesApi['getPage']>;
   let importZip: jasmine.Spy<CvBackup['import']>;
 
   beforeEach(async () => {
@@ -31,7 +32,7 @@ describe('ZIP imports on the open Experiences page', () => {
     });
     saved = TestBed.inject(SavedCvs);
     await saved.saveExperience(experience);
-    list = spyOn(saved, 'listExperiences').and.callThrough();
+    list = spyOn(TestBed.inject(ExperiencesApi), 'getPage').and.callThrough();
     importZip = spyOn(TestBed.inject(CvBackup), 'import').and.callThrough();
     header = TestBed.createComponent(Header);
     page = TestBed.createComponent(Experiences);
@@ -55,7 +56,12 @@ describe('ZIP imports on the open Experiences page', () => {
   }
 
   async function importFromHeader(records: readonly SavedExperience[], wipe = false): Promise<void> {
-    document.querySelector<HTMLButtonElement>('dialog[open] [aria-label="Close Import / Export"]')?.click();
+    const close = document.querySelector<HTMLButtonElement>('dialog[open] [aria-label="Close Import / Export"]');
+    if (close) {
+      const closed = new Promise<void>((resolve) => close.closest('dialog')!.addEventListener('close', () => resolve(), { once: true }));
+      close.click();
+      await closed;
+    }
     await header.whenStable();
     const button = header.nativeElement.querySelector('[aria-label="Import / Export"]') as HTMLButtonElement;
     button.focus();
@@ -119,16 +125,25 @@ describe('ZIP imports on the open Experiences page', () => {
   it('does not overwrite imported rows when an earlier page load finishes later', async () => {
     const oldRecords = await saved.listExperiences();
     page.destroy();
-    let finishOldLoad!: (records: SavedExperience[]) => void;
-    const oldLoad = new Promise<SavedExperience[]>((resolve) => { finishOldLoad = resolve; });
+    let finishOldLoad!: (page: ExperiencePage) => void;
+    let rejectOldLoad!: (error: Error) => void;
+    const oldLoad = new Promise<ExperiencePage>((resolve, reject) => { finishOldLoad = resolve; rejectOldLoad = reject; });
     let loads = 0;
-    list.and.callFake(() => ++loads === 1 ? oldLoad : SavedCvs.prototype.listExperiences.call(saved));
+    list.and.callFake((offset, limit, search, signal) => {
+      if (++loads === 1) {
+        signal?.addEventListener('abort', () => rejectOldLoad(new DOMException('Aborted', 'AbortError')), { once: true });
+        return oldLoad;
+      }
+      return ExperiencesApi.prototype.getPage.call(TestBed.inject(ExperiencesApi), offset, limit, search, signal);
+    });
     page = TestBed.createComponent(Experiences);
-    await page.whenStable();
-    await importFromHeader([imported]);
+    page.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    await TestBed.inject(CvBackup).import(new File([await createArchive([], [imported])], 'experiences.zip', { type: 'application/zip' }));
+    await settlePage();
     expect(projects()).toEqual(['Original project', 'Project from backup']);
-    finishOldLoad(oldRecords);
-    await oldLoad;
+    finishOldLoad({ records: oldRecords, nextOffset: oldRecords.length, hasMore: false });
+    await oldLoad.catch(() => undefined);
     await page.whenStable();
     expect(projects()).toEqual(['Original project', 'Project from backup']);
   });

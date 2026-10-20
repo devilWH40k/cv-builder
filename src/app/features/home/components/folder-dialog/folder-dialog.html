@@ -6,5 +6,6 @@
   <app-cv-collection #collection [cvs]="cvs()" [isListView]="isListView()" [deletingIds]="deletingIds()"
     [folderId]="folder().id" (pasteRequested)="pasteRequested.emit($event)"
     [reorderDisabled]="reorderDisabled()" (reordered)="reordered.emit($event)" (cvDeleted)="cvDeleted.emit($event)" />
-  @if (!cvs().length) { <p class="empty-state" role="status">This folder is empty. Drag a CV onto it to add one.</p> }
+  @if (loading() && !cvs().length) { <p role="status">Loading CVs…</p> }
+  @else if (!cvs().length) { <p class="empty-state" role="status">This folder is empty. Drag a CV onto it to add one.</p> }
 </app-dialog>

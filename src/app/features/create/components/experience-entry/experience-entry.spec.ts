@@ -8,6 +8,7 @@ import { createExperienceForm } from '../../helpers/cv-form';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ThemeStore } from '../../../../core/theme/theme-store';
+import { CvDraft } from '../../../cv/services/cv-draft';
 
 describe('Save experience', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] }));
@@ -68,6 +69,47 @@ describe('Save experience', () => {
     expect(form.controls.company.value).toBe('Example');
     expect(button.disabled).toBeFalse();
     expect(TestBed.inject(ToastService).messages().at(-1)?.theme).toBe('danger');
+  });
+
+  it('saves the current CV link and clears only the saved experience changes', async () => {
+    const save = spyOn(TestBed.inject(SavedCvs), 'saveExperience').and.resolveTo('library-1');
+    const { fixture, form, button } = await setup();
+    form.patchValue({ company: 'Original', savedExperienceId: 'library-1' });
+    const draft = TestBed.inject(CvDraft);
+    const info = { name: 'Ada', positionTitle: '', description: '', photo: null,
+      languages: [], technologies: [], experiences: [form.getRawValue()] };
+    draft.savedId.set('cv-1');
+    draft.beginEditing(info);
+    form.controls.company.setValue('Updated');
+    draft.save({ ...info, name: 'Unsaved name', experiences: [form.getRawValue()] });
+    button.click();
+    await fixture.whenStable();
+    expect(save).toHaveBeenCalledWith(jasmine.objectContaining({ company: 'Updated' }), 'cv-1');
+    expect(draft.hasUnsavedChanges()).toBeTrue();
+    draft.save({ ...info, experiences: [form.getRawValue()] });
+    expect(draft.hasUnsavedChanges()).toBeFalse();
+  });
+
+  it('keeps edits made during an experience save unsaved', async () => {
+    let complete!: (id: string) => void;
+    spyOn(TestBed.inject(SavedCvs), 'saveExperience').and.returnValue(new Promise((resolve) => { complete = resolve; }));
+    const { fixture, form, button } = await setup();
+    form.patchValue({ company: 'Original', savedExperienceId: 'library-1' });
+    const draft = TestBed.inject(CvDraft);
+    const info = { name: 'Ada', positionTitle: '', description: '', photo: null,
+      languages: [], technologies: [], experiences: [form.getRawValue()] };
+    draft.savedId.set('cv-1');
+    draft.beginEditing(info);
+    form.controls.company.setValue('Saving');
+    button.click();
+    form.controls.company.setValue('Newer edit');
+    draft.save({ ...info, experiences: [form.getRawValue()] });
+    complete('library-1');
+    await fixture.whenStable();
+    expect(form.controls.company.value).toBe('Newer edit');
+    expect(draft.hasUnsavedChanges()).toBeTrue();
+    draft.save({ ...info, experiences: [{ ...form.getRawValue(), company: 'Saving' }] });
+    expect(draft.hasUnsavedChanges()).toBeFalse();
   });
 
   it('opens the experience guide from the Save hint without saving an experience', async () => {

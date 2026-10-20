@@ -1,6 +1,6 @@
 import type { SavedCv } from '../services/saved-cvs';
 
-export function orderSavedCvs(cvs: readonly SavedCv[], savedOrder: unknown): SavedCv[] {
+export function orderSavedCvs<T extends Pick<SavedCv, 'id' | 'updatedAt'>>(cvs: readonly T[], savedOrder: unknown): T[] {
   const ids = Array.isArray(savedOrder)
     ? savedOrder.filter((id): id is string => typeof id === 'string')
     : [];
