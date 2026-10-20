@@ -475,11 +475,30 @@ describe('Saved CV navigation', () => {
       expect(getComputedStyle(source.closest('app-draggable')!).display).toBe('none');
       expect(document.querySelector('.app-drag-preview')?.textContent).toContain('Ada');
       const target = root.querySelector('.saved-folder')!;
+      const closedIcon = target.querySelector<HTMLElement>('.folder-closed')!;
+      const openIcon = target.querySelector<HTMLElement>('.folder-open')!;
+      const expectFolderOpen = (open: boolean) => {
+        for (const icon of [closedIcon, openIcon]) {
+          getComputedStyle(icon).opacity;
+          icon.getAnimations().forEach((animation) => animation.finish());
+        }
+        expect(getComputedStyle(closedIcon).opacity).toBe(open ? '0' : '1');
+        expect(getComputedStyle(openIcon).opacity).toBe(open ? '1' : '0');
+      };
+      expectFolderOpen(false);
       overTarget(target);
       await harness.fixture.whenStable();
       expect(target.classList.contains('drop-target')).toBeTrue();
+      expectFolderOpen(true);
+      overTarget(root.querySelector('#saved-title')!);
+      await harness.fixture.whenStable();
+      expectFolderOpen(false);
+      overTarget(target);
+      await harness.fixture.whenStable();
+      expectFolderOpen(true);
       releaseOn(target);
       await harness.fixture.whenStable();
+      expectFolderOpen(false);
       expect(root.querySelector('a.cv-card')).toBeNull();
       expect(saved.folders()[0].cvIds).toEqual([id]);
       expect(document.querySelector('.app-drag-preview')).toBeNull();

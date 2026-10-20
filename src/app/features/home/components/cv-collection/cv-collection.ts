@@ -1,7 +1,7 @@
 import { DatePipe, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, linkedSignal, output, signal, viewChild, viewChildren } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { ClipboardPaste, Download, ExternalLink, Eye, FileText, Folder, LucideAngularModule, Scissors, Trash2 } from 'lucide-angular';
+import { ClipboardPaste, Download, ExternalLink, Eye, FileText, Folder, FolderOpen, LucideAngularModule, Scissors, Trash2 } from 'lucide-angular';
 import { ContextMenu, ContextMenuItem } from '../../../../shared/ui/context-menu/context-menu';
 import { CvClipboard } from '../../state/cv-clipboard';
 import { CvFolder } from '../../../cv/interfaces/cv-folder';
@@ -38,7 +38,7 @@ type CvMenuContext = { readonly kind: 'cv'; readonly cv: SavedCv }
   selector: 'app-cv-collection',
   imports: [RouterLink, LucideAngularModule, Draggable, DropTarget, CvInsertionTarget, CvCollectionMotion, DatePipe, CvPreviewDialog, ContextMenu],
   templateUrl: './cv-collection.html',
-  styleUrls: ['./cv-collection.scss', './cv-collection-order.scss', './cv-collection-clipboard.scss'],
+  styleUrls: ['./cv-collection.scss', './cv-collection-order.scss', './cv-collection-clipboard.scss', './cv-collection-folder-icon.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CvCollection {
@@ -82,6 +82,7 @@ export class CvCollection {
   });
   protected readonly FileIcon = FileText;
   protected readonly FolderIcon = Folder;
+  protected readonly FolderOpenIcon = FolderOpen;
   protected readonly DeleteIcon = Trash2;
   protected readonly PreviewIcon = Eye;
   protected readonly DownloadIcon = Download;
