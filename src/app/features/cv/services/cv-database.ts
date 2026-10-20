@@ -71,6 +71,10 @@ export class CvDatabase {
           const items = database.createObjectStore('collection-items', { keyPath: 'id' });
           items.createIndex('scope-position', ['scope', 'position'], { unique: true });
         }
+        if (!database.objectStoreNames.contains('experience-search')) {
+          const search = database.createObjectStore('experience-search', { keyPath: 'id' });
+          search.createIndex('order', ['sortTime', 'id'], { unique: true });
+        }
       };
       request.onerror = () => reject(request.error);
       request.onblocked = () => {
@@ -83,7 +87,7 @@ export class CvDatabase {
           database.close();
           return;
         }
-        const missingStore = ['cvs', 'metadata', 'experiences', 'technologies', 'folders', 'collection-items']
+        const missingStore = ['cvs', 'metadata', 'experiences', 'technologies', 'folders', 'collection-items', 'experience-search']
           .some((name) => !database.objectStoreNames.contains(name));
         if (missingStore || !database.transaction('cvs').objectStore('cvs').indexNames.contains('updatedAt')) {
           const nextVersion = database.version + 1;

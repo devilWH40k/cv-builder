@@ -14,6 +14,8 @@ export interface TableColumn<T> {
 }
 
 export interface TableSettings {
+  /** Delegate filtering to the host's data API while retaining table search controls. */
+  readonly externalSearch?: boolean;
   /** Sync URL query parameters using tableId, or a custom string, as their prefix. */
   readonly queryParams?: boolean | string;
   readonly columnVisibility?: boolean;
@@ -21,6 +23,11 @@ export interface TableSettings {
   readonly searchLabel?: string;
   readonly emptyMessage?: string;
   readonly noResultsMessage?: string;
+}
+
+export interface TableSearch {
+  readonly query: string;
+  readonly columns: readonly string[];
 }
 
 export interface TableCellContext<T> {

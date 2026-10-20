@@ -1439,6 +1439,17 @@ exposes the column definition. An empty `appTableCell` supplies a fallback templ
 a template with a matching column key takes precedence. Default cells render plain
 text. Feature templates remain responsible for rich text, links and action callbacks.
 
+The Experiences page uses `ExperiencesApi` to read batches of 24 from IndexedDB
+when its end enters the viewport. `ExperienceCollection` owns offsets, loading,
+retry, cancellation, and a 200ms search debounce. Changing search text or scope
+starts at offset zero; subsequent scroll requests retrieve only the next page of
+matches. A separate normalized search index preserves newest-first order and
+supports Any visible column or a selected Search in column without reading every
+experience body. Existing records are indexed once; saves, imports, and deletes
+maintain that index transactionally. Late responses cannot replace newer results.
+The shared table opts into `externalSearch`, emits `searchChanged`, and keeps
+its controls and URL state while displaying the supplied page without local filtering.
+
 Experience entries can be saved independently in the IndexedDB `experiences`
 object store. Load experience opens a centered multi-select picker. Applying
 entries retains their library IDs. Already linked experiences show a warning icon

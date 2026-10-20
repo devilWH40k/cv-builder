@@ -1,7 +1,8 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Experiences } from './experiences';
-import { SavedCvs } from '../cv/services/saved-cvs';
+import { CV_DATABASE_NAME, SavedCvs } from '../cv/services/saved-cvs';
+import { ExperiencesApi } from './services/experiences-api';
 import { SavedExperience } from '../cv/interfaces/experience';
 import { ExperienceExcel } from './services/experience-excel';
 
@@ -14,11 +15,29 @@ const record: SavedExperience = {
 };
 
 describe('Experiences page', () => {
-  beforeEach(() => TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] }));
+  let databaseName: string;
+  beforeEach(() => {
+    databaseName = 'experiences-page-' + crypto.randomUUID();
+    spyOn(Storage.prototype, 'getItem').and.returnValue(null);
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(),
+      { provide: CV_DATABASE_NAME, useValue: databaseName }] });
+  });
+  afterEach(async () => {
+    TestBed.resetTestingModule();
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(databaseName);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+      request.onblocked = () => reject(new Error('Database still open.'));
+    });
+  });
+  async function seed(records: readonly SavedExperience[]): Promise<void> {
+    await TestBed.inject(SavedCvs).importRecords([], records, true);
+  }
 
   it('renders the requested column order with aligned grid rows and refreshes the edited record', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([record]);
-    const save = spyOn(TestBed.inject(SavedCvs), 'saveExperience').and.resolveTo(record.id);
+    await seed([record]);
+    const save = spyOn(TestBed.inject(SavedCvs), 'saveExperience').and.callThrough();
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
@@ -57,6 +76,7 @@ describe('Experiences page', () => {
     input.value = 'Updated alternative';
     input.dispatchEvent(new Event('input'));
     dialog.querySelector<HTMLButtonElement>('[dialogActions] app-button:last-child button')!.click();
+    await save.calls.mostRecent().returnValue;
     await fixture.whenStable();
     expect(save).toHaveBeenCalled();
     expect(row.textContent).toContain('Updated alternative');
@@ -64,7 +84,7 @@ describe('Experiences page', () => {
   });
 
   it('opens Web link and Photos in a new tab and leaves invalid or empty URLs as plain text', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([
+    await seed([
       { ...record, experience: { ...record.experience, webLink: 'https://example.com/project',
         photos: 'https://example.com/photos' } },
       { ...record, id: 'invalid-links', experience: { ...record.experience,
@@ -86,7 +106,7 @@ describe('Experiences page', () => {
   });
 
   it('toggles data columns immediately while preserving grid alignment and sticky actions', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([record]);
+    await seed([record]);
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
@@ -131,7 +151,7 @@ describe('Experiences page', () => {
   });
 
   it('keeps column settings open when clicking a checkbox label temporarily clears focus', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([record]);
+    await seed([record]);
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
@@ -165,7 +185,7 @@ describe('Experiences page', () => {
   });
 
   it('supports keyboard navigation in the checkbox dropdown and dismisses on Escape or outside click', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([]);
+    await seed([]);
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
@@ -190,7 +210,7 @@ describe('Experiences page', () => {
   });
 
   it('filters supplied experiences through the table wrapper and can clear the search', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([
+    await seed([
       record, { ...record, id: 'other', experience: { ...record.experience, company: 'Other project', position: 'Designer' } }
     ]);
     const fixture = TestBed.createComponent(Experiences);
@@ -214,20 +234,20 @@ describe('Experiences page', () => {
   });
 
   it('displays load failures and allows retry to the empty state', async () => {
-    const list = spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.rejectWith(new Error('Read failed'));
+    const list = spyOn(TestBed.inject(ExperiencesApi), 'getPage').and.rejectWith(new Error('Read failed'));
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.textContent).toContain('could not be loaded');
-    list.and.resolveTo([]);
+    list.and.callThrough();
     root.querySelector<HTMLButtonElement>('.retry button')!.click();
     await fixture.whenStable();
     expect(root.textContent).toContain('You have no saved experiences');
   });
 
   it('adds an experience through the dialog and cancels without adding another record', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([]);
-    const save = spyOn(TestBed.inject(SavedCvs), 'saveExperience').and.resolveTo('new-id');
+    await seed([]);
+    const save = spyOn(TestBed.inject(SavedCvs), 'saveExperience').and.callThrough();
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
@@ -247,6 +267,7 @@ describe('Experiences page', () => {
     input.value = 'New project';
     input.dispatchEvent(new Event('input'));
     submit.click();
+    await save.calls.mostRecent().returnValue;
     await fixture.whenStable();
     expect(save).toHaveBeenCalledOnceWith(jasmine.objectContaining({ company: 'New project', savedExperienceId: null }));
     expect(root.querySelectorAll('app-table-row').length).toBe(1);
@@ -261,7 +282,7 @@ describe('Experiences page', () => {
   });
 
   it('keeps the experience when deletion is cancelled', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([record]);
+    await seed([record]);
     const remove = spyOn(TestBed.inject(SavedCvs), 'deleteExperience');
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
@@ -276,10 +297,13 @@ describe('Experiences page', () => {
   });
 
   it('waits for deletion to succeed and prevents duplicate requests', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([record]);
+    await seed([record]);
     let complete!: () => void;
     const remove = spyOn(TestBed.inject(SavedCvs), 'deleteExperience')
-      .and.returnValue(new Promise<void>((resolve) => { complete = resolve; }));
+      .and.callFake(async (id) => {
+        await new Promise<void>((resolve) => { complete = resolve; });
+        await SavedCvs.prototype.deleteExperience.call(TestBed.inject(SavedCvs), id);
+      });
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
@@ -302,7 +326,7 @@ describe('Experiences page', () => {
   });
 
   it('retains a record after a failed deletion and allows retry', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([record]);
+    await seed([record]);
     const remove = spyOn(TestBed.inject(SavedCvs), 'deleteExperience').and.rejectWith(new Error('Write failed'));
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
@@ -316,19 +340,21 @@ describe('Experiences page', () => {
     expect(root.querySelector('app-table-row')).not.toBeNull();
     expect(root.querySelector('[role="alert"]')?.textContent).toContain('could not be deleted');
     expect(button.disabled).toBeFalse();
-    remove.and.resolveTo();
+    remove.and.callThrough();
     button.click();
     await fixture.whenStable();
     document.querySelector<HTMLButtonElement>('#delete-confirmation .confirm-delete button')!.click();
+    await fixture.whenStable();
+    await remove.calls.mostRecent().returnValue;
     await fixture.whenStable();
     expect(root.querySelector('app-table-row')).toBeNull();
     expect(root.querySelector('[role="alert"]')).toBeNull();
   });
 
   it('opens Import to the right of Add experience and renders records after applying', async () => {
-    spyOn(TestBed.inject(SavedCvs), 'listExperiences').and.resolveTo([record]);
+    await seed([record]);
     const imported = { ...record, id: 'imported', experience: { ...record.experience, company: 'Imported project' } };
-    const save = spyOn(TestBed.inject(SavedCvs), 'importExperiences').and.resolveTo([imported]);
+    const save = spyOn(TestBed.inject(SavedCvs), 'importExperiences').and.callThrough();
     spyOn(TestBed.inject(ExperienceExcel), 'parse').and.resolveTo({ experiences: [imported.experience],
       report: [{ type: 'success', message: 'Record 1 is successfully parsed.' }] });
     const fixture = TestBed.createComponent(Experiences);

@@ -9,6 +9,7 @@ import { CvFolder } from '../interfaces/cv-folder';
 import { CvReorder } from '../interfaces/cv-reorder';
 import { orderSavedCvs } from '../helpers/cv-order';
 import { CvCollectionApi, readCvHeaders } from './cv-collection-api';
+import { putExperience } from '../helpers/experience-search';
 
 export interface SavedCv {
   readonly id: string;
@@ -251,11 +252,16 @@ export class SavedCvs {
       id, experience: structuredClone({ ...experience, savedExperienceId: id }), updatedAt: Date.now()
     };
     if (cvId === null) {
-      await this.request('readwrite', (store) => store.put(record), 'experiences');
+      const database = await this.open();
+      const transaction = database.transaction(['experiences', 'experience-search'], 'readwrite');
+      const done = completed(transaction);
+      try { putExperience(transaction, record); }
+      catch { transaction.abort(); }
+      await done;
       return id;
     }
     const database = await this.open();
-    const transaction = database.transaction(['cvs', 'experiences'], 'readwrite');
+    const transaction = database.transaction(['cvs', 'experiences', 'experience-search'], 'readwrite');
     const done = completed(transaction);
     let operationError: unknown;
     const cvs = transaction.objectStore('cvs');
@@ -264,7 +270,7 @@ export class SavedCvs {
       try {
         const cv = request.result;
         if (!cv) throw new Error('This CV no longer exists.');
-        transaction.objectStore('experiences').put(record);
+        putExperience(transaction, record);
         if (cv.info.experiences.some((entry) => entry.savedExperienceId === id)) {
           cvs.put({
             ...cv, updatedAt: record.updatedAt,
@@ -283,7 +289,14 @@ export class SavedCvs {
   }
 
   async deleteExperience(id: string): Promise<void> {
-    await this.request('readwrite', (store) => store.delete(id), 'experiences');
+    const database = await this.open();
+    const transaction = database.transaction(['experiences', 'experience-search'], 'readwrite');
+    const done = completed(transaction);
+    try {
+      transaction.objectStore('experiences').delete(id);
+      transaction.objectStore('experience-search').delete(id);
+    } catch { transaction.abort(); }
+    await done;
   }
 
   async importExperiences(experiences: readonly CvExperience[]): Promise<readonly SavedExperience[]> {
@@ -293,11 +306,10 @@ export class SavedCvs {
       return { id, updatedAt: Date.now(), experience: structuredClone({ ...experience, savedExperienceId: id }) };
     });
     const database = await this.open();
-    const transaction = database.transaction('experiences', 'readwrite');
+    const transaction = database.transaction(['experiences', 'experience-search'], 'readwrite');
     const done = completed(transaction);
     try {
-      const store = transaction.objectStore('experiences');
-      for (const record of records) store.add(record);
+      for (const record of records) putExperience(transaction, record, true);
     } catch {
       transaction.abort();
     }
@@ -325,7 +337,7 @@ export class SavedCvs {
     wipePreviousData = false, technologies: readonly SavedTechnology[] = [], folders: readonly CvFolder[] = []
   ): Promise<void> {
     const database = await this.open();
-    const transaction = database.transaction(['cvs', 'experiences', 'technologies', 'folders', 'metadata'], 'readwrite');
+    const transaction = database.transaction(['cvs', 'experiences', 'experience-search', 'technologies', 'folders', 'metadata'], 'readwrite');
     const done = completed(transaction);
     let importedTechnologies: SavedTechnology[] = [];
     try {
@@ -336,6 +348,8 @@ export class SavedCvs {
       if (wipePreviousData) {
         cvsStore.clear();
         experiencesStore.clear();
+        transaction.objectStore('experience-search').clear();
+        transaction.objectStore('metadata').put(true, 'experience-search-ready');
         technologiesStore.clear();
         foldersStore.clear();
         transaction.objectStore('metadata').delete('cv-order');
@@ -356,7 +370,7 @@ export class SavedCvs {
         } catch { transaction.abort(); }
       };
       for (const record of experiences) {
-        experiencesStore.put({
+        putExperience(transaction, {
           ...record, experience: { ...record.experience, savedExperienceId: record.id }
         });
       }

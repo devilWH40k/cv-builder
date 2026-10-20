@@ -43,8 +43,8 @@
     </app-table-row>
   }
 </app-table>
-@if (!filteredData().length) {
-  <p class="empty-state" role="status">{{ data().length
+@if (!filteredData().length && !loading()) {
+  <p class="empty-state" role="status">{{ data().length || (settings().externalSearch && query().trim())
     ? (settings().noResultsMessage ?? 'No records match your search.')
     : (settings().emptyMessage ?? 'No records to display.') }}</p>
 }

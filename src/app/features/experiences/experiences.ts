@@ -1,4 +1,4 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
+import { afterRenderEffect, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { LucideAngularModule, Pencil, Plus, Trash2, Upload } from 'lucide-angular';
 import { TableWrapper } from '../../shared/ui/table/table-wrapper/table-wrapper';
 import { TableCellTemplate } from '../../shared/ui/table/directives/table-cell-template';
@@ -12,27 +12,31 @@ import { SavedCvs } from '../cv/services/saved-cvs';
 import { ExperienceDialog } from './components/experience-dialog/experience-dialog';
 import { ExperienceImportDialog } from './components/experience-import-dialog/experience-import-dialog';
 import { EXPERIENCE_TABLE_COLUMNS, experienceLink } from './experience-columns';
+import { ExperienceCollection } from './services/experience-collection';
 
 @Component({
   selector: 'app-experiences',
   imports: [TableWrapper, TableCellTemplate, Button, Tooltip, LucideAngularModule, ExperienceDialog, ExperienceImportDialog],
   templateUrl: './experiences.html',
   styleUrl: './experiences.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [ExperienceCollection]
 })
 export class Experiences {
-  protected readonly records = signal<readonly SavedExperience[]>([]);
+  protected readonly collection = inject(ExperienceCollection);
+  protected readonly records = this.collection.records;
   protected readonly editing = signal<SavedExperience | null>(null);
   protected readonly adding = signal(false);
   protected readonly importing = signal(false);
   protected readonly deletingIds = signal<readonly string[]>([]);
   protected readonly deleteError = signal('');
-  protected readonly loading = signal(true);
-  protected readonly failed = signal(false);
+  protected readonly loading = this.collection.loading;
+  protected readonly failed = this.collection.failed;
   protected readonly columns = EXPERIENCE_TABLE_COLUMNS;
   protected readonly tableSettings: TableSettings = {
     queryParams: true,
     search: true,
+    externalSearch: true,
     searchLabel: 'Search experiences',
     emptyMessage: 'You have no saved experiences. Add an experience here or save one in the CV editor.'
   };
@@ -46,44 +50,37 @@ export class Experiences {
   private readonly toasts = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly confirmation = inject(DeleteConfirmationService);
-  private loadId = 0;
+  private readonly end = viewChild<ElementRef<HTMLElement>>('experiencesEnd');
 
   constructor() {
-    const initialImportRevision = this.saved.importRevision();
-    afterNextRender(() => void this.load());
-    effect(() => {
-      if (this.saved.importRevision() !== initialImportRevision) untracked(() => void this.load());
+    afterRenderEffect((onCleanup) => {
+      const end = this.end()?.nativeElement;
+      this.records();
+      if (!end || this.loading() || this.failed() || this.collection.searchPending() || this.collection.loadingMore() ||
+        this.collection.moreError() || this.adding() || this.editing() || this.importing()) return;
+      const observer = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        void this.collection.loadMore();
+      });
+      observer.observe(end);
+      onCleanup(() => observer.disconnect());
     });
   }
 
   protected async load(): Promise<void> {
-    const loadId = ++this.loadId;
-    this.loading.set(true);
-    this.failed.set(false);
-    try {
-      const records = await this.saved.listExperiences();
-      if (!this.destroyRef.destroyed && loadId === this.loadId) this.records.set(records);
-    } catch {
-      if (!this.destroyRef.destroyed && loadId === this.loadId) {
-        this.failed.set(true);
-        this.toasts.show('danger', 'Saved experiences could not be loaded. Please try again.');
-      }
-    } finally {
-      if (!this.destroyRef.destroyed && loadId === this.loadId) this.loading.set(false);
-    }
+    await this.collection.reload();
   }
 
-  protected updated(record: SavedExperience): void {
-    this.records.update((records) => records.some((entry) => entry.id === record.id)
-      ? records.map((entry) => entry.id === record.id ? record : entry)
-      : [record, ...records]);
+  protected updated(): void {
     this.editing.set(null);
     this.adding.set(false);
+    void this.collection.reload();
   }
 
-  protected imported(records: readonly SavedExperience[]): void {
-    this.records.update((current) => [...records, ...current]);
+  protected imported(): void {
     this.importing.set(false);
+    void this.collection.reload();
   }
 
   protected async deleteExperience(id: string): Promise<void> {
@@ -98,7 +95,7 @@ export class Experiences {
     try {
       await this.saved.deleteExperience(id);
       if (this.destroyRef.destroyed) return;
-      this.records.update((records) => records.filter((record) => record.id !== id));
+      await this.collection.reload();
       this.toasts.show('success', 'Your experience has been deleted.');
     } catch {
       if (!this.destroyRef.destroyed) {

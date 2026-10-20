@@ -74,6 +74,32 @@ describe('Table wrapper', () => {
     expect(getComputedStyle(row.lastElementChild!).position).toBe('sticky');
   });
 
+  it('delegates external search and scope changes without filtering the supplied page locally', async () => {
+    const { fixture, root } = await setup();
+    const changed = jasmine.createSpy('searchChanged');
+    fixture.componentInstance.searchChanged.subscribe(changed);
+    fixture.componentRef.setInput('settings', { search: true, externalSearch: true });
+    await fixture.whenStable();
+    const search = root.querySelector<HTMLInputElement>('#test-search')!;
+    search.value = 'unloaded result';
+    search.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(changed).toHaveBeenCalledWith({ query: 'unloaded result', columns: ['name', 'role'] });
+    expect(root.querySelectorAll('app-table-row').length).toBe(2);
+    const scope = root.querySelector<HTMLSelectElement>('#test-search-column')!;
+    scope.value = 'role';
+    scope.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    expect(changed).toHaveBeenCalledWith({ query: 'unloaded result', columns: ['role'] });
+    fixture.componentRef.setInput('data', []);
+    fixture.componentRef.setInput('loading', true);
+    await fixture.whenStable();
+    expect(root.querySelector('.empty-state')).toBeNull();
+    fixture.componentRef.setInput('loading', false);
+    await fixture.whenStable();
+    expect(root.querySelector('.empty-state')?.textContent).toContain('No records match your search.');
+  });
+
   it('preserves visibility by column key when columns are reordered or added and data is refreshed', async () => {
     const { fixture, root } = await setup();
     root.querySelector<HTMLButtonElement>('[aria-label="Choose visible columns"]')!.click();
