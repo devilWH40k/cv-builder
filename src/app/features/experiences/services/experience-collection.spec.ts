@@ -60,6 +60,37 @@ describe('Experience search and page state', () => {
     } finally { jasmine.clock().uninstall(); }
   });
 
+  it('keeps visible results until a search completes, including searches with no matches', async () => {
+    const { collection, read } = await setup();
+    await collection.loadMore();
+    const visible = collection.records();
+    let finish!: (result: ExperiencePage) => void;
+    read.and.callFake(() => new Promise<ExperiencePage>((resolve) => { finish = resolve; }));
+    jasmine.clock().install();
+    jasmine.clock().mockDate(new Date());
+    try {
+      collection.setSearch({ query: 'project', columns: ['company'] });
+      expect(collection.records()).toBe(visible);
+      jasmine.clock().tick(200);
+      expect(collection.loading()).toBeTrue();
+      expect(collection.records()).toBe(visible);
+      finish(page(0));
+      await settle();
+      expect(collection.records()).toEqual(records.slice(0, 24));
+      expect(collection.loading()).toBeFalse();
+
+      const matched = collection.records();
+      collection.setSearch({ query: 'no matches', columns: ['company'] });
+      jasmine.clock().tick(200);
+      expect(collection.records()).toBe(matched);
+      finish({ records: [], nextOffset: 0, hasMore: false });
+      await settle();
+      expect(collection.records()).toEqual([]);
+      expect(collection.hasMore()).toBeFalse();
+      expect(collection.loading()).toBeFalse();
+    } finally { jasmine.clock().uninstall(); }
+  });
+
   it('aborts the previous request and ignores its response when a newer search finishes first', async () => {
     const { collection, read } = await setup();
     let finishOld!: (result: ExperiencePage) => void;

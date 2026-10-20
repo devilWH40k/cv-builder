@@ -79,13 +79,13 @@ export class ExperienceCollection {
     await this.fetchPages(generation, Math.max(24, this.offset));
   }
 
-  private async fetchPages(generation: number, target: number, clear = false): Promise<void> {
+  private async fetchPages(generation: number, target: number, resetOffset = false): Promise<void> {
     const controller = new AbortController();
     this.controller = controller;
     this.loading.set(true);
     this.failed.set(false);
     this.moreError.set('');
-    if (clear) { this.records.set([]); this.offset = 0; this.hasMore.set(false); }
+    if (resetOffset) this.offset = 0;
     const done = this.pending.add();
     try {
       const records: SavedExperience[] = [];
