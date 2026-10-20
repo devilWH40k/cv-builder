@@ -2,10 +2,10 @@
   <div class="page-heading">
     <h1>Experiences</h1>
     <div class="page-actions">
-      <app-button [disabled]="loading() || failed()" (click)="adding.set(true)">
+      <app-button [disabled]="collection.initialLoading() || failed()" (click)="adding.set(true)">
         <lucide-icon [img]="AddIcon" [size]="20" aria-hidden="true" /> Add experience
       </app-button>
-      <app-button class="import" variant="monochrome" [disabled]="loading() || failed()" (click)="importing.set(true)">
+      <app-button class="import" variant="monochrome" [disabled]="collection.initialLoading() || failed()" (click)="importing.set(true)">
         <lucide-icon [img]="ImportIcon" [size]="20" aria-hidden="true" /> Import
       </app-button>
     </div>

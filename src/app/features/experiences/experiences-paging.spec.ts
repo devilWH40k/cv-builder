@@ -1,7 +1,7 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Experiences } from './experiences';
-import { ExperiencesApi } from './services/experiences-api';
+import { ExperiencePage, ExperiencesApi } from './services/experiences-api';
 import { SavedCvs } from '../cv/services/saved-cvs';
 import { SavedExperience } from '../cv/interfaces/experience';
 
@@ -76,5 +76,40 @@ describe('Experiences scroll paging', () => {
     await fixture.whenStable();
     expect(read.calls.mostRecent().args[0]).toBe(24);
     expect(root.querySelectorAll('app-table-row').length).toBe(48);
+  });
+
+  it('disables actions only during initial loading and keeps them enabled while searching an empty library', async () => {
+    let finishInitial!: (page: ExperiencePage) => void;
+    let finishSearch!: (page: ExperiencePage) => void;
+    let searchStarted!: () => void;
+    const initial = new Promise<ExperiencePage>((resolve) => { finishInitial = resolve; });
+    const results = new Promise<ExperiencePage>((resolve) => { finishSearch = resolve; });
+    const started = new Promise<void>((resolve) => { searchStarted = resolve; });
+    spyOn(TestBed.inject(ExperiencesApi), 'getPage').and.callFake((_offset, _limit, search) => {
+      if (!search?.query) return initial;
+      searchStarted();
+      return results;
+    });
+    const fixture = TestBed.createComponent(Experiences);
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const actions = () => Array.from(root.querySelectorAll<HTMLButtonElement>('.page-actions button'));
+    expect(actions().length).toBe(2);
+    expect(actions().every((button) => button.disabled)).toBeTrue();
+    finishInitial({ records: [], nextOffset: 0, hasMore: false });
+    await fixture.whenStable();
+    expect(actions().every((button) => !button.disabled)).toBeTrue();
+
+    const search = root.querySelector<HTMLInputElement>('#experience-search')!;
+    search.value = 'project';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(actions().every((button) => !button.disabled)).toBeTrue();
+    await started;
+    fixture.detectChanges();
+    expect(actions().every((button) => !button.disabled)).toBeTrue();
+    finishSearch({ records: [], nextOffset: 0, hasMore: false });
+    await fixture.whenStable();
+    expect(actions().every((button) => !button.disabled)).toBeTrue();
   });
 });

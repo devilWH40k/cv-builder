@@ -1,4 +1,4 @@
-import { DestroyRef, effect, inject, Injectable, PendingTasks, signal, untracked } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Injectable, PendingTasks, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime, Subject } from 'rxjs';
 import { SavedExperience } from '../../cv/interfaces/experience';
@@ -10,6 +10,8 @@ import { ExperienceSearch, ExperiencesApi } from './experiences-api';
 export class ExperienceCollection {
   readonly records = signal<readonly SavedExperience[]>([]);
   readonly loading = signal(true);
+  private readonly hasLoaded = signal(false);
+  readonly initialLoading = computed(() => this.loading() && !this.hasLoaded());
   readonly searchPending = signal(false);
   readonly loadingMore = signal(false);
   readonly failed = signal(false);
@@ -101,6 +103,7 @@ export class ExperienceCollection {
       this.records.set(records);
       this.offset = offset;
       this.hasMore.set(more);
+      this.hasLoaded.set(true);
     } catch {
       if (this.isCurrent(generation)) {
         this.failed.set(true);
