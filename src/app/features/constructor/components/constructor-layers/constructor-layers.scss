@@ -1,0 +1,28 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+:host { display: block; min-width: 0; }
+h2 { font-size: tokens.$font-size-md; margin: 0 0 tokens.$spacing-3; }
+button { @include buttons.secondary; }
+button[aria-pressed='true'] { border-color: tokens.$color-primary; background: tokens.$background-primary-subtle; }
+.hint { font-size: tokens.$font-size-xs; color: tokens.$text-muted; }
+.layers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: tokens.$spacing-1;
+}
+.layer {
+  justify-content: space-between;
+  text-align: left;
+  width: 100%;
+  min-width: 0;
+  font-size: tokens.$font-size-xs;
+  gap: tokens.$spacing-2;
+  span {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  lucide-icon { flex-shrink: 0; }
+}

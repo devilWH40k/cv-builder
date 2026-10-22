@@ -13,7 +13,7 @@ class MenuHarness {
   readonly items: readonly ContextMenuItem[] = [
     { id: 'open', label: 'Open', href: '/create?id=saved', newTab: true },
     { id: 'disabled', label: 'Unavailable', disabled: true },
-    { id: 'cut', label: 'Cut' }
+    { id: 'cut', label: 'Cut', separatorBefore: true }
   ];
   selected = '';
 }

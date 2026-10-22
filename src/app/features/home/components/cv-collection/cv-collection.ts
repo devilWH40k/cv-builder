@@ -1,7 +1,7 @@
 import { DatePipe, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, linkedSignal, output, signal, viewChild, viewChildren } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { ClipboardPaste, Download, ExternalLink, Eye, FileText, Folder, FolderOpen, LucideAngularModule, Scissors, Trash2 } from 'lucide-angular';
+import { ClipboardPaste, Download, ExternalLink, Eye, FileText, Folder, FolderOpen, LucideAngularModule, PenTool, Scissors, Trash2 } from 'lucide-angular';
 import { ContextMenu, ContextMenuItem } from '../../../../shared/ui/context-menu/context-menu';
 import { CvClipboard } from '../../state/cv-clipboard';
 import { CvFolder } from '../../../cv/interfaces/cv-folder';
@@ -76,6 +76,7 @@ export class CvCollection {
     ));
     return [
       { id: 'open', label: 'Open CV in new tab', icon: ExternalLink, href, newTab: true, disabled },
+      { id: 'constructor', label: 'Open in constructor', icon: PenTool, disabled },
       { id: 'cut', label: 'Cut', icon: Scissors, disabled },
       paste
     ];
@@ -152,6 +153,9 @@ export class CvCollection {
 
   protected selectMenuItem(id: string): void {
     const context = this.menuContext();
+    if (id === 'constructor' && context.kind === 'cv') {
+      void this.router.navigate(['/constructor'], { queryParams: { cv: context.cv.id, returnTab: 'files' } });
+    }
     if (id === 'cut' && context.kind === 'cv') this.clipboard.cut(context.cv.id);
     if (id === 'paste' && this.clipboard.cutId()) {
       this.pasteRequested.emit(context.kind === 'folder' ? context.folder.id : this.folderId());

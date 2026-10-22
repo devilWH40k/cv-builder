@@ -1,0 +1,4 @@
+@use 'styles/tokens' as tokens;
+p { margin: 0; }
+.error { margin-top: tokens.$spacing-3; color: tokens.$text-danger; }
+.actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: tokens.$spacing-2; }

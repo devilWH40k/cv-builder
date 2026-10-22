@@ -4,6 +4,10 @@
     (click)="editCv()" title="Edit CV" [attr.aria-label]="'Edit ' + (cv().info.name || 'Untitled CV')">
     <lucide-icon [img]="EditIcon" [size]="20" aria-hidden="true" />
   </a>
+  <a dialogHeaderActions class="edit-cv" routerLink="/constructor" [queryParams]="{ cv: cv().id }"
+    title="Open in constructor" aria-label="Open in constructor">
+    <lucide-icon [img]="ConstructorIcon" [size]="20" aria-hidden="true" />
+  </a>
   <app-preview [embedded]="true" [readOnly]="true"
     style="--preview-max-height: none; --preview-max-scale: 0.85" />
 </app-dialog>

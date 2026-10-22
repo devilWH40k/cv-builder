@@ -1,0 +1,18 @@
+<section aria-labelledby="page-properties-title">
+  <h2 id="page-properties-title">Page properties</h2>
+  <label>Background color
+    <input #color type="color" [value]="editor.backgroundColor()" [disabled]="editor.busy()"
+      (change)="editor.setBackgroundColor(color.value)" />
+  </label>
+  <app-button variant="outline" [disabled]="editor.busy()" (click)="image.click()">
+    <lucide-icon [img]="ImageIcon" [size]="18" />
+    {{ editor.hasBackgroundImage() ? 'Replace image' : 'Background image' }}
+  </app-button>
+  @if (editor.hasBackgroundImage()) {
+    <app-button variant="outline" [disabled]="editor.busy()" (click)="editor.removeBackgroundImage()">
+      <lucide-icon [img]="RemoveIcon" [size]="18" />Remove image
+    </app-button>
+  }
+  <p class="hint">Applies to this page. Images fill the page and are cropped to fit.</p>
+  <input #image type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="upload(image)" />
+</section>

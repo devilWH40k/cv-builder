@@ -1,5 +1,6 @@
 import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, linkedSignal, PendingTasks, signal, untracked, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { LucideAngularModule, Plus, FolderPlus, List, LayoutGrid } from 'lucide-angular';
 import { SavedCv, SavedCvs } from '../../../cv/services/saved-cvs';
 import { CvCollectionApi } from '../../../cv/services/cv-collection-api';
@@ -14,16 +15,33 @@ import { CvCollection, CvMove } from '../cv-collection/cv-collection';
 import { CreateFolderDialog } from '../create-folder-dialog/create-folder-dialog';
 import { FolderDialog } from '../folder-dialog/folder-dialog';
 import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
+import { Tabs, Tab } from '../../../../shared/ui/tabs/tabs';
+import { DesignList } from '../../../constructor/components/design-list/design-list';
+import { ConstructorRepository } from '../../../constructor/services/constructor-repository';
+import { DesignSummary } from '../../../constructor/interfaces/constructor-document';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, LucideAngularModule, CvCollection, CreateFolderDialog, FolderDialog],
+  imports: [RouterLink, LucideAngularModule, CvCollection, CreateFolderDialog, FolderDialog, Tabs, DesignList],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [HomeCollection]
 })
 export class Home {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly queryParams = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
+  protected readonly activeTab = computed(() => this.queryParams().get('tab') === 'designs' ? 'designs' : 'files');
+  protected readonly tabs: readonly Tab[] = [
+    { id: 'files', label: 'Files', panelId: 'home-files' },
+    { id: 'designs', label: 'Designs', panelId: 'home-designs' }
+  ];
+  private readonly designsRepository = inject(ConstructorRepository);
+  protected readonly designs = signal<readonly DesignSummary[]>([]);
+  protected readonly designsLoading = signal(false);
+  protected readonly designsError = signal('');
+  protected readonly deletingDesignIds = signal<readonly string[]>([]);
   protected readonly PlusIcon = Plus;
   protected readonly deleteError = signal('');
   protected readonly FolderPlusIcon = FolderPlus;
@@ -82,6 +100,9 @@ export class Home {
   private readonly clipboard = inject(CvClipboard);
 
   constructor() {
+    effect(() => {
+      if (this.activeTab() === 'designs') void this.pendingTasks.run(() => untracked(() => this.loadDesigns()));
+    });
     this.destroyRef.onDestroy(() => {
       this.drag.end();
       this.folderGeneration++;
@@ -96,7 +117,7 @@ export class Home {
       const end = this.collectionEnd()?.nativeElement;
       this.collection.cvs();
       this.collection.folders();
-      if (!end || this.saved.loading() || this.collection.loading() || this.collection.moreError() || this.loadingMore() || this.activeFolderId() !== null ||
+      if (this.activeTab() !== 'files' || !end || this.saved.loading() || this.collection.loading() || this.collection.moreError() || this.loadingMore() || this.activeFolderId() !== null ||
         this.reordering() || this.drag.draggedId()) return;
       const observer = new IntersectionObserver((entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return;
@@ -106,6 +127,32 @@ export class Home {
       observer.observe(end);
       onCleanup(() => observer.disconnect());
     });
+  }
+
+  protected async selectTab(tab: string): Promise<void> {
+    await this.router.navigate([], { relativeTo: this.route, queryParams: { tab: tab === 'designs' ? 'designs' : null },
+      queryParamsHandling: 'merge', replaceUrl: true });
+  }
+
+  protected async loadDesigns(): Promise<void> {
+    this.designsLoading.set(true);
+    this.designsError.set('');
+    try { this.designs.set(await this.designsRepository.list()); }
+    catch { this.designsError.set('Saved designs could not be loaded. Please try again.'); }
+    finally { this.designsLoading.set(false); }
+  }
+
+  protected async deleteDesign(design: DesignSummary): Promise<void> {
+    if (this.deletingDesignIds().includes(design.id) || !await this.confirmation.confirm({
+      title: 'Delete design', itemName: design.title || 'Untitled design'
+    }, this.destroyRef)) return;
+    this.deletingDesignIds.update((ids) => [...ids, design.id]);
+    this.designsError.set('');
+    try {
+      await this.designsRepository.delete(design.id);
+      this.designs.update((designs) => designs.filter((entry) => entry.id !== design.id));
+    } catch { this.designsError.set('This design could not be deleted. Please try again.'); }
+    finally { this.deletingDesignIds.update((ids) => ids.filter((id) => id !== design.id)); }
   }
 
   private loadNextBatch(): void {
@@ -150,7 +197,7 @@ export class Home {
     }
   }
 
-  protected startNew(): void { this.draft.reset(); }
+  protected startNew(): void { if (this.activeTab() === 'files') this.draft.reset(); }
 
   protected toggleView(): void { this.viewStore.toggleView(); }
 

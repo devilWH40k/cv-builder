@@ -1,0 +1,135 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+.editor {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: tokens.$spacing-4;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: tokens.$background-app;
+  color: tokens.$text-primary;
+  &[open] {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$spacing-3;
+  }
+}
+.document-heading {
+  margin-bottom: 0;
+  gap: tokens.$spacing-3;
+  min-height: tokens.$spacing-16;
+  flex-shrink: 0;
+}
+.document-title {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-2;
+  min-width: 10rem;
+  input {
+    font-size: tokens.$font-size-md;
+  }
+}
+.editor-close {
+  @include buttons.ghost;
+  & {
+    flex-shrink: 0;
+    width: tokens.$button-height-lg;
+    padding: tokens.$spacing-2;
+  }
+}
+.toolbar {
+  padding: tokens.$spacing-2;
+  flex-shrink: 0;
+}
+.workspace {
+  grid-template-columns: var(--left-width) auto minmax(0, 1fr) auto var(--right-width);
+  gap: tokens.$spacing-2;
+  margin-top: 0;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.stage-column {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: tokens.$spacing-2;
+}
+.page-tabs {
+  padding-bottom: 0;
+}
+.canvas-viewport {
+  min-height: 0;
+  max-height: none;
+  padding: tokens.$spacing-4;
+}
+.panel {
+  background: tokens.$background-surface;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md;
+  padding: tokens.$spacing-4;
+  min-height: 0;
+  max-height: none;
+  min-width: 0;
+  overflow: auto;
+}
+.object-panels {
+  display: grid;
+  grid-template-rows: minmax(0, clamp(120px, var(--properties-height), calc(100% - 132px))) tokens.$spacing-3 minmax(0, 1fr);
+  gap: 0;
+  min-height: 0;
+  min-width: 0;
+}
+.hint {
+  margin: 0;
+}
+.panel, .canvas-viewport { position: relative; }
+.is-loading {
+  overflow: clip;
+  > :not(app-spinner) { visibility: hidden; }
+  > app-spinner {
+    position: absolute;
+    inset: 0;
+    background: tokens.$background-surface;
+  }
+}
+.initial-spinner { min-height: tokens.$spacing-16 * 3; }
+@media (max-width: tokens.$breakpoint-lg) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: max-content;
+    overflow-y: auto;
+    align-content: start;
+  }
+  .stage-column {
+    min-height: 55dvh;
+  }
+  .canvas-viewport {
+    min-height: 40dvh;
+  }
+  .workspace > app-resize-handle { display: none; }
+  .object-panels { grid-template-rows: auto auto; gap: tokens.$spacing-3; }
+  .object-panels > app-resize-handle { display: none; }
+  .panel { max-height: 50dvh; }
+}
+@media (max-width: tokens.$breakpoint-sm) {
+  .editor {
+    padding: tokens.$spacing-3;
+  }
+  .save-state {
+    flex-basis: 100%;
+  }
+  .document-actions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+}

@@ -1,0 +1,180 @@
+<section aria-labelledby="properties-title">
+  <h2 id="properties-title">Properties</h2>
+  @if (editor.selection(); as selected) {
+    <p class="selection-name" [title]="selected.label">{{ editor.selectionCount() > 1 ? editor.selectionCount() + ' objects selected' : selected.label }}</p>
+    <div class="actions">
+      <button
+        type="button"
+        (click)="duplicate()"
+        [disabled]="editor.busy()"
+        title="Duplicate"
+        aria-label="Duplicate object"
+      >
+        <lucide-icon [img]="icons.Copy" [size]="18" />
+      </button>
+      <button
+        type="button"
+        (click)="editor.toggleLock()"
+        [attr.aria-pressed]="selected.locked"
+        title="Lock / unlock"
+        aria-label="Lock object"
+      >
+        <lucide-icon [img]="selected.locked ? icons.Lock : icons.Unlock" [size]="18" />
+      </button>
+      <button
+        type="button"
+        (click)="editor.remove()"
+        [disabled]="selected.locked"
+        title="Delete"
+        aria-label="Delete object"
+      >
+        <lucide-icon [img]="icons.Trash2" [size]="18" />
+      </button>
+    </div>
+    <fieldset [disabled]="selected.locked || editor.busy()">
+      @if (selected.canBlur) {
+        <label class="border-control">Blur (px)<input #shapeBlur type="number" min="0" max="40" step="1"
+          [value]="selected.blur" (change)="editor.setBlur(shapeBlur.valueAsNumber)" /></label>
+      }
+      @if (selected.isImage) {
+        <label>Brightness (%)<input #brightness type="number" min="-100" max="100" step="1"
+          [value]="selected.imageEffects.brightness" (change)="editor.updateImageEffects({ brightness: brightness.valueAsNumber })" /></label>
+        <label>Contrast (%)<input #contrast type="number" min="-100" max="99" step="1"
+          [value]="selected.imageEffects.contrast" (change)="editor.updateImageEffects({ contrast: contrast.valueAsNumber })" /></label>
+        <label>Saturation (%)<input #saturation type="number" min="-100" max="100" step="1"
+          [value]="selected.imageEffects.saturation" (change)="editor.updateImageEffects({ saturation: saturation.valueAsNumber })" /></label>
+        <label>Image blur (%)<input #imageBlur type="number" min="0" max="100" step="1"
+          [value]="selected.imageEffects.blur" (change)="editor.updateImageEffects({ blur: imageBlur.valueAsNumber })" /></label>
+        <label class="checkbox"><input #grayscale type="checkbox" [checked]="selected.imageEffects.grayscale"
+          (change)="editor.updateImageEffects({ grayscale: grayscale.checked })" />Grayscale</label>
+        <label class="checkbox"><input #sepia type="checkbox" [checked]="selected.imageEffects.sepia"
+          (change)="editor.updateImageEffects({ sepia: sepia.checked })" />Sepia</label>
+        <label class="checkbox"><input #invert type="checkbox" [checked]="selected.imageEffects.invert"
+          (change)="editor.updateImageEffects({ invert: invert.checked })" />Invert</label>
+        <button type="button" (click)="editor.updateImageEffects({ brightness: 0, contrast: 0, saturation: 0, blur: 0, grayscale: false, sepia: false, invert: false })">Reset filters</button>
+      }
+      @if (selected.isRectangle) {
+        <label class="border-control">Border radius (px)<input #radius type="number" min="0" step="1"
+          [value]="selected.borderRadius" (change)="editor.updateRectangle({ borderRadius: radius.valueAsNumber })" /></label>
+        <label class="border-control">Border color<input #borderColor type="color" [value]="selected.borderColor"
+          (change)="editor.updateRectangle({ borderColor: borderColor.value })" /></label>
+        <label class="border-control">Border width (px)<input #borderWidth type="number" min="0" max="100" step="1"
+          [value]="selected.borderWidth" (change)="editor.updateRectangle({ borderWidth: borderWidth.valueAsNumber })" /></label>
+      }
+      @if (selected.isText) {
+        <label
+          >Font size (px)<input
+            #fontSize
+            type="number"
+            min="6"
+            max="120"
+            [value]="selected.fontSize"
+            (change)="editor.updateText({ fontSize: fontSize.valueAsNumber })"
+        /></label>
+        <div class="actions">
+          <button
+            type="button"
+            aria-label="Bold"
+            [attr.aria-pressed]="selected.bold"
+            (click)="editor.updateText({ bold: !selected.bold })"
+          >
+            <lucide-icon [img]="icons.Bold" [size]="18" />
+          </button>
+          <button
+            type="button"
+            aria-label="Italic"
+            [attr.aria-pressed]="selected.italic"
+            (click)="editor.updateText({ italic: !selected.italic })"
+          >
+            <lucide-icon [img]="icons.Italic" [size]="18" />
+          </button>
+        </div>
+        <label
+          >Text alignment<select
+            #textAlign
+            [value]="selected.textAlign"
+            (change)="editor.updateText({ textAlign: textAlign.value })"
+          >
+            <option value="left">Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+            <option value="justify">Justify</option>
+          </select></label
+        >
+      }
+      @if (!selected.isImage) {
+        <label
+          >Color<input
+            #color
+            type="color"
+            [value]="selected.color"
+            (change)="editor.setFill(color.value, selected.gradientEnd)"
+        /></label>
+        <label class="checkbox"
+          ><input
+            #gradient
+            type="checkbox"
+            [checked]="!!selected.gradientEnd"
+            (change)="editor.setFill(selected.color, gradient.checked ? '#36d4f7' : null)"
+          />Gradient fill</label
+        >
+        @if (selected.gradientEnd) {
+          <label
+            >Gradient end<input
+              #gradientEnd
+              type="color"
+              [value]="selected.gradientEnd"
+              (change)="editor.setFill(selected.color, gradientEnd.value)"
+          /></label>
+        }
+      }
+      <label
+        >Link URL<input
+          #link
+          type="url"
+          [value]="selected.linkUrl"
+          placeholder="https://example.com"
+          (change)="changeLink(link.value)"
+          [attr.aria-invalid]="invalidLink()"
+      /></label>
+      @if (validLink(); as url) {
+        <a [href]="url" target="_blank" rel="noopener noreferrer">Open link in new tab</a>
+      }
+      <p class="hint">Links stay clickable in the exported PDF.</p>
+      <p class="field-title">Align on page</p>
+      <div class="actions">
+        <button type="button" aria-label="Align object left" (click)="editor.align('left')">
+          <lucide-icon [img]="icons.AlignLeft" [size]="18" />
+        </button>
+        <button type="button" aria-label="Center object" (click)="editor.align('center')">
+          <lucide-icon [img]="icons.AlignCenter" [size]="18" />
+        </button>
+        <button type="button" aria-label="Align object right" (click)="editor.align('right')">
+          <lucide-icon [img]="icons.AlignRight" [size]="18" />
+        </button>
+      </div>
+      <div class="actions">
+        <button
+          type="button"
+          (click)="editor.reorder('forward')"
+          title="Bring forward"
+          aria-label="Bring object forward"
+        >
+          <lucide-icon [img]="icons.ArrowUp" [size]="18" />
+        </button>
+        <button
+          type="button"
+          (click)="editor.reorder('backward')"
+          title="Send backward"
+          aria-label="Send object backward"
+        >
+          <lucide-icon [img]="icons.ArrowDown" [size]="18" />
+        </button>
+      </div>
+    </fieldset>
+  } @else {
+    <p class="hint">
+      Select text, an image or a shape to adjust it. Double-click text to edit its contents.
+    </p>
+  }
+</section>

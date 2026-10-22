@@ -1,0 +1,13 @@
+@use 'styles/tokens' as tokens;
+:host { display: grid; place-items: center; }
+span {
+  display: block;
+  width: tokens.$spacing-8;
+  height: tokens.$spacing-8;
+  border: 3px solid tokens.$border-color;
+  border-top-color: tokens.$color-primary;
+  border-radius: tokens.$radius-full;
+  animation: spin 800ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { span { animation: none; } }

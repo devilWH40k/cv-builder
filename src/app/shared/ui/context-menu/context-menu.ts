@@ -9,6 +9,7 @@ export interface ContextMenuItem {
   readonly disabled?: boolean;
   readonly href?: string;
   readonly newTab?: boolean;
+  readonly separatorBefore?: boolean;
 }
 
 @Component({
