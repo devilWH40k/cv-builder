@@ -59,6 +59,15 @@ validation and tested through save/reopen and PDF export.
 
 ## Fonts, assets and exports
 
+Constructor color pickers share `appDebouncedColor`: preview updates wait for a
+150 ms input pause, with an immediate final commit on blur or an outside pointer
+press before canvas selection changes. Pending work is canceled on destruction.
+
+Undo/redo compares scenes by object ID and restores only changed/added objects,
+removing deleted objects and restoring stack order and backgrounds. Unchanged
+instances and decoded image caches remain live. History restoration redraws the
+canvas without page-loading spinners; changing pages still uses loading indicators.
+
 Copy style sits after Select and uses one selected object as the source. Clicking
 a canvas object or layer applies compatible paints, border settings, shape blur,
 text formatting or image filters in one undoable action. Content, links, position,

@@ -91,6 +91,7 @@
 .hint {
   margin: 0;
 }
+.operation-busy :is(.document-heading, .toolbar, .workspace) { pointer-events: none; }
 .panel, .canvas-viewport { position: relative; }
 .is-loading {
   overflow: clip;

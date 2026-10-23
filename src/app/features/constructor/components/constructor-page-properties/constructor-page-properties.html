@@ -2,7 +2,8 @@
   <h2 id="page-properties-title">Page properties</h2>
   <label>Background color
     <input #color type="color" [value]="editor.backgroundColor()" [disabled]="editor.busy()"
-      (change)="editor.setBackgroundColor(color.value)" />
+      appDebouncedColor (colorCommitted)="editor.setBackgroundColor($event)"
+ />
   </label>
   <app-button variant="outline" [disabled]="editor.busy()" (click)="image.click()">
     <lucide-icon [img]="ImageIcon" [size]="18" />

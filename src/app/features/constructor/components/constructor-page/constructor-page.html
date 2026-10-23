@@ -33,7 +33,7 @@
   </section>
   }
 
-  <dialog appDialogOverlay class="editor" [attr.inert]="session.saving() ? '' : null" (keydown)="keyboard($event)"
+  <dialog appDialogOverlay class="editor" [class.operation-busy]="editor.restoringHistory() || editor.clipboardBusy()" [attr.inert]="session.saving() ? '' : null" (keydown)="keyboard($event)"
     (cancel)="closeEditor($event)" aria-label="Visual CV editor">
     <div class="document-heading" [attr.inert]="workspaceLoading() ? '' : null">
       <label class="document-title">Design name<input #title aria-label="Design name" maxlength="200"
@@ -104,7 +104,7 @@
         </select></label>
       @if (editor.tool() === 'draw') {
       <label>Brush color<input #brushColor type="color" [value]="editor.brushColor()"
-          (change)="editor.setBrush(brushColor.value, editor.brushWidth())" /></label>
+          appDebouncedColor (colorCommitted)="editor.setBrush($event, editor.brushWidth())" /></label>
       <label>Brush size<input #brushWidth type="number" min="1" max="40" [value]="editor.brushWidth()"
           (change)="editor.setBrush(editor.brushColor(), brushWidth.valueAsNumber)" /></label>
       }

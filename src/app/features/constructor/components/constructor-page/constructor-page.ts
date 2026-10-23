@@ -1,3 +1,4 @@
+import { DebouncedColor } from '../../../../shared/directives/debounced-color';
 import {
   afterNextRender,
   afterRenderEffect,
@@ -61,7 +62,7 @@ import { ConstructorSvgAssets } from '../../services/constructor-svg-assets';
 
 @Component({
   selector: 'app-constructor-page',
-  imports: [
+  imports: [DebouncedColor,
     RouterLink,
     LucideAngularModule,
     Button,
@@ -107,7 +108,9 @@ export class ConstructorPageComponent {
   protected readonly fitPage = signal(true);
   protected readonly designs = signal<readonly DesignSummary[]>([]);
   protected readonly loading = signal(true);
-  protected readonly workspaceLoading = computed(() => this.loading() || this.editor.busy());
+  protected readonly workspaceLoading = computed(() =>
+    this.loading() || (this.editor.busy() && !this.editor.restoringHistory() && !this.editor.clipboardBusy()),
+  );
   protected readonly exporting = signal(false);
   private readonly toasts = inject(ToastService);
   protected readonly icons = {
@@ -386,22 +389,22 @@ export class ConstructorPageComponent {
       return;
     }
     const modifier = event.ctrlKey || event.metaKey;
-    if (modifier && event.key.toLowerCase() === 's') {
+    const key = /^Key[A-Z]$/.test(event.code) ? event.code.slice(3).toLowerCase() : event.key.toLowerCase();
+    if (modifier && key === 's') {
       event.preventDefault();
       void this.save();
-      } else if (modifier && event.key.toLowerCase() === 'a') {
+      } else if (modifier && key === 'a') {
         event.preventDefault();
         this.editor.selectAll();
-      } else if (modifier && ['c', 'x', 'v'].includes(event.key.toLowerCase())) {
-        const key = event.key.toLowerCase();
+      } else if (modifier && ['c', 'x', 'v'].includes(key)) {
         if ((key === 'v' && !this.editor.canPaste()) || (key !== 'v' && !this.editor.selectionCount())) return;
         event.preventDefault();
         const action = key === 'c' ? 'copy' : key === 'x' ? 'cut' : 'paste';
         void this.run(() => this.editor[action](), false);
-      } else if (modifier && event.key.toLowerCase() === 'z') {
+      } else if (modifier && key === 'z') {
       event.preventDefault();
       void this.run(() => (event.shiftKey ? this.editor.redo() : this.editor.undo()), false);
-    } else if (modifier && event.key.toLowerCase() === 'd') {
+    } else if (modifier && key === 'd') {
       event.preventDefault();
       void this.run(() => this.editor.duplicate(), false);
     } else if (['Delete', 'Backspace'].includes(event.key)) {

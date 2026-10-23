@@ -1,3 +1,4 @@
+import { DebouncedColor } from '../../../../shared/directives/debounced-color';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { LucideAngularModule, ImagePlus, Trash2 } from 'lucide-angular';
 import { Button } from '../../../../shared/ui/button/button';
@@ -6,7 +7,7 @@ import { ConstructorEditor } from '../../services/constructor-editor';
 
 @Component({
   selector: 'app-constructor-page-properties',
-  imports: [Button, LucideAngularModule],
+  imports: [DebouncedColor,Button, LucideAngularModule],
   templateUrl: './constructor-page-properties.html',
   styleUrl: './constructor-page-properties.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

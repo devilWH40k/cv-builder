@@ -57,7 +57,7 @@
         <label class="border-control">Border radius (px)<input #radius type="number" min="0" step="1"
           [value]="selected.borderRadius" (change)="editor.updateRectangle({ borderRadius: radius.valueAsNumber })" /></label>
         <label class="border-control">Border color<input #borderColor type="color" [value]="selected.borderColor"
-          (change)="editor.updateRectangle({ borderColor: borderColor.value })" /></label>
+          appDebouncedColor (colorCommitted)="editor.updateRectangle({ borderColor: $event })" /></label>
         <label class="border-control">Border width (px)<input #borderWidth type="number" min="0" max="100" step="1"
           [value]="selected.borderWidth" (change)="editor.updateRectangle({ borderWidth: borderWidth.valueAsNumber })" /></label>
       }
@@ -108,7 +108,7 @@
             #color
             type="color"
             [value]="selected.color"
-            (change)="editor.setFill(color.value, selected.gradientEnd)"
+            appDebouncedColor (colorCommitted)="editor.setFill($event, selected.gradientEnd)"
         /></label>
         <label class="checkbox"
           ><input
@@ -124,7 +124,7 @@
               #gradientEnd
               type="color"
               [value]="selected.gradientEnd"
-              (change)="editor.setFill(selected.color, gradientEnd.value)"
+              appDebouncedColor (colorCommitted)="editor.setFill(selected.color, $event)"
           /></label>
         }
       }

@@ -32,6 +32,7 @@ import { applyImageEffects, imageEffects } from '../helpers/image-effects';
 import { ConstructorClipboard } from './constructor-clipboard';
 import { LayoutTextbox } from '../helpers/layout-textbox';
 import { applyVisualStyle, captureVisualStyle, VisualStyle } from '../helpers/visual-style';
+import { restoreDesignScene } from '../helpers/restore-design-scene';
 
 /** Owns live Fabric objects. Components consume snapshots and issue editor commands. */
 @Injectable()
@@ -60,6 +61,8 @@ export class ConstructorEditor {
   readonly tool = signal<ConstructorTool>('select');
   readonly zoom = signal(0.8);
   readonly busy = signal(false);
+  readonly restoringHistory = signal(false);
+  readonly clipboardBusy = signal(false);
   readonly brushColor = signal('#111827');
   readonly brushWidth = signal(3);
   readonly backgroundColor = signal('#ffffff');
@@ -127,11 +130,11 @@ export class ConstructorEditor {
       await this.canvas.loadFromJSON(page.scene);
       this.canvas.discardActiveObject();
       this.canvas.requestRenderAll();
-      this.lastScene = this.snapshot();
       this.past.set([]);
       this.future.set([]);
       this.setTool('select');
       this.refreshSelection();
+      this.lastScene = this.snapshot();
     } finally {
       this.restoring = false;
       this.busy.set(false);
@@ -423,17 +426,19 @@ export class ConstructorEditor {
   async duplicate(): Promise<void> {
     if (this.busy() || !this.canvas) return;
     this.finishEditing();
+    this.clipboardBusy.set(true);
     this.busy.set(true);
     try { this.insertCopies(await this.copySelection(), 16); }
-    finally { this.busy.set(false); }
+    finally { this.busy.set(false); this.clipboardBusy.set(false); }
   }
 
   async copy(): Promise<void> {
     if (this.busy() || !this.selectionCount()) return;
     this.finishEditing();
+    this.clipboardBusy.set(true);
     this.busy.set(true);
     try { this.clipboard.write(await this.copySelection()); }
-    finally { this.busy.set(false); }
+    finally { this.busy.set(false); this.clipboardBusy.set(false); }
   }
 
   async cut(): Promise<void> {
@@ -441,6 +446,7 @@ export class ConstructorEditor {
     this.finishEditing();
     const canvas = this.canvas;
     const selected = canvas.getActiveObjects();
+    this.clipboardBusy.set(true);
     this.busy.set(true);
     try {
       const copies = await this.copySelection();
@@ -449,17 +455,18 @@ export class ConstructorEditor {
       canvas.discardActiveObject();
       canvas.remove(...selected);
       this.commit();
-    } finally { this.busy.set(false); }
+    } finally { this.busy.set(false); this.clipboardBusy.set(false); }
   }
 
   async paste(): Promise<void> {
     if (this.busy() || !this.canvas || !this.canPaste()) return;
     this.finishEditing();
+    this.clipboardBusy.set(true);
     this.busy.set(true);
     try {
       const { objects, offset } = await this.clipboard.read();
       this.insertCopies(objects, offset);
-    } finally { this.busy.set(false); }
+    } finally { this.busy.set(false); this.clipboardBusy.set(false); }
   }
 
   private async copySelection(): Promise<FabricObject[]> {
@@ -665,9 +672,10 @@ export class ConstructorEditor {
     if (!scene) return;
     const current = this.snapshot();
     this.restoring = true;
+    this.restoringHistory.set(true);
     this.busy.set(true);
     try {
-      await this.canvas.loadFromJSON(scene);
+      await restoreDesignScene(this.canvas, current, scene);
       from.update((items) => items.slice(0, -1));
       to.update((items) => [...items, current]);
       this.lastScene = scene;
@@ -677,6 +685,7 @@ export class ConstructorEditor {
     } finally {
       this.restoring = false;
       this.busy.set(false);
+      this.restoringHistory.set(false);
     }
   }
 

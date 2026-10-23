@@ -1,3 +1,4 @@
+import { DebouncedColor } from '../../../../shared/directives/debounced-color';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   LucideAngularModule,
@@ -19,7 +20,7 @@ import { safeDesignLink } from '../../helpers/design-assets';
 
 @Component({
   selector: 'app-constructor-properties',
-  imports: [LucideAngularModule],
+  imports: [DebouncedColor,LucideAngularModule],
   templateUrl: './constructor-properties.html',
   styleUrl: './constructor-properties.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
