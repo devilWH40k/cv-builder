@@ -1,0 +1,100 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+:host {
+  display: block;
+}
+section + section {
+  margin-top: tokens.$spacing-6;
+}
+h2 {
+  font-size: tokens.$font-size-md;
+  margin: 0 0 tokens.$spacing-3;
+}
+.selection-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: tokens.$font-size-sm;
+}
+.actions {
+  display: flex;
+  gap: tokens.$spacing-2;
+  margin-block: tokens.$spacing-3;
+  flex-wrap: wrap;
+}
+button {
+  @include buttons.secondary;
+  & {
+    padding: tokens.$spacing-2;
+    min-width: tokens.$spacing-10;
+  }
+}
+button[aria-pressed='true'] {
+  border-color: tokens.$color-primary;
+  background: tokens.$background-primary-subtle;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+fieldset {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  min-width: 0;
+}
+label {
+  display: grid;
+  gap: tokens.$spacing-2;
+  margin-block: tokens.$spacing-3;
+  font-size: tokens.$font-size-sm;
+}
+input,
+select {
+  width: 100%;
+  min-height: tokens.$input-height;
+  padding: tokens.$spacing-2;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-sm;
+  color: tokens.$text-primary;
+  background: tokens.$background-surface;
+  font: inherit;
+  &:focus-visible {
+    outline: 2px solid tokens.$border-color-focus;
+    outline-offset: 2px;
+  }
+}
+.checkbox {
+  display: flex;
+  align-items: center;
+  input {
+    width: auto;
+    min-height: auto;
+  }
+}
+.border-control {
+  grid-template-columns: minmax(0, 1fr) tokens.$spacing-10 * 2;
+  align-items: center;
+  margin-block: tokens.$spacing-2;
+  input {
+    min-height: tokens.$button-height-sm;
+    height: tokens.$button-height-sm;
+    padding: tokens.$spacing-1 tokens.$spacing-2;
+  }
+}
+.hint {
+  font-size: tokens.$font-size-xs;
+  color: tokens.$text-muted;
+  line-height: tokens.$line-height-normal;
+}
+.field-title {
+  font-size: tokens.$font-size-sm;
+  margin-top: tokens.$spacing-4;
+}
+
+
+a {
+  color: tokens.$text-accent;
+  font-size: tokens.$font-size-sm;
+}

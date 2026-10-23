@@ -1,0 +1,218 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+:host {
+  display: block;
+  background: tokens.$background-app;
+  color: tokens.$text-primary;
+}
+.constructor-root {
+  max-width: tokens.$content-max-width;
+  margin: auto;
+  padding: tokens.$spacing-10 tokens.$spacing-4;
+}
+.document-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: tokens.$spacing-4;
+  flex-wrap: wrap;
+}
+.page-heading {
+  text-align: center;
+  margin-bottom: tokens.$spacing-8;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: tokens.$spacing-3;
+  margin-bottom: tokens.$spacing-3;
+}
+h1 {
+  margin: 0;
+  font-size: tokens.$font-size-3xl;
+  color: tokens.$text-primary;
+  font-weight: tokens.$font-weight-semibold;
+  line-height: tokens.$line-height-tight;
+}
+.page-heading p {
+  color: tokens.$text-secondary;
+  margin-block: tokens.$spacing-2;
+}
+.secondary-link,
+.home-button,
+.toolbar button,
+.page-tabs button {
+  @include buttons.secondary;
+  & {
+    gap: tokens.$spacing-2;
+  }
+}
+.home-button {
+  width: tokens.$button-height-lg;
+  height: tokens.$button-height-lg;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  &:hover {
+    border-color: transparent;
+  }
+}
+.library {
+  max-width: 54rem;
+  margin: tokens.$spacing-8 auto;
+}
+h2 {
+  font-size: tokens.$font-size-xl;
+  font-weight: tokens.$font-weight-semibold;
+  margin-block: tokens.$spacing-6 tokens.$spacing-3;
+}
+.library-actions,
+.document-actions {
+  display: flex;
+  gap: tokens.$spacing-2;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.library-actions {
+  margin-block: tokens.$spacing-4 tokens.$spacing-8;
+}
+.document-heading {
+  margin-bottom: tokens.$spacing-4;
+}
+.document-title {
+  display: grid;
+  gap: tokens.$spacing-1;
+  font-size: tokens.$font-size-xs;
+  flex: 1;
+  min-width: 12rem;
+  input {
+    width: 100%;
+    max-width: 24rem;
+    font-size: tokens.$font-size-lg;
+  }
+}
+.save-state {
+  color: tokens.$text-muted;
+  font-size: tokens.$font-size-xs;
+}
+input,
+select {
+  background: tokens.$background-surface;
+  color: tokens.$text-primary;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-sm;
+  padding: tokens.$spacing-2;
+  font: inherit;
+  min-height: tokens.$button-height-sm;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid tokens.$border-color-focus;
+  outline-offset: 2px;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: tokens.$spacing-2;
+  align-items: center;
+  padding: tokens.$spacing-3;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md;
+  background: tokens.$background-surface;
+  button {
+    padding: tokens.$spacing-2;
+  }
+  button[aria-pressed='true'] {
+    border-color: tokens.$color-primary;
+    background: tokens.$background-primary-subtle;
+  }
+  label {
+    display: flex;
+    align-items: center;
+    gap: tokens.$spacing-2;
+    font-size: tokens.$font-size-xs;
+  }
+  input {
+    width: 4rem;
+  }
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.toolbar-divider {
+  height: tokens.$spacing-6;
+  width: 1px;
+  background: tokens.$border-color;
+  margin-inline: tokens.$spacing-1;
+}
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) tokens.$sidebar-width;
+  gap: tokens.$spacing-4;
+  margin-top: tokens.$spacing-4;
+  align-items: start;
+}
+.stage-column {
+  min-width: 0;
+}
+.page-tabs {
+  display: flex;
+  gap: tokens.$spacing-2;
+  overflow-x: auto;
+  padding-bottom: tokens.$spacing-3;
+  button {
+    padding: tokens.$spacing-2 tokens.$spacing-3;
+    white-space: nowrap;
+  }
+  button[aria-current='page'] {
+    border-color: tokens.$color-primary;
+  }
+}
+.canvas-viewport {
+  overflow: auto;
+  max-height: 78dvh;
+  min-height: 20rem;
+  padding: tokens.$spacing-6;
+  border: 1px solid tokens.$border-color;
+  background: tokens.$background-subtle;
+}
+.properties-panel {
+  background: tokens.$background-surface;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md;
+  padding: tokens.$spacing-4;
+  max-height: 85dvh;
+  overflow: auto;
+}
+.hint {
+  color: tokens.$text-muted;
+  font-size: tokens.$font-size-xs;
+  line-height: tokens.$line-height-normal;
+}
+// Render at a stable width outside the viewport; display:none would destroy layout metrics.
+.preview-source {
+  position: fixed;
+  left: -20000px;
+  top: 0;
+  width: 900px;
+  visibility: hidden;
+  pointer-events: none;
+}
+[hidden] {
+  display: none !important;
+}
+@media (max-width: tokens.$breakpoint-lg) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .properties-panel {
+    max-height: none;
+  }
+  .canvas-viewport {
+    padding: tokens.$spacing-3;
+  }
+}

@@ -14,6 +14,17 @@ and are never sent to a server. Saving and PDF generation happen locally.
 
 ## Project notes
 
+### Visual constructor
+
+Open **Constructor** in the header to manage visual designs. Use **Open in
+constructor** from a CV preview to create an independent, editable design with
+Fabric.js. Designs support movable text and images, gradients, drawing tools,
+alignment, layers and multiple pages. PDF export preserves text and clickable
+links. Editable design files provide separate portable backups.
+
+See [Constructor architecture](docs/CONSTRUCTOR.md) for extension points, storage,
+conversion and export details.
+
 ### Feature folders
 
 Feature code lives under `src/app/features/<feature>/`, grouped by responsibility:

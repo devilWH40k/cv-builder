@@ -1,6 +1,6 @@
 {
   "name": "cv-builder",
-  "version": "3.5.2a",
+  "version": "1.0.1b",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -29,8 +29,9 @@
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
     "@flogeez/angular-tiptap-editor": "^3.4.7",
-    "html-to-pdfmake": "^2.5.34",
+    "fabric": "^7.4.0",
     "fflate": "^0.8.3",
+    "html-to-pdfmake": "^2.5.34",
     "lucide-angular": "^1.0.0",
     "pdfmake": "^0.3.11",
     "rxjs": "~7.8.0",

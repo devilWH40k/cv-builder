@@ -1,0 +1,24 @@
+<section aria-labelledby="layers-title">
+  <h2 id="layers-title">Layers</h2>
+  <div class="layers">
+    @for (layer of editor.layers(); track layer.id) {
+      <button
+        type="button"
+        class="layer"
+        [title]="layer.label"
+        [class.selected]="editor.selectedIds().has(layer.id)"
+        [attr.aria-pressed]="editor.selectedIds().has(layer.id)"
+        (click)="editor.select(layer.id)"
+        (contextmenu)="contextRequested.emit({ event: $event, layerId: layer.id })"
+      >
+        <lucide-icon [img]="layerIcons[layer.kind]" [size]="16" aria-hidden="true" />
+        <span>{{ layer.label }}</span>
+        @if (layer.locked) {
+          <lucide-icon [img]="LockIcon" [size]="14" aria-hidden="true" />
+        }
+      </button>
+    } @empty {
+      <p class="hint">Your objects will appear here.</p>
+    }
+  </div>
+</section>

@@ -1,0 +1,50 @@
+import { provideZonelessChangeDetection } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { ResizeHandle } from './resize-handle';
+
+describe('ResizeHandle', () => {
+  it('resizes vertically with pointer Y and Up/Down keys', async () => {
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
+    const fixture = TestBed.createComponent(ResizeHandle);
+    fixture.componentRef.setInput('label', 'Resize height');
+    fixture.componentRef.setInput('axis', 'vertical');
+    await fixture.whenStable();
+    const handle: HTMLElement = fixture.nativeElement.querySelector('[role="separator"]');
+    expect(handle.getAttribute('aria-orientation')).toBe('horizontal');
+    spyOn(handle, 'setPointerCapture');
+    handle.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientY: 100, button: 0 }));
+    handle.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientY: 160, clientX: 999 }));
+    expect(fixture.componentInstance.size()).toBe(340);
+    handle.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1 }));
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    expect(fixture.componentInstance.size()).toBe(330);
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', shiftKey: true }));
+    expect(fixture.componentInstance.size()).toBe(370);
+  });
+  it('resizes in the edge direction with keyboard bounds and pointer capture', async () => {
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection()] });
+    const fixture = TestBed.createComponent(ResizeHandle);
+    fixture.componentRef.setInput('label', 'Resize panel');
+    await fixture.whenStable();
+    const handle: HTMLElement = fixture.nativeElement.querySelector('[role="separator"]');
+    const key = (key: string) => handle.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    key('ArrowRight');
+    expect(fixture.componentInstance.size()).toBe(290);
+    fixture.componentRef.setInput('edge', 'left');
+    key('ArrowRight');
+    expect(fixture.componentInstance.size()).toBe(280);
+    key('Home');
+    key('ArrowRight');
+    expect(fixture.componentInstance.size()).toBe(200);
+    key('End');
+    expect(fixture.componentInstance.size()).toBe(420);
+    spyOn(handle, 'setPointerCapture');
+    handle.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 100, button: 0 }));
+    handle.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 150 }));
+    expect(fixture.componentInstance.size()).toBe(370);
+    key('Escape');
+    expect(fixture.componentInstance.size()).toBe(420);
+    handle.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 180 }));
+    expect(fixture.componentInstance.size()).toBe(420);
+  });
+});

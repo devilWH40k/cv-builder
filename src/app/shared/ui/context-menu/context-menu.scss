@@ -31,3 +31,4 @@ button, a {
   &:disabled { color: tokens.$text-disabled; cursor: default; }
 }
 lucide-icon { display: flex; flex-shrink: 0; }
+.menu-separator { border-top: 1px solid tokens.$border-color; margin: tokens.$spacing-1; }

@@ -144,6 +144,7 @@
         {{ pdf.exporting() ? 'Exporting…' : 'Export' }}
       </app-button>
       <app-save-cv-button [info]="info" />
+      <a routerLink="/constructor" [queryParams]="{ from: 'draft' }">Open in constructor</a>
       <a routerLink="/create">Edit CV info</a>
       <a routerLink="/">Back to home</a>
     </nav>

@@ -25,6 +25,12 @@ export const routes: Routes = [
     loadChildren: () => import('./features/create/create.routes').then((m) => m.CREATE_ROUTES)
   },
   {
+    path: 'constructor',
+    title: 'CV Constructor | CV Builder',
+    canDeactivate: [(component: { canDeactivate(): boolean | Promise<boolean> }) => component.canDeactivate()],
+    loadComponent: () => import('./features/constructor/components/constructor-page/constructor-page').then((m) => m.ConstructorPageComponent)
+  },
+  {
     path: 'preview',
     title: 'Your CV Preview | CV Builder',
     canActivate: [() => inject(CvDraft).current() ? true : inject(Router).createUrlTree(['/create'])],

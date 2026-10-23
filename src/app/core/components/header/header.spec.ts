@@ -25,6 +25,7 @@ describe('Header navigation', () => {
       providers: [provideZonelessChangeDetection(), provideRouter([
         { path: '', component: NavigationPage },
         { path: 'experiences', component: NavigationPage },
+        { path: 'constructor', component: NavigationPage },
         { path: 'guides', component: NavigationPage }
       ])]
     });
@@ -71,7 +72,7 @@ describe('Header navigation', () => {
     expect(page.querySelector('app-dropdown')).toBeNull();
     expect(page.querySelector('[aria-label="Settings"]')).toBeNull();
     expect(Array.from(page.querySelectorAll('.header-menu .menu-item')).map((item) => item.textContent?.trim()))
-      .toEqual(['Import / Export', 'Experiences', 'Technologies']);
+      .toEqual(['Constructor', 'Import / Export', 'Experiences', 'Technologies']);
     expect(page.querySelector('.header-actions [aria-label="Guides"]')?.getAttribute('href')).toBe('/guides');
     expect(page.querySelectorAll('.header-menu [aria-haspopup="dialog"]').length).toBe(2);
     expect(getComputedStyle(page.querySelector('header')!).backgroundColor).toBe('rgba(0, 0, 0, 0)');
@@ -79,7 +80,7 @@ describe('Header navigation', () => {
 
   it('tracks the active route, including query changes, and moves the active state to Guides', async () => {
     const router = TestBed.inject(Router);
-    const experiences = page.querySelector<HTMLAnchorElement>('.header-menu a')!;
+    const experiences = page.querySelector<HTMLAnchorElement>('.header-menu a[href="/experiences"]')!;
     const guides = page.querySelector<HTMLAnchorElement>('.guides-link')!;
     experiences.click();
     await fixture.whenStable();

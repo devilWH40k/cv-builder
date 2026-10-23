@@ -1,0 +1,173 @@
+<main class="constructor-root">
+  <header class="page-heading">
+    <div class="title-row">
+      <a routerLink="/" class="home-button" aria-label="Back to home" title="Back to home">
+        <lucide-icon [img]="icons.ArrowLeft" [size]="24" aria-hidden="true" />
+      </a>
+      <h1>CV Constructor</h1>
+    </div>
+    <p>Create a design from your CV, then make it your own or start from scratch.</p>
+  </header>
+  @if (!session.document() && loading()) {
+  <app-spinner class="initial-spinner" label="Preparing your design" />
+  }
+  <input #designFile type="file" accept="application/json,.json" hidden (change)="importDesign(designFile)" />
+
+  @if (!session.document() && !loading()) {
+  <section class="library" aria-labelledby="start-title">
+    <h2 id="start-title">Start a design</h2>
+    <p>
+      Open a saved CV from Home and choose “Open in constructor”, or start with an empty A4 page.
+    </p>
+    <div class="library-actions">
+      <a routerLink="/" class="secondary-link"><lucide-icon [img]="icons.FolderOpen" [size]="18" />Choose a CV</a>
+      <app-button variant="outline" (click)="designFile.click()"><lucide-icon [img]="icons.FileJson"
+          [size]="18" />Import design</app-button>
+      <app-button (click)="newBlank()"><lucide-icon [img]="icons.Plus" [size]="18" />Blank design</app-button>
+    </div>
+    <h2>Recently</h2>
+    <p class="hint">
+      Your recently opened designs. Find all saved designs in Home’s Designs tab.
+    </p>
+    <app-design-list [designs]="designs()" [recent]="true" (deleteRequested)="deleteDesign($event)" />
+  </section>
+  }
+
+  <dialog appDialogOverlay class="editor" [class.operation-busy]="editor.restoringHistory() || editor.clipboardBusy()" [attr.inert]="session.saving() ? '' : null" (keydown)="keyboard($event)"
+    (cancel)="closeEditor($event)" aria-label="Visual CV editor">
+    <div class="document-heading" [attr.inert]="workspaceLoading() ? '' : null">
+      <label class="document-title">Design name<input #title aria-label="Design name" maxlength="200"
+          [value]="session.title()" (change)="session.rename(title.value)" /></label>
+      <span class="save-state">{{ session.dirty() ? 'Unsaved changes' : 'Saved' }}</span>
+      <div class="document-actions">
+        <app-button variant="outline" (click)="exportDesign()" title="Download an editable design file"><lucide-icon
+            [img]="icons.FileJson" [size]="18" />Design file</app-button>
+        <app-button variant="outline" (click)="exportPdf()" [disabled]="exporting()"><lucide-icon [img]="icons.Download"
+            [size]="18" />{{
+          exporting() ? 'Exporting…' : 'Export PDF'
+          }}</app-button>
+        <app-button (click)="save()" [disabled]="session.saving()"><lucide-icon [img]="icons.Save" [size]="18" />{{
+          session.saving() ? 'Saving…' : 'Save'
+          }}</app-button>
+      </div>
+      <button type="button" class="editor-close" aria-label="Close editor" title="Close editor" (click)="closeEditor()">
+        <lucide-icon [img]="icons.X" [size]="24" aria-hidden="true" />
+      </button>
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="Design tools" [attr.inert]="workspaceLoading() ? '' : null">
+      <button type="button" aria-label="Select objects" title="Select" [attr.aria-pressed]="editor.tool() === 'select'"
+        (click)="editor.setTool('select')">
+        <lucide-icon [img]="icons.MousePointer2" [size]="20" />
+      </button>
+        <button type="button" aria-label="Copy style" title="Copy style: select a source, then click a target"
+          [disabled]="editor.selectionCount() !== 1" [attr.aria-pressed]="editor.tool() === 'style'"
+          (click)="editor.setTool(editor.tool() === 'style' ? 'select' : 'style')">
+          <lucide-icon [img]="icons.Paintbrush" [size]="20" />
+        </button>
+      <button type="button" aria-label="Freehand drawing" title="Draw" [attr.aria-pressed]="editor.tool() === 'draw'"
+        (click)="editor.setTool('draw')">
+        <lucide-icon [img]="icons.Pencil" [size]="20" />
+      </button>
+      <button type="button" (click)="editor.addText()" title="Add text" aria-label="Add text">
+        <lucide-icon [img]="icons.Type" [size]="20" />
+      </button>
+      <button type="button" (click)="imageFile.click()" title="Insert image" aria-label="Insert image">
+        <lucide-icon [img]="icons.ImagePlus" [size]="20" />
+      </button>
+      <button type="button" (click)="editor.addShape('rectangle')" title="Add rectangle" aria-label="Add rectangle">
+        <lucide-icon [img]="icons.Square" [size]="20" />
+      </button>
+      <button type="button" (click)="editor.addShape('circle')" title="Add circle" aria-label="Add circle">
+        <lucide-icon [img]="icons.Circle" [size]="20" />
+      </button>
+      <button type="button" (click)="editor.addShape('line')" title="Add line" aria-label="Add line">
+        <lucide-icon [img]="icons.Minus" [size]="20" />
+      </button>
+      <span class="toolbar-divider"></span>
+      <button type="button" (click)="history('undo')" [disabled]="!editor.undoCount().length" title="Undo (Ctrl/Cmd+Z)"
+        aria-label="Undo">
+        <lucide-icon [img]="icons.Undo2" [size]="20" />
+      </button>
+      <button type="button" (click)="history('redo')" [disabled]="!editor.redoCount().length"
+        title="Redo (Ctrl/Cmd+Shift+Z)" aria-label="Redo">
+        <lucide-icon [img]="icons.Redo2" [size]="20" />
+      </button>
+      <label class="zoom-label">Zoom<select #zoom [value]="fitPage() ? 'fit' : editor.zoom()"
+          (change)="changeZoom(zoom.value)">
+          <option value="fit">Fit page</option>
+          <option value="0.25">25%</option>
+          <option value="0.5">50%</option>
+          <option value="0.8">80%</option>
+          <option value="1">100%</option>
+          <option value="1.5">150%</option>
+          <option value="2">200%</option>
+        </select></label>
+      @if (editor.tool() === 'draw') {
+      <label>Brush color<input #brushColor type="color" [value]="editor.brushColor()"
+          appDebouncedColor (colorCommitted)="editor.setBrush($event, editor.brushWidth())" /></label>
+      <label>Brush size<input #brushWidth type="number" min="1" max="40" [value]="editor.brushWidth()"
+          (change)="editor.setBrush(editor.brushColor(), brushWidth.valueAsNumber)" /></label>
+      }
+    </div>
+    <div class="workspace" [style.--left-width]="leftWidth() + 'px'" [style.--right-width]="rightWidth() + 'px'">
+      <aside class="page-properties-panel panel" [class.is-loading]="workspaceLoading()"
+        [attr.aria-busy]="workspaceLoading()">
+        <app-constructor-page-properties />
+        @if (workspaceLoading()) { <app-spinner label="Loading page properties" /> }
+      </aside>
+      <app-resize-handle [(size)]="leftWidth" [max]="360" label="Resize page properties" />
+      <div class="stage-column">
+        <nav class="page-tabs" aria-label="Design pages" [attr.inert]="workspaceLoading() ? '' : null">
+          @for (pageItem of session.document()?.pages; track pageItem.id; let index = $index) {
+          <button type="button" [attr.aria-current]="session.activePage() === index ? 'page' : null"
+            (click)="page(index)">
+            Page {{ index + 1 }}
+          </button>
+          }
+          <button type="button" (click)="addPage()" [disabled]="(session.document()?.pages?.length ?? 0) >= 50"
+            aria-label="Add page">
+            <lucide-icon [img]="icons.Plus" [size]="16" />
+          </button>
+          <button type="button" (click)="removePage()" [disabled]="(session.document()?.pages?.length ?? 0) <= 1"
+            aria-label="Delete current page">
+            <lucide-icon [img]="icons.Trash2" [size]="16" />
+          </button>
+        </nav>
+        <div #canvasViewport class="canvas-viewport" tabindex="0" aria-label="A4 design workspace"
+          (contextmenu)="objectMenu.open($event)" [class.is-loading]="workspaceLoading()"
+          [attr.aria-busy]="workspaceLoading()">
+          <canvas #canvas></canvas>
+          @if (workspaceLoading()) { <app-spinner label="Loading design page" /> }
+        </div>
+        <p class="hint">
+          Double-click text to edit or copy it. Drag handles to resize and rotate. Arrow keys move
+          selected objects; hold Shift for larger steps. Shift-click or drag a box to select multiple objects.
+          Drag to snap alignment and size; hold Alt to bypass snapping.
+        </p>
+      </div>
+      <app-resize-handle [(size)]="rightWidth" edge="left" [max]="400" label="Resize properties and layers" />
+      <aside class="object-panels" [style.--properties-height]="propertiesHeight() + 'px'">
+        <div class="properties-panel panel" [class.is-loading]="workspaceLoading()"
+          [attr.aria-busy]="workspaceLoading()">
+          <app-constructor-properties />
+          @if (workspaceLoading()) { <app-spinner label="Loading object properties" /> }
+        </div>
+        <app-resize-handle [(size)]="propertiesHeight" axis="vertical" [min]="120" [max]="900"
+          label="Resize properties and layers height" />
+        <div class="layers-panel panel" [class.is-loading]="workspaceLoading()" [attr.aria-busy]="workspaceLoading()">
+          <app-constructor-layers (contextRequested)="objectMenu.open($event.event, $event.layerId)" />
+          @if (workspaceLoading()) { <app-spinner label="Loading layers" /> }
+        </div>
+      </aside>
+    </div>
+    <app-constructor-object-menu #objectMenu />
+    <input #imageFile type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="insertImage(imageFile)" />
+  </dialog>
+  <div #previewSource class="preview-source" aria-hidden="true" inert>
+    <app-preview [embedded]="true" [readOnly]="true" style="--preview-max-height: none; --preview-max-scale: 1" />
+  </div>
+</main>
+@if (leaveOpen()) {
+<app-unsaved-changes-dialog subject="design" dialogId="leave-constructor" [busy]="leaveSaving()"
+  (decision)="handleLeaveDecision($event)" />
+}

@@ -2,6 +2,7 @@
   <div #panel class="context-menu" role="menu" [attr.aria-label]="label()" tabindex="-1"
     (contextmenu)="$event.preventDefault(); $event.stopPropagation()">
     @for (item of items(); track item.id) {
+      @if (item.separatorBefore) { <div class="menu-separator" role="separator"></div> }
       @if (item.href && !item.disabled) {
         <a role="menuitem" tabindex="-1" [href]="item.href" [target]="item.newTab ? '_blank' : '_self'"
           rel="noopener noreferrer" [attr.data-menu-id]="item.id" (click)="choose(item)">

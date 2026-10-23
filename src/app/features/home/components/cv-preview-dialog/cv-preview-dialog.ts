@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideAngularModule, Pencil } from 'lucide-angular';
+import { LucideAngularModule, Pencil, PenTool } from 'lucide-angular';
 import { Dialog } from '../../../../shared/ui/dialog/dialog';
 import { CvDraft } from '../../../cv/services/cv-draft';
 import { SavedCv } from '../../../cv/services/saved-cvs';
@@ -18,6 +18,7 @@ export class CvPreviewDialog {
   readonly cv = input.required<SavedCv>();
   readonly dismissed = output<void>();
   protected readonly EditIcon = Pencil;
+  protected readonly ConstructorIcon = PenTool;
   private readonly draft = inject(CvDraft);
   private readonly editorDraft = inject(CvDraft, { skipSelf: true });
 

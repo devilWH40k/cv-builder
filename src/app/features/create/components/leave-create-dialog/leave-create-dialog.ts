@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { Button } from '../../../../shared/ui/button/button';
-import { Dialog } from '../../../../shared/ui/dialog/dialog';
+import { UnsavedChangesDialog, UnsavedChangesDecision } from '../../../../shared/ui/unsaved-changes-dialog/unsaved-changes-dialog';
 
-export type LeaveCreateDecision = 'save' | 'leave' | 'cancel';
+export type LeaveCreateDecision = UnsavedChangesDecision;
 
 @Component({
   selector: 'app-leave-create-dialog',
-  imports: [Button, Dialog],
+  imports: [UnsavedChangesDialog],
   templateUrl: './leave-create-dialog.html',
   styleUrl: './leave-create-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

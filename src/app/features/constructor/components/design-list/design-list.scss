@@ -1,0 +1,77 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+:host {
+  display: block;
+}
+.design-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: tokens.$spacing-2;
+}
+li {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-2;
+  padding: tokens.$spacing-2;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-md;
+  background: tokens.$background-surface;
+}
+.design-open {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: tokens.$spacing-3;
+  padding: tokens.$spacing-3;
+  color: tokens.$text-primary;
+  text-decoration: none;
+  text-align: left;
+  border-radius: tokens.$radius-sm;
+  &:hover {
+    background: tokens.$background-subtle;
+  }
+  &:focus-visible {
+    outline: 2px solid tokens.$border-color-focus;
+    outline-offset: 2px;
+  }
+  > lucide-icon {
+    flex-shrink: 0;
+    color: tokens.$text-accent;
+  }
+}
+.design-details {
+  display: grid;
+  gap: tokens.$spacing-1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  strong {
+    font-weight: tokens.$font-weight-medium;
+  }
+  > span {
+    font-size: tokens.$font-size-xs;
+    color: tokens.$text-muted;
+  }
+}
+.delete-design {
+  @include buttons.ghost;
+  & {
+    padding: tokens.$spacing-2;
+    flex-shrink: 0;
+  }
+  &:hover {
+    color: tokens.$text-danger;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+.empty {
+  padding: tokens.$spacing-4;
+  color: tokens.$text-muted;
+  font-size: tokens.$font-size-sm;
+}

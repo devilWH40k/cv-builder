@@ -1,18 +1,14 @@
 <main class="home" aria-labelledby="home-title">
-  <h1 id="home-title">Create your new CV</h1>
-  <a class="create-link" routerLink="/create" (click)="startNew()" aria-label="Create a new CV">
+  <h1 id="home-title">{{ activeTab() === 'files' ? 'Create your new CV' : 'Create a new design' }}</h1>
+  <a class="create-link" [routerLink]="activeTab() === 'files' ? '/create' : '/constructor'"
+    (click)="startNew()" [attr.aria-label]="activeTab() === 'files' ? 'Create a new CV' : 'Create a new design'">
     <lucide-icon [img]="PlusIcon" [size]="48" [strokeWidth]="1.5" aria-hidden="true" />
   </a>
-  <section class="saved-cvs" aria-labelledby="saved-title">
-    <h2 id="saved-title">Your CVs</h2>
+  <section class="saved-cvs" aria-label="Your library">
+    <h2 id="saved-title">{{ activeTab() === 'files' ? 'Your CVs' : 'Your designs' }}</h2>
     <div class="saved-toolbar">
-      <p class="storage" title="Browser estimates for all storage used by this site. The quota can change.">
-        @if (saved.storageEstimate(); as estimate) {
-          {{ estimate.usedMb }} MB used / {{ estimate.quotaGb }} GB quota (estimated site storage)
-        } @else {
-          Storage estimate unavailable
-        }
-      </p>
+      <app-tabs [tabs]="tabs" [active]="activeTab()" (activeChange)="selectTab($event)" label="Library" />
+      @if (activeTab() === 'files') {
       <div class="view-actions">
         <button class="folder-add" type="button" aria-label="New folder" title="New folder" (click)="createFolderOpen.set(true)">
           <lucide-icon [img]="FolderPlusIcon" [size]="20" aria-hidden="true" />
@@ -23,7 +19,9 @@
           <lucide-icon [img]="isListView() ? GridIcon : ListIcon" [size]="20" aria-hidden="true" />
         </button>
       </div>
+      }
     </div>
+    <section id="home-files" role="tabpanel" aria-labelledby="home-files-tab" [hidden]="activeTab() !== 'files'">
     @if (saved.migrationWarning()) {
     <p role="alert">{{ saved.migrationWarning() }}</p>
     }
@@ -60,6 +58,15 @@
     @if (!collection.total() && !collection.error() && !saved.error() && !collection.loading()) {
       <p>No saved CVs yet. Create a CV and choose Save to keep it here.</p>
     }
+    </section>
+    <section id="home-designs" role="tabpanel" aria-labelledby="home-designs-tab" [hidden]="activeTab() !== 'designs'">
+      @if (designsLoading()) { <p role="status">Loading saved designs…</p> }
+      @if (designsError()) {
+        <p role="alert">{{ designsError() }}</p>
+        <button class="load-retry" type="button" (click)="loadDesigns()">Try again</button>
+      }
+      <app-design-list [designs]="designs()" returnTab="designs" [deletingIds]="deletingDesignIds()" (deleteRequested)="deleteDesign($event)" />
+    </section>
   </section>
 </main>
 @if (createFolderOpen()) {
