@@ -8,6 +8,7 @@ import {
   Gradient,
   IText,
   PencilBrush,
+  Point,
   Rect,
   Textbox,
   Transform,
@@ -500,7 +501,7 @@ export class ConstructorEditor {
           : alignment === 'center'
             ? (A4_WIDTH - bounds.width) / 2
             : A4_WIDTH - bounds.width - 32;
-      object.set('left', object.left + target - bounds.left);
+      object.setXY(object.getXY().add(new Point(target - bounds.left, 0)));
     });
   }
 
@@ -541,7 +542,7 @@ export class ConstructorEditor {
 
   nudge(x: number, y: number): void {
     this.modify((object) => {
-      object.set({ left: object.left + x, top: object.top + y });
+      object.setXY(object.getXY().add(new Point(x, y)));
     });
   }
 
@@ -647,6 +648,9 @@ export class ConstructorEditor {
       change(object);
       object.setCoords();
     }
+    // Programmatic child changes do not trigger Fabric's selection layout automatically.
+    const active = this.canvas?.getActiveObject();
+    if (active instanceof ActiveSelection) active.triggerLayout();
     this.commit();
   }
 

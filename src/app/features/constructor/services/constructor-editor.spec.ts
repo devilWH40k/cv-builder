@@ -4,6 +4,8 @@ import { ConstructorEditor } from './constructor-editor';
 import { blankDesign } from '../helpers/preview-to-design';
 import { parseDesign } from '../helpers/design-validation';
 import { loadDesignFonts } from '../helpers/design-assets';
+import { ActiveSelection, Canvas } from 'fabric';
+import { A4_WIDTH } from '../interfaces/constructor-document';
 
 describe('Constructor editing', () => {
   let editor: ConstructorEditor;
@@ -63,6 +65,61 @@ describe('Constructor editing', () => {
     editor.toggleLock();
     editor.remove();
     expect(editor.layers().length).toBe(0);
+  });
+
+  it('moves the selection box with repeated arrow nudges in page coordinates', () => {
+    editor.addText();
+    editor.addShape('rectangle');
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.selectAll();
+    const selection = activate.calls.mostRecent().args[0];
+    if (!(selection instanceof ActiveSelection)) throw new Error('Expected multi-selection');
+    selection.set({ angle: 30, scaleX: 1.4, scaleY: 0.8 });
+    selection.setCoords();
+    const bounds = selection.getBoundingRect();
+    const positions = selection.getObjects().map((object) => object.getXY());
+    const selectedIds = [...editor.selectedIds()];
+    editor.nudge(10, 0);
+    editor.nudge(0, -1);
+    editor.nudge(-1, 0);
+    const moved = selection.getBoundingRect();
+    expect(moved.left).toBeCloseTo(bounds.left + 9, 6);
+    expect(moved.top).toBeCloseTo(bounds.top - 1, 6);
+    expect(moved.width).toBeCloseTo(bounds.width, 6);
+    expect(moved.height).toBeCloseTo(bounds.height, 6);
+    selection.getObjects().forEach((object, index) => {
+      expect(object.getXY().x).toBeCloseTo(positions[index].x + 9, 6);
+      expect(object.getXY().y).toBeCloseTo(positions[index].y - 1, 6);
+    });
+    expect([...editor.selectedIds()]).toEqual(selectedIds);
+  });
+
+  it('fits the selection box after page alignment and preserves alignment through undo', async () => {
+    editor.addText();
+    editor.nudge(150, 60);
+    editor.addShape('rectangle');
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.selectAll();
+    const selection = activate.calls.mostRecent().args[0];
+    if (!(selection instanceof ActiveSelection)) throw new Error('Expected multi-selection');
+    for (const alignment of ['left', 'center', 'right'] as const) {
+      editor.align(alignment);
+      const bounds = selection.getBoundingRect();
+      const objects = selection.getObjects().map((object) => object.getBoundingRect());
+      expect(bounds.left).toBeCloseTo(Math.min(...objects.map((object) => object.left)), 6);
+      expect(bounds.left + bounds.width).toBeCloseTo(Math.max(...objects.map((object) => object.left + object.width)), 6);
+      for (const object of objects) {
+        const expected = alignment === 'left' ? 32 : alignment === 'center'
+          ? (A4_WIDTH - object.width) / 2 : A4_WIDTH - object.width - 32;
+        expect(object.left).toBeCloseTo(expected, 6);
+      }
+      expect(editor.selectionCount()).toBe(2);
+    }
+    const aligned = editor.snapshot();
+    await editor.undo();
+    expect(editor.snapshot()).not.toBe(aligned);
+    await editor.redo();
+    expect(editor.snapshot()).toBe(aligned);
   });
 
   it('paints a captured style onto the next layer in a single undo step', async () => {
