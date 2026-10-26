@@ -4,8 +4,9 @@ import { ConstructorEditor } from './constructor-editor';
 import { blankDesign } from '../helpers/preview-to-design';
 import { parseDesign } from '../helpers/design-validation';
 import { loadDesignFonts } from '../helpers/design-assets';
-import { ActiveSelection, Canvas } from 'fabric';
+import { ActiveSelection, Canvas, FabricImage, Group, IText, Point, Transform, util } from 'fabric';
 import { A4_WIDTH } from '../interfaces/constructor-document';
+import { svgVector } from '../helpers/svg-vector';
 
 describe('Constructor editing', () => {
   let editor: ConstructorEditor;
@@ -28,6 +29,434 @@ describe('Constructor editing', () => {
     await editor.dispose();
     canvas.remove();
   });
+
+  it('renames text layers without changing their content and ignores empty or unchanged names', async () => {
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.addText();
+    const text = activate.calls.mostRecent().args[0];
+    if (!(text instanceof IText)) throw new Error('Expected text');
+    const id = editor.layers()[0].id;
+    const before = editor.snapshot();
+    editor.renameLayer(id, '  Profile summary  ');
+    expect(editor.layers()[0].label).toBe('Profile summary');
+    expect(editor.selection()?.label).toBe('Profile summary');
+    expect(text.text).toBe('Your text');
+    const renamed = editor.snapshot();
+    const history = editor.undoCount().length;
+    for (const name of ['', '   ', 'Profile summary']) editor.renameLayer(id, name);
+    expect(editor.snapshot()).toBe(renamed);
+    expect(editor.undoCount().length).toBe(history);
+    await editor.undo();
+    expect(editor.snapshot()).toBe(before);
+    await editor.redo();
+    expect(editor.snapshot()).toBe(renamed);
+    await editor.load({ id: crypto.randomUUID(), scene: renamed });
+    expect(editor.layers()[0].label).toBe('Profile summary');
+  });
+
+  it('preserves group and nested member names through copying and portable designs', async () => {
+    editor.addText();
+    const textId = editor.layers()[0].id;
+    editor.addShape('line');
+    const lineId = editor.layers()[0].id;
+    editor.selectAll();
+    editor.group();
+    const groupId = editor.layers()[0].id;
+    editor.renameLayer(groupId, 'Contact details');
+    editor.renameLayer(textId, 'Email');
+    editor.renameLayer(lineId, 'Divider');
+    expect(editor.layers()[0].children?.find((child) => child.id === lineId)?.kind).toBe('line');
+    await editor.duplicate();
+    const blank = blankDesign();
+    const saved = parseDesign({ ...blank, pages: [{ ...blank.pages[0], scene: editor.snapshot() }] });
+    await editor.load(saved.pages[0]);
+    expect(editor.layers().length).toBe(2);
+    for (const group of editor.layers()) {
+      expect(group.label).toBe('Contact details');
+      expect(group.children?.map((child) => child.label)).toEqual(['Divider', 'Email']);
+    }
+  });
+
+  it('groups, moves, reopens and ungroups elements without changing their world transforms', async () => {
+    editor.addText();
+    editor.nudge(70, 40);
+    editor.addShape('rectangle');
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.selectAll();
+    const selection = activate.calls.mostRecent().args[0];
+    if (!(selection instanceof ActiveSelection)) throw new Error('Expected multi-selection');
+    const matrices = selection.getObjects().map((object) => object.calcTransformMatrix());
+    const before = editor.snapshot();
+    editor.group();
+    expect(editor.layers().length).toBe(1);
+    expect(editor.layers()[0].children?.length).toBe(2);
+    const group = activate.calls.mostRecent().args[0];
+    if (!(group instanceof Group)) throw new Error('Expected group');
+    group.getObjects().forEach((object, index) => object.calcTransformMatrix().forEach((coordinate, axis) =>
+      expect(coordinate).toBeCloseTo(matrices[index][axis], 6)));
+    const grouped = editor.snapshot();
+    await editor.undo();
+    expect(editor.snapshot()).toBe(before);
+    await editor.redo();
+    expect(editor.snapshot()).toBe(grouped);
+    editor.select(editor.layers()[0].id);
+    editor.nudge(20, -10);
+    const saved = { ...blankDesign().pages[0], scene: editor.snapshot() };
+    await editor.load(saved);
+    editor.select(editor.layers()[0].id);
+    editor.ungroup();
+    expect(editor.layers().length).toBe(2);
+    expect(editor.selectionCount()).toBe(2);
+    const released = activate.calls.mostRecent().args[0];
+    if (!(released instanceof ActiveSelection)) throw new Error('Expected released objects');
+    released.getObjects().forEach((object, index) => {
+      const matrix = object.calcTransformMatrix();
+      expect(matrix[4]).toBeCloseTo(matrices[index][4] + 20, 6);
+      expect(matrix[5]).toBeCloseTo(matrices[index][5] - 10, 6);
+    });
+  });
+
+  it('selects and edits a group member by double click and preserves unique IDs on duplication', async () => {
+    editor.addText();
+    editor.addShape('rectangle');
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.selectAll();
+    editor.group();
+    const group = activate.calls.mostRecent().args[0];
+    if (!(group instanceof Group) || !(group.canvas instanceof Canvas)) throw new Error('Expected group');
+    const text = group.getObjects().find((object): object is IText => object instanceof IText)!;
+    group.canvas.fire('mouse:dblclick', { e: new MouseEvent('dblclick'), target: group, subTargets: [text],
+      scenePoint: new Point(), viewportPoint: new Point() });
+    expect(editor.selection()?.id).toBe(text.designId);
+    expect(text.isEditing).toBeTrue();
+    editor.finishEditing();
+    editor.updateText({ fontSize: 30 });
+    expect(text.fontSize).toBe(30);
+    expect(editor.layers()[0].children?.find((child) => child.id === text.designId)?.fontSize).toBe(30);
+    editor.select(group.designId!);
+    await editor.duplicate();
+    const ids = editor.layers().flatMap((layer) => [layer.id, ...layer.children!.map((child) => child.id)]);
+    expect(new Set(ids).size).toBe(6);
+    expect(editor.layers().length).toBe(2);
+  });
+
+  for (const textMember of [false, true]) {
+    it(`drills into nested groups one level per double-click before selecting ${textMember ? 'and editing text' : 'a shape'}`, () => {
+      if (textMember) editor.addText();
+      else editor.addShape('rectangle');
+      const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+      editor.select(editor.layers()[0].id);
+      const member = activate.calls.mostRecent().args[0];
+      const groups: Group[] = [];
+      for (let depth = 0; depth < 3; depth++) {
+        editor.addShape('circle');
+        editor.nudge(300 + depth * 40, 300 + depth * 40);
+        editor.selectAll();
+        editor.group();
+        const group = activate.calls.mostRecent().args[0];
+        if (!(group instanceof Group)) throw new Error('Expected group');
+        groups.push(group);
+      }
+      const liveCanvas = groups[2].canvas;
+      if (!(liveCanvas instanceof Canvas)) throw new Error('Expected live canvas');
+      const before = editor.snapshot();
+      const history = editor.undoCount().length;
+      const doubleClick = () => {
+        const upper = liveCanvas.upperCanvasEl;
+        const point = member.getCenterPoint().transform(liveCanvas.viewportTransform);
+        const bounds = upper.getBoundingClientRect();
+        const options = { clientX: bounds.left + point.x, clientY: bounds.top + point.y,
+          bubbles: true, pointerId: 1, pointerType: 'mouse', isPrimary: true };
+        for (const detail of [1, 2]) {
+          upper.dispatchEvent(new PointerEvent('pointerdown', { ...options, detail, buttons: 1 }));
+          upper.dispatchEvent(new PointerEvent('pointerup', { ...options, detail, buttons: 0 }));
+        }
+        upper.dispatchEvent(new MouseEvent('dblclick', { ...options, detail: 2 }));
+      };
+      for (const group of groups.slice(0, -1).reverse()) {
+        doubleClick();
+        expect(editor.selection()?.id).toBe(group.designId);
+        expect(editor.selectionCount()).toBe(1);
+        if (member instanceof IText) expect(member.isEditing).toBeFalse();
+      }
+      doubleClick();
+      expect(editor.selection()?.id).toBe(member.designId);
+      if (member instanceof IText) expect(member.isEditing).toBeTrue();
+      expect(editor.snapshot()).toBe(before);
+      expect(editor.undoCount().length).toBe(history);
+    });
+  }
+
+  for (const nested of [false, true]) {
+    it(`keeps adding and removing members with Shift-click inside ${nested ? 'nested groups' : 'a group'}`, () => {
+      for (let index = 0; index < 4; index++) {
+        editor.addShape('rectangle');
+        editor.nudge((index % 3) * 210, Math.floor(index / 3) * 200);
+      }
+      const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+      editor.selectAll();
+      editor.group();
+      const group = activate.calls.mostRecent().args[0];
+      if (!(group instanceof Group) || !(group.canvas instanceof Canvas)) throw new Error('Expected group');
+      const liveCanvas = group.canvas;
+      const members = group.getObjects();
+      const matrices = members.map((member) => member.calcTransformMatrix());
+      if (nested) {
+        editor.addShape('circle');
+        editor.nudge(500, 500);
+        editor.selectAll();
+        editor.group();
+      }
+      editor.select(members[0].designId!);
+      const shiftClick = (member: typeof members[number]) => {
+        const point = member.getCenterPoint().transform(liveCanvas.viewportTransform);
+        const upper = liveCanvas.upperCanvasEl;
+        const bounds = upper.getBoundingClientRect();
+        const options = { clientX: bounds.left + point.x, clientY: bounds.top + point.y,
+          shiftKey: true, bubbles: true, pointerId: 1, pointerType: 'mouse', isPrimary: true };
+        upper.dispatchEvent(new PointerEvent('pointerdown', { ...options, buttons: 1 }));
+        upper.dispatchEvent(new PointerEvent('pointerup', { ...options, buttons: 0 }));
+      };
+      for (let index = 1; index < members.length; index++) {
+        shiftClick(members[index]);
+        expect(editor.selectionCount()).toBe(index + 1);
+        expect(editor.selectedIds()).toEqual(new Set(members.slice(0, index + 1).map((member) => member.designId!)));
+      }
+      shiftClick(members[1]);
+      expect(editor.selectionCount()).toBe(3);
+      expect(editor.selectedIds().has(members[1].designId!)).toBeFalse();
+      expect(editor.canGroup()).toBeFalse();
+      expect(editor.canUngroup()).toBeFalse();
+      editor.select(group.designId!);
+      expect(group.interactive).toBeFalse();
+      expect(group.getObjects()).toEqual(members);
+      members.forEach((member, index) => {
+        expect(member.parent).toBe(group);
+        member.calcTransformMatrix().forEach((coordinate, axis) =>
+          expect(coordinate).toBeCloseTo(matrices[index][axis], 6));
+      });
+    });
+  }
+
+  it('numbers groups in creation order, retaining the sequence after ungrouping and reopening', async () => {
+    editor.addText();
+    editor.addShape('rectangle');
+    editor.selectAll();
+    editor.group();
+    expect(editor.selection()?.label).toBe('Group 1');
+    editor.addShape('circle');
+    editor.selectAll();
+    editor.group();
+    expect(editor.selection()?.label).toBe('Group 2');
+    editor.ungroup();
+    editor.selectAll();
+    editor.group();
+    expect(editor.selection()?.label).toBe('Group 3');
+    const saved = { id: crypto.randomUUID(), scene: editor.snapshot() };
+    await editor.load(saved);
+    editor.addShape('rectangle');
+    editor.selectAll();
+    editor.group();
+    expect(editor.selection()?.label).toBe('Group 4');
+    await editor.undo();
+    await editor.redo();
+    expect(editor.layers()[0].label).toBe('Group 4');
+  });
+
+  it('hides SVG paths and shapes while keeping the artwork selectable inside user groups', async () => {
+    const artwork = await svgVector(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M0 0h10v10z"/><circle cx="16" cy="16" r="4"/></svg>',
+      24, 24,
+    );
+    if (!(artwork instanceof Group)) throw new Error('Expected vector artwork');
+    artwork.designLabel = 'SVG icon';
+    await editor.load({ id: crypto.randomUUID(), scene: JSON.stringify({ objects: [artwork.toObject()] }) });
+    expect(editor.layers()[0].label).toBe('SVG icon');
+    expect(editor.layers()[0].children).toBeUndefined();
+    editor.addText();
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.selectAll();
+    editor.group();
+    const group = activate.calls.mostRecent().args[0];
+    if (!(group instanceof Group) || !(group.canvas instanceof Canvas)) throw new Error('Expected user group');
+    const svg = group.getObjects().find((member) => member.designLabel === 'SVG icon')!;
+    expect(editor.layers()[0].children?.length).toBe(2);
+    expect(editor.layers()[0].children?.find((member) => member.label === 'SVG icon')?.children).toBeUndefined();
+    group.canvas.fire('mouse:dblclick', { e: new MouseEvent('dblclick'), target: group, subTargets: [svg],
+      scenePoint: new Point(), viewportPoint: new Point() });
+    expect(editor.selection()?.id).toBe(svg.designId);
+    const saved = { id: crypto.randomUUID(), scene: editor.snapshot() };
+    await editor.load(saved);
+    expect(editor.layers()[0].children?.length).toBe(2);
+    expect(editor.layers()[0].children?.find((member) => member.label === 'SVG icon')?.children).toBeUndefined();
+  });
+
+  it('shows shared text properties and applies them to nested groups in one history action', async () => {
+    editor.addText();
+    editor.updateText({ fontSize: 18 });
+    editor.addText();
+    editor.updateText({ fontSize: 30, bold: true });
+    editor.selectAll();
+    editor.group();
+    expect(editor.selection()?.isText).toBeTrue();
+    expect(editor.selection()?.mixed).toContain('fontSize');
+    expect(editor.selection()?.mixed).toContain('bold');
+    editor.addText();
+    editor.selectAll();
+    editor.group();
+    const before = editor.snapshot();
+    const history = editor.undoCount().length;
+    editor.updateText({ fontSize: 28, bold: true, italic: true, textAlign: 'center' });
+    expect(editor.undoCount().length).toBe(history + 1);
+    expect(editor.selection()?.fontSize).toBe(28);
+    expect(editor.selection()?.bold).toBeTrue();
+    expect(editor.selection()?.italic).toBeTrue();
+    expect(editor.selection()?.textAlign).toBe('center');
+    expect(editor.selection()?.mixed).not.toContain('fontSize');
+    const after = editor.snapshot();
+    await editor.undo();
+    expect(editor.snapshot()).toBe(before);
+    await editor.redo();
+    expect(editor.snapshot()).toBe(after);
+    editor.select(editor.layers()[0].id);
+    editor.setFill('#123456', '#abcdef');
+    editor.setLink('https://example.com/group');
+    const group = editor.layers()[0];
+    const texts = group.children!.flatMap((child) => child.children ?? [child]);
+    expect(texts.length).toBe(3);
+    for (const text of texts) {
+      expect(text.fontSize).toBe(28);
+      expect(text.color).toBe('#123456');
+      expect(text.gradientEnd).toBe('#ABCDEF');
+      expect(text.linkUrl).toBe('https://example.com/group');
+    }
+    await editor.load({ id: crypto.randomUUID(), scene: editor.snapshot() });
+    editor.select(editor.layers()[0].id);
+    expect(editor.selection()?.fontSize).toBe(28);
+    expect(editor.selection()?.linkUrl).toBe('https://example.com/group');
+  });
+
+  it('applies shared shape properties while retaining locked members and group movement', () => {
+    editor.addShape('rectangle');
+    editor.updateRectangle({ borderWidth: 2 });
+    editor.addShape('rectangle');
+    editor.selectAll();
+    editor.group();
+    expect(editor.selection()?.isRectangle).toBeTrue();
+    expect(editor.selection()?.canBlur).toBeTrue();
+    expect(editor.selection()?.mixed).toContain('borderWidth');
+    editor.updateRectangle({ borderRadius: 12, borderWidth: 4, borderColor: '#ff0000' });
+    editor.setBlur(6);
+    for (const child of editor.layers()[0].children!) {
+      expect(child.borderRadius).toBe(12);
+      expect(child.borderWidth).toBe(4);
+      expect(child.borderColor).toBe('#FF0000');
+      expect(child.blur).toBe(6);
+    }
+    const id = editor.layers()[0].id;
+    const lockedId = editor.layers()[0].children![0].id;
+    editor.select(lockedId);
+    editor.toggleLock();
+    editor.select(id);
+    editor.setFill('#0000ff');
+    expect(editor.layers()[0].children!.find((child) => child.id === lockedId)?.color).not.toBe('#0000FF');
+    expect(editor.layers()[0].children!.find((child) => child.id !== lockedId)?.color).toBe('#0000FF');
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.select(id);
+    const group = activate.calls.mostRecent().args[0];
+    if (!(group instanceof Group)) throw new Error('Expected group');
+    const positions = group.getObjects().map((child) => child.getXY());
+    editor.nudge(20, 10);
+    group.getObjects().forEach((child, index) => {
+      expect(child.getXY().x).toBeCloseTo(positions[index].x + 20, 6);
+      expect(child.getXY().y).toBeCloseTo(positions[index].y + 10, 6);
+    });
+  });
+
+  it('shows only common controls for mixed members and shares filters between images', async () => {
+    editor.addText();
+    editor.addShape('rectangle');
+    editor.selectAll();
+    editor.group();
+    expect(editor.selection()?.isText).toBeFalse();
+    expect(editor.selection()?.isRectangle).toBeFalse();
+    expect(editor.selection()?.canFill).toBeTrue();
+    editor.setFill('#ff0000');
+    expect(editor.layers()[0].children!.every((child) => child.color === '#FF0000')).toBeTrue();
+    const raster = document.createElement('canvas');
+    raster.width = raster.height = 10;
+    const images = new Group([new FabricImage(raster), new FabricImage(raster)], { subTargetCheck: true });
+    await editor.load({ id: crypto.randomUUID(), scene: JSON.stringify({ objects: [images.toObject()] }) });
+    editor.select(editor.layers()[0].id);
+    expect(editor.selection()?.isImage).toBeTrue();
+    expect(editor.selection()?.canFill).toBeFalse();
+    editor.updateImageEffects({ brightness: 20, contrast: 10, grayscale: true });
+    expect(editor.layers()[0].children!.every((child) => child.imageEffects.brightness === 20 && child.imageEffects.grayscale)).toBeTrue();
+    expect(editor.selection()?.imageEffects.contrast).toBe(10);
+  });
+
+  it('does not group locked selections and supports nested groups', () => {
+    editor.addText();
+    editor.toggleLock();
+    editor.addShape('rectangle');
+    editor.selectAll();
+    expect(editor.canGroup()).toBeFalse();
+    editor.group();
+    expect(editor.layers().length).toBe(2);
+    editor.select(editor.layers().find((layer) => layer.locked)!.id);
+    editor.toggleLock();
+    editor.selectAll();
+    editor.group();
+    editor.addShape('circle');
+    editor.selectAll();
+    editor.group();
+    expect(editor.layers()[0].children?.some((child) => child.children?.length === 2)).toBeTrue();
+    editor.ungroup();
+    expect(editor.layers().length).toBe(2);
+    expect(editor.layers().some((layer) => layer.children?.length === 2)).toBeTrue();
+  });
+
+  for (const persistentGroup of [false, true]) {
+    it(`reflows texts during a ${persistentGroup ? 'persistent group' : 'multi-selection'} resize and records one undoable change`, async () => {
+      editor.addText();
+      editor.addText();
+      editor.nudge(100, 100);
+      const before = editor.snapshot();
+      const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+      editor.selectAll();
+      if (persistentGroup) editor.group();
+      const selection = activate.calls.mostRecent().args[0];
+      if (!(selection instanceof Group) || !(selection.canvas instanceof Canvas))
+        throw new Error('Expected canvas group');
+      const beforeResize = editor.snapshot();
+      const canvas = selection.canvas;
+      const matrices = selection.getObjects().map((text) => text.calcTransformMatrix());
+      const transform: Transform = {
+        target: selection, action: 'scale', corner: 'br',
+        scaleX: 1, scaleY: 1, skewX: 0, skewY: 0, offsetX: 0, offsetY: 0,
+        originX: 'left', originY: 'top', ex: 0, ey: 0, lastX: 0, lastY: 0,
+        theta: 0, width: selection.width, height: selection.height,
+        shiftKey: false, altKey: false, actionPerformed: false,
+        original: { ...util.saveObjectTransform(selection), originX: selection.originX, originY: selection.originY, cropX: 0, cropY: 0 },
+      };
+      const e = new MouseEvent('mousemove', { altKey: true });
+      canvas.fire('before:transform', { e, transform });
+      selection.set({ scaleX: 1.5, scaleY: 2 });
+      canvas.fire('object:scaling', { e, transform, target: selection, pointer: new Point() });
+      selection.getObjects().forEach((text, index) => {
+        text.calcTransformMatrix().slice(0, 4).forEach((value, coordinate) =>
+          expect(value).toBeCloseTo(matrices[index][coordinate], 6));
+      });
+      canvas.fire('object:modified', { e, transform, target: selection });
+      expect(editor.selectionCount()).toBe(persistentGroup ? 1 : 2);
+      const after = editor.snapshot();
+      expect(after).not.toBe(before);
+      await editor.undo();
+      expect(editor.snapshot()).toBe(persistentGroup ? beforeResize : before);
+      await editor.redo();
+      expect(editor.snapshot()).toBe(after);
+    });
+  }
 
   it('restores text formatting, gradients and links through save/reopen and undo/redo', async () => {
     editor.addText();

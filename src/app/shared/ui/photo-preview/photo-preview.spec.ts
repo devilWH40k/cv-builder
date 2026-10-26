@@ -75,6 +75,62 @@ describe('PhotoPreview', () => {
     expect(parseFloat(circle.style.top)).toBe(0);
   });
 
+  it('exports a circular constructor photo with transparent corners', async () => {
+    fixture.componentRef.setInput('circularOutput', true);
+    await fixture.whenStable();
+    const result = new Promise<File>((resolve) => fixture.componentInstance.applied.subscribe(resolve));
+    page.querySelector<HTMLButtonElement>('app-button button')!.click();
+    const bitmap = await createImageBitmap(await result);
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context = canvas.getContext('2d')!;
+    context.drawImage(bitmap, 0, 0);
+    expect(context.getImageData(0, 0, 1, 1).data[3]).toBe(0);
+    expect(context.getImageData(80, 80, 1, 1).data[3]).toBe(255);
+    bitmap.close();
+  });
+
+  it('allows independent rectangular crop dimensions and exports opaque corners', async () => {
+    fixture.componentRef.setInput('shapes', ['full', 'circle', 'rectangle']);
+    await fixture.whenStable();
+    Array.from(page.querySelectorAll<HTMLButtonElement>('.shape-options button'))
+      .find((button) => button.textContent === 'Rectangle')!.click();
+    await fixture.whenStable();
+    const sliders = page.querySelectorAll<HTMLInputElement>('input[type="range"]');
+    sliders[0].value = '40';
+    sliders[0].dispatchEvent(new Event('input'));
+    sliders[1].value = '50';
+    sliders[1].dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    const result = new Promise<File>((resolve) => fixture.componentInstance.applied.subscribe(resolve));
+    page.querySelector<HTMLButtonElement>('app-button button')!.click();
+    const bitmap = await createImageBitmap(await result);
+    expect(bitmap.width).toBe(160);
+    expect(bitmap.height).toBe(100);
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d')!;
+    context.drawImage(bitmap, 0, 0);
+    expect(context.getImageData(0, 0, 1, 1).data[3]).toBe(255);
+    bitmap.close();
+  });
+
+  it('returns the original file without re-encoding when using the full image', async () => {
+    fixture.componentRef.setInput('shapes', ['full', 'circle', 'rectangle']);
+    await fixture.whenStable();
+    Array.from(page.querySelectorAll<HTMLButtonElement>('.shape-options button'))
+      .find((button) => button.textContent === 'Full image')!.click();
+    await fixture.whenStable();
+    expect(page.querySelector('.crop-circle')).toBeNull();
+    expect(page.querySelector('input[type="range"]')).toBeNull();
+    const encode = spyOn(HTMLCanvasElement.prototype, 'toBlob').and.callThrough();
+    const applied = jasmine.createSpy('applied');
+    fixture.componentInstance.applied.subscribe(applied);
+    page.querySelector<HTMLButtonElement>('app-button button')!.click();
+    expect(applied).toHaveBeenCalledOnceWith(fixture.componentInstance.file());
+    expect(encode).not.toHaveBeenCalled();
+  });
+
   it('resizes the circle and cancels without applying', async () => {
     const applied = jasmine.createSpy('applied');
     const cancelled = jasmine.createSpy('cancelled');

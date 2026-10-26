@@ -1,4 +1,4 @@
-import { FabricObject, StaticCanvas } from 'fabric';
+import { FabricObject, Group, StaticCanvas } from 'fabric';
 import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces';
 import { A4_HEIGHT, A4_WIDTH, ConstructorDocument } from '../interfaces/constructor-document';
 import { loadDesignFonts, safeDesignLink } from './design-assets';
@@ -23,8 +23,19 @@ function linkedSvg(svg: string, link: string | undefined): string {
 }
 
 /** Restore inline hyperlinks inside multiline text without rasterizing its glyphs. */
-function objectSvg(object: FabricObject): string {
-  const source = object.designBlur ? rasterEffectSvg(object) : object.toSVG();
+function objectSvg(object: FabricObject, render = () => object.toSVG()): string {
+  if (object instanceof Group) {
+    // Keep Fabric's group clipping, opacity and transforms while decorating each child.
+    const renderers = object.getObjects().map((child) => ({ child, toSVG: child.toSVG }));
+    try {
+      for (const { child, toSVG } of renderers)
+        child.toSVG = () => child.excludeFromExport ? '' : objectSvg(child, () => toSVG.call(child));
+      return linkedSvg(render(), object.linkUrl);
+    } finally {
+      for (const { child, toSVG } of renderers) child.toSVG = toSVG;
+    }
+  }
+  const source = object.designBlur ? rasterEffectSvg(object) : render();
   if (!object.designTextLinks?.length || object.linkUrl) return linkedSvg(source, object.linkUrl);
   const document = new DOMParser().parseFromString(
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">${source}</svg>`,

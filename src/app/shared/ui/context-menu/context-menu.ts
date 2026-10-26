@@ -22,6 +22,7 @@ export interface ContextMenuItem {
 export class ContextMenu {
   readonly items = input.required<readonly ContextMenuItem[]>();
   readonly label = input('Context menu');
+  readonly compact = input(false);
   readonly selected = output<string>();
   protected readonly position = signal<{ x: number; y: number } | null>(null);
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');

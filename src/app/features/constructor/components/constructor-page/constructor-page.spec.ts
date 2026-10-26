@@ -10,6 +10,97 @@ import { ConstructorEditor } from '../../services/constructor-editor';
 import { FabricObject } from 'fabric';
 
 describe('Fullscreen constructor page', () => {
+  it('shows and edits shared group properties with mixed values', async () => {
+    const design = blankDesign();
+    const repository = jasmine.createSpyObj<ConstructorRepository>('repository', [
+      'load', 'recentlyVisited', 'recordVisit',
+    ]);
+    repository.load.and.resolveTo(design);
+    repository.recentlyVisited.and.resolveTo([]);
+    repository.recordVisit.and.resolveTo();
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(),
+        provideRouter([{ path: 'constructor', component: ConstructorPageComponent }]),
+        { provide: ConstructorRepository, useValue: repository }],
+    });
+    const harness = await RouterTestingHarness.create('/constructor?design=' + design.id);
+    await harness.fixture.whenStable();
+    const editor = harness.routeDebugElement!.injector.get(ConstructorEditor);
+    editor.addText();
+    editor.updateText({ fontSize: 18 });
+    editor.addText();
+    editor.updateText({ fontSize: 32, bold: true });
+    editor.selectAll();
+    editor.group();
+    harness.fixture.detectChanges();
+    const properties = document.querySelector('app-constructor-properties')!;
+    const fontLabel = Array.from(properties.querySelectorAll('label')).find((label) =>
+      label.textContent?.trim().startsWith('Font size'))!;
+    const fontSize = fontLabel.querySelector('input')!;
+    expect(fontSize.value).toBe('');
+    expect(fontSize.placeholder).toBe('Mixed');
+    const bold = properties.querySelector<HTMLButtonElement>('[aria-label="Bold"]')!;
+    expect(bold.getAttribute('aria-pressed')).toBe('mixed');
+    fontSize.value = '26';
+    fontSize.dispatchEvent(new Event('change', { bubbles: true }));
+    bold.click();
+    harness.fixture.detectChanges();
+    expect(fontSize.value).toBe('26');
+    expect(bold.getAttribute('aria-pressed')).toBe('true');
+    expect(editor.layers()[0].children!.every((child) => child.fontSize === 26 && child.bold)).toBeTrue();
+    expect(editor.selectionCount()).toBe(1);
+  });
+
+  it('groups with the keyboard, expands member layers and ungroups with Shift', async () => {
+    const design = blankDesign();
+    const repository = jasmine.createSpyObj<ConstructorRepository>('repository', [
+      'load', 'recentlyVisited', 'recordVisit',
+    ]);
+    repository.load.and.resolveTo(design);
+    repository.recentlyVisited.and.resolveTo([]);
+    repository.recordVisit.and.resolveTo();
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(),
+        provideRouter([{ path: 'constructor', component: ConstructorPageComponent }]),
+        { provide: ConstructorRepository, useValue: repository }],
+    });
+    const harness = await RouterTestingHarness.create('/constructor?design=' + design.id);
+    await harness.fixture.whenStable();
+    const editor = harness.routeDebugElement!.injector.get(ConstructorEditor);
+    editor.addText();
+    editor.addShape('rectangle');
+    editor.selectAll();
+    const dialog = document.querySelector<HTMLDialogElement>('dialog.editor')!;
+    const canvas = dialog.querySelector<HTMLCanvasElement>('.upper-canvas')!;
+    const shortcut = (shiftKey: boolean) => canvas.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'g', code: 'KeyG', ctrlKey: true, shiftKey, bubbles: true, cancelable: true,
+    }));
+    shortcut(false);
+    harness.fixture.detectChanges();
+    expect(editor.layers().length).toBe(1);
+    const layers = dialog.querySelector('app-constructor-layers')!;
+    expect(layers.querySelectorAll('.layer').length).toBe(1);
+    const expand = layers.querySelector<HTMLButtonElement>('.expand')!;
+    expect(layers.querySelector('.layer')!.textContent).toContain('Group 1');
+    const layerBounds = layers.querySelector('.layer')!.getBoundingClientRect();
+    const expandBounds = expand.getBoundingClientRect();
+    expect(expandBounds.left).toBeGreaterThanOrEqual(layerBounds.left);
+    expect(expandBounds.right).toBeLessThanOrEqual(layerBounds.right);
+    expand.click();
+    harness.fixture.detectChanges();
+    expect(expand.getAttribute('aria-expanded')).toBe('true');
+    expect(layers.querySelectorAll('.layer').length).toBe(3);
+    expect(layers.querySelectorAll<HTMLElement>('.layer-row')[1].style.paddingLeft).toBe('1rem');
+    const children = editor.layers()[0].children!;
+    layers.querySelectorAll<HTMLButtonElement>('.layer')[1].click();
+    expect(editor.selection()?.id).toBe(children[0].id);
+    editor.select(editor.layers()[0].id);
+    shortcut(true);
+    harness.fixture.detectChanges();
+    expect(editor.layers().length).toBe(2);
+    expect(layers.querySelector('.expand')).toBeNull();
+  });
+
   for (const shortcut of [
     { key: 'c', action: 'copy', count: 2 },
     { key: 'x', action: 'cut', count: 0 },
@@ -154,6 +245,41 @@ describe('Fullscreen constructor page', () => {
     const nativeInputUndo = new KeyboardEvent('keydown', { key: 'я', code: 'KeyZ', ctrlKey: true, bubbles: true, cancelable: true });
     dialog.querySelector<HTMLInputElement>('[aria-label="Design name"]')!.dispatchEvent(nativeInputUndo);
     expect(nativeInputUndo.defaultPrevented).toBeFalse();
+    const imageCanvas = document.createElement('canvas');
+    imageCanvas.width = 400;
+    imageCanvas.height = 200;
+    imageCanvas.getContext('2d')!.fillRect(0, 0, 400, 200);
+    const blob = await new Promise<Blob | null>((resolve) => imageCanvas.toBlob(resolve));
+    const image = new File([blob!], 'photo.png', { type: 'image/png' });
+    const imageInput = dialog.querySelector<HTMLInputElement>(':scope > input[type="file"][accept^="image/"]')!;
+    const upload = () => {
+      const transfer = new DataTransfer();
+      transfer.items.add(image);
+      imageInput.files = transfer.files;
+      imageInput.dispatchEvent(new Event('change'));
+    };
+    const original = editor.snapshot();
+    upload();
+    await harness.fixture.whenStable();
+    const photoDialog = document.querySelector<HTMLDialogElement>('dialog.photo-preview-dialog')!;
+    expect(photoDialog.open).toBeTrue();
+    expect(photoDialog.querySelectorAll('.shape-options button').length).toBe(3);
+    expect(editor.snapshot()).toBe(original);
+    photoDialog.querySelector<HTMLButtonElement>('.cancel')!.click();
+    await harness.fixture.whenStable();
+    expect(editor.snapshot()).toBe(original);
+    upload();
+    await harness.fixture.whenStable();
+    const source = document.querySelector<HTMLImageElement>('.photo-preview-dialog .source-photo')!;
+    await source.decode();
+    source.dispatchEvent(new Event('load'));
+    await harness.fixture.whenStable();
+    const insert = spyOn(editor, 'addImage').and.callThrough();
+    document.querySelector<HTMLButtonElement>('.photo-preview-dialog app-button button')!.click();
+    await harness.fixture.whenStable();
+    expect(insert).toHaveBeenCalledOnceWith(image);
+    expect(editor.layers().some((layer) => layer.kind === 'image')).toBeTrue();
+    expect(document.querySelector('.photo-preview-dialog')).toBeNull();
     const saveButton = Array.from(dialog.querySelectorAll<HTMLButtonElement>('.document-actions button'))
       .find((button) => button.textContent?.trim() === 'Save')!;
     saveButton.click();

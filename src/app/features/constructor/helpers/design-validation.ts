@@ -59,6 +59,7 @@ export function validateDesignScene(scene: string): void {
       if (key === 'fontFamily' && child !== 'Roboto') throw new Error(INVALID);
       if (key === 'strategy' && !['fit-content', 'fixed'].includes(String(child))) throw new Error(INVALID);
       if (key === 'designBlur' && (typeof child !== 'number' || child < 0 || child > 40)) throw new Error(INVALID);
+      if (key === 'designLayerName' && (typeof child !== 'string' || !child.trim() || child.length > 100)) throw new Error(INVALID);
       if (typeof properties['type'] === 'string' &&
           ['Brightness', 'Contrast', 'Saturation', 'Blur'].includes(properties['type']) &&
           ['brightness', 'contrast', 'saturation', 'blur'].includes(key) &&

@@ -5,6 +5,12 @@ import { safeDesignLink } from './design-assets';
 import './fabric-metadata';
 
 describe('Portable constructor designs', () => {
+  it('accepts optional layer names and rejects invalid names', () => {
+    expect(() => validateDesignScene(JSON.stringify({ objects: [{ type: 'Rect', designLayerName: 'Section divider' }] }))).not.toThrow();
+    for (const name of ['', '   ', 123, 'a'.repeat(101)]) {
+      expect(() => validateDesignScene(JSON.stringify({ objects: [{ type: 'Rect', designLayerName: name }] }))).toThrow();
+    }
+  });
   it('validates schema and page identity before loading an editor scene', () => {
     const design = blankDesign();
     expect(parseDesign(design)).toEqual(design);

@@ -1,4 +1,4 @@
-import { Circle, Rect, classRegistry, FabricObject } from 'fabric';
+import { Circle, Group, Rect, classRegistry, FabricObject } from 'fabric';
 import './fabric-metadata';
 
 function renderBlur(object: FabricObject, context: CanvasRenderingContext2D, render: () => void): void {
@@ -25,12 +25,46 @@ export class EffectCircle extends Circle {
   }
 }
 
+function containsBlur(object: FabricObject): boolean {
+  return (object.designBlur ?? 0) > 0 ||
+    (object instanceof Group && object.getObjects().some(containsBlur));
+}
+
+export class EffectGroup extends Group {
+  override shouldCache(): boolean {
+    const cached = super.shouldCache();
+    // Geometry-sized group caches crop the blur halo. Explicit clip paths still apply.
+    if (cached && !this.clipPath && this.getObjects().some(containsBlur)) {
+      this.ownCaching = false;
+      return false;
+    }
+    return cached;
+  }
+}
+
 // Keep native scene types so existing designs reopen with the same editable geometry.
 classRegistry.setClass(EffectRect, 'Rect');
 classRegistry.setClass(EffectCircle, 'Circle');
+classRegistry.setClass(EffectGroup, 'Group');
 
 /** Bake only an affected object for PDF engines which cannot render SVG filters. */
 export function rasterEffectSvg(object: FabricObject): string {
+  const group = object.group;
+  const canvas = object.canvas;
+  try {
+    // The enclosing SVG groups supply their transforms and opacity exactly once.
+    // Detach the export object so local coordinates are not culled against the page.
+    object.group = undefined;
+    object.canvas = undefined;
+    return localRasterEffectSvg(object);
+  } finally {
+    object.group = group;
+    object.canvas = canvas;
+    object.setCoords();
+  }
+}
+
+function localRasterEffectSvg(object: FabricObject): string {
   object.setCoords();
   const bounds = object.getBoundingRect();
   const scale = object.getObjectScaling();

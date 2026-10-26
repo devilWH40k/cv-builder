@@ -162,6 +162,10 @@
     </div>
     <app-constructor-object-menu #objectMenu />
     <input #imageFile type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="insertImage(imageFile)" />
+    @if (pendingImage(); as file) {
+      <app-photo-preview [file]="file" [shapes]="imageShapes" [circularOutput]="true"
+        (cancelled)="pendingImage.set(null)" (applied)="applyImage($event)" />
+    }
   </dialog>
   <div #previewSource class="preview-source" aria-hidden="true" inert>
     <app-preview [embedded]="true" [readOnly]="true" style="--preview-max-height: none; --preview-max-scale: 1" />

@@ -32,34 +32,37 @@
       </button>
     </div>
     <fieldset [disabled]="selected.locked || editor.busy()">
+      @if (selected.mixed?.length || selected.mixedImageEffects?.length) {
+        <p class="hint">Mixed values. Changes apply to all unlocked members.</p>
+      }
       @if (selected.canBlur) {
         <label class="border-control">Blur (px)<input #shapeBlur type="number" min="0" max="40" step="1"
-          [value]="selected.blur" (change)="editor.setBlur(shapeBlur.valueAsNumber)" /></label>
+          [value]="selected.mixed?.includes('blur') ? '' : selected.blur" placeholder="Mixed" (change)="editor.setBlur(shapeBlur.valueAsNumber)" /></label>
       }
       @if (selected.isImage) {
         <label>Brightness (%)<input #brightness type="number" min="-100" max="100" step="1"
-          [value]="selected.imageEffects.brightness" (change)="editor.updateImageEffects({ brightness: brightness.valueAsNumber })" /></label>
+          [value]="selected.mixedImageEffects?.includes('brightness') ? '' : selected.imageEffects.brightness" placeholder="Mixed" (change)="editor.updateImageEffects({ brightness: brightness.valueAsNumber })" /></label>
         <label>Contrast (%)<input #contrast type="number" min="-100" max="99" step="1"
-          [value]="selected.imageEffects.contrast" (change)="editor.updateImageEffects({ contrast: contrast.valueAsNumber })" /></label>
+          [value]="selected.mixedImageEffects?.includes('contrast') ? '' : selected.imageEffects.contrast" placeholder="Mixed" (change)="editor.updateImageEffects({ contrast: contrast.valueAsNumber })" /></label>
         <label>Saturation (%)<input #saturation type="number" min="-100" max="100" step="1"
-          [value]="selected.imageEffects.saturation" (change)="editor.updateImageEffects({ saturation: saturation.valueAsNumber })" /></label>
+          [value]="selected.mixedImageEffects?.includes('saturation') ? '' : selected.imageEffects.saturation" placeholder="Mixed" (change)="editor.updateImageEffects({ saturation: saturation.valueAsNumber })" /></label>
         <label>Image blur (%)<input #imageBlur type="number" min="0" max="100" step="1"
-          [value]="selected.imageEffects.blur" (change)="editor.updateImageEffects({ blur: imageBlur.valueAsNumber })" /></label>
-        <label class="checkbox"><input #grayscale type="checkbox" [checked]="selected.imageEffects.grayscale"
+          [value]="selected.mixedImageEffects?.includes('blur') ? '' : selected.imageEffects.blur" placeholder="Mixed" (change)="editor.updateImageEffects({ blur: imageBlur.valueAsNumber })" /></label>
+        <label class="checkbox"><input #grayscale type="checkbox" [checked]="selected.imageEffects.grayscale" [indeterminate]="!!selected.mixedImageEffects?.includes('grayscale')"
           (change)="editor.updateImageEffects({ grayscale: grayscale.checked })" />Grayscale</label>
-        <label class="checkbox"><input #sepia type="checkbox" [checked]="selected.imageEffects.sepia"
+        <label class="checkbox"><input #sepia type="checkbox" [checked]="selected.imageEffects.sepia" [indeterminate]="!!selected.mixedImageEffects?.includes('sepia')"
           (change)="editor.updateImageEffects({ sepia: sepia.checked })" />Sepia</label>
-        <label class="checkbox"><input #invert type="checkbox" [checked]="selected.imageEffects.invert"
+        <label class="checkbox"><input #invert type="checkbox" [checked]="selected.imageEffects.invert" [indeterminate]="!!selected.mixedImageEffects?.includes('invert')"
           (change)="editor.updateImageEffects({ invert: invert.checked })" />Invert</label>
         <button type="button" (click)="editor.updateImageEffects({ brightness: 0, contrast: 0, saturation: 0, blur: 0, grayscale: false, sepia: false, invert: false })">Reset filters</button>
       }
       @if (selected.isRectangle) {
         <label class="border-control">Border radius (px)<input #radius type="number" min="0" step="1"
-          [value]="selected.borderRadius" (change)="editor.updateRectangle({ borderRadius: radius.valueAsNumber })" /></label>
-        <label class="border-control">Border color<input #borderColor type="color" [value]="selected.borderColor"
+          [value]="selected.mixed?.includes('borderRadius') ? '' : selected.borderRadius" placeholder="Mixed" (change)="editor.updateRectangle({ borderRadius: radius.valueAsNumber })" /></label>
+        <label class="border-control">Border color{{ selected.mixed?.includes('borderColor') ? ' (mixed)' : '' }}<input #borderColor type="color" [value]="selected.borderColor"
           appDebouncedColor (colorCommitted)="editor.updateRectangle({ borderColor: $event })" /></label>
         <label class="border-control">Border width (px)<input #borderWidth type="number" min="0" max="100" step="1"
-          [value]="selected.borderWidth" (change)="editor.updateRectangle({ borderWidth: borderWidth.valueAsNumber })" /></label>
+          [value]="selected.mixed?.includes('borderWidth') ? '' : selected.borderWidth" placeholder="Mixed" (change)="editor.updateRectangle({ borderWidth: borderWidth.valueAsNumber })" /></label>
       }
       @if (selected.isText) {
         <label
@@ -68,14 +71,15 @@
             type="number"
             min="6"
             max="120"
-            [value]="selected.fontSize"
+            [value]="selected.mixed?.includes('fontSize') ? '' : selected.fontSize"
+            placeholder="Mixed"
             (change)="editor.updateText({ fontSize: fontSize.valueAsNumber })"
         /></label>
         <div class="actions">
           <button
             type="button"
             aria-label="Bold"
-            [attr.aria-pressed]="selected.bold"
+            [attr.aria-pressed]="selected.mixed?.includes('bold') ? 'mixed' : selected.bold"
             (click)="editor.updateText({ bold: !selected.bold })"
           >
             <lucide-icon [img]="icons.Bold" [size]="18" />
@@ -83,7 +87,7 @@
           <button
             type="button"
             aria-label="Italic"
-            [attr.aria-pressed]="selected.italic"
+            [attr.aria-pressed]="selected.mixed?.includes('italic') ? 'mixed' : selected.italic"
             (click)="editor.updateText({ italic: !selected.italic })"
           >
             <lucide-icon [img]="icons.Italic" [size]="18" />
@@ -92,9 +96,12 @@
         <label
           >Text alignment<select
             #textAlign
-            [value]="selected.textAlign"
+            [value]="selected.mixed?.includes('textAlign') ? '' : selected.textAlign"
             (change)="editor.updateText({ textAlign: textAlign.value })"
           >
+            @if (selected.mixed?.includes('textAlign')) {
+              <option value="" disabled>Mixed</option>
+            }
             <option value="left">Left</option>
             <option value="center">Center</option>
             <option value="right">Right</option>
@@ -102,9 +109,9 @@
           </select></label
         >
       }
-      @if (!selected.isImage) {
+      @if (selected.canFill) {
         <label
-          >Color<input
+          >Color{{ selected.mixed?.includes('color') ? ' (mixed)' : '' }}<input
             #color
             type="color"
             [value]="selected.color"
@@ -115,12 +122,13 @@
             #gradient
             type="checkbox"
             [checked]="!!selected.gradientEnd"
+            [indeterminate]="!!selected.mixed?.includes('gradientEnd')"
             (change)="editor.setFill(selected.color, gradient.checked ? '#36d4f7' : null)"
           />Gradient fill</label
         >
         @if (selected.gradientEnd) {
           <label
-            >Gradient end<input
+            >Gradient end{{ selected.mixed?.includes('gradientEnd') ? ' (mixed)' : '' }}<input
               #gradientEnd
               type="color"
               [value]="selected.gradientEnd"
@@ -133,7 +141,7 @@
           #link
           type="url"
           [value]="selected.linkUrl"
-          placeholder="https://example.com"
+          [placeholder]="selected.mixed?.includes('linkUrl') ? 'Mixed' : 'https://example.com'"
           (change)="changeLink(link.value)"
           [attr.aria-invalid]="invalidLink()"
       /></label>

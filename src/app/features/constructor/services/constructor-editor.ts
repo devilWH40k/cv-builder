@@ -13,6 +13,7 @@ import {
   Textbox,
   Transform,
   ActiveSelection,
+  Group,
   util,
 } from 'fabric';
 import {
@@ -28,10 +29,11 @@ import { fileDataUrl, safeDesignLink } from '../helpers/design-assets';
 import { identifyObject } from '../helpers/fabric-metadata';
 import { validateDesignScene } from '../helpers/design-validation';
 import { boundsGuides, PAGE_PADDING, snapAxis } from '../helpers/design-snapping';
-import { EffectCircle, EffectRect } from '../helpers/effect-shapes';
+import { EffectCircle, EffectGroup, EffectRect } from '../helpers/effect-shapes';
 import { applyImageEffects, imageEffects } from '../helpers/image-effects';
 import { ConstructorClipboard } from './constructor-clipboard';
 import { LayoutTextbox } from '../helpers/layout-textbox';
+import { selectionTextResize } from '../helpers/selection-text-resize';
 import { applyVisualStyle, captureVisualStyle, VisualStyle } from '../helpers/visual-style';
 import { restoreDesignScene } from '../helpers/restore-design-scene';
 
@@ -43,6 +45,8 @@ export class ConstructorEditor {
   readonly selectionCount = signal(0);
   readonly selectedIds = signal<ReadonlySet<string>>(new Set());
   readonly canCut = signal(false);
+  readonly canGroup = signal(false);
+  readonly canUngroup = signal(false);
   readonly canPaste = computed(() => this.clipboard.count() > 0);
   private readonly selected = signal<SelectionProperties | null>(null);
   private readonly objectList = signal<readonly SelectionProperties[]>([]);
@@ -54,7 +58,10 @@ export class ConstructorEditor {
   private readonly historyLimit = 60;
   private guides: { x?: number; y?: number } = {};
   private capturedStyle: VisualStyle | null = null;
+  private resizeSelectedText: (() => void) | null = null;
   private styleSourceId: string | null = null;
+  private pageId = '';
+  private readonly groupNumbers = new Map<string, number>();
   readonly selection = this.selected.asReadonly();
   readonly layers = this.objectList.asReadonly();
   readonly undoCount = this.past.asReadonly();
@@ -89,15 +96,39 @@ export class ConstructorEditor {
     for (const event of ['selection:created', 'selection:updated', 'selection:cleared'] as const) {
       this.canvas.on(event, () => this.refreshSelection());
     }
-    this.canvas.on('object:modified', () => this.commit());
+    this.canvas.on('before:transform', ({ transform }) => {
+      this.resizeSelectedText = transform.target instanceof Group && transform.action?.startsWith('scale')
+        ? selectionTextResize(transform.target) : null;
+    });
+    this.canvas.on('object:modified', ({ target }) => {
+      if (this.resizeSelectedText && target instanceof Group) target.triggerLayout({ deep: true });
+      this.resizeSelectedText = null;
+      this.commit();
+    });
     this.canvas.on('mouse:down:before', ({ target, e }) => {
       if (this.tool() !== 'style' || !target || ('button' in e && e.button !== 0)) return;
       this.paintStyle(target);
     });
+    this.canvas.on('mouse:dblclick', ({ subTargets }) => {
+      const active = this.canvas?.getActiveObject();
+      if (!(active instanceof Group) || active instanceof ActiveSelection || !active.subTargetCheck) return;
+      const target = subTargets?.find((object) => object.parent === active);
+      if (!target?.designId || this.isLocked(target)) return;
+      this.select(target.designId);
+      if (target instanceof IText) {
+        target.enterEditing();
+        target.selectAll();
+      }
+      this.canvas?.requestRenderAll();
+    });
     this.canvas.on('object:moving', ({ target, e }) => this.snapMove(target, e.altKey));
-    this.canvas.on('object:scaling', ({ target, transform, e }) => this.snapSize(target, transform, e.altKey));
+    this.canvas.on('object:scaling', ({ target, transform, e }) => {
+      this.snapSize(target, transform, e.altKey);
+      this.resizeSelectedText?.();
+    });
     this.canvas.on('object:resizing', ({ target, transform, e }) => this.snapSize(target, transform, e.altKey));
     this.canvas.on('mouse:up', () => {
+      this.resizeSelectedText = null;
       this.guides = {};
       this.canvas?.requestRenderAll();
     });
@@ -129,6 +160,7 @@ export class ConstructorEditor {
     this.busy.set(true);
     try {
       await this.canvas.loadFromJSON(page.scene);
+      this.pageId = page.id;
       this.canvas.discardActiveObject();
       this.canvas.requestRenderAll();
       this.past.set([]);
@@ -143,7 +175,9 @@ export class ConstructorEditor {
   }
 
   snapshot(): string {
-    return JSON.stringify(this.canvas?.toObject() ?? { objects: [], background: '#ffffff' });
+    // Drilling into a group is selection state, not a document/history change.
+    return JSON.stringify(this.canvas?.toObject() ?? { objects: [], background: '#ffffff' },
+      (key, value: unknown) => key === 'interactive' ? false : value);
   }
 
   finishEditing(): void {
@@ -284,8 +318,12 @@ export class ConstructorEditor {
   }
 
   select(id: string): void {
-    const object = this.canvas?.getObjects().find((object) => object.designId === id);
+    const object = this.allObjects().find((object) => object.designId === id);
     if (object && this.canvas) {
+      if (object.group && !(object.group instanceof ActiveSelection) && this.isLocked(object.group)) {
+        this.select(object.group.designId ?? '');
+        return;
+      }
       if (this.tool() === 'style') { this.paintStyle(object); return; }
       this.setTool('select');
       this.canvas.setActiveObject(object);
@@ -294,8 +332,71 @@ export class ConstructorEditor {
     }
   }
 
+  private allObjects(objects = this.canvas?.getObjects() ?? []): FabricObject[] {
+    return objects.flatMap((object) => [object,
+      ...(object instanceof Group ? this.allObjects(object.getObjects()) : [])]);
+  }
+
+  renameLayer(id: string, value: string): void {
+    const name = value.trim().slice(0, 100);
+    if (!name || this.busy()) return;
+    const object = this.allObjects().find((object) => object.designId === id);
+    if (!object || this.properties(object).label === name) return;
+    this.finishEditing();
+    object.designLayerName = name;
+    this.commit();
+  }
+
+  private isLocked(object: FabricObject): boolean {
+    return object.lockMovementX || (!!object.group && this.isLocked(object.group));
+  }
+
+  group(): void {
+    if (!this.canvas || this.busy() || !this.canGroup()) return;
+    this.finishEditing();
+    const selected = new Set(this.canvas.getActiveObjects());
+    this.canvas.discardActiveObject();
+    const objects = this.canvas.getObjects().filter((object) => selected.has(object));
+    const index = this.canvas.getObjects().indexOf(objects.at(-1)!);
+    const label = this.nextGroupLabel();
+    this.canvas.remove(...objects);
+    const group = new EffectGroup(objects, { subTargetCheck: true });
+    identifyObject(group, label);
+    this.canvas.insertAt(Math.max(0, index - objects.length + 1), group);
+    this.canvas.setActiveObject(group);
+    this.commit();
+  }
+
+  private nextGroupLabel(): string {
+    const highest = this.allObjects().reduce((highest, object) => {
+      const match = object instanceof Group ? /^Group (\d+)$/.exec(object.designLabel ?? '') : null;
+      return match ? Math.max(highest, Number(match[1])) : highest;
+    }, this.groupNumbers.get(this.pageId) ?? 0);
+    const next = highest + 1;
+    this.groupNumbers.set(this.pageId, next);
+    return `Group ${next}`;
+  }
+
+  ungroup(): void {
+    if (!this.canvas || this.busy() || !this.canUngroup()) return;
+    this.finishEditing();
+    const groups = this.canvas.getActiveObjects().filter((object): object is Group => object instanceof Group);
+    this.canvas.discardActiveObject();
+    const released: FabricObject[] = [];
+    for (const group of groups) {
+      const index = this.canvas.getObjects().indexOf(group);
+      const children = group.removeAll();
+      this.canvas.remove(group);
+      this.canvas.insertAt(index, ...children);
+      released.push(...children);
+    }
+    if (released.length) this.canvas.setActiveObject(released.length === 1 ? released[0]
+      : new ActiveSelection(released, { canvas: this.canvas }));
+    this.commit();
+  }
+
   private paintStyle(target: FabricObject): void {
-    if (!this.capturedStyle || target.designId === this.styleSourceId || target.lockMovementX) return;
+    if (!this.capturedStyle || target.designId === this.styleSourceId || this.isLocked(target)) return;
     const style = this.capturedStyle;
     this.setTool('select');
     applyVisualStyle(style, target);
@@ -317,9 +418,11 @@ export class ConstructorEditor {
 
   selectContext(event: MouseEvent, layerId?: string): void {
     if (!this.canvas || this.busy()) return;
-    const target = layerId
-      ? this.canvas.getObjects().find((object) => object.designId === layerId)
+    let target = layerId
+      ? this.allObjects().find((object) => object.designId === layerId)
       : this.canvas.findTarget(event).target;
+    while (target?.group && !(target.group instanceof ActiveSelection) && this.isLocked(target.group))
+      target = target.group;
     const active = this.canvas.getActiveObject();
     if (target && (target === active || this.canvas.getActiveObjects().includes(target))) return;
     this.finishEditing();
@@ -335,7 +438,7 @@ export class ConstructorEditor {
     italic?: boolean;
     textAlign?: string;
   }): void {
-    this.modify((object) => {
+    this.modifyMembers((object) => {
       if (!(object instanceof IText)) return;
       if (update.fontSize !== undefined && Number.isFinite(update.fontSize)) {
         object.removeStyle('fontSize');
@@ -357,7 +460,8 @@ export class ConstructorEditor {
   setFill(color: string, gradientEnd: string | null = null): void {
     if (!/^#[a-f0-9]{6}$/i.test(color) || (gradientEnd && !/^#[a-f0-9]{6}$/i.test(gradientEnd)))
       return;
-    this.modify((object) => {
+    this.modifyMembers((object) => {
+      if (object instanceof FabricImage) return;
       const fill = gradientEnd
         ? new Gradient({
             type: 'linear',
@@ -380,13 +484,16 @@ export class ConstructorEditor {
   setLink(value: string): void {
     const url = value.trim() ? safeDesignLink(value) : '';
     if (url === null) throw new Error('Use an https://, http://, mailto: or tel: link.');
-    this.modify((object) => {
+    for (const object of this.allObjects(this.canvas?.getActiveObjects() ?? [])) {
+      if (object instanceof Group && object.subTargetCheck && !this.isLocked(object)) object.linkUrl = '';
+    }
+    this.modifyMembers((object) => {
       object.linkUrl = url;
     });
   }
 
   updateRectangle(update: { borderRadius?: number; borderColor?: string; borderWidth?: number }): void {
-    this.modify((object) => {
+    this.modifyMembers((object) => {
       if (!(object instanceof Rect)) return;
       if (update.borderRadius !== undefined && Number.isFinite(update.borderRadius)) {
         const radius = Math.max(0, Math.min(update.borderRadius, object.width / 2, object.height / 2));
@@ -403,7 +510,7 @@ export class ConstructorEditor {
 
   setBlur(value: number): void {
     if (!Number.isFinite(value)) return;
-    this.modify((object) => {
+    this.modifyMembers((object) => {
       if (!(object instanceof Rect || object instanceof Circle)) return;
       object.designBlur = Math.max(0, Math.min(40, value));
       object.set('dirty', true);
@@ -411,16 +518,19 @@ export class ConstructorEditor {
   }
 
   updateImageEffects(update: Partial<ImageEffects>): void {
-    this.modify((object) => {
+    this.modifyMembers((object) => {
       if (object instanceof FabricImage) applyImageEffects(object, update);
     });
   }
 
   remove(): void {
-    const objects = this.canvas?.getActiveObjects().filter((object) => !object.lockMovementX) ?? [];
+    const objects = this.canvas?.getActiveObjects().filter((object) => !this.isLocked(object)) ?? [];
     if (!objects.length) return;
     this.canvas?.discardActiveObject();
-    this.canvas?.remove(...objects);
+    for (const object of objects) {
+      if (object.group) object.group.remove(object);
+      else this.canvas?.remove(object);
+    }
     this.commit();
   }
 
@@ -454,7 +564,10 @@ export class ConstructorEditor {
       if (canvas !== this.canvas) return;
       this.clipboard.write(copies);
       canvas.discardActiveObject();
-      canvas.remove(...selected);
+      for (const object of selected) {
+        if (object.group) object.group.remove(object);
+        else canvas.remove(object);
+      }
       this.commit();
     } finally { this.busy.set(false); this.clipboardBusy.set(false); }
   }
@@ -472,7 +585,7 @@ export class ConstructorEditor {
 
   private async copySelection(): Promise<FabricObject[]> {
     const selected = new Set(this.canvas?.getActiveObjects() ?? []);
-    const objects = (this.canvas?.getObjects() ?? []).filter((object) => selected.has(object));
+    const objects = this.allObjects().filter((object) => selected.has(object));
     const transforms = objects.map((object) => object.calcTransformMatrix());
     const copies = await Promise.all(objects.map((object) => object.clone()));
     copies.forEach((copy, index) => util.applyTransformToObject(copy, transforms[index]));
@@ -484,7 +597,7 @@ export class ConstructorEditor {
     this.setTool('select');
     this.canvas.discardActiveObject();
     for (const object of objects) {
-      object.designId = crypto.randomUUID();
+      for (const member of this.allObjects([object])) member.designId = crypto.randomUUID();
       object.set({ left: object.left + offset, top: object.top + offset });
       this.canvas.add(object);
     }
@@ -508,17 +621,19 @@ export class ConstructorEditor {
   reorder(direction: 'front' | 'forward' | 'backward' | 'back'): void {
     if (!this.canvas || this.busy()) return;
     const selected = new Set(this.canvas.getActiveObjects());
-    const objects = this.canvas.getObjects().filter((object) => selected.has(object));
+    const objects = this.allObjects().filter((object) => selected.has(object));
     if (direction === 'back' || direction === 'forward') objects.reverse();
     for (const object of objects) {
-      if (direction === 'front') this.canvas.bringObjectToFront(object);
-      else if (direction === 'back') this.canvas.sendObjectToBack(object);
+      if (this.isLocked(object)) continue;
+      const container = object.group instanceof ActiveSelection ? this.canvas : object.group ?? this.canvas;
+      if (direction === 'front') container.bringObjectToFront(object);
+      else if (direction === 'back') container.sendObjectToBack(object);
       else {
-        const stack = this.canvas.getObjects();
+        const stack = container.getObjects();
         const next = stack[stack.indexOf(object) + (direction === 'forward' ? 1 : -1)];
         if (!next || selected.has(next)) continue;
-        if (direction === 'forward') this.canvas.bringObjectForward(object);
-        else this.canvas.sendObjectBackwards(object);
+        if (direction === 'forward') container.bringObjectForward(object);
+        else container.sendObjectBackwards(object);
       }
     }
     this.commit();
@@ -526,7 +641,7 @@ export class ConstructorEditor {
 
   toggleLock(): void {
     const object = this.canvas?.getActiveObject();
-    if (!object) return;
+    if (!object || (object.group && !(object.group instanceof ActiveSelection) && this.isLocked(object.group))) return;
     const locked = !object.lockMovementX;
     object.set({
       lockMovementX: locked,
@@ -641,16 +756,30 @@ export class ConstructorEditor {
     context.restore();
   }
 
-  private modify(change: (object: FabricObject) => void): void {
-    const objects = this.canvas?.getActiveObjects() ?? [];
+  private propertyMembers(objects: FabricObject[]): FabricObject[] {
+    return objects.flatMap((object) => object instanceof Group &&
+      (object instanceof ActiveSelection || object.subTargetCheck)
+      ? this.propertyMembers(object.getObjects()) : [object]);
+  }
+
+  private modifyMembers(change: (object: FabricObject) => void): void {
+    this.modify(change, true);
+  }
+
+  private modify(change: (object: FabricObject) => void, members = false): void {
+    const selected = this.canvas?.getActiveObjects() ?? [];
+    const objects = members ? this.propertyMembers(selected) : selected;
+    const groups = new Set<Group>();
     for (const object of objects) {
-      if (object.lockMovementX) continue;
+      if (this.isLocked(object)) continue;
       change(object);
       object.setCoords();
+      if (object.group && !(object.group instanceof ActiveSelection)) groups.add(object.group);
     }
+    for (const group of groups) group.triggerLayout({ deep: true });
     // Programmatic child changes do not trigger Fabric's selection layout automatically.
     const active = this.canvas?.getActiveObject();
-    if (active instanceof ActiveSelection) active.triggerLayout();
+    if (active instanceof Group) active.triggerLayout({ deep: true });
     this.commit();
   }
 
@@ -700,7 +829,10 @@ export class ConstructorEditor {
     const hexColor = (color: string) => '#' + new Color(color).toHex();
     return {
       id: object.designId ?? '',
-      label: text?.text || object.designLabel || object.type,
+      // SVG artwork is an atomic layer; only user-created groups expose their members.
+      ...(object instanceof Group && object.subTargetCheck
+        ? { children: object.getObjects().map((child) => this.properties(child)).reverse() } : {}),
+      label: object.designLayerName || text?.text || object.designLabel || object.type,
       kind: text ? 'text' : object instanceof FabricImage ? 'image'
         : object.type === 'path' ? 'drawing'
         : object.type === 'line' || object.designLabel === 'Line' ? 'line'
@@ -709,6 +841,7 @@ export class ConstructorEditor {
         : ['group', 'activeselection'].includes(object.type) ? 'group' : 'shape',
       isRectangle: object instanceof Rect,
       canBlur: object instanceof Rect || object instanceof Circle,
+      canFill: !(object instanceof FabricImage || object instanceof Group),
       blur: object.designBlur ?? 0,
       imageEffects: imageEffects(object instanceof FabricImage ? object : null),
       borderRadius: object instanceof Rect ? object.rx : 0,
@@ -716,7 +849,7 @@ export class ConstructorEditor {
       borderWidth: object.strokeWidth,
       isText: !!text,
       isImage: object instanceof FabricImage,
-      locked: object.lockMovementX,
+      locked: this.isLocked(object),
       fontSize: text?.fontSize ?? 16,
       bold: text?.fontWeight === 'bold' || Number(text?.fontWeight) >= 600,
       italic: text?.fontStyle === 'italic',
@@ -733,12 +866,20 @@ export class ConstructorEditor {
     const activeObjects = this.canvas?.getActiveObjects() ?? [];
     this.selectionCount.set(activeObjects.length);
     this.selectedIds.set(new Set(activeObjects.flatMap((object) => object.designId ? [object.designId] : [])));
-    this.canCut.set(activeObjects.length > 0 && activeObjects.every((object) => !object.lockMovementX));
+    this.canCut.set(activeObjects.length > 0 && activeObjects.every((object) => !this.isLocked(object)));
+    const topLevel = activeObjects.every((object) => !object.parent);
+    this.canGroup.set(activeObjects.length > 1 && topLevel && this.canCut());
+    this.canUngroup.set(activeObjects.length > 0 && topLevel && this.canCut()
+      && activeObjects.every((object) => object instanceof Group && !(object instanceof ActiveSelection)));
     const background = this.canvas?.backgroundColor;
     this.backgroundColor.set(typeof background === 'string' && background ? '#' + new Color(background).toHex() : '#ffffff');
     this.hasBackgroundImage.set(!!this.canvas?.backgroundImage);
     const objects = this.canvas?.getObjects() ?? [];
-    objects.forEach((object) =>
+    for (const object of this.allObjects(objects)) {
+      if (object instanceof Group && !(object instanceof ActiveSelection))
+        object.set('interactive', activeObjects.some((selected) => selected !== object && selected.isDescendantOf(object)));
+    }
+    this.allObjects(objects).forEach((object) =>
       identifyObject(object, object instanceof IText ? object.text.slice(0, 40) : object.type),
     );
     this.objectList.set(objects.map((object) => this.properties(object)).reverse());
@@ -747,6 +888,39 @@ export class ConstructorEditor {
       active.set('cornerSize', 8);
       active.setCoords();
     }
-    this.selected.set(active ? this.properties(active) : null);
+    this.selected.set(active ? this.sharedProperties(active) : null);
+  }
+
+  private sharedProperties(active: FabricObject): SelectionProperties {
+    const base = this.properties(active);
+    if (!(active instanceof Group) || !(active instanceof ActiveSelection || active.subTargetCheck)) return base;
+    const members = this.propertyMembers([active]).map((object) => this.properties(object));
+    if (!members.length) return base;
+    const first = members[0];
+    const isText = members.every((member) => member.isText);
+    const isImage = members.every((member) => member.isImage);
+    const isRectangle = members.every((member) => member.isRectangle);
+    const canBlur = members.every((member) => member.canBlur);
+    const canFill = members.every((member) => member.canFill);
+    const keys: (keyof SelectionProperties)[] = base.linkUrl ? [] : ['linkUrl'];
+    if (isText) keys.push('fontSize', 'bold', 'italic', 'textAlign');
+    if (isRectangle) keys.push('borderRadius', 'borderColor', 'borderWidth');
+    if (canBlur) keys.push('blur');
+    if (canFill) keys.push('color', 'gradientEnd');
+    const effectKeys: readonly (keyof ImageEffects)[] = [
+      'brightness', 'contrast', 'saturation', 'blur', 'grayscale', 'sepia', 'invert',
+    ];
+    return {
+      ...first,
+      id: base.id, label: base.label, kind: base.kind, children: base.children,
+      locked: base.locked,
+      linkUrl: base.linkUrl || (members.every((member) => member.linkUrl === first.linkUrl) ? first.linkUrl : ''),
+      isText, isImage, isRectangle, canBlur, canFill,
+      bold: members.every((member) => member.bold),
+      italic: members.every((member) => member.italic),
+      mixed: keys.filter((key) => members.some((member) => member[key] !== first[key])),
+      mixedImageEffects: isImage
+        ? effectKeys.filter((key) => members.some((member) => member.imageEffects[key] !== first.imageEffects[key])) : [],
+    };
   }
 }

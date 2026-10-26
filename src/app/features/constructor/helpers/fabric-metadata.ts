@@ -9,6 +9,7 @@ declare module 'fabric' {
   interface FabricObject {
     designId?: string;
     designLabel?: string;
+    designLayerName?: string;
     linkUrl?: string;
     designTextLinks?: DesignTextLink[];
     designBlur?: number;
@@ -17,6 +18,7 @@ declare module 'fabric' {
   interface SerializedObjectProps {
     designId?: string;
     designLabel?: string;
+    designLayerName?: string;
     linkUrl?: string;
     designTextLinks?: DesignTextLink[];
     designBlur?: number;
@@ -25,7 +27,7 @@ declare module 'fabric' {
 }
 
 FabricObject.customProperties = [
-  ...new Set([...FabricObject.customProperties, 'designId', 'designLabel', 'linkUrl', 'designTextLinks', 'designBlur', 'designTextHeight']),
+  ...new Set([...FabricObject.customProperties, 'designId', 'designLabel', 'designLayerName', 'linkUrl', 'designTextLinks', 'designBlur', 'designTextHeight']),
 ];
 
 export function identifyObject(object: FabricObject, label: string): void {
