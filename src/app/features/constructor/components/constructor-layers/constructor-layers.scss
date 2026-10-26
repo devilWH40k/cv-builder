@@ -11,6 +11,7 @@ button[aria-pressed='true'] { border-color: tokens.$color-primary; background: t
   gap: tokens.$spacing-1;
 }
 .layer {
+  flex: 1;
   justify-content: space-between;
   text-align: left;
   width: 100%;
@@ -25,4 +26,14 @@ button[aria-pressed='true'] { border-color: tokens.$color-primary; background: t
     white-space: nowrap;
   }
   lucide-icon { flex-shrink: 0; }
-}
+}.layer-row { position: relative; display: flex; align-items: center; min-width: 0; gap: tokens.$spacing-1; }
+.group-layer { padding-right: tokens.$spacing-10; }
+.expand {
+  @include buttons.ghost;
+  & {
+    position: absolute;
+    right: tokens.$spacing-1;
+    min-height: tokens.$button-height-sm;
+    padding: tokens.$spacing-1;
+  }
+}

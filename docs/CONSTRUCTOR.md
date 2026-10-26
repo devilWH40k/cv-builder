@@ -94,6 +94,21 @@ Each cut/paste/duplicate is one history action. Cut is disabled if any selected
 object is locked. The in-app clipboard survives switching pages/designs during
 the current session; it is not shared with other apps or browser tabs.
 
+Select multiple unlocked objects and choose **Group** from the context menu or
+press Ctrl/Cmd+G to move them together. **Ungroup** (Ctrl/Cmd+Shift+G) releases
+the selected groups while preserving their positions. Groups can contain groups;
+Layers shows expandable member rows. Each double-click enters one group level:
+select an inner group first, then double-click again to select a member or edit
+its text. Selecting the outer group again restores whole-group movement.
+Grouping participates in history, saved/portable scenes, copying and PDF export.
+Groups use the existing version 1 Fabric Group representation.
+Resizing groups or multi-selections reflows their text frames without stretching
+glyphs or changing font sizes, including text inside nested groups.
+The Properties panel exposes controls shared by all group members, including
+text formatting, rectangle borders, shape blur and image filters when applicable.
+Differing values are marked Mixed. Changes apply recursively to unlocked members
+in one history action; movement and page alignment still act on the group.
+
 Circles and rectangles support 0–40 px blur while retaining editable geometry.
 `EffectRect`/`EffectCircle` extend native Fabric rendering and register for native
 scene types, including existing imported shapes. Image filters use Fabric's pixel
@@ -102,6 +117,11 @@ Resetting filters restores the embedded original image. All settings participate
 in history and saved scenes. PDF exports embed processed image pixels and rasterize
 only blurred shapes at up to 2× resolution (8192 px maximum side), retaining native
 text and link annotations. CSS/SVG filter support is not required from PDF readers.
+Groups containing blurred shapes render without geometry-sized group caches so
+the blur extends past group edges, including nested groups and reopened designs.
+Groups without blur retain normal caching; explicit clip paths still clip artwork.
+PDF blur images are rendered in their parent group's coordinates so nested
+transforms and opacity apply once, while text and unaffected artwork stay vector.
 
 Dragging snaps visual edges/centers to the page edges, 16 mm margins, page center,
 and other objects. Axis-aligned resizing matches other object dimensions or the

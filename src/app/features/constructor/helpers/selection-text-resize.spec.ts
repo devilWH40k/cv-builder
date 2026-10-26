@@ -1,8 +1,49 @@
-import { ActiveSelection, Rect, StaticCanvas } from 'fabric';
+import { ActiveSelection, Group, Rect, StaticCanvas } from 'fabric';
 import { LayoutTextbox } from './layout-textbox';
 import { selectionTextResize } from './selection-text-resize';
 
 describe('Multi-selection text frame resizing', () => {
+  for (const multiSelection of [false, true]) {
+    it(`preserves nested text glyphs when resizing a ${multiSelection ? 'multi-selection' : 'persistent group'}`, async () => {
+      const text = new LayoutTextbox('Grouped text that wraps when narrowed', {
+        width: 240, fontSize: 20, left: 40, top: 30, angle: 15,
+      });
+      const nested = new Group([text], { angle: 20, scaleX: 1.1, scaleY: 0.9 });
+      const shape = new Rect({ left: 320, top: 200, width: 100, height: 80 });
+      const GroupClass = multiSelection ? ActiveSelection : Group;
+      const group: Group = new GroupClass([nested, shape], { angle: 10, scaleX: 1.2, scaleY: 0.8 });
+      const original = text.calcTransformMatrix();
+      const shapeMatrix = shape.calcTransformMatrix();
+      const resize = selectionTextResize(group);
+      group.set({ scaleX: 0.6, scaleY: 1.6 });
+      resize();
+      expect(text.width).toBeCloseTo(120);
+      group.set({ scaleX: 0.9, scaleY: 1.2 });
+      resize();
+      expect(text.width).toBeCloseTo(180);
+      expect(text.height).toBeGreaterThanOrEqual(text.calcTextHeight());
+      expect(shape.calcTransformMatrix()).not.toEqual(shapeMatrix);
+      group.triggerLayout({ deep: true });
+      text.calcTransformMatrix().slice(0, 4).forEach((coordinate, axis) =>
+        expect(coordinate).toBeCloseTo(original[axis], 6));
+      expect(text.fontSize).toBe(20);
+      const resized = text.calcTransformMatrix();
+      const canvas = new StaticCanvas(undefined);
+      try {
+        if (multiSelection) group.removeAll();
+        await canvas.loadFromJSON({ objects: multiSelection ? [nested.toObject(), shape.toObject()] : [group.toObject()] });
+        const outer = canvas.getObjects()[0];
+        if (!(outer instanceof Group)) throw new Error('Expected persisted group');
+        const inner = multiSelection ? outer : outer.getObjects()[0];
+        if (!(inner instanceof Group)) throw new Error('Expected nested group');
+        const restored = inner.getObjects()[0];
+        expect(restored.width).toBeCloseTo(180);
+        restored.calcTransformMatrix().forEach((coordinate, axis) =>
+          expect(coordinate).toBeCloseTo(resized[axis], 3));
+      } finally { await canvas.dispose(); }
+    });
+  }
+
   it('reflows multiple text frames without scaling glyphs, including repeated resize updates', async () => {
     const first = new LayoutTextbox('Text that wraps into multiple lines when narrowed', { width: 240, fontSize: 20, left: 40, top: 40 });
     const second = new LayoutTextbox('Second text', { width: 200, fontSize: 16, left: 80, top: 180, angle: 15 });

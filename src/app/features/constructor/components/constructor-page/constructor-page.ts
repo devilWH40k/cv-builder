@@ -410,6 +410,10 @@ export class ConstructorPageComponent {
         event.preventDefault();
         const action = key === 'c' ? 'copy' : key === 'x' ? 'cut' : 'paste';
         void this.run(() => this.editor[action](), false);
+      } else if (modifier && key === 'g') {
+        event.preventDefault();
+        if (event.shiftKey) this.editor.ungroup();
+        else this.editor.group();
       } else if (modifier && key === 'z') {
       event.preventDefault();
       void this.run(() => (event.shiftKey ? this.editor.redo() : this.editor.undo()), false);

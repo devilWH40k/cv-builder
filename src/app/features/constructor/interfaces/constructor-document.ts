@@ -39,11 +39,15 @@ export interface ImageEffects {
 }
 
 export interface SelectionProperties {
+  readonly mixed?: readonly (keyof SelectionProperties)[];
+  readonly mixedImageEffects?: readonly (keyof ImageEffects)[];
+  readonly children?: readonly SelectionProperties[];
   readonly id: string;
   readonly label: string;
   readonly kind: LayerKind;
   readonly isRectangle: boolean;
   readonly canBlur: boolean;
+  readonly canFill: boolean;
   readonly blur: number;
   readonly imageEffects: ImageEffects;
   readonly borderRadius: number;

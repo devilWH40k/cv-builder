@@ -1,22 +1,33 @@
 <section aria-labelledby="layers-title">
   <h2 id="layers-title">Layers</h2>
   <div class="layers">
-    @for (layer of editor.layers(); track layer.id) {
-      <button
-        type="button"
-        class="layer"
-        [title]="layer.label"
-        [class.selected]="editor.selectedIds().has(layer.id)"
-        [attr.aria-pressed]="editor.selectedIds().has(layer.id)"
-        (click)="editor.select(layer.id)"
-        (contextmenu)="contextRequested.emit({ event: $event, layerId: layer.id })"
-      >
-        <lucide-icon [img]="layerIcons[layer.kind]" [size]="16" aria-hidden="true" />
-        <span>{{ layer.label }}</span>
-        @if (layer.locked) {
-          <lucide-icon [img]="LockIcon" [size]="14" aria-hidden="true" />
+    @for (row of rows(); track row.layer.id) {
+      @let layer = row.layer;
+      <div class="layer-row" [style.padding-left.rem]="row.depth">
+        <button
+          type="button"
+          class="layer"
+          [class.group-layer]="layer.children?.length"
+          [title]="layer.label"
+          [class.selected]="editor.selectedIds().has(layer.id)"
+          [attr.aria-pressed]="editor.selectedIds().has(layer.id)"
+          (click)="editor.select(layer.id)"
+          (dblclick)="layer.children?.length && toggleGroup(layer.id)"
+          (contextmenu)="contextRequested.emit({ event: $event, layerId: layer.id })"
+        >
+          <lucide-icon [img]="layerIcons[layer.kind]" [size]="16" aria-hidden="true" />
+          <span>{{ layer.label }}</span>
+          @if (layer.locked) {
+            <lucide-icon [img]="LockIcon" [size]="14" aria-hidden="true" />
+          }
+        </button>
+        @if (layer.children?.length) {
+          <button type="button" class="expand" [attr.aria-label]="(expanded().has(layer.id) ? 'Collapse ' : 'Expand ') + layer.label"
+            [attr.aria-expanded]="expanded().has(layer.id)" (click)="toggleGroup(layer.id)">
+            <lucide-icon [img]="expanded().has(layer.id) ? ChevronDownIcon : ChevronRightIcon" [size]="16" aria-hidden="true" />
+          </button>
         }
-      </button>
+      </div>
     } @empty {
       <p class="hint">Your objects will appear here.</p>
     }
