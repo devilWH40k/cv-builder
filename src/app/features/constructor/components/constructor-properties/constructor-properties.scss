@@ -73,7 +73,8 @@ select {
     min-height: auto;
   }
 }
-.border-control {
+.border-control,
+label:has(> input[type='color']) {
   grid-template-columns: minmax(0, 1fr) tokens.$spacing-10 * 2;
   align-items: center;
   margin-block: tokens.$spacing-2;

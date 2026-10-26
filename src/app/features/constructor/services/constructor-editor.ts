@@ -36,6 +36,9 @@ import { LayoutTextbox } from '../helpers/layout-textbox';
 import { selectionTextResize } from '../helpers/selection-text-resize';
 import { applyVisualStyle, captureVisualStyle, VisualStyle } from '../helpers/visual-style';
 import { restoreDesignScene } from '../helpers/restore-design-scene';
+import type { LucideIconData } from 'lucide-angular';
+import { iconSvg } from './constructor-icons';
+import { svgVector } from '../helpers/svg-vector';
 
 /** Owns live Fabric objects. Components consume snapshots and issue editor commands. */
 @Injectable()
@@ -262,6 +265,18 @@ export class ConstructorEditor {
     );
   }
 
+  async addIcon(name: string, data: LucideIconData): Promise<void> {
+    const canvas = this.canvas;
+    const pageId = this.pageId;
+    if (!canvas || this.busy()) return;
+    const icon = await svgVector(iconSvg(data), 40, 40);
+    if (!icon) throw new Error('Could not create icon');
+    if (this.canvas !== canvas || this.pageId !== pageId || this.busy()) return;
+    icon.set({ left: 80, top: 100 });
+    icon.designIconName = name;
+    this.add(icon, name);
+  }
+
   async addImage(file: File): Promise<void> {
     const image = await this.readImage(file);
     image.set({ left: 80, top: 100, originX: 'left', originY: 'top' });
@@ -473,7 +488,15 @@ export class ConstructorEditor {
             ],
           })
         : color;
-      if (object.type === 'path') object.set('stroke', fill);
+      if (object.designIconName && object instanceof Group) {
+        const paint = (member: FabricObject): void => {
+          if (member instanceof Group) member.getObjects().forEach(paint);
+          else if (member.stroke) member.set('stroke', fill);
+          member.set('dirty', true);
+        };
+        paint(object);
+      }
+      else if (object.type === 'path') object.set('stroke', fill);
       else {
         if (object instanceof IText) object.removeStyle('fill');
         object.set('fill', fill);
@@ -824,7 +847,9 @@ export class ConstructorEditor {
 
   private properties(object: FabricObject): SelectionProperties {
     const text = object instanceof IText ? object : null;
-    const paint = object.type === 'path' ? object.stroke : object.fill;
+    const paint = object.designIconName && object instanceof Group
+      ? object.getObjects().find(child => !!child.stroke)?.stroke
+      : object.type === 'path' ? object.stroke : object.fill;
     const gradient = paint instanceof Gradient ? paint : null;
     const hexColor = (color: string) => '#' + new Color(color).toHex();
     return {
@@ -841,7 +866,7 @@ export class ConstructorEditor {
         : ['group', 'activeselection'].includes(object.type) ? 'group' : 'shape',
       isRectangle: object instanceof Rect,
       canBlur: object instanceof Rect || object instanceof Circle,
-      canFill: !(object instanceof FabricImage || object instanceof Group),
+      canFill: !!object.designIconName || !(object instanceof FabricImage || object instanceof Group),
       blur: object.designBlur ?? 0,
       imageEffects: imageEffects(object instanceof FabricImage ? object : null),
       borderRadius: object instanceof Rect ? object.rx : 0,

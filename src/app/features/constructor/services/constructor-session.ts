@@ -78,12 +78,14 @@ export class ConstructorSession {
     this.markChanged();
   }
 
-  async removePage(): Promise<void> {
+  async removePage(index = this.activePage()): Promise<void> {
     const snapshot = this.snapshot();
-    if (!snapshot || snapshot.pages.length <= 1 || this.editor.busy()) return;
-    const pages = snapshot.pages.filter((_, index) => index !== this.activePage());
-    const next = Math.min(this.activePage(), pages.length - 1);
-    await this.editor.load(pages[next]);
+    if (!snapshot || snapshot.pages.length <= 1 || this.editor.busy() ||
+      !Number.isInteger(index) || index < 0 || index >= snapshot.pages.length) return;
+    const active = this.activePage();
+    const pages = snapshot.pages.filter((_, pageIndex) => pageIndex !== index);
+    const next = index < active ? active - 1 : Math.min(active, pages.length - 1);
+    if (index === active) await this.editor.load(pages[next]);
     this.current.set({ ...snapshot, pages });
     this.activePage.set(next);
     this.markChanged();

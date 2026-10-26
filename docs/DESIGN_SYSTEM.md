@@ -1511,8 +1511,11 @@ Import design, Blank design. Recently shows visited designs, while Home's Files 
 Designs tabs separate the CV collection and all saved visual designs.
 The editor fills the viewport using the shared overlay and a top-right close icon,
 with fit-page zoom to maximize the visible document. Its toolbar groups selection,
-drawing, text, images, shapes, history and zoom. Pages sit above the canvas;
-properties and layers occupy a right panel on desktop and stack below the canvas
+drawing, text, images, shapes, history and zoom. A Pages section follows Page
+properties in the left panel, with a compact Add page button opposite the heading
+and a confirmation-protected delete cross beside each page.
+The compact header places save status beside the design name and uses 32px action
+buttons. Properties and layers occupy a right panel on desktop and stack below the canvas
 on smaller screens. The canvas scrolls independently without widening the page.
 Object colors belong to the document and remain independent of the application
 theme. See [Constructor architecture](CONSTRUCTOR.md) for persistence and export.

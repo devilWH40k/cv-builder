@@ -7,6 +7,7 @@ import { loadDesignFonts } from '../helpers/design-assets';
 import { ActiveSelection, Canvas, FabricImage, Group, IText, Point, Transform, util } from 'fabric';
 import { A4_WIDTH } from '../interfaces/constructor-document';
 import { svgVector } from '../helpers/svg-vector';
+import { Mail } from 'lucide-angular';
 
 describe('Constructor editing', () => {
   let editor: ConstructorEditor;
@@ -28,6 +29,31 @@ describe('Constructor editing', () => {
   afterEach(async () => {
     await editor.dispose();
     canvas.remove();
+  });
+
+  it('adds recolorable vector icons as atomic layers and preserves them through history and reload', async () => {
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    await editor.addIcon('Mail', Mail);
+    const icon = activate.calls.mostRecent().args[0];
+    if (!(icon instanceof Group)) throw new Error('Expected vector icon');
+    expect(editor.layers()[0].children).toBeUndefined();
+    expect(editor.selection()?.canFill).toBeTrue();
+    expect(icon.getScaledWidth()).toBeCloseTo(40, 0);
+    editor.setFill('#ff0000');
+    expect(editor.selection()?.color).toBe('#FF0000');
+    expect(icon.getObjects().filter(child => !!child.stroke).every(child => child.stroke === '#ff0000')).toBeTrue();
+    expect(icon.getObjects()[0].fill).toBe('transparent');
+    const scene = editor.snapshot();
+    const document = blankDesign();
+    expect(() => parseDesign({ ...document, pages: [{ ...document.pages[0], scene }] })).not.toThrow();
+    await editor.undo();
+    expect(editor.selection()?.color).not.toBe('#FF0000');
+    await editor.redo();
+    expect(editor.snapshot()).toBe(scene);
+    await editor.load({ id: crypto.randomUUID(), scene });
+    editor.selectAll();
+    expect(editor.selection()?.canFill).toBeTrue();
+    expect(editor.selection()?.color).toBe('#FF0000');
   });
 
   it('renames text layers without changing their content and ignores empty or unchanged names', async () => {

@@ -6,8 +6,8 @@ button {
   align-items: center;
   justify-content: center;
   gap: tokens.$spacing-2;
-  min-height: tokens.$button-height-lg;
-  padding: tokens.$spacing-2 tokens.$spacing-8;
+  min-height: var(--button-min-height, #{tokens.$button-height-lg});
+  padding: var(--button-padding, #{tokens.$spacing-2} #{tokens.$spacing-8});
   border: 0;
   border-radius: tokens.$button-radius;
   background: tokens.$color-primary;
