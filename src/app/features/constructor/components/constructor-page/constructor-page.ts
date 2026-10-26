@@ -1,4 +1,5 @@
 import { DebouncedColor } from '../../../../shared/directives/debounced-color';
+import { PhotoPreview, PhotoCropShape } from '../../../../shared/ui/photo-preview/photo-preview';
 import {
   afterNextRender,
   afterRenderEffect,
@@ -63,6 +64,7 @@ import { ConstructorSvgAssets } from '../../services/constructor-svg-assets';
 @Component({
   selector: 'app-constructor-page',
   imports: [DebouncedColor,
+    PhotoPreview,
     RouterLink,
     LucideAngularModule,
     Button,
@@ -112,6 +114,8 @@ export class ConstructorPageComponent {
     this.loading() || (this.editor.busy() && !this.editor.restoringHistory() && !this.editor.clipboardBusy()),
   );
   protected readonly exporting = signal(false);
+  protected readonly pendingImage = signal<File | null>(null);
+  protected readonly imageShapes: readonly PhotoCropShape[] = ['full', 'circle', 'rectangle'];
   private readonly toasts = inject(ToastService);
   protected readonly icons = {
     Save,
@@ -336,7 +340,12 @@ export class ConstructorPageComponent {
   protected async insertImage(input: HTMLInputElement): Promise<void> {
     const file = input.files?.[0];
     input.value = '';
-    if (file) await this.run(() => this.editor.addImage(file));
+    if (file) this.pendingImage.set(file);
+  }
+
+  protected async applyImage(file: File): Promise<void> {
+    this.pendingImage.set(null);
+    await this.run(() => this.editor.addImage(file));
   }
 
   protected async deleteDesign(design: DesignSummary): Promise<void> {

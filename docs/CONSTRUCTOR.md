@@ -131,6 +131,12 @@ pdfmake's existing virtual font files. Loading those same files through `FontFac
 keeps browser and PDF font metrics aligned without external font requests. Adding
 font families requires registering files for both the canvas and PDF renderer.
 
+Constructor image uploads reuse the shared photo preview dialog, offering the
+original file, a transparent circular crop, or a rectangle with independent width
+and height controls. Applying inserts the result; cancelling leaves the canvas
+unchanged. CV uploads retain their existing circular preview and square export
+for the portrait renderer's own mask.
+
 Raster images are embedded as data URLs in versioned scene JSON. Imported CV SVG
 contact, technology and social icons retain vector paths/groups, viewport padding,
 colors, gradients, clipping and links through enlargement, save/reopen and PDF

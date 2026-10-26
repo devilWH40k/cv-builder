@@ -5,21 +5,30 @@ import {
 import { Button } from '../button/button';
 import { DialogOverlay } from '../dialog/dialog-overlay';
 import { ToastService } from '../toast/toast.service';
+import { Spinner } from '../spinner/spinner';
+
+export type PhotoCropShape = 'circle' | 'rectangle' | 'full';
 
 @Component({
   selector: 'app-photo-preview',
-  imports: [Button, DialogOverlay],
+  imports: [Button, DialogOverlay, Spinner],
   templateUrl: './photo-preview.html',
   styleUrl: './photo-preview.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PhotoPreview {
   readonly file = input.required<File>();
+  readonly shapes = input<readonly PhotoCropShape[]>(['circle']);
+  // CV portraits already apply their own circular mask when rendering.
+  readonly circularOutput = input(false);
   readonly applied = output<File>();
   readonly cancelled = output<void>();
   protected readonly source = signal('');
   protected readonly dimensions = signal({ width: 1, height: 1 });
-  protected readonly crop = signal({ x: 0, y: 0, size: 1 });
+  protected readonly shape = signal<PhotoCropShape>('circle');
+  protected readonly crop = signal({ x: 0, y: 0, width: 1, height: 1 });
+  protected readonly frame = computed(() => this.shape() === 'full'
+    ? { x: 0, y: 0, ...this.dimensions() } : this.crop());
   protected readonly ready = signal(false);
   protected readonly saving = signal(false);
   protected readonly loadFailed = signal(false);
@@ -33,6 +42,7 @@ export class PhotoPreview {
 
   constructor() {
     afterNextRender(() => {
+      this.shape.set(this.shapes()[0] ?? 'circle');
       const url = URL.createObjectURL(this.file());
       this.source.set(url);
       this.overlay().open();
@@ -44,11 +54,19 @@ export class PhotoPreview {
     const image = this.image().nativeElement;
     const width = image.naturalWidth;
     const height = image.naturalHeight;
-    const size = Math.min(width, height) * 0.8;
     this.dimensions.set({ width, height });
-    this.crop.set({ x: (width - size) / 2, y: (height - size) / 2, size });
+    this.chooseShape(this.shape());
     this.loadFailed.set(false);
     this.ready.set(true);
+  }
+
+  protected chooseShape(shape: PhotoCropShape): void {
+    this.stopDrag();
+    this.shape.set(shape);
+    const dimensions = this.dimensions();
+    const width = (shape === 'rectangle' ? dimensions.width : this.maximumSize()) * 0.8;
+    const height = (shape === 'rectangle' ? dimensions.height : this.maximumSize()) * 0.8;
+    this.crop.set({ x: (dimensions.width - width) / 2, y: (dimensions.height - height) / 2, width, height });
   }
 
   protected failed(): void {
@@ -91,18 +109,21 @@ export class PhotoPreview {
     event.preventDefault();
   }
 
-  protected resize(event: Event): void {
+  protected resize(event: Event, axis: 'width' | 'height' = 'width'): void {
     if (!(event.target instanceof HTMLInputElement)) return;
     const previous = this.crop();
-    const size = this.maximumSize() * Number(event.target.value) / 100;
-    this.crop.set({ ...previous, size });
-    this.move(previous.x + (previous.size - size) / 2, previous.y + (previous.size - size) / 2);
+    const maximum = this.shape() === 'circle' ? this.maximumSize() : this.dimensions()[axis];
+    const size = maximum * Number(event.target.value) / 100;
+    const next = this.shape() === 'circle' ? { width: size, height: size } : { [axis]: size };
+    this.crop.set({ ...previous, ...next });
+    this.move(previous.x + (previous.width - this.crop().width) / 2,
+      previous.y + (previous.height - this.crop().height) / 2);
   }
 
   private move(x: number, y: number): void {
-    const size = this.crop().size;
+    const crop = this.crop();
     const { width, height } = this.dimensions();
-    this.crop.set({ size, x: Math.max(0, Math.min(width - size, x)), y: Math.max(0, Math.min(height - size, y)) });
+    this.crop.set({ ...crop, x: Math.max(0, Math.min(width - crop.width, x)), y: Math.max(0, Math.min(height - crop.height, y)) });
   }
 
   protected cancel(): void {
@@ -116,12 +137,24 @@ export class PhotoPreview {
     this.saving.set(true);
 
     try {
-      const { x, y, size } = this.crop();
+      if (this.shape() === 'full') {
+        this.overlay().close();
+        this.applied.emit(this.file());
+        return;
+      }
+      const { x, y, width, height } = this.crop();
       const canvas = document.createElement('canvas');
-      canvas.width = canvas.height = Math.max(1, Math.min(1024, Math.round(size)));
+      const scale = Math.min(1, 1024 / Math.max(width, height));
+      canvas.width = Math.max(1, Math.round(width * scale));
+      canvas.height = Math.max(1, Math.round(height * scale));
       const context = canvas.getContext('2d');
       if (!context) throw new Error('Canvas unavailable');
-      context.drawImage(this.image().nativeElement, x, y, size, size, 0, 0, canvas.width, canvas.height);
+      if (this.shape() === 'circle' && this.circularOutput()) {
+        context.beginPath();
+        context.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, 0, Math.PI * 2);
+        context.clip();
+      }
+      context.drawImage(this.image().nativeElement, x, y, width, height, 0, 0, canvas.width, canvas.height);
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
       if (this.destroyRef.destroyed) return;
       if (!blob) throw new Error('Photo export failed');
