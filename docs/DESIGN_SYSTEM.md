@@ -1502,6 +1502,21 @@ five seconds, and show at most ten unique display names. A failed request or no
 matches leaves manual entry available, with an inline hint. No credentials are
 required. See [ROR API documentation](https://ror.readme.io/docs/rest-api).
 
+## Visual constructor
+
+`/constructor` uses the existing application palette, shared buttons and Lucide
+icons around a white or CV-themed A4 canvas. Its landing heading follows Guides'
+centered title row and icon-only back action. Start actions are ordered Choose a CV,
+Import design, Blank design. Recently shows visited designs, while Home's Files and
+Designs tabs separate the CV collection and all saved visual designs.
+The editor fills the viewport using the shared overlay and a top-right close icon,
+with fit-page zoom to maximize the visible document. Its toolbar groups selection,
+drawing, text, images, shapes, history and zoom. Pages sit above the canvas;
+properties and layers occupy a right panel on desktop and stack below the canvas
+on smaller screens. The canvas scrolls independently without widening the page.
+Object colors belong to the document and remain independent of the application
+theme. See [Constructor architecture](CONSTRUCTOR.md) for persistence and export.
+
 ## Resizable CV photo
 
 The preview photo uses the shared `app-resizable` square wrapper. Drag the photo

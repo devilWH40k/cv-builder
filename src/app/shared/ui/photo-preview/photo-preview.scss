@@ -45,3 +45,14 @@ p { color: tokens.$text-secondary; font-size: tokens.$font-size-sm; }
 input { width: 100%; accent-color: tokens.$color-primary; }
 footer { display: flex; justify-content: flex-end; gap: tokens.$spacing-2; margin-top: tokens.$spacing-6; }
 .cancel { @include buttons.ghost; }
+.shape-options {
+  display: flex;
+  gap: tokens.$spacing-2;
+  margin-block: tokens.$spacing-4;
+  button {
+    @include buttons.ghost;
+    &[aria-pressed='true'] { background: tokens.$background-primary-subtle; color: tokens.$text-accent; }
+  }
+}
+.crop-circle.rectangular { border-radius: 0; }
+.portrait.rectangular { height: auto; border-radius: 0; }

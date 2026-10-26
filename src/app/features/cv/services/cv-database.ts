@@ -65,6 +65,7 @@ export class CvDatabase {
         if (!database.objectStoreNames.contains('experiences')) database.createObjectStore('experiences', { keyPath: 'id' });
         if (!database.objectStoreNames.contains('technologies')) database.createObjectStore('technologies', { keyPath: 'id' });
         if (!database.objectStoreNames.contains('folders')) database.createObjectStore('folders', { keyPath: 'id' });
+        if (!database.objectStoreNames.contains('constructor-designs')) database.createObjectStore('constructor-designs', { keyPath: 'id' });
         const cvs = request.transaction!.objectStore('cvs');
         if (!cvs.indexNames.contains('updatedAt')) cvs.createIndex('updatedAt', 'updatedAt');
         if (!database.objectStoreNames.contains('collection-items')) {
@@ -87,7 +88,7 @@ export class CvDatabase {
           database.close();
           return;
         }
-        const missingStore = ['cvs', 'metadata', 'experiences', 'technologies', 'folders', 'collection-items', 'experience-search']
+        const missingStore = ['cvs', 'metadata', 'experiences', 'technologies', 'folders', 'collection-items', 'experience-search', 'constructor-designs']
           .some((name) => !database.objectStoreNames.contains(name));
         if (missingStore || !database.transaction('cvs').objectStore('cvs').indexNames.contains('updatedAt')) {
           const nextVersion = database.version + 1;

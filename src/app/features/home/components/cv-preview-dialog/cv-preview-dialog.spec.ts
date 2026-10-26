@@ -55,7 +55,10 @@ describe('Saved CV preview dialog', () => {
     const edit = dialog.querySelector<HTMLAnchorElement>('header .edit-cv')!;
     expect(edit.getAttribute('aria-label')).toBe('Edit Alex');
     expect(edit.getAttribute('href')).toBe('/create?id=saved');
-    expect(edit.nextElementSibling?.classList.contains('close')).toBeTrue();
+    const constructor = edit.nextElementSibling as HTMLAnchorElement;
+    expect(constructor.getAttribute('aria-label')).toBe('Open in constructor');
+    expect(constructor.getAttribute('href')).toBe('/constructor?cv=saved');
+    expect(constructor.nextElementSibling?.classList.contains('close')).toBeTrue();
     const bounds = dialog.getBoundingClientRect();
     const gap = parseFloat(getComputedStyle(document.documentElement).fontSize);
     expect(bounds.height).toBeCloseTo(innerHeight - 2 * gap, 0);

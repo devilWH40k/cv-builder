@@ -1,0 +1,37 @@
+<ul class="design-list">
+  @for (design of designs(); track design.id) {
+    <li>
+      <a
+        class="design-open"
+        routerLink="/constructor"
+        [queryParams]="{ design: design.id, returnTab: returnTab() }"
+      >
+        <lucide-icon [img]="DesignIcon" [size]="24" aria-hidden="true" />
+        <span class="design-details">
+          <strong>{{ design.title || 'Untitled design' }}</strong>
+          <span
+            >{{ recent() ? 'Last opened' : 'Last updated' }}
+            {{ (recent() ? design.visitedAt : design.updatedAt) | date: 'medium' }}</span
+          >
+        </span>
+      </a>
+      <button
+        type="button"
+        class="delete-design"
+        [disabled]="deletingIds().includes(design.id)"
+        [attr.aria-label]="'Delete ' + (design.title || 'Untitled design')"
+        (click)="deleteRequested.emit(design)"
+      >
+        <lucide-icon [img]="DeleteIcon" [size]="18" aria-hidden="true" />
+      </button>
+    </li>
+  } @empty {
+    <li class="empty">
+      {{
+        recent()
+          ? 'Designs you open will appear here.'
+          : 'No saved designs yet. Create a design in the constructor to keep it here.'
+      }}
+    </li>
+  }
+</ul>

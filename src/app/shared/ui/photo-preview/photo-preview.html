@@ -1,17 +1,26 @@
 <dialog appDialogOverlay #dialog class="photo-preview-dialog" aria-labelledby="photo-preview-title"
   aria-describedby="photo-preview-help" (cancel)="$event.preventDefault(); cancel()">
   <h2 id="photo-preview-title">Photo preview</h2>
-  <p id="photo-preview-help">Drag the circle to frame your photo. Use the arrow keys to fine-tune it.</p>
+  <p id="photo-preview-help">{{ shape() === 'full' ? 'Use the full picture without cropping.' : 'Drag the crop to frame your photo. Use the arrow keys to fine-tune it.' }}</p>
+  @if (shapes().length > 1) {
+    <div class="shape-options" role="group" aria-label="Photo shape">
+      @for (option of shapes(); track option) {
+        <button type="button" [attr.aria-pressed]="shape() === option" [disabled]="saving()"
+          (click)="chooseShape(option)">{{ option === 'full' ? 'Full image' : option === 'circle' ? 'Circle' : 'Rectangle' }}</button>
+      }
+    </div>
+  }
   <div class="workspace">
     <div class="photo-stage">
       <img #image class="source-photo" [attr.src]="source() || null" alt="Photo to crop"
         draggable="false" (load)="loaded()" (error)="failed()" />
-      @if (ready()) {
+      @if (ready() && shape() !== 'full') {
         <button type="button" class="crop-circle" aria-label="Move photo crop with arrow keys"
+          [class.rectangular]="shape() === 'rectangle'"
           [disabled]="saving()" [style.left.%]="crop().x / dimensions().width * 100"
           [style.top.%]="crop().y / dimensions().height * 100"
-          [style.width.%]="crop().size / dimensions().width * 100"
-          [style.height.%]="crop().size / dimensions().height * 100"
+          [style.width.%]="crop().width / dimensions().width * 100"
+          [style.height.%]="crop().height / dimensions().height * 100"
           (pointerdown)="startDrag($event)" (pointermove)="moveDrag($event)"
           (pointerup)="stopDrag()" (pointercancel)="stopDrag()" (lostpointercapture)="stopDrag()"
           (keydown)="moveWithKeyboard($event)"></button>
@@ -19,23 +28,30 @@
     </div>
     @if (ready()) {
       <div class="preview">
-        <div class="portrait">
-          <img [src]="source()" alt="How your photo will look on the CV" draggable="false"
-            [style.width.%]="dimensions().width / crop().size * 100"
-            [style.left.%]="-crop().x / crop().size * 100"
-            [style.top.%]="-crop().y / crop().size * 100" />
+        <div class="portrait" [class.rectangular]="shape() !== 'circle'"
+          [style.aspect-ratio]="frame().width / frame().height">
+          <img [src]="source()" alt="Photo result preview" draggable="false"
+            [style.width.%]="dimensions().width / frame().width * 100"
+            [style.left.%]="-frame().x / frame().width * 100"
+            [style.top.%]="-frame().y / frame().height * 100" />
         </div>
-        <span>CV preview</span>
+        <span>{{ shapes().length > 1 ? 'Preview' : 'CV preview' }}</span>
       </div>
     }
   </div>
-  @if (ready()) {
-    <label class="size-control">Circle size
-      <input type="range" min="20" max="100" [value]="crop().size / maximumSize() * 100"
+  @if (ready() && shape() !== 'full') {
+    <label class="size-control">{{ shape() === 'circle' ? 'Circle size' : 'Crop width' }}
+      <input type="range" min="20" max="100" [value]="crop().width / (shape() === 'circle' ? maximumSize() : dimensions().width) * 100"
         [disabled]="saving()" (input)="resize($event)" />
     </label>
-  } @else if (!loadFailed()) {
-    <p role="status">Loading photo…</p>
+    @if (shape() === 'rectangle') {
+      <label class="size-control">Crop height
+        <input type="range" min="20" max="100" [value]="crop().height / dimensions().height * 100"
+          [disabled]="saving()" (input)="resize($event, 'height')" />
+      </label>
+    }
+  } @else if (!ready() && !loadFailed()) {
+    <app-spinner label="Loading photo" />
   }
   <footer>
     <button type="button" class="cancel" (click)="cancel()">Cancel</button>

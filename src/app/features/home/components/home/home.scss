@@ -98,10 +98,12 @@ lucide-icon {
 }
 .saved-toolbar {
   display: grid;
-  grid-template-columns: (tokens.$button-height-lg * 2) minmax(0, 1fr) (tokens.$button-height-lg * 2);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: tokens.$spacing-2;
   margin: tokens.$spacing-3 0 tokens.$spacing-6;
+  border-bottom: 1px solid tokens.$border-color;
+
+  app-tabs { margin-bottom: -1px; }
 }
 .root-collection {
   min-height: tokens.$spacing-16;
@@ -120,13 +122,4 @@ lucide-icon {
 :is(.view-toggle, .folder-add) {
   @include buttons.ghost;
   & { width: tokens.$button-height-lg; flex-shrink: 0; padding: 0; }
-}
-.storage {
-  grid-column: 2;
-  color: tokens.$text-muted;
-  font-size: tokens.$font-size-sm;
-  margin: 0;
-}
-@media (max-width: tokens.$breakpoint-sm) {
-  .storage, .view-actions { grid-column: 1 / -1; }
 }

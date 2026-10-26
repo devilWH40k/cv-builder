@@ -42,8 +42,8 @@ describe('Header technologies dialog', () => {
     const navigate = spyOn(TestBed.inject(Router), 'navigateByUrl').and.resolveTo(true);
     const host: HTMLElement = fixture.nativeElement;
     const items = Array.from(host.querySelectorAll<HTMLElement>('.header-menu .menu-item'));
-    expect(items.map((button) => button.textContent?.trim())).toEqual(['Import / Export', 'Experiences', 'Technologies']);
-    items[1].click();
+    expect(items.map((button) => button.textContent?.trim())).toEqual(['Constructor', 'Import / Export', 'Experiences', 'Technologies']);
+    host.querySelector<HTMLAnchorElement>('.header-menu a[href="/experiences"]')!.click();
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigate.calls.mostRecent().args[0].toString()).toBe('/experiences');
   });

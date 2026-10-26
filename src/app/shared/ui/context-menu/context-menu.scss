@@ -31,3 +31,13 @@ button, a {
   &:disabled { color: tokens.$text-disabled; cursor: default; }
 }
 lucide-icon { display: flex; flex-shrink: 0; }
+.context-menu.compact {
+  min-width: 0;
+  width: min(12rem, calc(100vw - #{tokens.$spacing-8}));
+
+  button, a {
+    font-size: tokens.$font-size-xs;
+    padding-inline: tokens.$spacing-2;
+  }
+}
+.menu-separator { border-top: 1px solid tokens.$border-color; margin: tokens.$spacing-1; }
