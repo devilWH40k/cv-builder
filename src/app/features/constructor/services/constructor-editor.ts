@@ -337,6 +337,16 @@ export class ConstructorEditor {
       ...(object instanceof Group ? this.allObjects(object.getObjects()) : [])]);
   }
 
+  renameLayer(id: string, value: string): void {
+    const name = value.trim().slice(0, 100);
+    if (!name || this.busy()) return;
+    const object = this.allObjects().find((object) => object.designId === id);
+    if (!object || this.properties(object).label === name) return;
+    this.finishEditing();
+    object.designLayerName = name;
+    this.commit();
+  }
+
   private isLocked(object: FabricObject): boolean {
     return object.lockMovementX || (!!object.group && this.isLocked(object.group));
   }
@@ -822,7 +832,7 @@ export class ConstructorEditor {
       // SVG artwork is an atomic layer; only user-created groups expose their members.
       ...(object instanceof Group && object.subTargetCheck
         ? { children: object.getObjects().map((child) => this.properties(child)).reverse() } : {}),
-      label: text?.text || object.designLabel || object.type,
+      label: object.designLayerName || text?.text || object.designLabel || object.type,
       kind: text ? 'text' : object instanceof FabricImage ? 'image'
         : object.type === 'path' ? 'drawing'
         : object.type === 'line' || object.designLabel === 'Line' ? 'line'

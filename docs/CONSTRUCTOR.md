@@ -108,6 +108,11 @@ The Properties panel exposes controls shared by all group members, including
 text formatting, rectangle borders, shape blur and image filters when applicable.
 Differing values are marked Mixed. Changes apply recursively to unlocked members
 in one history action; movement and page alignment still act on the group.
+Each Layers row has a pen button for renaming. Enter, the check button or blur
+saves; Escape cancels. Empty or whitespace-only names leave the name unchanged.
+Custom names change only layer labels, including for text objects, and persist
+through history, copying and portable designs. The optional `designLayerName`
+metadata is additive to version 1 scenes; older scenes keep their existing labels.
 
 Circles and rectangles support 0–40 px blur while retaining editable geometry.
 `EffectRect`/`EffectCircle` extend native Fabric rendering and register for native

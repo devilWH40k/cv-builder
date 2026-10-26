@@ -30,6 +30,53 @@ describe('Constructor editing', () => {
     canvas.remove();
   });
 
+  it('renames text layers without changing their content and ignores empty or unchanged names', async () => {
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.addText();
+    const text = activate.calls.mostRecent().args[0];
+    if (!(text instanceof IText)) throw new Error('Expected text');
+    const id = editor.layers()[0].id;
+    const before = editor.snapshot();
+    editor.renameLayer(id, '  Profile summary  ');
+    expect(editor.layers()[0].label).toBe('Profile summary');
+    expect(editor.selection()?.label).toBe('Profile summary');
+    expect(text.text).toBe('Your text');
+    const renamed = editor.snapshot();
+    const history = editor.undoCount().length;
+    for (const name of ['', '   ', 'Profile summary']) editor.renameLayer(id, name);
+    expect(editor.snapshot()).toBe(renamed);
+    expect(editor.undoCount().length).toBe(history);
+    await editor.undo();
+    expect(editor.snapshot()).toBe(before);
+    await editor.redo();
+    expect(editor.snapshot()).toBe(renamed);
+    await editor.load({ id: crypto.randomUUID(), scene: renamed });
+    expect(editor.layers()[0].label).toBe('Profile summary');
+  });
+
+  it('preserves group and nested member names through copying and portable designs', async () => {
+    editor.addText();
+    const textId = editor.layers()[0].id;
+    editor.addShape('line');
+    const lineId = editor.layers()[0].id;
+    editor.selectAll();
+    editor.group();
+    const groupId = editor.layers()[0].id;
+    editor.renameLayer(groupId, 'Contact details');
+    editor.renameLayer(textId, 'Email');
+    editor.renameLayer(lineId, 'Divider');
+    expect(editor.layers()[0].children?.find((child) => child.id === lineId)?.kind).toBe('line');
+    await editor.duplicate();
+    const blank = blankDesign();
+    const saved = parseDesign({ ...blank, pages: [{ ...blank.pages[0], scene: editor.snapshot() }] });
+    await editor.load(saved.pages[0]);
+    expect(editor.layers().length).toBe(2);
+    for (const group of editor.layers()) {
+      expect(group.label).toBe('Contact details');
+      expect(group.children?.map((child) => child.label)).toEqual(['Divider', 'Email']);
+    }
+  });
+
   it('groups, moves, reopens and ungroups elements without changing their world transforms', async () => {
     editor.addText();
     editor.nudge(70, 40);

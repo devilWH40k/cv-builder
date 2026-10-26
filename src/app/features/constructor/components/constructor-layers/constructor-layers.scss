@@ -18,6 +18,7 @@ button[aria-pressed='true'] { border-color: tokens.$color-primary; background: t
   min-width: 0;
   font-size: tokens.$font-size-xs;
   gap: tokens.$spacing-2;
+  padding-right: tokens.$spacing-10;
   span {
     flex: 1;
     min-width: 0;
@@ -27,8 +28,8 @@ button[aria-pressed='true'] { border-color: tokens.$color-primary; background: t
   }
   lucide-icon { flex-shrink: 0; }
 }.layer-row { position: relative; display: flex; align-items: center; min-width: 0; gap: tokens.$spacing-1; }
-.group-layer { padding-right: tokens.$spacing-10; }
-.expand {
+.group-layer { padding-right: tokens.$spacing-16; }
+.expand, .rename {
   @include buttons.ghost;
   & {
     position: absolute;
@@ -36,4 +37,29 @@ button[aria-pressed='true'] { border-color: tokens.$color-primary; background: t
     min-height: tokens.$button-height-sm;
     padding: tokens.$spacing-1;
   }
+}
+.group-row .rename { right: tokens.$spacing-8; }
+@media (hover: hover) {
+  .rename { opacity: 0; pointer-events: none; }
+  .layer-row:hover .rename,
+  .layer-row:focus-within .rename { opacity: 1; pointer-events: auto; }
+}
+.layer-edit {
+  @include buttons.secondary;
+  & {
+    padding-right: tokens.$spacing-10;
+    &.group-layer { padding-right: tokens.$spacing-16; }
+  }
+}
+.layer-name {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: tokens.$spacing-1;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-sm;
+  background: tokens.$background-surface;
+  color: tokens.$text-primary;
+  font: inherit;
+  &:focus-visible { outline: 2px solid tokens.$border-color-focus; }
 }
