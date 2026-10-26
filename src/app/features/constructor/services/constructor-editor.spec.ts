@@ -4,7 +4,7 @@ import { ConstructorEditor } from './constructor-editor';
 import { blankDesign } from '../helpers/preview-to-design';
 import { parseDesign } from '../helpers/design-validation';
 import { loadDesignFonts } from '../helpers/design-assets';
-import { ActiveSelection, Canvas } from 'fabric';
+import { ActiveSelection, Canvas, Point, Transform, util } from 'fabric';
 import { A4_WIDTH } from '../interfaces/constructor-document';
 
 describe('Constructor editing', () => {
@@ -27,6 +27,44 @@ describe('Constructor editing', () => {
   afterEach(async () => {
     await editor.dispose();
     canvas.remove();
+  });
+
+  it('reflows selected texts during a group resize and records one undoable change', async () => {
+    editor.addText();
+    editor.addText();
+    editor.nudge(100, 100);
+    const before = editor.snapshot();
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.selectAll();
+    const selection = activate.calls.mostRecent().args[0];
+    if (!(selection instanceof ActiveSelection) || !(selection.canvas instanceof Canvas))
+      throw new Error('Expected canvas multi-selection');
+    const canvas = selection.canvas;
+    const matrices = selection.getObjects().map((text) => text.calcTransformMatrix());
+    const transform: Transform = {
+      target: selection, action: 'scale', corner: 'br',
+      scaleX: 1, scaleY: 1, skewX: 0, skewY: 0, offsetX: 0, offsetY: 0,
+      originX: 'left', originY: 'top', ex: 0, ey: 0, lastX: 0, lastY: 0,
+      theta: 0, width: selection.width, height: selection.height,
+      shiftKey: false, altKey: false, actionPerformed: false,
+      original: { ...util.saveObjectTransform(selection), originX: selection.originX, originY: selection.originY, cropX: 0, cropY: 0 },
+    };
+    const e = new MouseEvent('mousemove', { altKey: true });
+    canvas.fire('before:transform', { e, transform });
+    selection.set({ scaleX: 1.5, scaleY: 2 });
+    canvas.fire('object:scaling', { e, transform, target: selection, pointer: new Point() });
+    selection.getObjects().forEach((text, index) => {
+      text.calcTransformMatrix().slice(0, 4).forEach((value, coordinate) =>
+        expect(value).toBeCloseTo(matrices[index][coordinate], 6));
+    });
+    canvas.fire('object:modified', { e, transform, target: selection });
+    expect(editor.selectionCount()).toBe(2);
+    const after = editor.snapshot();
+    expect(after).not.toBe(before);
+    await editor.undo();
+    expect(editor.snapshot()).toBe(before);
+    await editor.redo();
+    expect(editor.snapshot()).toBe(after);
   });
 
   it('restores text formatting, gradients and links through save/reopen and undo/redo', async () => {

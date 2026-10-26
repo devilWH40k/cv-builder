@@ -32,6 +32,7 @@ import { EffectCircle, EffectRect } from '../helpers/effect-shapes';
 import { applyImageEffects, imageEffects } from '../helpers/image-effects';
 import { ConstructorClipboard } from './constructor-clipboard';
 import { LayoutTextbox } from '../helpers/layout-textbox';
+import { selectionTextResize } from '../helpers/selection-text-resize';
 import { applyVisualStyle, captureVisualStyle, VisualStyle } from '../helpers/visual-style';
 import { restoreDesignScene } from '../helpers/restore-design-scene';
 
@@ -54,6 +55,7 @@ export class ConstructorEditor {
   private readonly historyLimit = 60;
   private guides: { x?: number; y?: number } = {};
   private capturedStyle: VisualStyle | null = null;
+  private resizeSelectedText: (() => void) | null = null;
   private styleSourceId: string | null = null;
   readonly selection = this.selected.asReadonly();
   readonly layers = this.objectList.asReadonly();
@@ -89,15 +91,27 @@ export class ConstructorEditor {
     for (const event of ['selection:created', 'selection:updated', 'selection:cleared'] as const) {
       this.canvas.on(event, () => this.refreshSelection());
     }
-    this.canvas.on('object:modified', () => this.commit());
+    this.canvas.on('before:transform', ({ transform }) => {
+      this.resizeSelectedText = transform.target instanceof ActiveSelection && transform.action?.startsWith('scale')
+        ? selectionTextResize(transform.target) : null;
+    });
+    this.canvas.on('object:modified', ({ target }) => {
+      if (this.resizeSelectedText && target instanceof ActiveSelection) target.triggerLayout();
+      this.resizeSelectedText = null;
+      this.commit();
+    });
     this.canvas.on('mouse:down:before', ({ target, e }) => {
       if (this.tool() !== 'style' || !target || ('button' in e && e.button !== 0)) return;
       this.paintStyle(target);
     });
     this.canvas.on('object:moving', ({ target, e }) => this.snapMove(target, e.altKey));
-    this.canvas.on('object:scaling', ({ target, transform, e }) => this.snapSize(target, transform, e.altKey));
+    this.canvas.on('object:scaling', ({ target, transform, e }) => {
+      this.snapSize(target, transform, e.altKey);
+      this.resizeSelectedText?.();
+    });
     this.canvas.on('object:resizing', ({ target, transform, e }) => this.snapSize(target, transform, e.altKey));
     this.canvas.on('mouse:up', () => {
+      this.resizeSelectedText = null;
       this.guides = {};
       this.canvas?.requestRenderAll();
     });
