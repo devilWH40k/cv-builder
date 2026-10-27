@@ -11,3 +11,10 @@ export function imageFileValidator(control: AbstractControl): ValidationErrors |
       ? null
       : { imageType: true };
 }
+
+export function companyLogoFileValidator(control: AbstractControl): ValidationErrors | null {
+  const file: unknown = control.value;
+  if (file instanceof File && /\.svg$/i.test(file.name) &&
+      ['', 'image/svg+xml'].includes(file.type)) return null;
+  return imageFileValidator(control);
+}

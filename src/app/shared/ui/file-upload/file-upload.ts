@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, effect, input, signal } from '@angular/core';
-import { File as FileIcon, Image, LucideAngularModule, Upload, UserRound } from 'lucide-angular';
+import { File as FileIcon, Image, LucideAngularModule, Upload, UserRound, X } from 'lucide-angular';
 import { FormField } from '../form-field/form-field';
 import { imageFileValidator } from './image-file.validator';
 import { FormControl } from '@angular/forms';
@@ -13,6 +13,8 @@ import { PhotoPreview } from '../photo-preview/photo-preview';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileUpload extends FormField<File | null> {
+  readonly removable = input(false);
+  protected readonly XIcon = X;
   readonly mode = input<'photo' | 'icon' | 'file'>('photo');
   readonly accept = input('.jpg,.jpeg,.png');
   readonly helpText = input('JPG, JPEG or PNG');
@@ -37,6 +39,14 @@ export class FileUpload extends FormField<File | null> {
       this.previewUrl.set(url);
       onCleanup(() => URL.revokeObjectURL(url));
     });
+  }
+
+  protected removeFile(): void {
+    if (this.disabled()) return;
+    this.pendingPhoto.set(null);
+    this.control().setValue(null);
+    this.control().markAsDirty();
+    this.control().markAsTouched();
   }
 
   protected selectFile(event: Event): void {

@@ -82,7 +82,8 @@ describe('CV save feedback', () => {
   it('keeps the same immutable photo and clears unsaved state only after a successful commit', async () => {
     const photo = new File(['photo'], 'portrait.png', { type: 'image/png' });
     draft.beginEditing(info);
-    const changed = { ...info, photo };
+    const companyLogo = new File(['logo'], 'company.png', { type: 'image/png' });
+    const changed = { ...info, photo, companyLogo };
     draft.save(changed);
     storage.save.and.rejectWith(new Error('Storage unavailable'));
     expect(await save.save(changed)).toBeFalse();
@@ -90,6 +91,7 @@ describe('CV save feedback', () => {
     storage.save.and.resolveTo('saved-id');
     expect(await save.save(changed)).toBeTrue();
     expect(draft.current()?.photo).toBe(photo);
+    expect(draft.current()?.companyLogo).toBe(companyLogo);
     draft.save({ ...changed });
     expect(draft.hasUnsavedChanges()).toBeFalse();
   });

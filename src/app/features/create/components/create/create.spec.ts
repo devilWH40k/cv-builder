@@ -29,6 +29,34 @@ describe('CV form', () => {
     page.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   }
 
+  it('uploads an optional company logo below the photo, previews it, and removes it', async () => {
+    const uploads = Array.from(page.querySelectorAll<HTMLInputElement>('input[type="file"]'));
+    expect(uploads.slice(0, 2).map((input) => input.id)).toEqual(['photo', 'company-logo']);
+    const control = fixture.componentInstance.form.controls.companyLogo;
+    expect(control.valid).toBeTrue();
+    const logo = new File(['logo'], 'company.png', { type: 'image/png' });
+    spyOn(URL, 'createObjectURL').and.returnValue(document.createElement('canvas').toDataURL());
+    const transfer = new DataTransfer();
+    transfer.items.add(logo);
+    uploads[1].files = transfer.files;
+    uploads[1].dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    expect(control.value).toBe(logo);
+    expect(control.dirty).toBeTrue();
+    expect(TestBed.inject(CvDraft).current()?.companyLogo).toBe(logo);
+    expect(page.querySelector('#company-logo')!.closest('app-file-upload')!.querySelector('img')).not.toBeNull();
+    const header = page.querySelector('.cv-header')!;
+    expect(header.lastElementChild?.classList.contains('logo-resizer')).toBeTrue();
+    const remove = Array.from(page.querySelectorAll<HTMLButtonElement>('button'))
+      .find((button) => button.getAttribute('aria-label') === 'Remove company logo')!;
+    remove.click();
+    await fixture.whenStable();
+    expect(control.value).toBeNull();
+    expect(page.querySelector('.company-logo')).toBeNull();
+    control.setValue(new File(['invalid'], 'logo.gif', { type: 'image/gif' }));
+    expect(control.invalid).toBeTrue();
+  });
+
   it('adds general technologies to Custom and prevents blank or duplicate entries', async () => {
     for (const name of ['  Internal SDK  ', 'internal sdk', ' vue ', '   ']) {
       page.querySelector<HTMLButtonElement>('#technologies')!.closest('app-multi-select')!.querySelector<HTMLButtonElement>('.add-custom')!.click();
@@ -129,6 +157,7 @@ describe('CV form', () => {
       positionTitle: 'Designer',
       description: 'I design accessible applications.',
       photo: null,
+      companyLogo: null,
       languages: [],
       experiences: [],
       education: [],

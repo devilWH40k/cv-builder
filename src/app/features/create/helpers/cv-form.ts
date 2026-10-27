@@ -1,6 +1,6 @@
 import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
 import { CvSocialLink, emailValidator, phoneValidator, socialLink, SOCIAL_NETWORKS } from '../../cv/helpers/cv-contact';
-import { imageFileValidator } from '../../../shared/ui/file-upload/image-file.validator';
+import { companyLogoFileValidator, imageFileValidator } from '../../../shared/ui/file-upload/image-file.validator';
 import { CvLanguage } from '../../cv/constants/languages';
 import { CvExperience } from '../../cv/interfaces/experience';
 import { parseCalendarDate } from '../../../shared/ui/date-picker/date-value';
@@ -100,6 +100,7 @@ export function createCvForm() {
     positionTitle: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)] }),
     description: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)] }),
     photo: new FormControl<File | null>(null, { validators: [imageFileValidator] }),
+    companyLogo: new FormControl<File | null>(null, { validators: [companyLogoFileValidator] }),
     languages: new FormArray<ReturnType<typeof createLanguageForm>>([]),
     experiences: new FormArray<ReturnType<typeof createExperienceForm>>([]),
     education: new FormArray<ReturnType<typeof createEducationForm>>([]),

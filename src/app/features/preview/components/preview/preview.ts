@@ -1,3 +1,4 @@
+import { cvLogoSizeMm } from '../../../cv/helpers/cv-logo-size';
 import { Resizable } from '../../../../shared/ui/resizable/resizable';
 import { contactLinks } from '../../../cv/helpers/cv-contact';
 import { ExperienceDescription } from '../../pipes/experience-description';
@@ -37,12 +38,16 @@ export class Preview {
   protected readonly contacts = computed(() => contactLinks(this.info()?.contact));
   protected readonly structure = computed(() => ({ ...DEFAULT_CV_STRUCTURE, ...this.info()?.structure }));
   protected readonly photoSizeMm = computed(() => cvPhotoSizeMm(this.structure().photoSizeMm));
+  protected readonly logoSizeMm = computed(() => cvLogoSizeMm(this.structure().companyLogoSizeMm));
+  protected readonly pixelsPerMm = CSS_PIXELS_PER_MM;
   protected readonly photoSize = computed(() => this.photoSizeMm() * CSS_PIXELS_PER_MM);
   protected readonly minPhotoSize = CV_PHOTO_MIN_MM * CSS_PIXELS_PER_MM;
   protected readonly maxPhotoSize = CV_PHOTO_MAX_MM * CSS_PIXELS_PER_MM;
   protected readonly photoSizeStep = CSS_PIXELS_PER_MM;
   private readonly photo = computed(() => this.info()?.photo);
   protected readonly photoUrl = signal<string | null>(null);
+  private readonly companyLogo = computed(() => this.info()?.companyLogo);
+  protected readonly companyLogoUrl = signal<string | null>(null);
   protected readonly usedTechnologyIcon = usedTechnologyIcon;
   protected readonly entryIcon = entryIcon;
   protected readonly usedTechnologiesView = usedTechnologiesView;
@@ -52,6 +57,16 @@ export class Preview {
   protected readonly formatDate = formatCalendarDate;
 
   constructor() {
+    effect((onCleanup) => {
+      const logo = this.companyLogo();
+      if (!logo) {
+        this.companyLogoUrl.set(null);
+        return;
+      }
+      const url = URL.createObjectURL(logo);
+      this.companyLogoUrl.set(url);
+      onCleanup(() => URL.revokeObjectURL(url));
+    });
     afterRenderEffect((onCleanup) => {
       this.info();
       const flow = this.pageFlows()[0]?.nativeElement;
@@ -91,6 +106,10 @@ export class Preview {
       this.photoUrl.set(url);
       onCleanup(() => URL.revokeObjectURL(url));
     });
+  }
+
+  protected resizeLogo(size: number): void {
+    this.draft.updateStructure({ ...this.structure(), companyLogoSizeMm: cvLogoSizeMm(Math.round(size / CSS_PIXELS_PER_MM)) });
   }
 
   protected resizePhoto(size: number): void {

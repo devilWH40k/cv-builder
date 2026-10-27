@@ -138,6 +138,27 @@ describe('CV ZIP backups', () => {
     expect(await restored.info.photo!.arrayBuffer()).toEqual(await record.info.photo!.arrayBuffer());
   });
 
+  it('round trips company logo bytes and metadata alongside the portrait', async () => {
+    const companyLogo = new File(['<svg xmlns="http://www.w3.org/2000/svg"/>'], 'company.svg', { type: 'image/svg+xml', lastModified: 456 });
+    const { cvs: [restored] } = await readArchive(await createArchive([
+      { ...record, info: { ...record.info, companyLogo } }
+    ]));
+    const logo = restored.info.companyLogo!;
+    expect(logo.name).toBe(companyLogo.name);
+    expect(logo.type).toBe(companyLogo.type);
+    expect(logo.lastModified).toBe(companyLogo.lastModified);
+    expect(await logo.text()).toBe(await companyLogo.text());
+    expect(await restored.info.photo!.arrayBuffer()).toEqual(await record.info.photo!.arrayBuffer());
+  });
+
+  it('rejects missing logo files and paths outside the logo directory', async () => {
+    for (const path of ['logos/0.png', 'photos/0.png', '../logo.png']) {
+      await expectAsync(readArchive(archive([{ ...record, info: { ...record.info, photo: null,
+        companyLogo: { path, name: 'logo.png', type: 'image/png', lastModified: 1 }
+      } }]))).toBeRejected();
+    }
+  });
+
   it('supports empty databases and CVs without photos or optional structure', async () => {
     expect(await readArchive(await createArchive([]))).toEqual({ cvs: [], experiences: [], technologies: [], folders: [] });
     const { structure, ...info } = record.info;
@@ -151,7 +172,7 @@ describe('CV ZIP backups', () => {
   });
 
   it('rejects unsupported versions, malformed ZIPs and invalid nested fields', async () => {
-    await expectAsync(readArchive(archive([], 6))).toBeRejectedWithError(/version/);
+    await expectAsync(readArchive(archive([], 7))).toBeRejectedWithError(/version/);
     await expectAsync(readArchive(new Blob(['not a zip']))).toBeRejectedWithError();
     await expectAsync(readArchive(archive([{ ...record,
       info: { ...record.info, photo: null, experiences: [{ isCurrent: 'yes' }] }
