@@ -60,6 +60,8 @@ import { ConstructorObjectMenu } from '../constructor-object-menu/constructor-ob
 import { Spinner } from '../../../../shared/ui/spinner/spinner';
 import { UnsavedChangesDialog, UnsavedChangesDecision } from '../../../../shared/ui/unsaved-changes-dialog/unsaved-changes-dialog';
 import { ConstructorSvgAssets } from '../../services/constructor-svg-assets';
+import { environment } from '../../../../../environments/environment';
+import { ConstructorIconLibrary } from '../constructor-icon-library/constructor-icon-library';
 
 @Component({
   selector: 'app-constructor-page',
@@ -74,6 +76,7 @@ import { ConstructorSvgAssets } from '../../services/constructor-svg-assets';
     DesignList,
     ConstructorLayers,
     ConstructorPageProperties,
+    ConstructorIconLibrary,
     ResizeHandle,
     ConstructorObjectMenu,
     Spinner,
@@ -81,11 +84,12 @@ import { ConstructorSvgAssets } from '../../services/constructor-svg-assets';
   ],
   providers: [CvDraft, ConstructorEditor, ConstructorSession],
   templateUrl: './constructor-page.html',
-  styleUrls: ['./constructor-page.scss', './constructor-editor.scss'],
+  styleUrls: ['./constructor-page.scss', './constructor-editor.scss', './constructor-panels.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class ConstructorPageComponent {
+  protected readonly appVersion = environment.appVersion;
   protected readonly editor = inject(ConstructorEditor);
   protected readonly session = inject(ConstructorSession);
   protected readonly sourceDraft = inject(CvDraft, { skipSelf: true });
@@ -105,6 +109,7 @@ export class ConstructorPageComponent {
   private readonly returnTab = this.route.snapshot.queryParamMap.get('returnTab');
   private resizeObserver: ResizeObserver | null = null;
   protected readonly propertiesHeight = signal(400);
+  protected readonly pagePropertiesHeight = signal(400);
   protected readonly leftWidth = signal(240);
   protected readonly rightWidth = signal(280);
   protected readonly fitPage = signal(true);
@@ -362,19 +367,23 @@ export class ConstructorPageComponent {
     });
   }
 
-  protected async removePage(): Promise<void> {
+  protected async removePage(index: number): Promise<void> {
+    const page = this.session.document()?.pages[index];
+    if (!page || (this.session.document()?.pages.length ?? 0) <= 1) return;
     if (
       !(await this.confirmation.confirm(
         {
           title: 'Delete page',
-          itemName: `Page ${this.session.activePage() + 1}`,
+          itemName: `Page ${index + 1}`,
           message: 'All objects on this page will be removed.',
         },
         this.destroyRef,
       ))
     )
       return;
-    await this.run(() => this.session.removePage());
+    await this.run(() => this.session.removePage(
+      this.session.document()?.pages.findIndex((item) => item.id === page.id) ?? -1,
+    ));
   }
 
   protected async page(index: number): Promise<void> {

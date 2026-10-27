@@ -10,6 +10,7 @@ declare module 'fabric' {
     designId?: string;
     designLabel?: string;
     designLayerName?: string;
+    designIconName?: string;
     linkUrl?: string;
     designTextLinks?: DesignTextLink[];
     designBlur?: number;
@@ -19,6 +20,7 @@ declare module 'fabric' {
     designId?: string;
     designLabel?: string;
     designLayerName?: string;
+    designIconName?: string;
     linkUrl?: string;
     designTextLinks?: DesignTextLink[];
     designBlur?: number;
@@ -27,7 +29,7 @@ declare module 'fabric' {
 }
 
 FabricObject.customProperties = [
-  ...new Set([...FabricObject.customProperties, 'designId', 'designLabel', 'designLayerName', 'linkUrl', 'designTextLinks', 'designBlur', 'designTextHeight']),
+  ...new Set([...FabricObject.customProperties, 'designId', 'designLabel', 'designLayerName', 'designIconName', 'linkUrl', 'designTextLinks', 'designBlur', 'designTextHeight']),
 ];
 
 export function identifyObject(object: FabricObject, label: string): void {

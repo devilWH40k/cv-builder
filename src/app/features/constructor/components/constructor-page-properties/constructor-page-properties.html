@@ -6,12 +6,12 @@
  />
   </label>
   <app-button variant="outline" [disabled]="editor.busy()" (click)="image.click()">
-    <lucide-icon [img]="ImageIcon" [size]="18" />
+    <lucide-icon [img]="ImageIcon" [size]="16" />
     {{ editor.hasBackgroundImage() ? 'Replace image' : 'Background image' }}
   </app-button>
   @if (editor.hasBackgroundImage()) {
     <app-button variant="outline" [disabled]="editor.busy()" (click)="editor.removeBackgroundImage()">
-      <lucide-icon [img]="RemoveIcon" [size]="18" />Remove image
+      <lucide-icon [img]="RemoveIcon" [size]="16" />Remove image
     </app-button>
   }
   <p class="hint">Applies to this page. Images fill the page and are cropped to fit.</p>

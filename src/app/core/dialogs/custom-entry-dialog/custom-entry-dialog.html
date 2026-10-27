@@ -4,9 +4,9 @@
   <app-input [inputId]="inputId() + '-name'" label="Entry name" [control]="name" [required]="true" (keydown.enter)="apply($event)">
     @if (name.invalid && name.touched) { <span>Entry name is required.</span> }
   </app-input>
-  <app-file-upload [inputId]="inputId() + '-icon'" label="Icon (optional)" [control]="iconFile" mode="icon"
-    accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
-    helpText="PNG, JPEG, WebP, GIF, or SVG, up to 5 MB.">
+  <app-file-upload [inputId]="inputId() + '-icon'" label="Icon (optional)" [control]="iconFile" mode="icon" [previewSource]="icon() ?? null"
+    accept=".svg,image/svg+xml"
+    helpText="SVG only, up to 5 MB. Icon colors use the main color.">
     @if (error()) { <span role="alert">{{ error() }}</span> }
   </app-file-upload>
   @if (loading()) { <p role="status">Preparing icon...</p> }

@@ -450,6 +450,18 @@ describe('IndexedDB saved CVs', () => {
     expect(await restored.text()).toBe(await photo.text());
   });
 
+  it('stores an optional company logo with unchanged bytes and metadata', async () => {
+    const saved = service();
+    const companyLogo = new File(['logo bytes'], 'company.png', { type: 'image/png', lastModified: 456 });
+    const id = await saved.save({ ...info, companyLogo }, null);
+    const restored = (await service().load(id))!.companyLogo!;
+    expect(restored instanceof File).toBeTrue();
+    expect(restored.name).toBe(companyLogo.name);
+    expect(restored.type).toBe(companyLogo.type);
+    expect(restored.lastModified).toBe(companyLogo.lastModified);
+    expect(await restored.text()).toBe(await companyLogo.text());
+  });
+
   it('preserves the previous snapshot when a write transaction aborts', async () => {
     const saved = service();
     const id = await saved.save(info, null);

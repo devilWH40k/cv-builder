@@ -1,0 +1,17 @@
+@use 'styles/tokens' as tokens;
+
+.page-panels {
+  display: grid;
+  grid-template-rows: minmax(0, clamp(120px, var(--page-properties-height), calc(100% - 192px))) tokens.$spacing-3 minmax(0, 1fr);
+  gap: 0;
+  min-height: 0;
+  min-width: 0;
+}
+
+.panel.icon-library-panel { display: flex; overflow: hidden; }
+
+@media (max-width: tokens.$breakpoint-lg) {
+  .page-panels { grid-template-rows: auto auto; gap: tokens.$spacing-3; }
+  .page-panels > app-resize-handle { display: none; }
+  .icon-library-panel { height: 50dvh; }
+}

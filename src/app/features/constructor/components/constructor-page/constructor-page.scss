@@ -43,6 +43,8 @@ h1 {
 .secondary-link,
 .home-button,
 .toolbar button,
+.add-page,
+.editor-close,
 .page-tabs button {
   @include buttons.secondary;
   & {

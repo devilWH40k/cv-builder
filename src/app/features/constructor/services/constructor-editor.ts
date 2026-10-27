@@ -1,6 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import {
-  Canvas,
   Circle,
   Color,
   FabricImage,
@@ -28,7 +27,7 @@ import {
 import { fileDataUrl, safeDesignLink } from '../helpers/design-assets';
 import { identifyObject } from '../helpers/fabric-metadata';
 import { validateDesignScene } from '../helpers/design-validation';
-import { boundsGuides, PAGE_PADDING, snapAxis } from '../helpers/design-snapping';
+import { boundsGuides, snapAxis, snappingGuides, SnapGuides } from '../helpers/design-snapping';
 import { EffectCircle, EffectGroup, EffectRect } from '../helpers/effect-shapes';
 import { applyImageEffects, imageEffects } from '../helpers/image-effects';
 import { ConstructorClipboard } from './constructor-clipboard';
@@ -36,11 +35,15 @@ import { LayoutTextbox } from '../helpers/layout-textbox';
 import { selectionTextResize } from '../helpers/selection-text-resize';
 import { applyVisualStyle, captureVisualStyle, VisualStyle } from '../helpers/visual-style';
 import { restoreDesignScene } from '../helpers/restore-design-scene';
+import type { LucideIconData } from 'lucide-angular';
+import { iconSvg } from './constructor-icons';
+import { svgVector } from '../helpers/svg-vector';
+import { ConstructorCanvas } from '../helpers/constructor-canvas';
 
 /** Owns live Fabric objects. Components consume snapshots and issue editor commands. */
 @Injectable()
 export class ConstructorEditor {
-  private canvas: Canvas | null = null;
+  private canvas: ConstructorCanvas | null = null;
   private readonly clipboard = inject(ConstructorClipboard);
   readonly selectionCount = signal(0);
   readonly selectedIds = signal<ReadonlySet<string>>(new Set());
@@ -57,6 +60,7 @@ export class ConstructorEditor {
   private revisionCallback: (() => void) | null = null;
   private readonly historyLimit = 60;
   private guides: { x?: number; y?: number } = {};
+  private snapping: { target: FabricObject; guides: SnapGuides } | null = null;
   private capturedStyle: VisualStyle | null = null;
   private resizeSelectedText: (() => void) | null = null;
   private styleSourceId: string | null = null;
@@ -78,7 +82,7 @@ export class ConstructorEditor {
 
   attach(element: HTMLCanvasElement, onChange: () => void): void {
     this.revisionCallback = onChange;
-    this.canvas = new Canvas(element, {
+    this.canvas = new ConstructorCanvas(element, {
       width: A4_WIDTH,
       height: A4_HEIGHT,
       backgroundColor: '#ffffff',
@@ -97,6 +101,9 @@ export class ConstructorEditor {
       this.canvas.on(event, () => this.refreshSelection());
     }
     this.canvas.on('before:transform', ({ transform }) => {
+      this.canvas?.beginGesture(transform.target);
+      this.snapping = null;
+      this.snapGuides(transform.target);
       this.resizeSelectedText = transform.target instanceof Group && transform.action?.startsWith('scale')
         ? selectionTextResize(transform.target) : null;
     });
@@ -128,6 +135,8 @@ export class ConstructorEditor {
     });
     this.canvas.on('object:resizing', ({ target, transform, e }) => this.snapSize(target, transform, e.altKey));
     this.canvas.on('mouse:up', () => {
+      this.canvas?.endGesture();
+      this.snapping = null;
       this.resizeSelectedText = null;
       this.guides = {};
       this.canvas?.requestRenderAll();
@@ -147,6 +156,8 @@ export class ConstructorEditor {
   }
 
   async dispose(): Promise<void> {
+    this.canvas?.endGesture();
+    this.snapping = null;
     const canvas = this.canvas;
     this.canvas = null;
     this.revisionCallback = null;
@@ -154,6 +165,8 @@ export class ConstructorEditor {
   }
 
   async load(page: ConstructorPage): Promise<void> {
+    this.canvas?.endGesture();
+    this.snapping = null;
     validateDesignScene(page.scene);
     if (!this.canvas) return;
     this.restoring = true;
@@ -260,6 +273,18 @@ export class ConstructorEditor {
         : new EffectRect({ ...options, width: 180, height: shape === 'line' ? 3 : 100 }),
       shape === 'circle' ? 'Circle' : shape === 'line' ? 'Line' : 'Rectangle',
     );
+  }
+
+  async addIcon(name: string, data: LucideIconData): Promise<void> {
+    const canvas = this.canvas;
+    const pageId = this.pageId;
+    if (!canvas || this.busy()) return;
+    const icon = await svgVector(iconSvg(data), 40, 40);
+    if (!icon) throw new Error('Could not create icon');
+    if (this.canvas !== canvas || this.pageId !== pageId || this.busy()) return;
+    icon.set({ left: 80, top: 100 });
+    icon.designIconName = name;
+    this.add(icon, name);
   }
 
   async addImage(file: File): Promise<void> {
@@ -473,7 +498,20 @@ export class ConstructorEditor {
             ],
           })
         : color;
-      if (object.type === 'path') object.set('stroke', fill);
+      if (object.designIconName && object instanceof Group) {
+        const paint = (member: FabricObject): void => {
+          if (member instanceof Group) member.getObjects().forEach(paint);
+          else {
+            for (const key of ['fill', 'stroke'] as const) {
+              const paint = member[key];
+              if (paint && paint !== 'none' && (typeof paint !== 'string' || (new Color(paint).getAlpha() > 0 && new Color(paint).toHex() !== 'FFFFFF'))) member.set(key, fill);
+            }
+          }
+          member.set('dirty', true);
+        };
+        paint(object);
+      }
+      else if (object.type === 'path') object.set('stroke', fill);
       else {
         if (object instanceof IText) object.removeStyle('fill');
         object.set('fill', fill);
@@ -684,18 +722,26 @@ export class ConstructorEditor {
     );
   }
 
+  private snapGuides(target: FabricObject): SnapGuides {
+    if (this.snapping?.target !== target) {
+      this.snapping = { target, guides: snappingGuides(
+        this.snapTargets(target).map(object => object.getBoundingRect()), A4_WIDTH, A4_HEIGHT,
+      ) };
+    }
+    return this.snapping.guides;
+  }
+
   private snapMove(target: FabricObject, bypass = false): void {
     this.guides = {};
     if (!this.canvas || bypass) return;
-    target.setCoords();
+    // Fabric updates controls and descendant coordinates after the transform handler.
+    target.aCoords = target.calcACoords();
     const bounds = target.getBoundingRect();
-    const others = this.snapTargets(target).map((object) => object.getBoundingRect());
-    const x = snapAxis(boundsGuides(bounds, 'x'), [0, PAGE_PADDING, A4_WIDTH / 2, A4_WIDTH - PAGE_PADDING, A4_WIDTH,
-      ...others.flatMap((bounds) => boundsGuides(bounds, 'x'))], 6 / this.zoom());
-    const y = snapAxis(boundsGuides(bounds, 'y'), [0, PAGE_PADDING, A4_HEIGHT / 2, A4_HEIGHT - PAGE_PADDING, A4_HEIGHT,
-      ...others.flatMap((bounds) => boundsGuides(bounds, 'y'))], 6 / this.zoom());
+    const guides = this.snapGuides(target);
+    const x = snapAxis(boundsGuides(bounds, 'x'), guides.x, 6 / this.zoom());
+    const y = snapAxis(boundsGuides(bounds, 'y'), guides.y, 6 / this.zoom());
     target.set({ left: target.left + (x?.delta ?? 0), top: target.top + (y?.delta ?? 0) });
-    target.setCoords();
+    target.aCoords = target.calcACoords();
     this.guides = { x: x?.guide, y: y?.guide };
   }
 
@@ -703,15 +749,15 @@ export class ConstructorEditor {
     this.guides = {};
     // Axis-aligned objects have an unambiguous page width/height and fixed opposite anchor.
     if (!this.canvas || bypass || target.angle % 360 !== 0 || target.skewX || target.skewY) return;
-    target.setCoords();
+    target.aCoords = target.calcACoords();
     const bounds = target.getBoundingRect();
-    const others = this.snapTargets(target).map((object) => object.getBoundingRect());
+    const guides = this.snapGuides(target);
     const action = transform.action;
     const verticalTextResize = target instanceof Textbox && ['mt', 'mb'].includes(transform.corner);
     const width = action !== 'scaleY' && !verticalTextResize
-      ? snapAxis([bounds.width], [A4_WIDTH - 2 * PAGE_PADDING, ...others.map((bounds) => bounds.width)], 6 / this.zoom()) : null;
+      ? snapAxis([bounds.width], guides.widths, 6 / this.zoom()) : null;
     const height = action !== 'scaleX' && action !== 'resizing'
-      ? snapAxis([bounds.height], [A4_HEIGHT - 2 * PAGE_PADDING, ...others.map((bounds) => bounds.height)], 6 / this.zoom()) : null;
+      ? snapAxis([bounds.height], guides.heights, 6 / this.zoom()) : null;
     const anchor = target.getPointByOrigin(transform.originX, transform.originY);
     if (action === 'resizing' && target instanceof Textbox && width) {
       target.set('width', Math.max(8, target.width + width.delta / target.scaleX));
@@ -728,7 +774,7 @@ export class ConstructorEditor {
       if (height && bounds.height > 0) target.set('scaleY', target.scaleY * (bounds.height + height.delta) / bounds.height);
     }
     target.setPositionByOrigin(anchor, transform.originX, transform.originY);
-    target.setCoords();
+    target.aCoords = target.calcACoords();
     const snapped = target.getBoundingRect();
     this.guides = {
       x: width && Math.abs(snapped.width - width.guide) < 0.5 ? snapped.left + snapped.width : undefined,
@@ -784,6 +830,8 @@ export class ConstructorEditor {
   }
 
   private commit(): void {
+    this.canvas?.endGesture();
+    this.snapping = null;
     if (this.restoring || !this.canvas) return;
     const scene = this.snapshot();
     if (scene !== this.lastScene) {
@@ -824,7 +872,22 @@ export class ConstructorEditor {
 
   private properties(object: FabricObject): SelectionProperties {
     const text = object instanceof IText ? object : null;
-    const paint = object.type === 'path' ? object.stroke : object.fill;
+    const iconPaint = (member: FabricObject): FabricObject['fill'] => {
+      if (member instanceof Group) {
+        for (const child of member.getObjects()) {
+          const paint = iconPaint(child);
+          if (paint) return paint;
+        }
+        return null;
+      }
+      for (const paint of [member.stroke, member.fill]) {
+        if (paint && paint !== 'none' && (typeof paint !== 'string' || new Color(paint).getAlpha() > 0)) return paint;
+      }
+      return null;
+    };
+    const paint = object.designIconName && object instanceof Group
+      ? iconPaint(object)
+      : object.type === 'path' ? object.stroke : object.fill;
     const gradient = paint instanceof Gradient ? paint : null;
     const hexColor = (color: string) => '#' + new Color(color).toHex();
     return {
@@ -841,7 +904,7 @@ export class ConstructorEditor {
         : ['group', 'activeselection'].includes(object.type) ? 'group' : 'shape',
       isRectangle: object instanceof Rect,
       canBlur: object instanceof Rect || object instanceof Circle,
-      canFill: !(object instanceof FabricImage || object instanceof Group),
+      canFill: !!object.designIconName || !(object instanceof FabricImage || object instanceof Group),
       blur: object.designBlur ?? 0,
       imageEffects: imageEffects(object instanceof FabricImage ? object : null),
       borderRadius: object instanceof Rect ? object.rx : 0,

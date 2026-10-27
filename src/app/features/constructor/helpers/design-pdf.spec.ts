@@ -4,8 +4,25 @@ import { blankDesign } from './preview-to-design';
 import './fabric-metadata';
 import { EffectCircle, EffectRect } from './effect-shapes';
 import { A4_HEIGHT, A4_WIDTH } from '../interfaces/constructor-document';
+import { Mail } from 'lucide-angular';
+import { iconSvg } from '../services/constructor-icons';
+import { svgVector } from './svg-vector';
 
 describe('Constructor vector PDF', () => {
+  it('exports library icons as vector paths', async () => {
+    const icon = await svgVector(iconSvg(Mail), 40, 40);
+    if (!icon) throw new Error('Expected icon');
+    icon.designIconName = 'Mail';
+    const blank = blankDesign();
+    const definition = await buildDesignPdf({ ...blank, pages: [{ ...blank.pages[0],
+      scene: JSON.stringify({ objects: [icon.toObject()] }),
+    }] });
+    const content = Array.isArray(definition.content) ? definition.content[0] : definition.content;
+    if (!content || typeof content !== 'object' || !('svg' in content) || typeof content.svg !== 'string')
+      throw new Error('Expected SVG page');
+    expect(content.svg).toContain('<path');
+    expect(content.svg).not.toContain('<image');
+  });
   for (const kind of ['rectangle', 'circle', 'line'] as const) {
     for (const nested of [false, true]) {
       it(`exports visible blurred ${kind} pixels in ${nested ? 'nested groups' : 'a group'}`, async () => {

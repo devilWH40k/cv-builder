@@ -23,6 +23,12 @@ directive. The background becomes inert and focus stays within the editor.
 The top-right close action and Escape preserve unsaved-change confirmation and
 return to the originating Home tab, or to the constructor landing page. **Fit page**
 adjusts zoom to the available canvas space; manual zoom remains available.
+Page selection lives in a Pages section after Page properties in the left sidebar.
+A small Add page button sits opposite the heading; each page has a delete cross
+that confirms the specific page before removal. Deleting an inactive page keeps
+the current page and its history open. The last page cannot be deleted.
+The compact header keeps save status beside the design name
+and uses smaller action buttons to leave more vertical space for the canvas.
 
 ## Code boundaries
 
@@ -183,6 +189,19 @@ opens the selected object's link without interfering with selection. PDF export
 preserves link annotations and selectable text, including gradient text. Text copy
 order follows object order; free-form designs are not tagged or guaranteed to
 provide a semantic document reading order for every PDF consumer.
+
+The **Icon Library** below Page properties and Pages lists the complete Lucide
+catalogue alphabetically. Search filters names; clearing it restores every icon.
+Click an icon to add a vector layer, then use its color properties to recolor it.
+Icons remain single layers and are preserved in saved designs and PDF export.
+
+During a drag or resize, `ConstructorCanvas` reuses temporary rendered layers
+above and below the moving object, avoiding repeated painting of stationary blur
+and nested groups. The layers are released after the gesture or any document
+change and rebuilt if zoom or canvas dimensions change. Stack-spanning
+multi-selections, destination-dependent blending, and canvases exceeding the
+temporary pixel budget use normal Fabric rendering. Saved designs and PDF export
+continue to use editable vector objects.
 
 ## Validation
 

@@ -53,6 +53,38 @@ describe('Constructor document sessions', () => {
     expect(session.document()?.pages.length).toBe(1);
   });
 
+  it('deletes specific inactive pages while preserving the active scene and history', async () => {
+    await session.addPage();
+    await session.addPage();
+    editor.addText();
+    const activeId = session.document()!.pages[2].id;
+    const scene = editor.snapshot();
+    const history = editor.undoCount().length;
+    const load = spyOn(editor, 'load').and.callThrough();
+    await session.removePage(0);
+    expect(session.activePage()).toBe(1);
+    expect(session.document()!.pages[1].id).toBe(activeId);
+    expect(editor.snapshot()).toBe(scene);
+    expect(editor.undoCount().length).toBe(history);
+    expect(load).not.toHaveBeenCalled();
+    await session.switchPage(0);
+    const firstId = session.document()!.pages[0].id;
+    load.calls.reset();
+    await session.removePage(1);
+    expect(session.activePage()).toBe(0);
+    expect(session.document()!.pages[0].id).toBe(firstId);
+    expect(load).not.toHaveBeenCalled();
+    expect(session.document()!.pages.length).toBe(1);
+  });
+
+  it('ignores invalid page deletion targets', async () => {
+    await session.addPage();
+    const before = session.document();
+    for (const index of [-1, 2, 0.5, NaN]) await session.removePage(index);
+    expect(session.document()!.pages).toEqual(before!.pages);
+    expect(session.activePage()).toBe(1);
+  });
+
   it('waits for durable saves and retains changes made while a save is pending', async () => {
     let resolveSave!: () => void;
     repository.save.and.returnValue(

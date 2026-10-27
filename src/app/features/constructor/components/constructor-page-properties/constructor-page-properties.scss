@@ -1,14 +1,30 @@
 @use 'styles/tokens' as tokens;
 :host { display: block; }
 h2 { font-size: tokens.$font-size-md; margin: 0 0 tokens.$spacing-3; }
-label { display: grid; gap: tokens.$spacing-2; margin-block: tokens.$spacing-3; font-size: tokens.$font-size-sm; }
+label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) tokens.$spacing-10 * 2;
+  align-items: center;
+  gap: tokens.$spacing-2;
+  margin-block: tokens.$spacing-2;
+  font-size: tokens.$font-size-sm;
+}
 input[type='color'] {
-  width: 100%; min-height: tokens.$input-height;
-  padding: tokens.$spacing-1;
+  width: 100%;
+  min-height: tokens.$button-height-sm;
+  height: tokens.$button-height-sm;
+  padding: tokens.$spacing-1 tokens.$spacing-2;
   border: 1px solid tokens.$border-color;
   border-radius: tokens.$radius-sm;
   background: tokens.$background-surface;
   &:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: 2px; }
 }
-app-button { display: block; margin-block: tokens.$spacing-2; }
+app-button {
+  --button-min-height: #{tokens.$button-height-sm};
+  --button-padding: #{tokens.$spacing-1} #{tokens.$spacing-3};
+  display: block;
+  margin-block: tokens.$spacing-2;
+  line-height: tokens.$line-height-tight;
+}
+lucide-icon { display: flex; }
 .hint { color: tokens.$text-muted; font-size: tokens.$font-size-xs; line-height: tokens.$line-height-normal; }

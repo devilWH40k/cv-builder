@@ -1226,8 +1226,11 @@ The user should focus primarily on creating their CV, not on understanding the i
 
 The multi-select's small secondary “Add custom entry” button opens a shared dialog
 with a required name and optional icon. Cancel, Escape, and backdrop dismissal
-leave selections unchanged. Uploaded icons are decoded locally and fitted without
-stretching into a transparent 96×96 PNG. Pickers and chips display them at 20×20px;
+leave selections unchanged. New icons accept vector SVG only, up to 5 MB. They are
+fitted without stretching into a transparent 96 by 96 SVG viewport. Visible fills and
+strokes use the main color (#36D4F7), preserving white contrast details; embedded images and external resources are
+rejected. SVG paths remain editable and recolorable in the constructor. Existing
+saved PNG icons remain supported. Pickers and chips display them at 20×20px;
 experience preview icons use 24×24px, matching the built-in icons.
 
 The icon field reuses `app-file-upload` with `mode="icon"`, a configurable `accept`
@@ -1511,8 +1514,11 @@ Import design, Blank design. Recently shows visited designs, while Home's Files 
 Designs tabs separate the CV collection and all saved visual designs.
 The editor fills the viewport using the shared overlay and a top-right close icon,
 with fit-page zoom to maximize the visible document. Its toolbar groups selection,
-drawing, text, images, shapes, history and zoom. Pages sit above the canvas;
-properties and layers occupy a right panel on desktop and stack below the canvas
+drawing, text, images, shapes, history and zoom. A Pages section follows Page
+properties in the left panel, with a compact Add page button opposite the heading
+and a confirmation-protected delete cross beside each page.
+The compact header places save status beside the design name and uses 32px action
+buttons. Properties and layers occupy a right panel on desktop and stack below the canvas
 on smaller screens. The canvas scrolls independently without widening the page.
 Object colors belong to the document and remain independent of the application
 theme. See [Constructor architecture](CONSTRUCTOR.md) for persistence and export.
