@@ -195,6 +195,14 @@ catalogue alphabetically. Search filters names; clearing it restores every icon.
 Click an icon to add a vector layer, then use its color properties to recolor it.
 Icons remain single layers and are preserved in saved designs and PDF export.
 
+During a drag or resize, `ConstructorCanvas` reuses temporary rendered layers
+above and below the moving object, avoiding repeated painting of stationary blur
+and nested groups. The layers are released after the gesture or any document
+change and rebuilt if zoom or canvas dimensions change. Stack-spanning
+multi-selections, destination-dependent blending, and canvases exceeding the
+temporary pixel budget use normal Fabric rendering. Saved designs and PDF export
+continue to use editable vector objects.
+
 ## Validation
 
 ```sh

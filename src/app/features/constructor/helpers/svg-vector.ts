@@ -56,5 +56,7 @@ export async function svgVector(source: string, width: number, height: number, c
     }
   };
   prepare(group);
+  // Cache the complete artwork once; its paths remain vectors for editing and export.
+  group.set('objectCaching', true);
   return group;
 }

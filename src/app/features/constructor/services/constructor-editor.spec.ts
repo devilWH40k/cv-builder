@@ -4,7 +4,7 @@ import { ConstructorEditor } from './constructor-editor';
 import { blankDesign } from '../helpers/preview-to-design';
 import { parseDesign } from '../helpers/design-validation';
 import { loadDesignFonts } from '../helpers/design-assets';
-import { ActiveSelection, Canvas, FabricImage, Group, IText, Point, Transform, util } from 'fabric';
+import { ActiveSelection, Canvas, controlsUtils, FabricImage, Group, IText, Point, Rect, Transform, util } from 'fabric';
 import { A4_WIDTH } from '../interfaces/constructor-document';
 import { svgVector } from '../helpers/svg-vector';
 import { Mail } from 'lucide-angular';
@@ -29,6 +29,97 @@ describe('Constructor editing', () => {
   afterEach(async () => {
     await editor.dispose();
     canvas.remove();
+  });
+
+  it('reuses snapping bounds during dragging and resizing and refreshes them for the next gesture', async () => {
+    const target = new Rect({ left: 200, top: 200, width: 60, height: 40, strokeWidth: 0 });
+    target.designId = 'moving';
+    const stationary = new Rect({ left: 300, top: 400, width: 80, height: 50, strokeWidth: 0 });
+    stationary.designId = 'stationary';
+    await editor.load({ id: crypto.randomUUID(), scene: JSON.stringify({ objects: [target.toObject(), stationary.toObject()] }) });
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.select('moving');
+    const moving = activate.calls.mostRecent().args[0];
+    const canvas = moving.canvas;
+    if (!(canvas instanceof Canvas)) throw new Error('Expected editor canvas');
+    const other = canvas.getObjects().find(object => object.designId === 'stationary')!;
+    const bounds = spyOn(other, 'getBoundingRect').and.callThrough();
+    const transform: Transform = {
+      target: moving, action: 'drag', corner: '',
+      scaleX: 1, scaleY: 1, skewX: 0, skewY: 0, offsetX: 0, offsetY: 0,
+      originX: 'left', originY: 'top', ex: 0, ey: 0, lastX: 0, lastY: 0,
+      theta: 0, width: moving.width, height: moving.height,
+      shiftKey: false, altKey: false, actionPerformed: false,
+      original: { ...util.saveObjectTransform(moving), originX: moving.originX, originY: moving.originY, cropX: 0, cropY: 0 },
+    };
+    const e = new MouseEvent('mousemove');
+    canvas.fire('before:transform', { e, transform });
+    for (let index = 0; index < 20; index++) {
+      moving.set({ left: 303, top: 401 });
+      canvas.fire('object:moving', { e, transform, target: moving, pointer: new Point() });
+      expect(moving.left).toBeCloseTo(300);
+      expect(moving.top).toBeCloseTo(400);
+    }
+    expect(bounds).toHaveBeenCalledTimes(1);
+    moving.set({ left: 303, top: 401 });
+    canvas.fire('object:moving', { e: new MouseEvent('mousemove', { altKey: true }), transform, target: moving, pointer: new Point() });
+    expect(moving.left).toBe(303);
+    canvas.fire('object:modified', { e, transform, target: moving });
+    other.set({ left: 500, top: 600 });
+    other.setCoords();
+    const before = bounds.calls.count();
+    canvas.fire('before:transform', { e, transform });
+    moving.set({ left: 503, top: 601 });
+    canvas.fire('object:moving', { e, transform, target: moving, pointer: new Point() });
+    expect(moving.left).toBeCloseTo(500);
+    expect(moving.top).toBeCloseTo(600);
+    expect(bounds.calls.count() - before).toBe(1);
+    transform.action = 'scaleX';
+    canvas.fire('before:transform', { e, transform });
+    const beforeScaling = bounds.calls.count();
+    for (let index = 0; index < 20; index++) {
+      moving.set('scaleX', 1.3);
+      canvas.fire('object:scaling', { e, transform, target: moving, pointer: new Point() });
+      expect(moving.getScaledWidth()).toBeCloseTo(80);
+    }
+    expect(bounds.calls.count()).toBe(beforeScaling);
+  });
+
+  it('updates nested group coordinates once per native drag step and keeps children selectable afterward', async () => {
+    editor.addShape('rectangle');
+    editor.addShape('circle');
+    editor.selectAll();
+    editor.group();
+    editor.addShape('rectangle');
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.selectAll();
+    editor.group();
+    const group = activate.calls.mostRecent().args[0];
+    if (!(group instanceof Group) || !(group.canvas instanceof Canvas)) throw new Error('Expected group');
+    const canvas = group.canvas;
+    const inner = group.getObjects().find(object => object instanceof Group);
+    if (!(inner instanceof Group)) throw new Error('Expected nested group');
+    const child = inner.getObjects()[0];
+    const update = spyOn(child, 'setCoords').and.callThrough();
+    const transform: Transform = {
+      target: group, action: 'drag', actionHandler: controlsUtils.dragHandler, corner: '',
+      scaleX: 1, scaleY: 1, skewX: 0, skewY: 0, offsetX: 0, offsetY: 0,
+      originX: 'left', originY: 'top', ex: 0, ey: 0, lastX: 0, lastY: 0,
+      theta: 0, width: group.width, height: group.height,
+      shiftKey: false, altKey: false, actionPerformed: false,
+      original: { ...util.saveObjectTransform(group), originX: group.originX, originY: group.originY, cropX: 0, cropY: 0 },
+    };
+    const e = new MouseEvent('mousemove');
+    canvas.fire('before:transform', { e, transform });
+    for (let index = 0; index < 10; index++) {
+      canvas._performTransformAction(e, transform, new Point(200 + index * 10, 300 + index * 10));
+    }
+    expect(update).toHaveBeenCalledTimes(10);
+    const center = child.getCenterPoint();
+    expect(child.containsPoint(center)).toBeTrue();
+    canvas.fire('object:modified', { e, transform, target: group });
+    editor.select(child.designId!);
+    expect(editor.selectedIds().has(child.designId!)).toBeTrue();
   });
 
   it('adds recolorable vector icons as atomic layers and preserves them through history and reload', async () => {
