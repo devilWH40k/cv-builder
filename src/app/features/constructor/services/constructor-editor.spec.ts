@@ -122,6 +122,22 @@ describe('Constructor editing', () => {
     expect(editor.selectedIds().has(child.designId!)).toBeTrue();
   });
 
+  it('recolors filled vector icon paths while retaining transparent areas', async () => {
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    await editor.addIcon('Mail', Mail);
+    const icon = activate.calls.mostRecent().args[0];
+    if (!(icon instanceof Group)) throw new Error('Expected vector icon');
+    const filledPath = new Rect({ width: 8, height: 8, fill: '#0000ff' });
+    const transparentPath = new Rect({ width: 8, height: 8, fill: 'rgba(0,0,0,0)' });
+    const whitePath = new Rect({ width: 4, height: 4, fill: '#ffffff' });
+    icon.add(filledPath, transparentPath, whitePath);
+    editor.setFill('#ff0000');
+    expect(filledPath.fill).toBe('#ff0000');
+    expect(transparentPath.fill).toBe('rgba(0,0,0,0)');
+    expect(whitePath.fill).toBe('#ffffff');
+    expect(icon.getObjects()[0].fill).toBe('transparent');
+  });
+
   it('adds recolorable vector icons as atomic layers and preserves them through history and reload', async () => {
     const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
     await editor.addIcon('Mail', Mail);

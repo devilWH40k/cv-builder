@@ -79,7 +79,7 @@ function customIcons(value: unknown): { customTechnologyIcons?: CustomEntryIcons
   if (value === undefined) return {};
   const entries = Object.entries(object(value)).map(([name, source]) => {
     const icon = string(source);
-    if (!name.trim() || icon.length > 100000 || !/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(icon)) {
+    if (!name.trim() || icon.length > 100000 || !/^data:image\/(png|svg\+xml);base64,[A-Za-z0-9+/]+={0,2}$/.test(icon)) {
       throw new Error(INVALID);
     }
     return [name, icon];
@@ -164,7 +164,7 @@ export async function createArchive(
     });
   }
   const manifest = strToU8(JSON.stringify({
-    format: 'cv-builder', schemaVersion: 6, exportedAt: new Date().toISOString()
+    format: 'cv-builder', schemaVersion: 7, exportedAt: new Date().toISOString()
   }));
   const data = strToU8(JSON.stringify(cvs));
   const experienceData = strToU8(JSON.stringify(experiences));
@@ -262,7 +262,7 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
   const manifest = object(json('manifest.json'));
   if (manifest['format'] !== 'cv-builder') throw new Error(INVALID);
   const version = manifest['schemaVersion'];
-  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6) throw new Error('This backup version is not supported.');
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== 7) throw new Error('This backup version is not supported.');
   const savedExperiences = version >= 2 ? array(json('experiences.json')) : [];
   const savedTechnologies = version >= 3 ? array(json('technologies.json')) : [];
   if (savedTechnologies.length > MAX_TECHNOLOGIES) throw new Error(TOO_LARGE);

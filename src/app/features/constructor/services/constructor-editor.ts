@@ -501,7 +501,12 @@ export class ConstructorEditor {
       if (object.designIconName && object instanceof Group) {
         const paint = (member: FabricObject): void => {
           if (member instanceof Group) member.getObjects().forEach(paint);
-          else if (member.stroke) member.set('stroke', fill);
+          else {
+            for (const key of ['fill', 'stroke'] as const) {
+              const paint = member[key];
+              if (paint && paint !== 'none' && (typeof paint !== 'string' || (new Color(paint).getAlpha() > 0 && new Color(paint).toHex() !== 'FFFFFF'))) member.set(key, fill);
+            }
+          }
           member.set('dirty', true);
         };
         paint(object);
@@ -867,8 +872,21 @@ export class ConstructorEditor {
 
   private properties(object: FabricObject): SelectionProperties {
     const text = object instanceof IText ? object : null;
+    const iconPaint = (member: FabricObject): FabricObject['fill'] => {
+      if (member instanceof Group) {
+        for (const child of member.getObjects()) {
+          const paint = iconPaint(child);
+          if (paint) return paint;
+        }
+        return null;
+      }
+      for (const paint of [member.stroke, member.fill]) {
+        if (paint && paint !== 'none' && (typeof paint !== 'string' || new Color(paint).getAlpha() > 0)) return paint;
+      }
+      return null;
+    };
     const paint = object.designIconName && object instanceof Group
-      ? object.getObjects().find(child => !!child.stroke)?.stroke
+      ? iconPaint(object)
       : object.type === 'path' ? object.stroke : object.fill;
     const gradient = paint instanceof Gradient ? paint : null;
     const hexColor = (color: string) => '#' + new Color(color).toHex();

@@ -211,6 +211,7 @@ export async function previewToDesign(
       portrait,
       getComputedStyle(image).filter,
     );
+    if (vector && image.src.startsWith('data:image/svg+xml')) object.designIconName = image.alt || 'Custom icon';
     const page = pageFor(bounds.left);
     object.set({
       left: bounds.left - origin.left - page * A4_WIDTH,

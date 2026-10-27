@@ -18,9 +18,9 @@ writing happen in one transaction. A failure rolls back all changes, including
 the clear. An empty valid backup with this option clears all four stores.
 Internal migration metadata is retained. The current editor draft is unchanged.
 
-## Archive format (version 6)
+## Archive format (version 7)
 
-- `manifest.json`: `format: "cv-builder"`, `schemaVersion: 6`, and an ISO `exportedAt`.
+- `manifest.json`: `format: "cv-builder"`, `schemaVersion: 7`, and an ISO `exportedAt`.
 - `cvs.json`: saved CV records (`id`, `updatedAt`, `info`).
 - `experiences.json`: saved experience records (`id`, `updatedAt`, `experience`).
 - `technologies.json`: saved technology records with optional custom icons.
@@ -36,12 +36,13 @@ contact information (`phone`, `email`, and `socials` entries with `network` and
 values can be restored for editing, but are omitted from preview and PDF links.
 
 Version 6 adds optional company logos; older CVs without a logo remain supported.
-Versions 1 through 5 remain importable. Version 1 contains CVs only, version 2 adds
+Version 7 preserves custom SVG technology icons as editable vectors.
+Versions 1 through 6 remain importable. Version 1 contains CVs only, version 2 adds
 saved experiences, and version 3 adds technologies. These versions have no folders.
 Version 4 requires all four JSON collections, even when empty. Folder names must
 be nonblank and at most 120 characters; membership must reference CVs in the archive,
 with no duplicate assignments or nested folders. Older apps must be updated to read
-version 6 backups to preserve company logos.
+version 7 backups to preserve SVG technology icons.
 
 The codec loads on demand and uses fflate. JSON is compressed; JPEG and PNG are
 stored without recompression. Limits: 1,000 CVs, 1,000 saved experiences, 1,000

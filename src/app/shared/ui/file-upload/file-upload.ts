@@ -13,6 +13,7 @@ import { PhotoPreview } from '../photo-preview/photo-preview';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileUpload extends FormField<File | null> {
+  readonly previewSource = input<string | null | undefined>(undefined);
   readonly removable = input(false);
   protected readonly XIcon = X;
   readonly mode = input<'photo' | 'icon' | 'file'>('photo');
