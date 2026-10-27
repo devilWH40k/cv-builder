@@ -36,22 +36,24 @@
   <dialog appDialogOverlay class="editor" [class.operation-busy]="editor.restoringHistory() || editor.clipboardBusy()" [attr.inert]="session.saving() ? '' : null" (keydown)="keyboard($event)"
     (cancel)="closeEditor($event)" aria-label="Visual CV editor">
     <div class="document-heading" [attr.inert]="workspaceLoading() ? '' : null">
-      <label class="document-title">Design name<input #title aria-label="Design name" maxlength="200"
-          [value]="session.title()" (change)="session.rename(title.value)" /></label>
-      <span class="save-state">{{ session.dirty() ? 'Unsaved changes' : 'Saved' }}</span>
+      <div class="document-info">
+        <label class="document-title"><input #title aria-label="Design name" maxlength="200"
+            [value]="session.title()" (change)="session.rename(title.value)" /></label>
+        <span class="save-state">{{ session.dirty() ? 'Unsaved changes' : 'Saved' }}</span>
+      </div>
       <div class="document-actions">
         <app-button variant="outline" (click)="exportDesign()" title="Download an editable design file"><lucide-icon
-            [img]="icons.FileJson" [size]="18" />Design file</app-button>
+            [img]="icons.FileJson" [size]="16" />Design file</app-button>
         <app-button variant="outline" (click)="exportPdf()" [disabled]="exporting()"><lucide-icon [img]="icons.Download"
-            [size]="18" />{{
+            [size]="16" />{{
           exporting() ? 'Exporting…' : 'Export PDF'
           }}</app-button>
-        <app-button (click)="save()" [disabled]="session.saving()"><lucide-icon [img]="icons.Save" [size]="18" />{{
+        <app-button (click)="save()" [disabled]="session.saving()"><lucide-icon [img]="icons.Save" [size]="16" />{{
           session.saving() ? 'Saving…' : 'Save'
           }}</app-button>
       </div>
       <button type="button" class="editor-close" aria-label="Close editor" title="Close editor" (click)="closeEditor()">
-        <lucide-icon [img]="icons.X" [size]="24" aria-hidden="true" />
+        <lucide-icon [img]="icons.X" [size]="20" aria-hidden="true" />
       </button>
     </div>
     <div class="toolbar" role="toolbar" aria-label="Design tools" [attr.inert]="workspaceLoading() ? '' : null">
@@ -110,29 +112,48 @@
       }
     </div>
     <div class="workspace" [style.--left-width]="leftWidth() + 'px'" [style.--right-width]="rightWidth() + 'px'">
-      <aside class="page-properties-panel panel" [class.is-loading]="workspaceLoading()"
+      <aside class="page-panels" [style.--page-properties-height]="pagePropertiesHeight() + 'px'">
+      <div class="page-properties-panel panel" [class.is-loading]="workspaceLoading()"
         [attr.aria-busy]="workspaceLoading()">
         <app-constructor-page-properties />
+        <section class="pages-section" aria-labelledby="constructor-pages-title"
+          [attr.inert]="workspaceLoading() ? '' : null">
+          <div class="pages-heading">
+            <h2 id="constructor-pages-title">Pages</h2>
+            <button type="button" class="add-page" (click)="addPage()"
+              [disabled]="(session.document()?.pages?.length ?? 0) >= 50"
+              aria-label="Add page" title="Add page">
+              <lucide-icon [img]="icons.Plus" [size]="16" aria-hidden="true" />
+            </button>
+          </div>
+          <nav class="page-tabs" aria-label="Design pages">
+            @for (pageItem of session.document()?.pages; track pageItem.id; let index = $index) {
+              <div class="page-item">
+                <button type="button" class="page-select" [attr.aria-current]="session.activePage() === index ? 'page' : null"
+                  (click)="page(index)">
+                  Page {{ index + 1 }}
+                </button>
+                <button type="button" class="page-delete" (click)="removePage(index)"
+                  [disabled]="(session.document()?.pages?.length ?? 0) <= 1"
+                  [attr.aria-label]="'Delete Page ' + (index + 1)" [title]="'Delete Page ' + (index + 1)">
+                  <lucide-icon [img]="icons.X" [size]="14" aria-hidden="true" />
+                </button>
+              </div>
+            }
+          </nav>
+        </section>
         @if (workspaceLoading()) { <app-spinner label="Loading page properties" /> }
+      </div>
+      <app-resize-handle [(size)]="pagePropertiesHeight" axis="vertical" [min]="120" [max]="900"
+        label="Resize page properties and icon library height" />
+      <div class="icon-library-panel panel" [class.is-loading]="workspaceLoading()"
+        [attr.aria-busy]="workspaceLoading()">
+        <app-constructor-icon-library [attr.inert]="workspaceLoading() ? '' : null" />
+        @if (workspaceLoading()) { <app-spinner label="Loading icon library" /> }
+      </div>
       </aside>
       <app-resize-handle [(size)]="leftWidth" [max]="360" label="Resize page properties" />
       <div class="stage-column">
-        <nav class="page-tabs" aria-label="Design pages" [attr.inert]="workspaceLoading() ? '' : null">
-          @for (pageItem of session.document()?.pages; track pageItem.id; let index = $index) {
-          <button type="button" [attr.aria-current]="session.activePage() === index ? 'page' : null"
-            (click)="page(index)">
-            Page {{ index + 1 }}
-          </button>
-          }
-          <button type="button" (click)="addPage()" [disabled]="(session.document()?.pages?.length ?? 0) >= 50"
-            aria-label="Add page">
-            <lucide-icon [img]="icons.Plus" [size]="16" />
-          </button>
-          <button type="button" (click)="removePage()" [disabled]="(session.document()?.pages?.length ?? 0) <= 1"
-            aria-label="Delete current page">
-            <lucide-icon [img]="icons.Trash2" [size]="16" />
-          </button>
-        </nav>
         <div #canvasViewport class="canvas-viewport" tabindex="0" aria-label="A4 design workspace"
           (contextmenu)="objectMenu.open($event)" [class.is-loading]="workspaceLoading()"
           [attr.aria-busy]="workspaceLoading()">
@@ -160,6 +181,9 @@
         </div>
       </aside>
     </div>
+    <footer class="editor-footer">
+      <span aria-label="App version">{{ appVersion }}</span>
+    </footer>
     <app-constructor-object-menu #objectMenu />
     <input #imageFile type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="insertImage(imageFile)" />
     @if (pendingImage(); as file) {

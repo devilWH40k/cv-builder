@@ -1,3 +1,4 @@
+import { cvLogoSizeMm } from './cv-logo-size';
 import { cvPhotoSizeMm } from './cv-photo-size';
 import { contactLinks } from './cv-contact';
 import { Mail, Phone, LucideIconData } from 'lucide-angular';
@@ -72,7 +73,7 @@ export function pdfRichText(html: string): Content {
   });
 }
 
-async function imageData(source: string, size: number, round = false, tint?: string): Promise<string> {
+async function imageData(source: string, size: number, round = false, tint?: string, topRight = false): Promise<string> {
   const image = new Image();
   image.src = source;
   await image.decode();
@@ -90,7 +91,8 @@ async function imageData(source: string, size: number, round = false, tint?: str
     : Math.min(size / image.naturalWidth, size / image.naturalHeight);
   const width = image.naturalWidth * scale;
   const height = image.naturalHeight * scale;
-  context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+  context.drawImage(image, topRight ? size - width : (size - width) / 2,
+    topRight ? 0 : (size - height) / 2, width, height);
   if (tint) {
     context.globalCompositeOperation = 'source-in';
     context.fillStyle = tint;
@@ -132,6 +134,15 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
   }
 
   const icons = new Map<string, string>();
+  if (cv.companyLogo) {
+    const url = URL.createObjectURL(cv.companyLogo);
+    try {
+      const size = cvLogoSizeMm(structure.companyLogoSizeMm) * 72 / 25.4;
+      header.push({ image: await imageData(url, 480, false, undefined, true), width: size, height: size });
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
   if (structure.technologiesView === 'blocks') {
     const sources = [...new Set(cv.experiences
       .filter((entry) => usedTechnologiesView(entry.technologies, structure.technologiesView, entry.customTechnologyIcons) === 'blocks')

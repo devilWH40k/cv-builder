@@ -35,6 +35,19 @@
             <p class="position">{{ cv.positionTitle }}</p>
             <p class="description">{{ cv.description }}</p>
           </div>
+          @if (companyLogoUrl(); as url) {
+            @if (readOnly()) {
+              <img class="company-logo" [src]="url" alt="Company logo" draggable="false"
+                [style.width.mm]="logoSizeMm()" [style.height.mm]="logoSizeMm()" (error)="companyLogoUrl.set(null)" />
+            } @else {
+              <app-resizable class="logo-resizer" [size]="logoSizeMm() * pixelsPerMm"
+                [minSize]="10 * pixelsPerMm" [maxSize]="40 * pixelsPerMm" [step]="pixelsPerMm"
+                label="Company logo size" [valueText]="logoSizeMm() + ' millimeters'" (sizeChange)="resizeLogo($event)">
+                <img class="company-logo" [src]="url" alt="Company logo" draggable="false"
+                  (error)="companyLogoUrl.set(null)" />
+              </app-resizable>
+            }
+          }
         </header>
         <div class="cv-body" [class.sidebar-left]="structure().sidebarPosition === 'left'">
           <div class="cv-main">

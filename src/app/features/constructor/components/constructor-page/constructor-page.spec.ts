@@ -8,8 +8,82 @@ import { blankDesign } from '../../helpers/preview-to-design';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ConstructorEditor } from '../../services/constructor-editor';
 import { FabricObject } from 'fabric';
+import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
 
 describe('Fullscreen constructor page', () => {
+  it('keeps page actions below page properties and uses a compact document header', async () => {
+    const design = blankDesign();
+    const repository = jasmine.createSpyObj<ConstructorRepository>('repository', [
+      'load', 'recentlyVisited', 'recordVisit',
+    ]);
+    repository.load.and.resolveTo(design);
+    repository.recentlyVisited.and.resolveTo([]);
+    repository.recordVisit.and.resolveTo();
+    const confirmation = jasmine.createSpyObj<DeleteConfirmationService>('confirmation', ['confirm']);
+    confirmation.confirm.and.resolveTo(true);
+    TestBed.configureTestingModule({
+      providers: [provideZonelessChangeDetection(),
+        provideRouter([{ path: 'constructor', component: ConstructorPageComponent }]),
+        { provide: ConstructorRepository, useValue: repository },
+        { provide: DeleteConfirmationService, useValue: confirmation }],
+    });
+    const harness = await RouterTestingHarness.create('/constructor?design=' + design.id);
+    await harness.fixture.whenStable();
+    const dialog = document.querySelector<HTMLDialogElement>('dialog.editor')!;
+    const pages = dialog.querySelector('.pages-section')!;
+    expect(pages.previousElementSibling?.tagName.toLowerCase()).toBe('app-constructor-page-properties');
+    expect(pages.closest('.page-properties-panel')).not.toBeNull();
+    const library = dialog.querySelector('app-constructor-icon-library')!;
+    expect(library.closest('.page-properties-panel')).toBeNull();
+    const divider = dialog.querySelector<HTMLElement>('[aria-label="Resize page properties and icon library height"]')!;
+    expect(divider.getAttribute('aria-orientation')).toBe('horizontal');
+    expect(library.closest('.icon-library-panel')?.previousElementSibling).toBe(divider.parentElement);
+    expect(divider.parentElement?.previousElementSibling).toBe(pages.closest('.page-properties-panel'));
+    divider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await harness.fixture.whenStable();
+    expect(divider.getAttribute('aria-valuenow')).toBe('410');
+    expect((dialog.querySelector('.page-panels') as HTMLElement).style.getPropertyValue('--page-properties-height')).toBe('410px');
+    expect(pages.querySelector('h2')!.textContent).toBe('Pages');
+    expect(dialog.querySelector('.stage-column .page-tabs')).toBeNull();
+    const heading = dialog.querySelector('.document-heading')!;
+    const title = heading.querySelector('[aria-label="Design name"]')!.getBoundingClientRect();
+    const status = heading.querySelector('.save-state')!.getBoundingClientRect();
+    expect(status.left).toBeGreaterThanOrEqual(title.right);
+    expect(Math.abs((status.top + status.height / 2) - (title.top + title.height / 2))).toBeLessThan(1);
+    expect(heading.getBoundingClientRect().height).toBeLessThanOrEqual(40);
+    heading.querySelectorAll('button').forEach((button) => {
+      const style = getComputedStyle(button);
+      expect(button.getBoundingClientRect().height).withContext(JSON.stringify({
+        text: button.textContent?.trim(), boxSizing: style.boxSizing, minHeight: style.minHeight,
+        lineHeight: style.lineHeight, padding: style.padding, border: style.borderWidth,
+      })).toBeLessThanOrEqual(32);
+    });
+    const add = pages.querySelector<HTMLButtonElement>('[aria-label="Add page"]')!;
+    expect(add.closest('.pages-heading')).not.toBeNull();
+    const caption = pages.querySelector('h2')!.getBoundingClientRect();
+    const addBounds = add.getBoundingClientRect();
+    expect(addBounds.left).toBeGreaterThan(caption.right);
+    expect(Math.abs((caption.top + caption.height / 2) - (addBounds.top + addBounds.height / 2))).toBeLessThan(1);
+    const remove = pages.querySelector<HTMLButtonElement>('[aria-label="Delete Page 1"]')!;
+    expect(remove.disabled).toBeTrue();
+    add.click();
+    await harness.fixture.whenStable();
+    expect(pages.querySelector('[aria-current="page"]')!.textContent).toContain('Page 2');
+    expect(remove.disabled).toBeFalse();
+    expect(pages.querySelectorAll('.page-delete').length).toBe(2);
+    confirmation.confirm.and.resolveTo(false);
+    remove.click();
+    await harness.fixture.whenStable();
+    expect(confirmation.confirm).toHaveBeenCalledWith(jasmine.objectContaining({ itemName: 'Page 1' }), jasmine.anything());
+    expect(pages.querySelectorAll('.page-select').length).toBe(2);
+    expect(pages.querySelector('[aria-current="page"]')!.textContent).toContain('Page 2');
+    confirmation.confirm.and.resolveTo(true);
+    remove.click();
+    await harness.fixture.whenStable();
+    expect(pages.querySelector('[aria-current="page"]')!.textContent).toContain('Page 1');
+    expect(pages.querySelector<HTMLButtonElement>('.page-delete')!.disabled).toBeTrue();
+  });
+
   it('shows and edits shared group properties with mixed values', async () => {
     const design = blankDesign();
     const repository = jasmine.createSpyObj<ConstructorRepository>('repository', [
@@ -197,7 +271,8 @@ describe('Fullscreen constructor page', () => {
     expect(bounds.height).toBe(innerHeight);
     expect(repository.recordVisit).toHaveBeenCalledOnceWith(design.id);
     expect(dialog.querySelector<HTMLSelectElement>('.zoom-label select')!.value).toBe('fit');
-    expect(dialog.querySelector('p[role="status"], p[role="alert"]')).toBeNull();
+    expect(dialog.querySelector('p[role="status"]:not(.count), p[role="alert"]')).toBeNull();
+    expect(dialog.querySelector('app-constructor-icon-library .count')?.textContent).toContain('icons');
     const heading = dialog.querySelector('.document-heading')!;
     expect(heading.querySelector('.editor-close')).not.toBeNull();
     const toasts = TestBed.inject(ToastService);
@@ -213,8 +288,8 @@ describe('Fullscreen constructor page', () => {
     Array.from(dialog.querySelectorAll<HTMLButtonElement>('.page-tabs button'))
       .find((button) => button.textContent?.trim() === 'Page 2')!.click();
     harness.fixture.detectChanges();
-    expect(dialog.querySelectorAll('.is-loading app-spinner').length).toBe(4);
-    expect(dialog.querySelectorAll('[aria-busy="true"]').length).toBe(4);
+    expect(dialog.querySelectorAll('.is-loading app-spinner').length).toBe(5);
+    expect(dialog.querySelectorAll('[aria-busy="true"]').length).toBe(5);
     expect(toasts.messages().length).toBe(0);
     release();
     await harness.fixture.whenStable();

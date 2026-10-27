@@ -11,6 +11,7 @@ export interface CvStructure {
   readonly theme?: CvTheme;
   readonly showPhoto?: boolean;
   readonly photoSizeMm?: number;
+  readonly companyLogoSizeMm?: number;
   readonly sidebarPosition: 'left' | 'right';
   readonly technologiesView: 'blocks' | 'comma-separated';
   readonly technologiesPosition?: 'top' | 'bottom';
@@ -29,6 +30,7 @@ export interface CvInfo {
   readonly positionTitle: string;
   readonly description: string;
   readonly photo: File | null;
+  readonly companyLogo?: File | null;
   readonly languages: readonly CvLanguage[];
   readonly technologies: readonly string[];
   readonly experiences: readonly CvExperience[];

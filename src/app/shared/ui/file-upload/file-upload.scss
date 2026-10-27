@@ -125,3 +125,21 @@ lucide-icon {
   color: tokens.$text-muted;
   font-size: tokens.$font-size-xs;
 }
+
+.has-remove .upload-display { padding-right: tokens.$spacing-12; }
+.remove-file {
+  position: absolute;
+  right: tokens.$spacing-2;
+  top: tokens.$spacing-2;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: tokens.$spacing-8;
+  height: tokens.$spacing-8;
+  border: 0;
+  border-radius: tokens.$radius-sm;
+  background: tokens.$background-surface;
+  cursor: pointer;
+  &:focus-visible { outline: 2px solid tokens.$border-color-focus; }
+  &:disabled { cursor: not-allowed; }
+}

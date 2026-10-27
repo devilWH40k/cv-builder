@@ -1,6 +1,14 @@
 @use '../../../../../styles/tokens' as tokens;
 
 .page-stack { width: 210mm; margin-inline: auto; }
+.company-logo {
+  flex-shrink: 0;
+  align-self: flex-start;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: top right;
+}
 .page-count, .page-label {
   color: tokens.$text-muted;
   font-size: tokens.$font-size-sm;
@@ -32,3 +40,5 @@
   .preview-sheet { break-after: page; }
   .preview-sheet:last-child { break-after: auto; }
 }
+
+.logo-resizer { flex-shrink: 0; align-self: flex-start; }

@@ -12,6 +12,25 @@ export interface SnapMatch {
 
 export const PAGE_PADDING = (16 * 96) / 25.4;
 
+export interface SnapGuides {
+  readonly x: readonly number[];
+  readonly y: readonly number[];
+  readonly widths: readonly number[];
+  readonly heights: readonly number[];
+}
+
+/** Other objects stay stationary throughout a pointer transform. */
+export function snappingGuides(bounds: readonly SnapBounds[], pageWidth: number, pageHeight: number): SnapGuides {
+  return {
+    x: [0, PAGE_PADDING, pageWidth / 2, pageWidth - PAGE_PADDING, pageWidth,
+      ...bounds.flatMap(bound => boundsGuides(bound, 'x'))],
+    y: [0, PAGE_PADDING, pageHeight / 2, pageHeight - PAGE_PADDING, pageHeight,
+      ...bounds.flatMap(bound => boundsGuides(bound, 'y'))],
+    widths: [pageWidth - 2 * PAGE_PADDING, ...bounds.map(bound => bound.width)],
+    heights: [pageHeight - 2 * PAGE_PADDING, ...bounds.map(bound => bound.height)],
+  };
+}
+
 /** Find the nearest visual edge/center within a screen-derived tolerance. */
 export function snapAxis(points: readonly number[], guides: readonly number[], tolerance: number): SnapMatch | null {
   let match: SnapMatch | null = null;

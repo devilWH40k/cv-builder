@@ -21,6 +21,40 @@ describe('Preview photo visibility', () => {
     spyOn(URL, 'revokeObjectURL');
   });
 
+  it('starts with a smaller logo and persists keyboard resizing', async () => {
+    const draft = TestBed.inject(CvDraft);
+    draft.save({ ...info, companyLogo: info.photo });
+    const fixture = TestBed.createComponent(Preview);
+    await fixture.whenStable();
+    const slider = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.logo-resizer')!;
+    expect(slider.getAttribute('aria-valuetext')).toBe('18 millimeters');
+    slider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+    await fixture.whenStable();
+    expect(draft.current()?.structure?.companyLogoSizeMm).toBe(19);
+    expect(slider.getAttribute('aria-valuetext')).toBe('19 millimeters');
+  });
+
+  it('places the logo at the top right independently of the portrait and releases replaced URLs', async () => {
+    const draft = TestBed.inject(CvDraft);
+    const companyLogo = new File(['logo'], 'company.png', { type: 'image/png' });
+    draft.save({ ...info, photo: null, companyLogo });
+    const fixture = TestBed.createComponent(Preview);
+    fixture.componentRef.setInput('embedded', true);
+    fixture.componentRef.setInput('readOnly', true);
+    await fixture.whenStable();
+    const page: HTMLElement = fixture.nativeElement;
+    const logo = page.querySelector<HTMLImageElement>('.company-logo')!;
+    const header = page.querySelector<HTMLElement>('.cv-header')!;
+    expect(logo.alt).toBe('Company logo');
+    expect(logo.getBoundingClientRect().right).toBeCloseTo(header.getBoundingClientRect().right, 0);
+    expect(logo.getBoundingClientRect().top).toBeCloseTo(header.getBoundingClientRect().top, 0);
+    expect(getComputedStyle(logo).objectFit).toBe('contain');
+    draft.save({ ...info, companyLogo: null });
+    await fixture.whenStable();
+    expect(page.querySelector('.company-logo')).toBeNull();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(logo.src);
+  });
+
   it('shows older CV photos by default and toggles visibility without deleting the photo', async () => {
     const draft = TestBed.inject(CvDraft);
     draft.save(info);

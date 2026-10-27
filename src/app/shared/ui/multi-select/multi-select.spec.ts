@@ -55,13 +55,8 @@ describe('Custom multi-select entries', () => {
     const { fixture, page, dialog, name, apply } = await setup();
     name.value = '  My SDK  ';
     name.dispatchEvent(new Event('input'));
-    const canvas = document.createElement('canvas');
-    canvas.width = 320;
-    canvas.height = 80;
-    canvas.getContext('2d')!.fillRect(0, 0, 320, 80);
-    const blob = await new Promise<Blob>((resolve) => canvas.toBlob((blob) => resolve(blob!)));
     const transfer = new DataTransfer();
-    transfer.items.add(new File([blob], 'wide.png', { type: 'image/png' }));
+    transfer.items.add(new File(['<svg xmlns="http://www.w3.org/2000/svg" width="320" height="80"><rect width="320" height="80" fill="red"/></svg>'], 'wide.svg', { type: 'image/svg+xml' }));
     const upload = dialog.querySelector<HTMLInputElement>('input[type="file"]')!;
     upload.files = transfer.files;
     upload.dispatchEvent(new Event('change'));
@@ -70,7 +65,7 @@ describe('Custom multi-select entries', () => {
     const preview = dialog.querySelector<HTMLImageElement>('app-file-upload .icon-preview img')!;
     expect(preview.alt).toBe('Selected icon preview');
     expect(getComputedStyle(preview).objectFit).toBe('contain');
-    expect(dialog.querySelector('app-file-upload .filename')?.textContent).toBe('wide.png');
+    expect(dialog.querySelector('app-file-upload .filename')?.textContent).toBe('wide.svg');
     expect(document.querySelector('app-photo-preview')).toBeNull();
     apply.click();
     await fixture.whenStable();
@@ -101,7 +96,7 @@ describe('Custom multi-select entries', () => {
     upload.files = transfer.files;
     upload.dispatchEvent(new Event('change'));
     await fixture.whenStable();
-    expect(dialog.querySelector('[role="alert"]')?.textContent).toContain('could not be read');
+    expect(dialog.querySelector('[role="alert"]')?.textContent).toContain('Choose an SVG');
     expect(apply.disabled).toBeTrue();
     dialog.querySelector<HTMLButtonElement>('.icon-actions button')!.click();
     await fixture.whenStable();

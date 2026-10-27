@@ -25,8 +25,9 @@ export class SaveCv {
     const done = this.pendingTasks.add();
     this.busy.set(true);
     try {
-      // Files are immutable; preserve photo identity when tracking unsaved edits.
-      const snapshot: CvInfo = { ...structuredClone(info), photo: info.photo };
+      // Files are immutable; preserve image identity when tracking unsaved edits.
+      const snapshot: CvInfo = { ...structuredClone(info), photo: info.photo,
+        ...(info.companyLogo !== undefined ? { companyLogo: info.companyLogo } : {}) };
       const id = await this.saved.save(snapshot, savedId);
       if (this.draft.session() === session) {
         this.draft.savedId.set(id);

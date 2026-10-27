@@ -1,0 +1,24 @@
+<section aria-labelledby="icon-library-title">
+  <h2 id="icon-library-title">Icon Library</h2>
+  <input #search type="search" placeholder="Search icons" aria-label="Search icons"
+    [value]="query()" (input)="query.set(search.value)" />
+  @if (loading()) {
+    <p role="status">Loading icons…</p>
+  } @else {
+    <p class="count" role="status">{{ filtered().length }} icons</p>
+    <div class="icons" aria-label="Available icons" [attr.aria-busy]="inserting()">
+      @for (icon of filtered(); track icon.name) {
+        <button type="button" [disabled]="editor.busy() || inserting()" (click)="add(icon)"
+          [attr.aria-label]="'Add ' + icon.label + ' icon'" [title]="'Add ' + icon.label">
+          <lucide-icon [img]="icon.data" [size]="20" aria-hidden="true" />
+        </button>
+      } @empty {
+        <p>No icons found.</p>
+      }
+    </div>
+  }
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+    @if (!icons().length) { <button type="button" (click)="load()">Retry</button> }
+  }
+</section>

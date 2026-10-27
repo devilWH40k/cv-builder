@@ -79,7 +79,7 @@ function customIcons(value: unknown): { customTechnologyIcons?: CustomEntryIcons
   if (value === undefined) return {};
   const entries = Object.entries(object(value)).map(([name, source]) => {
     const icon = string(source);
-    if (!name.trim() || icon.length > 100000 || !/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(icon)) {
+    if (!name.trim() || icon.length > 100000 || !/^data:image\/(png|svg\+xml);base64,[A-Za-z0-9+/]+={0,2}$/.test(icon)) {
       throw new Error(INVALID);
     }
     return [name, icon];
@@ -111,11 +111,15 @@ function structure(value: unknown): CvStructure | undefined {
       sidebarTechnologiesView !== 'list')) throw new Error(INVALID);
   const showPhoto = settings['showPhoto'];
   const photoSizeMm = settings['photoSizeMm'];
+  const companyLogoSizeMm = settings['companyLogoSizeMm'];
+  if (companyLogoSizeMm !== undefined && (typeof companyLogoSizeMm !== 'number' ||
+    !Number.isFinite(companyLogoSizeMm) || companyLogoSizeMm <= 0)) throw new Error(INVALID);
   if (showPhoto !== undefined && typeof showPhoto !== 'boolean') throw new Error(INVALID);
   if (photoSizeMm !== undefined && (typeof photoSizeMm !== 'number' ||
     !Number.isFinite(photoSizeMm) || photoSizeMm <= 0)) throw new Error(INVALID);
   return {
     sidebarPosition, technologiesView,
+    ...(companyLogoSizeMm !== undefined ? { companyLogoSizeMm } : {}),
     ...(technologiesPosition !== undefined ? { technologiesPosition } : {}),
     ...(showPhoto !== undefined ? { showPhoto } : {}),
     ...(photoSizeMm !== undefined ? { photoSizeMm } : {}),
@@ -141,16 +145,26 @@ export async function createArchive(
       if (size > MAX_BYTES) throw new Error(TOO_LARGE);
       entries[path] = [new Uint8Array(await photo.arrayBuffer()), { level: 0 }];
     }
+    const logo = record.info.companyLogo;
+    const logoPath = `logos/${index}.${logo?.name.toLowerCase().endsWith('.svg') ? 'svg' : logo?.type === 'image/jpeg' ? 'jpg' : 'png'}`;
+    if (logo) {
+      size += logo.size;
+      if (size > MAX_BYTES) throw new Error(TOO_LARGE);
+      entries[logoPath] = [new Uint8Array(await logo.arrayBuffer()), { level: 0 }];
+    }
     cvs.push({
       ...record, info: {
         ...record.info, photo: photo ? {
           path, name: photo.name, type: photo.type, lastModified: photo.lastModified
-        } : null
+        } : null,
+        ...(logo !== undefined ? { companyLogo: logo ? {
+          path: logoPath, name: logo.name, type: logo.type, lastModified: logo.lastModified
+        } : null } : {})
       }
     });
   }
   const manifest = strToU8(JSON.stringify({
-    format: 'cv-builder', schemaVersion: 5, exportedAt: new Date().toISOString()
+    format: 'cv-builder', schemaVersion: 7, exportedAt: new Date().toISOString()
   }));
   const data = strToU8(JSON.stringify(cvs));
   const experienceData = strToU8(JSON.stringify(experiences));
@@ -192,13 +206,13 @@ async function extractArchive(file: Blob): Promise<Map<string, Uint8Array>> {
     const complete = () => { if (finished && active.size === 0 && !failed) resolve(entries); };
     const unzip = new Unzip((entry) => {
       if (failed) return;
-      if (names.has(entry.name) || !/^(manifest\.json|cvs\.json|experiences\.json|technologies\.json|folders\.json|photos\/\d+\.(png|jpg))$/.test(entry.name)) {
+      if (names.has(entry.name) || !/^(manifest\.json|cvs\.json|experiences\.json|technologies\.json|folders\.json|(photos\/\d+\.(png|jpg)|logos\/\d+\.(png|jpg|svg)))$/.test(entry.name)) {
         fail(new Error(INVALID));
         return;
       }
       names.add(entry.name);
       const limit = entry.name.endsWith('.json') ? MAX_JSON_BYTES : MAX_BYTES;
-      if (names.size > MAX_CVS + 5 || (entry.originalSize ?? 0) > limit) {
+      if (names.size > MAX_CVS * 2 + 5 || (entry.originalSize ?? 0) > limit) {
         fail(new Error(TOO_LARGE));
         return;
       }
@@ -248,7 +262,7 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
   const manifest = object(json('manifest.json'));
   if (manifest['format'] !== 'cv-builder') throw new Error(INVALID);
   const version = manifest['schemaVersion'];
-  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5) throw new Error('This backup version is not supported.');
+  if (version !== 1 && version !== 2 && version !== 3 && version !== 4 && version !== 5 && version !== 6 && version !== 7) throw new Error('This backup version is not supported.');
   const savedExperiences = version >= 2 ? array(json('experiences.json')) : [];
   const savedTechnologies = version >= 3 ? array(json('technologies.json')) : [];
   if (savedTechnologies.length > MAX_TECHNOLOGIES) throw new Error(TOO_LARGE);
@@ -296,11 +310,25 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
       });
     }
     const layout = structure(info['structure']);
+    let companyLogo: File | null | undefined;
+    if (info['companyLogo'] === null) companyLogo = null;
+    else if (info['companyLogo'] !== undefined) {
+      const stored = object(info['companyLogo']);
+      const path = string(stored['path']);
+      const bytes = entries.get(path);
+      const type = string(stored['type']);
+      if (!/^logos\/\d+\.(png|jpg|svg)$/.test(path) || !bytes ||
+        !['image/png', 'image/jpeg', 'image/svg+xml'].includes(type)) throw new Error(INVALID);
+      companyLogo = new File([new Uint8Array(bytes)], string(stored['name']), {
+        type, lastModified: number(stored['lastModified'])
+      });
+    }
     const contact = contactInfo(info['contact']);
     const restored: CvInfo = {
       ...(contact ? { contact } : {}),
       name: string(info['name']), positionTitle: string(info['positionTitle']),
       description: string(info['description']), photo,
+      ...(companyLogo !== undefined ? { companyLogo } : {}),
       technologies: array(info['technologies']).map(string),
       ...customIcons(info['customTechnologyIcons']),
       languages: array(info['languages']).map((value) => {
