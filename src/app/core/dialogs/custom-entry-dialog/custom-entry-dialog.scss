@@ -17,3 +17,21 @@ p { color: tokens.$text-secondary; font-size: tokens.$font-size-sm; }
 .secondary { @include buttons.secondary; }
 .cancel { @include buttons.ghost; }
 footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: tokens.$spacing-2; margin-top: tokens.$spacing-6; }
+
+.main-color-option { display: flex; align-items: center; gap: tokens.$spacing-1; margin-bottom: tokens.$spacing-4; }
+.color-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: tokens.$spacing-6;
+  height: tokens.$button-height-sm;
+  padding: 0;
+  border: 0;
+  border-radius: tokens.$radius-sm;
+  background: transparent;
+  color: tokens.$text-secondary;
+  cursor: help;
+  lucide-icon { display: flex; }
+  &:focus-visible { outline: 2px solid tokens.$border-color-focus; }
+}

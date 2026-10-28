@@ -1227,8 +1227,8 @@ The user should focus primarily on creating their CV, not on understanding the i
 The multi-select's small secondary “Add custom entry” button opens a shared dialog
 with a required name and optional icon. Cancel, Escape, and backdrop dismissal
 leave selections unchanged. New icons accept vector SVG only, up to 5 MB. They are
-fitted without stretching into a transparent 96 by 96 SVG viewport. Visible fills and
-strokes use the main color (#36D4F7), preserving white contrast details; embedded images and external resources are
+fitted without stretching into a transparent 96 by 96 SVG viewport. The unchecked Apply main color checkbox above the upload preserves original colors.
+When checked, visible fills and strokes use the main color (#36D4F7), preserving white contrast details; embedded images and external resources are
 rejected. SVG paths remain editable and recolorable in the constructor. Existing
 saved PNG icons remain supported. Pickers and chips display them at 20×20px;
 experience preview icons use 24×24px, matching the built-in icons.

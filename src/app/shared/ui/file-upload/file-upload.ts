@@ -17,6 +17,7 @@ export class FileUpload extends FormField<File | null> {
   readonly actionDisabled = input(false);
   readonly action = output<void>();
   readonly previewSource = input<string | null | undefined>(undefined);
+  readonly removeLabel = input('Remove file');
   readonly removable = input(false);
   protected readonly XIcon = X;
   readonly mode = input<'photo' | 'icon' | 'file'>('photo');

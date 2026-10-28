@@ -1,3 +1,6 @@
+import { CircleAlert, LucideAngularModule } from 'lucide-angular';
+import { Tooltip } from '../../../shared/directories/tooltip';
+import { Checkbox } from '../../../shared/ui/checkbox/checkbox';
 import { afterNextRender, ChangeDetectionStrategy, Component, DestroyRef, inject, input, output, PendingTasks, signal, viewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Button } from '../../../shared/ui/button/button';
@@ -14,12 +17,13 @@ export interface CustomEntry {
 
 @Component({
   selector: 'app-custom-entry-dialog',
-  imports: [ReactiveFormsModule, Button, DialogOverlay, Input, FileUpload],
+  imports: [ReactiveFormsModule, Button, DialogOverlay, Input, FileUpload, Checkbox, Tooltip, LucideAngularModule],
   templateUrl: './custom-entry-dialog.html',
   styleUrl: './custom-entry-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CustomEntryDialog {
+  protected readonly HelpIcon = CircleAlert;
   readonly inputId = input.required<string>();
   readonly applied = output<CustomEntry>();
   readonly cancelled = output<void>();
@@ -29,6 +33,7 @@ export class CustomEntryDialog {
     nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)]
   });
   protected readonly icon = signal<string | undefined>(undefined);
+  protected readonly applyMainColor = new FormControl(false, { nonNullable: true });
   protected readonly iconFile = new FormControl<File | null>(null);
   protected readonly loading = signal(false);
   protected readonly error = signal('');
@@ -41,19 +46,23 @@ export class CustomEntryDialog {
 
   constructor() {
     this.iconFile.valueChanges.pipe(takeUntilDestroyed()).subscribe((file) => void this.selectIcon(file));
+    this.applyMainColor.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => void this.selectIcon(this.iconFile.value, true));
     afterNextRender(() => this.overlay().open());
   }
 
-  private async selectIcon(file: File | null): Promise<void> {
+  private async selectIcon(file: File | null, keepPreview = false): Promise<void> {
     const uploadId = ++this.uploadId;
-    this.icon.set(undefined);
+    if (!keepPreview || !file) this.icon.set(undefined);
     this.error.set('');
     this.loading.set(!!file);
     if (!file) return;
     const done = this.pending.add();
     try {
-      const icon = await normalizeEntryIcon(file);
-      if (!this.destroyRef.destroyed && uploadId === this.uploadId) this.icon.set(icon);
+      const icon = await normalizeEntryIcon(file, this.applyMainColor.value);
+      if (!this.destroyRef.destroyed && uploadId === this.uploadId) {
+        this.iconFile.setErrors(null);
+        this.icon.set(icon);
+      }
     } catch (error: unknown) {
       if (!this.destroyRef.destroyed && uploadId === this.uploadId) {
         this.error.set(error instanceof Error ? error.message : 'This image could not be read.');
@@ -63,10 +72,6 @@ export class CustomEntryDialog {
       if (!this.destroyRef.destroyed && uploadId === this.uploadId) this.loading.set(false);
       done();
     }
-  }
-
-  protected clearIcon(): void {
-    this.iconFile.reset();
   }
 
   protected apply(event?: Event): void {
@@ -97,6 +102,7 @@ export class CustomEntryDialog {
     const entry: CustomEntry = { name: this.name.value.trim(), ...(this.icon() ? { icon: this.icon() } : {}) };
     this.name.disable({ emitEvent: false });
     this.iconFile.disable({ emitEvent: false });
+    this.applyMainColor.disable({ emitEvent: false });
     const done = this.pending.add();
     try {
       const saved = await save(entry);
@@ -110,6 +116,7 @@ export class CustomEntryDialog {
         this.saving.set(false);
         this.name.enable({ emitEvent: false });
         this.iconFile.enable({ emitEvent: false });
+        this.applyMainColor.enable({ emitEvent: false });
       }
       done();
     }
