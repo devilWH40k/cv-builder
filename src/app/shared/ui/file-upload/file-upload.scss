@@ -143,3 +143,19 @@ lucide-icon {
   &:focus-visible { outline: 2px solid tokens.$border-color-focus; }
   &:disabled { cursor: not-allowed; }
 }
+
+.upload-action {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  padding: tokens.$spacing-1 tokens.$spacing-2;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-sm;
+  background: tokens.$background-surface;
+  color: tokens.$text-accent;
+  font: inherit;
+  font-size: tokens.$font-size-xs;
+  cursor: pointer;
+  &:focus-visible { outline: 2px solid tokens.$border-color-focus; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}

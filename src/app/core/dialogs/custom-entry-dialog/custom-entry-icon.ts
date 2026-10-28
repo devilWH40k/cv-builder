@@ -4,8 +4,8 @@ export function entryIcon(icons: Readonly<Record<string, string | undefined>>, n
   return Object.hasOwn(icons, name) ? icons[name] : undefined;
 }
 
-/** Preserve editable vectors while preserving white contrast details and normalizing colored paint to the brand color. */
-export async function normalizeEntryIcon(file: File): Promise<string> {
+/** Fit editable vectors, optionally applying brand paint while preserving white details. */
+export async function normalizeEntryIcon(file: File, applyMainColor = false): Promise<string> {
   if (!/\.svg$/i.test(file.name) || !['', 'image/svg+xml'].includes(file.type) || file.size > 5 * 1024 ** 2) {
     throw new Error('Choose an SVG icon up to 5 MB.');
   }
@@ -17,7 +17,7 @@ export async function normalizeEntryIcon(file: File): Promise<string> {
   const width = Number.parseFloat(root.getAttribute('width') ?? '') || viewBox?.[2] || 24;
   const height = Number.parseFloat(root.getAttribute('height') ?? '') || viewBox?.[3] || 24;
   const scale = 96 / Math.max(width, height);
-  const icon = await svgVector(source, width * scale, height * scale, '#36d4f7');
+  const icon = await svgVector(source, width * scale, height * scale, applyMainColor ? '#36d4f7' : '#000000');
   if (!icon) throw new Error('Choose a vector SVG without embedded images or external resources.');
   const paint = (object: import('fabric').FabricObject): void => {
     if (object instanceof Group) object.getObjects().forEach(paint);
@@ -28,7 +28,7 @@ export async function normalizeEntryIcon(file: File): Promise<string> {
       }
     }
   };
-  paint(icon);
+  if (applyMainColor) paint(icon);
   icon.set({ left: (96 - width * scale) / 2, top: (96 - height * scale) / 2 });
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96">' + icon.toSVG() + '</svg>';
   const bytes = new TextEncoder().encode(svg);

@@ -1,3 +1,4 @@
+import { CompanyLogoPresets } from '../../../cv/services/company-logo-presets';
 import { CvPdf } from '../../../cv/services/cv-pdf';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -15,7 +16,9 @@ describe('CV form', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Create],
-      providers: [provideZonelessChangeDetection(), provideRouter([])]
+      providers: [provideZonelessChangeDetection(), provideRouter([]), { provide: CompanyLogoPresets, useValue: {
+        usense: () => Promise.resolve(new File(['<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><rect width="24" height="24"/></svg>'], 'usense-logo.svg', { type: 'image/svg+xml' }))
+      } }]
     }).compileComponents();
     spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
     spyOn(TestBed.inject(CvPdf), 'download').and.resolveTo();
@@ -23,6 +26,35 @@ describe('CV form', () => {
     page = fixture.nativeElement;
     fixture.detectChanges();
     await fixture.whenStable();
+  });
+
+  it('selects the bundled Usense logo from inside the upload and supports removing it', async () => {
+    const field = page.querySelector('#company-logo')!.closest('app-file-upload')!;
+    const button = field.querySelector<HTMLButtonElement>('.upload-action')!;
+    expect(button.textContent?.trim()).toBe('Use Usense logo');
+    button.click();
+    await fixture.whenStable();
+    const control = fixture.componentInstance.form.controls.companyLogo;
+    expect(control.value?.name).toBe('usense-logo.svg');
+    expect(control.value?.type).toBe('image/svg+xml');
+    expect(control.dirty).toBeTrue();
+    expect(control.valid).toBeTrue();
+    expect(TestBed.inject(CvDraft).current()?.companyLogo).toBe(control.value);
+    expect(page.querySelector('.company-logo')).not.toBeNull();
+    field.querySelector<HTMLButtonElement>('.remove-file')!.click();
+    await fixture.whenStable();
+    expect(control.value).toBeNull();
+    expect(page.querySelector('.company-logo')).toBeNull();
+  });
+
+  it('keeps the existing logo when the Usense asset cannot be loaded', async () => {
+    const original = new File(['logo'], 'original.png', { type: 'image/png' });
+    fixture.componentInstance.form.controls.companyLogo.setValue(original);
+    spyOn(TestBed.inject(CompanyLogoPresets), 'usense').and.rejectWith(new Error('Unavailable'));
+    page.querySelector<HTMLButtonElement>('app-file-upload .upload-action')!.click();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.form.controls.companyLogo.value).toBe(original);
+    expect(page.querySelector<HTMLButtonElement>('.upload-action')!.disabled).toBeFalse();
   });
 
   function submit(): void {
@@ -489,7 +521,9 @@ describe('CV form', () => {
 describe('Combined CV editor', () => {
   beforeEach(() => TestBed.configureTestingModule({
     imports: [Create],
-    providers: [provideZonelessChangeDetection(), provideRouter([])]
+    providers: [provideZonelessChangeDetection(), provideRouter([]), { provide: CompanyLogoPresets, useValue: {
+        usense: () => Promise.resolve(new File(['<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><rect width="24" height="24"/></svg>'], 'usense-logo.svg', { type: 'image/svg+xml' }))
+      } }]
   }));
 
   it('updates preview while invalid and only exports when the form is valid', async () => {

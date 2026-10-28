@@ -51,6 +51,57 @@ describe('Custom multi-select entries', () => {
     expect(document.activeElement).toBe(trigger);
   });
 
+  it('explains main color in an accessible tooltip inside the dialog', async () => {
+    const { fixture, dialog } = await setup();
+    const checkbox = dialog.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    const help = dialog.querySelector<HTMLButtonElement>('.color-help')!;
+    help.focus();
+    await fixture.whenStable();
+    const tooltip = dialog.querySelector<HTMLElement>('[role="tooltip"]')!;
+    expect(tooltip.hidden).toBeFalse();
+    expect(tooltip.textContent).toBe('Applies the main color to your icon, matching the default technology icons.');
+    expect(help.getAttribute('aria-describedby')).toContain(tooltip.id);
+    expect(checkbox.checked).toBeFalse();
+    const checkboxBounds = checkbox.getBoundingClientRect();
+    const iconBounds = help.querySelector('svg')!.getBoundingClientRect();
+    expect(Math.abs(checkboxBounds.top + checkboxBounds.height / 2 - iconBounds.top - iconBounds.height / 2)).toBeLessThan(1);
+  });
+
+  it('applies the main color only when checked and restores the original colors when unchecked', async () => {
+    const { fixture, dialog } = await setup();
+    const checkbox = dialog.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    expect(checkbox.checked).toBeFalse();
+    const transfer = new DataTransfer();
+    transfer.items.add(new File(['<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><rect width="24" height="24" fill="red"/></svg>'], 'red.svg', { type: 'image/svg+xml' }));
+    const upload = dialog.querySelector<HTMLInputElement>('input[type="file"]')!;
+    upload.files = transfer.files;
+    upload.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+    const pixel = async (): Promise<number[]> => {
+      const image = new Image();
+      image.src = dialog.querySelector<HTMLImageElement>('app-file-upload img')!.src;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 96;
+      const context = canvas.getContext('2d')!;
+      context.drawImage(image, 0, 0);
+      return Array.from(context.getImageData(48, 48, 1, 1).data);
+    };
+    expect(await pixel()).toEqual([255, 0, 0, 255]);
+    const before = dialog.getBoundingClientRect();
+    checkbox.click();
+    fixture.detectChanges();
+    expect(dialog.getBoundingClientRect().height).toBeCloseTo(before.height, 0);
+    expect(dialog.getBoundingClientRect().top).toBeCloseTo(before.top, 0);
+    await fixture.whenStable();
+    expect(await pixel()).toEqual([54, 212, 247, 255]);
+    expect(dialog.getBoundingClientRect().height).toBeCloseTo(before.height, 0);
+    expect(dialog.getBoundingClientRect().top).toBeCloseTo(before.top, 0);
+    checkbox.click();
+    await fixture.whenStable();
+    expect(await pixel()).toEqual([255, 0, 0, 255]);
+  });
+
   it('normalizes a wide uploaded icon, applies it, and renders it at the standard size', async () => {
     const { fixture, page, dialog, name, apply } = await setup();
     name.value = '  My SDK  ';
@@ -98,7 +149,7 @@ describe('Custom multi-select entries', () => {
     await fixture.whenStable();
     expect(dialog.querySelector('[role="alert"]')?.textContent).toContain('Choose an SVG');
     expect(apply.disabled).toBeTrue();
-    dialog.querySelector<HTMLButtonElement>('.icon-actions button')!.click();
+    dialog.querySelector<HTMLButtonElement>('[aria-label="Remove icon"]')!.click();
     await fixture.whenStable();
     expect(dialog.querySelector('app-file-upload .filename')?.textContent).toBe('');
     expect(dialog.querySelector('app-file-upload img')).toBeNull();
