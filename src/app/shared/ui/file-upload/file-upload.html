@@ -17,6 +17,10 @@
         <label [for]="inputId()">{{ label() }}{{ required() ? ' *' : '' }}</label>
         <span class="filename">{{ value()?.name }}</span>
       </div>
+      @if (actionLabel()) {
+        <button class="upload-action" type="button" [disabled]="disabled() || actionDisabled()"
+          (click)="action.emit()">{{ actionLabel() }}</button>
+      }
     </div>
     @if (removable() && value()) {
       <button class="remove-file" type="button" [disabled]="disabled()" aria-label="Remove company logo"

@@ -28,7 +28,9 @@
         }
       </app-file-upload>
 
-      <app-file-upload inputId="company-logo" label="Company logo (optional)" mode="icon" [removable]="true"
+      <app-file-upload [actionLabel]="loadingCompanyLogo() ? 'Loading?' : 'Use Usense logo'"
+        [actionDisabled]="loadingCompanyLogo()" (action)="useUsenseLogo()"
+        inputId="company-logo" label="Company logo (optional)" mode="icon" [removable]="true"
         accept=".jpg,.jpeg,.png,.svg" helpText="JPG, JPEG, PNG or SVG"
         [control]="form.controls.companyLogo">
         @if (form.controls.companyLogo.touched && form.controls.companyLogo.invalid) {

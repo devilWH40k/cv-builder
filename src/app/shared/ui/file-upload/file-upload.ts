@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
 import { File as FileIcon, Image, LucideAngularModule, Upload, UserRound, X } from 'lucide-angular';
 import { FormField } from '../form-field/form-field';
 import { imageFileValidator } from './image-file.validator';
@@ -13,6 +13,9 @@ import { PhotoPreview } from '../photo-preview/photo-preview';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileUpload extends FormField<File | null> {
+  readonly actionLabel = input('');
+  readonly actionDisabled = input(false);
+  readonly action = output<void>();
   readonly previewSource = input<string | null | undefined>(undefined);
   readonly removable = input(false);
   protected readonly XIcon = X;
