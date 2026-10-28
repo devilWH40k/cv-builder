@@ -52,7 +52,11 @@ export class Tooltip {
       }
       if (text.trim()) {
         if (hasLink) this.host.after(this.tooltip);
-        else if (this.tooltip.parentElement !== this.document.body) this.document.body.append(this.tooltip);
+        else {
+          // Keep tooltips in a modal's top layer so its backdrop cannot cover them.
+          const container = this.host.closest('dialog') ?? this.document.body;
+          if (this.tooltip.parentElement !== container) container.append(this.tooltip);
+        }
         this.describe(true);
         if (!this.tooltip.hidden) this.position();
       } else {

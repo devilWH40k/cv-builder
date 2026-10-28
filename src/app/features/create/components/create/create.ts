@@ -1,3 +1,4 @@
+import { CompanyLogoPresets } from '../../../cv/services/company-logo-presets';
 import { CvPdf } from '../../../cv/services/cv-pdf';
 import { ExperiencesDialog } from '../experiences-dialog/experiences-dialog';
 import { SavedExperience } from '../../../cv/interfaces/experience';
@@ -45,6 +46,7 @@ export class Create {
   protected readonly pdf = inject(CvPdf);
   protected readonly draft = inject(CvDraft);
   protected readonly activeTab = signal('info');
+  protected readonly loadingCompanyLogo = signal(false);
   protected readonly mobilePreview = signal(false);
   protected readonly tabs = [
     { id: 'info', label: 'CV info', panelId: 'info-panel' },
@@ -217,6 +219,24 @@ export class Create {
     this.form.markAsDirty();
     this.experiencesOpen.set(false);
     this.toasts.show('success', 'Selected experiences have been applied.');
+  }
+
+  protected async useUsenseLogo(): Promise<void> {
+    if (this.loadingCompanyLogo()) return;
+    const control = this.form.controls.companyLogo;
+    const previous = control.value;
+    this.loadingCompanyLogo.set(true);
+    try {
+      const logo = await this.injector.get(CompanyLogoPresets).usense();
+      if (this.destroyRef.destroyed || control.value !== previous) return;
+      control.setValue(logo);
+      control.markAsDirty();
+      control.markAsTouched();
+    } catch {
+      if (!this.destroyRef.destroyed) this.toasts.show('danger', 'The Usense logo could not be loaded. Please try again.');
+    } finally {
+      if (!this.destroyRef.destroyed) this.loadingCompanyLogo.set(false);
+    }
   }
 
   protected addExperience(): void {
