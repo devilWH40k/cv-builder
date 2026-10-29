@@ -1,3 +1,4 @@
+import { DESIGN_FONTS, loadSceneFonts, normalizeDesignFonts } from '../helpers/design-fonts';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import {
   Circle,
@@ -100,6 +101,7 @@ export class ConstructorEditor {
     for (const event of ['selection:created', 'selection:updated', 'selection:cleared'] as const) {
       this.canvas.on(event, () => this.refreshSelection());
     }
+    this.canvas.on('text:selection:changed', () => this.refreshSelection());
     this.canvas.on('before:transform', ({ transform }) => {
       this.canvas?.beginGesture(transform.target);
       this.snapping = null;
@@ -167,12 +169,14 @@ export class ConstructorEditor {
   async load(page: ConstructorPage): Promise<void> {
     this.canvas?.endGesture();
     this.snapping = null;
-    validateDesignScene(page.scene);
+    const scene = normalizeDesignFonts(page.scene);
+    validateDesignScene(scene);
     if (!this.canvas) return;
     this.restoring = true;
     this.busy.set(true);
     try {
-      await this.canvas.loadFromJSON(page.scene);
+      await loadSceneFonts(scene);
+      await this.canvas.loadFromJSON(scene);
       this.pageId = page.id;
       this.canvas.discardActiveObject();
       this.canvas.requestRenderAll();
@@ -373,7 +377,7 @@ export class ConstructorEditor {
   }
 
   private isLocked(object: FabricObject): boolean {
-    return object.lockMovementX || (!!object.group && this.isLocked(object.group));
+    return (!(object instanceof IText && object.isEditing) && object.lockMovementX) || (!!object.group && this.isLocked(object.group));
   }
 
   group(): void {
@@ -458,9 +462,13 @@ export class ConstructorEditor {
   }
 
   updateText(update: {
+    fontFamily?: string;
+    lineHeight?: number;
+    charSpacing?: number;
     fontSize?: number;
     bold?: boolean;
     italic?: boolean;
+    underline?: boolean;
     textAlign?: string;
   }): void {
     this.modifyMembers((object) => {
@@ -469,14 +477,34 @@ export class ConstructorEditor {
         object.removeStyle('fontSize');
         object.set('fontSize', Math.min(120, Math.max(6, update.fontSize)));
       }
-      if (update.bold !== undefined) {
+      if (update.fontFamily && DESIGN_FONTS.some((font) => font === update.fontFamily)) {
+        object.removeStyle('fontFamily');
+        object.set('fontFamily', update.fontFamily);
+      }
+      if (update.lineHeight !== undefined && Number.isFinite(update.lineHeight)) object.set('lineHeight', Math.min(3, Math.max(0.8, update.lineHeight)));
+      if (update.charSpacing !== undefined && Number.isFinite(update.charSpacing)) {
+        object.set('charSpacing', Math.min(500, Math.max(-100, update.charSpacing)));
+      }
+      const range = object.isEditing && object.selectionEnd > object.selectionStart;
+      if (update.bold !== undefined && range) {
+        object.setSelectionStyles({ fontWeight: update.bold ? 'bold' : 'normal' });
+      } else if (update.bold !== undefined) {
         object.removeStyle('fontWeight');
         object.set('fontWeight', update.bold ? 'bold' : 'normal');
       }
-      if (update.italic !== undefined) {
+      if (update.italic !== undefined && range) {
+        object.setSelectionStyles({ fontStyle: update.italic ? 'italic' : 'normal' });
+      } else if (update.italic !== undefined) {
         object.removeStyle('fontStyle');
         object.set('fontStyle', update.italic ? 'italic' : 'normal');
       }
+      if (update.underline !== undefined && range) {
+        object.setSelectionStyles({ underline: update.underline });
+      } else if (update.underline !== undefined) {
+        object.removeStyle('underline');
+        object.set('underline', update.underline);
+      }
+      object.initDimensions();
       if (update.textAlign && ['left', 'center', 'right', 'justify'].includes(update.textAlign))
         object.set('textAlign', update.textAlign);
     });
@@ -888,6 +916,7 @@ export class ConstructorEditor {
     const paint = object.designIconName && object instanceof Group
       ? iconPaint(object)
       : object.type === 'path' ? object.stroke : object.fill;
+    const emphasis = text?.isEditing && text.selectionEnd > text.selectionStart ? text.getSelectionStyles() : [];
     const gradient = paint instanceof Gradient ? paint : null;
     const hexColor = (color: string) => '#' + new Color(color).toHex();
     return {
@@ -913,9 +942,13 @@ export class ConstructorEditor {
       isText: !!text,
       isImage: object instanceof FabricImage,
       locked: this.isLocked(object),
+      fontFamily: text?.fontFamily ?? 'Roboto',
+      lineHeight: text?.lineHeight ?? 1.16,
+      charSpacing: text?.charSpacing ?? 0,
       fontSize: text?.fontSize ?? 16,
-      bold: text?.fontWeight === 'bold' || Number(text?.fontWeight) >= 600,
-      italic: text?.fontStyle === 'italic',
+      bold: emphasis.length ? emphasis.every((style) => (style.fontWeight ?? text?.fontWeight) === 'bold' || Number(style.fontWeight ?? text?.fontWeight) >= 600) : text?.fontWeight === 'bold' || Number(text?.fontWeight) >= 600,
+      italic: emphasis.length ? emphasis.every((style) => (style.fontStyle ?? text?.fontStyle) === 'italic') : text?.fontStyle === 'italic',
+      underline: emphasis.length ? emphasis.every((style) => style.underline ?? text?.underline ?? false) : text?.underline ?? false,
       textAlign: text?.textAlign ?? 'left',
       color: hexColor(
         gradient?.colorStops[0]?.color ?? (typeof paint === 'string' ? paint : '#111827'),
@@ -966,7 +999,7 @@ export class ConstructorEditor {
     const canBlur = members.every((member) => member.canBlur);
     const canFill = members.every((member) => member.canFill);
     const keys: (keyof SelectionProperties)[] = base.linkUrl ? [] : ['linkUrl'];
-    if (isText) keys.push('fontSize', 'bold', 'italic', 'textAlign');
+    if (isText) keys.push('fontFamily', 'lineHeight', 'charSpacing', 'fontSize', 'bold', 'italic', 'underline', 'textAlign');
     if (isRectangle) keys.push('borderRadius', 'borderColor', 'borderWidth');
     if (canBlur) keys.push('blur');
     if (canFill) keys.push('color', 'gradientEnd');
@@ -981,6 +1014,7 @@ export class ConstructorEditor {
       isText, isImage, isRectangle, canBlur, canFill,
       bold: members.every((member) => member.bold),
       italic: members.every((member) => member.italic),
+      underline: members.every((member) => member.underline),
       mixed: keys.filter((key) => members.some((member) => member[key] !== first[key])),
       mixedImageEffects: isImage
         ? effectKeys.filter((key) => members.some((member) => member.imageEffects[key] !== first.imageEffects[key])) : [],

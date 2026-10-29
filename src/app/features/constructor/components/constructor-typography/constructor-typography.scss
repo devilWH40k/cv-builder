@@ -1,0 +1,72 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+:host { display: block; }
+fieldset {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: tokens.$spacing-1;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+label {
+  display: flex;
+  align-items: center;
+  gap: tokens.$spacing-1;
+  font-size: tokens.$font-size-xs;
+  color: tokens.$text-secondary;
+}
+input, select {
+  box-sizing: border-box;
+  height: tokens.$button-height-sm;
+  padding: tokens.$spacing-1 tokens.$spacing-2;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-sm;
+  background: tokens.$background-surface;
+  color: tokens.$text-primary;
+  font: inherit;
+  font-size: tokens.$font-size-sm;
+  &:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: 1px; }
+  &:disabled { color: tokens.$text-disabled; }
+}
+select { width: 9rem; appearance: none; padding-right: tokens.$spacing-8; }
+input { width: tokens.$spacing-12; height: tokens.$button-height-sm; padding-inline: tokens.$spacing-1; text-align: center; font-size: tokens.$font-size-xs; }
+button {
+  @include buttons.ghost;
+  & {
+    min-height: tokens.$button-height-sm;
+    width: tokens.$button-height-sm;
+    padding: tokens.$spacing-1;
+    border-radius: tokens.$radius-sm;
+  }
+  &[aria-pressed='true'], &[aria-pressed='mixed'] {
+    color: tokens.$text-accent;
+    background: tokens.$background-primary-subtle;
+    border-color: tokens.$border-color-focus;
+  }
+  &:disabled { opacity: 0.45; cursor: default; }
+}
+lucide-icon { display: flex; }
+.control-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.typography-divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: tokens.$spacing-6;
+  margin-inline: tokens.$spacing-1;
+  background: tokens.$border-color;
+}
+.spacing-control { margin-right: tokens.$spacing-2; }
+
+.font-control { position: relative; margin-right: tokens.$spacing-2; }
+.font-arrow { position: absolute; right: tokens.$spacing-2; pointer-events: none; color: tokens.$text-secondary; }

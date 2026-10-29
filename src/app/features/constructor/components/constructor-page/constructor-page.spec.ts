@@ -107,7 +107,7 @@ describe('Fullscreen constructor page', () => {
     editor.selectAll();
     editor.group();
     harness.fixture.detectChanges();
-    const properties = document.querySelector('app-constructor-properties')!;
+    const properties = document.querySelector('app-constructor-typography')!;
     const fontLabel = Array.from(properties.querySelectorAll('label')).find((label) =>
       label.textContent?.trim().startsWith('Font size'))!;
     const fontSize = fontLabel.querySelector('input')!;
@@ -119,6 +119,10 @@ describe('Fullscreen constructor page', () => {
     fontSize.dispatchEvent(new Event('change', { bubbles: true }));
     bold.click();
     harness.fixture.detectChanges();
+    expect(fontSize.type).toBe('text');
+    expect(fontSize.value).toBe('26');
+    fontSize.value = 'invalid';
+    fontSize.dispatchEvent(new Event('change', { bubbles: true }));
     expect(fontSize.value).toBe('26');
     expect(bold.getAttribute('aria-pressed')).toBe('true');
     expect(editor.layers()[0].children!.every((child) => child.fontSize === 26 && child.bold)).toBeTrue();

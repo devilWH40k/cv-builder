@@ -94,6 +94,15 @@
         title="Redo (Ctrl/Cmd+Shift+Z)" aria-label="Redo">
         <lucide-icon [img]="icons.Redo2" [size]="20" />
       </button>
+      <span class="toolbar-divider" aria-hidden="true"></span>
+      <app-constructor-typography />
+      @if (editor.tool() === 'draw') {
+      <label>Brush color<input #brushColor type="color" [value]="editor.brushColor()"
+          appDebouncedColor (colorCommitted)="editor.setBrush($event, editor.brushWidth())"
+ /></label>
+      <label>Brush size<input #brushWidth type="number" min="1" max="40" [value]="editor.brushWidth()"
+          (change)="editor.setBrush(editor.brushColor(), brushWidth.valueAsNumber)" /></label>
+      }
       <label class="zoom-label">Zoom<select #zoom [value]="fitPage() ? 'fit' : editor.zoom()"
           (change)="changeZoom(zoom.value)">
           <option value="fit">Fit page</option>
@@ -104,12 +113,6 @@
           <option value="1.5">150%</option>
           <option value="2">200%</option>
         </select></label>
-      @if (editor.tool() === 'draw') {
-      <label>Brush color<input #brushColor type="color" [value]="editor.brushColor()"
-          appDebouncedColor (colorCommitted)="editor.setBrush($event, editor.brushWidth())" /></label>
-      <label>Brush size<input #brushWidth type="number" min="1" max="40" [value]="editor.brushWidth()"
-          (change)="editor.setBrush(editor.brushColor(), brushWidth.valueAsNumber)" /></label>
-      }
     </div>
     <div class="workspace" [style.--left-width]="leftWidth() + 'px'" [style.--right-width]="rightWidth() + 'px'">
       <aside class="page-panels" [style.--page-properties-height]="pagePropertiesHeight() + 'px'">

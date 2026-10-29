@@ -1,3 +1,4 @@
+import { ConstructorTypography } from '../constructor-typography/constructor-typography';
 import { DebouncedColor } from '../../../../shared/directives/debounced-color';
 import { PhotoPreview, PhotoCropShape } from '../../../../shared/ui/photo-preview/photo-preview';
 import {
@@ -65,7 +66,7 @@ import { ConstructorIconLibrary } from '../constructor-icon-library/constructor-
 
 @Component({
   selector: 'app-constructor-page',
-  imports: [DebouncedColor,
+  imports: [ConstructorTypography, DebouncedColor,
     PhotoPreview,
     RouterLink,
     LucideAngularModule,

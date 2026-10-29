@@ -1,3 +1,4 @@
+import { GOOGLE_DESIGN_FONTS } from './design-fonts';
 import { FabricImage, Gradient, Group, Rect, Textbox } from 'fabric';
 import { buildDesignPdf, designPdfBlob } from './design-pdf';
 import { blankDesign } from './preview-to-design';
@@ -9,6 +10,24 @@ import { iconSvg } from '../services/constructor-icons';
 import { svgVector } from './svg-vector';
 
 describe('Constructor vector PDF', () => {
+  for (const family of GOOGLE_DESIGN_FONTS) {
+    it(`embeds local ${family} regular and emphasis fonts in the PDF`, async () => {
+      const objects = ([
+        { fontWeight: 'normal', fontStyle: 'normal' },
+        { fontWeight: 'bold', fontStyle: 'normal' },
+        { fontWeight: 'normal', fontStyle: 'italic' },
+        { fontWeight: 'bold', fontStyle: 'italic' },
+      ] as const).map((style, index) => new Textbox('Font embedding test', {
+        ...style, fontFamily: family, width: 300, top: index * 40,
+      }).toObject());
+      const blank = blankDesign();
+      const blob = await designPdfBlob({ ...blank, pages: [{ ...blank.pages[0], scene: JSON.stringify({ objects }) }] });
+      const pdf = await blob.text();
+      expect(pdf).toContain(family.replace(/\s/g, ''));
+      expect((pdf.match(/\/FontFile2\b/g) ?? []).length).toBeGreaterThanOrEqual(4);
+    });
+  }
+
   it('exports library icons as vector paths', async () => {
     const icon = await svgVector(iconSvg(Mail), 40, 40);
     if (!icon) throw new Error('Expected icon');

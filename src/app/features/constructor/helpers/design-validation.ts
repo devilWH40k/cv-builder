@@ -1,3 +1,4 @@
+import { DESIGN_FONTS } from './design-fonts';
 import { ConstructorDocument } from '../interfaces/constructor-document';
 import { safeDesignLink } from './design-assets';
 
@@ -56,7 +57,7 @@ export function validateDesignScene(scene: string): void {
         throw new Error(INVALID);
       if (key === 'linkUrl' && child && (typeof child !== 'string' || !safeDesignLink(child)))
         throw new Error(INVALID);
-      if (key === 'fontFamily' && child !== 'Roboto') throw new Error(INVALID);
+      if (key === 'fontFamily' && !DESIGN_FONTS.some((font) => font === child) && !['sans-serif', 'serif', 'monospace'].includes(String(child))) throw new Error(INVALID);
       if (key === 'strategy' && !['fit-content', 'fixed'].includes(String(child))) throw new Error(INVALID);
       if (key === 'designBlur' && (typeof child !== 'number' || child < 0 || child > 40)) throw new Error(INVALID);
       if ((key === 'designLayerName' || key === 'designIconName') && (typeof child !== 'string' || !child.trim() || child.length > 100)) throw new Error(INVALID);

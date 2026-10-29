@@ -157,10 +157,20 @@ scene. Images cover the page with centered cropping. Background edits participat
 in undo/redo, save/reopen, portable designs, and PDF export, without becoming object
 layers. Constructor notifications use the shared toast service.
 
-The editor uses Roboto and its regular, bold, italic and bold-italic variants from
-pdfmake's existing virtual font files. Loading those same files through `FontFace`
-keeps browser and PDF font metrics aligned without external font requests. Adding
-font families requires registering files for both the canvas and PDF renderer.
+Typography controls follow undo/redo in the toolbar, with zoom at the far right.
+Font family, size, line height and letter spacing apply to the complete text block.
+Select characters while editing text to apply bold/italic/underline to that range; without a
+range, emphasis applies to the whole block. Existing mixed emphasis is retained
+when changing block typography. Letter spacing is entered in em.
+
+The menu offers bundled Roboto and thirteen locally hosted
+Google Font families. Each local family has regular, bold, italic and bold-italic
+static TTFs under `public/fonts/`, with its license alongside them. The editor loads
+only selected families and reloads saved scene fonts before measuring text. PDF
+export registers the same files with pdfmake and embeds the selected families.
+No Google Fonts CDN requests are made. Generic browser families are no longer offered. Older scenes map sans-serif to
+Roboto, serif to Lora and monospace to Roboto Mono when loaded or exported. Local font files
+are served by the application; this does not add offline caching for the app itself.
 
 Constructor image uploads reuse the shared photo preview dialog, offering the
 original file, a transparent circular crop, or a rectangle with independent width
