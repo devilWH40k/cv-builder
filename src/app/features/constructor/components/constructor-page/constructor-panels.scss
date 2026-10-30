@@ -15,3 +15,21 @@
   .page-panels > app-resize-handle { display: none; }
   .icon-library-panel { height: 50dvh; }
 }
+
+.file-properties {
+  padding-bottom: tokens.$spacing-4;
+  margin-bottom: tokens.$spacing-4;
+  border-bottom: 1px solid tokens.$border-color;
+  h2 { margin: 0 0 tokens.$spacing-3; font-size: tokens.$font-size-md; }
+  label { display: block; margin-bottom: tokens.$spacing-1; font-size: tokens.$font-size-sm; }
+  input { box-sizing: border-box; width: 100%; min-width: 0; font-size: tokens.$font-size-sm; }
+}
+.file-status { margin: 0 0 tokens.$spacing-3; font-size: tokens.$font-size-xs; color: tokens.$text-muted; }
+
+.workspace [hidden] { display: none !important; }
+.page-panels.single-panel, .object-panels.single-panel { grid-template-rows: minmax(0, 1fr); }
+@media (min-width: tokens.$breakpoint-lg) {
+  .workspace.no-left-panels { grid-template-columns: minmax(0, 1fr) auto var(--right-width); }
+  .workspace.no-right-panels { grid-template-columns: var(--left-width) auto minmax(0, 1fr); }
+  .workspace.no-left-panels.no-right-panels { grid-template-columns: minmax(0, 1fr); }
+}

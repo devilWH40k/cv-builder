@@ -1514,11 +1514,11 @@ Import design, Blank design. Recently shows visited designs, while Home's Files 
 Designs tabs separate the CV collection and all saved visual designs.
 The editor fills the viewport using the shared overlay and a top-right close icon,
 with fit-page zoom to maximize the visible document. Its toolbar groups selection,
-drawing, text, images, shapes, history and zoom. A Pages section follows Page
-properties in the left panel, with a compact Add page button opposite the heading
-and a confirmation-protected delete cross beside each page.
-The compact header places save status beside the design name and uses 32px action
-buttons. Properties and layers occupy a right panel on desktop and stack below the canvas
+drawing, text, images, shapes, history and zoom. File-style page tabs sit above the canvas, with a small plus tab at the end
+and a confirmation-protected delete cross on each page tab.
+The compact header uses a File menu on the left, a centered design name
+and a smaller close action on the right. File commands show keyboard shortcuts at
+the right edge of the dropdown. Properties and layers occupy a right panel on desktop and stack below the canvas
 on smaller screens. The canvas scrolls independently without widening the page.
 Object colors belong to the document and remain independent of the application
 theme. See [Constructor architecture](CONSTRUCTOR.md) for persistence and export.
@@ -1640,3 +1640,18 @@ and only accept drops directly outside the dialog. Escape, pointer cancellation,
 window blur, invalid drops, or source destruction restore the source and remove
 the preview. Escape cancels a drag before it can dismiss a dialog. Native browser
 dragging is suppressed to avoid a second translucent drag image.
+
+The constructor header uses the shared compact File dropdown, a centered name and a small close button. File contains New Design, Open From CV, Save,
+Import Design File, Export PDF and Export Design File. Shortcut hints appear at
+the right of each command: Ctrl/Cmd+S, Ctrl/Cmd+I, Ctrl/Cmd+E and
+Ctrl/Cmd+Shift+E. File shortcuts also work in text fields; native editing shortcuts
+remain independent. New, open and import retain unsaved-change confirmation.
+
+File properties above Page properties shows Status followed by the editable File name.
+The name is also displayed in the centered 20px menu header.
+
+The hover View menu stays open when toggling Main properties (File and Page properties), Icon
+library, Properties and Layers. Visible panels have checkmarks. Escape and outside interaction dismiss the menu. When one panel in
+a sidebar is hidden, the other fills its height; hiding both removes the sidebar
+and its width handle. Panel instances and resize settings remain intact when hidden.
+Visibility is kept for the current constructor session.

@@ -11,7 +11,7 @@ import { FabricObject } from 'fabric';
 import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
 
 describe('Fullscreen constructor page', () => {
-  it('keeps page actions below page properties and uses a compact document header', async () => {
+  it('shows file-style page actions above the canvas and uses a compact document header', async () => {
     const design = blankDesign();
     const repository = jasmine.createSpyObj<ConstructorRepository>('repository', [
       'load', 'recentlyVisited', 'recordVisit',
@@ -30,27 +30,31 @@ describe('Fullscreen constructor page', () => {
     const harness = await RouterTestingHarness.create('/constructor?design=' + design.id);
     await harness.fixture.whenStable();
     const dialog = document.querySelector<HTMLDialogElement>('dialog.editor')!;
-    const pages = dialog.querySelector('.pages-section')!;
-    expect(pages.previousElementSibling?.tagName.toLowerCase()).toBe('app-constructor-page-properties');
-    expect(pages.closest('.page-properties-panel')).not.toBeNull();
+    const pages = dialog.querySelector<HTMLElement>('.pages-section')!;
+    expect(pages.parentElement?.classList.contains('stage-column')).toBeTrue();
+    expect(pages.nextElementSibling?.classList.contains('canvas-area')).toBeTrue();
+    expect(dialog.querySelector('.stage-column .hint')).toBeNull();
+    expect(pages.closest('.page-properties-panel')).toBeNull();
     const library = dialog.querySelector('app-constructor-icon-library')!;
     expect(library.closest('.page-properties-panel')).toBeNull();
     const divider = dialog.querySelector<HTMLElement>('[aria-label="Resize page properties and icon library height"]')!;
     expect(divider.getAttribute('aria-orientation')).toBe('horizontal');
     expect(library.closest('.icon-library-panel')?.previousElementSibling).toBe(divider.parentElement);
-    expect(divider.parentElement?.previousElementSibling).toBe(pages.closest('.page-properties-panel'));
+    expect(divider.parentElement?.previousElementSibling).toBe(dialog.querySelector('.page-properties-panel'));
     divider.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await harness.fixture.whenStable();
     expect(divider.getAttribute('aria-valuenow')).toBe('410');
     expect((dialog.querySelector('.page-panels') as HTMLElement).style.getPropertyValue('--page-properties-height')).toBe('410px');
-    expect(pages.querySelector('h2')!.textContent).toBe('Pages');
-    expect(dialog.querySelector('.stage-column .page-tabs')).toBeNull();
+    expect(pages.getAttribute('aria-label')).toBe('Design pages');
+    expect(dialog.querySelector('.stage-column .page-tabs')).toBe(pages);
     const heading = dialog.querySelector('.document-heading')!;
-    const title = heading.querySelector('[aria-label="Design name"]')!.getBoundingClientRect();
-    const status = heading.querySelector('.save-state')!.getBoundingClientRect();
-    expect(status.left).toBeGreaterThanOrEqual(title.right);
-    expect(Math.abs((status.top + status.height / 2) - (title.top + title.height / 2))).toBeLessThan(1);
-    expect(heading.getBoundingClientRect().height).toBeLessThanOrEqual(40);
+    const fileProperties = dialog.querySelector('.file-properties')!;
+    expect(fileProperties.nextElementSibling?.tagName.toLowerCase()).toBe('app-constructor-page-properties');
+    const fileName = fileProperties.querySelector<HTMLInputElement>('[aria-label="File name"]')!;
+    const status = fileProperties.querySelector('.file-status')!;
+    expect(status.textContent).toContain('Status: Saved');
+    expect(status.getBoundingClientRect().bottom).toBeLessThanOrEqual(fileName.getBoundingClientRect().top);
+    expect(heading.getBoundingClientRect().height).toBeLessThanOrEqual(20);
     heading.querySelectorAll('button').forEach((button) => {
       const style = getComputedStyle(button);
       expect(button.getBoundingClientRect().height).withContext(JSON.stringify({
@@ -58,14 +62,102 @@ describe('Fullscreen constructor page', () => {
         lineHeight: style.lineHeight, padding: style.padding, border: style.borderWidth,
       })).toBeLessThanOrEqual(32);
     });
+    const titleBounds = heading.querySelector('.document-caption')!.getBoundingClientRect();
+    const headerBounds = heading.getBoundingClientRect();
+    expect(Math.abs(titleBounds.left + titleBounds.width / 2 - headerBounds.left - headerBounds.width / 2)).toBeLessThan(1);
+    const fileTrigger = heading.querySelector<HTMLButtonElement>('app-dropdown > button')!;
+    fileTrigger.closest('app-dropdown')!.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    await harness.fixture.whenStable();
+    expect(fileTrigger.getAttribute('aria-expanded')).toBe('true');
+    const items = Array.from(dialog.querySelectorAll('#constructor-file-menu [role="menuitem"]'));
+    expect(items.map((item) => item.querySelector('span')!.textContent?.trim())).toEqual([
+      'New Design', 'Open From CV', 'Save', 'Import Design File', 'Export PDF', 'Export Design File'
+    ]);
+    expect(items.map((item) => item.querySelector('.shortcut')?.textContent?.trim() ?? '')).toEqual([
+      '', '', 'Ctrl+S', 'Ctrl+I', 'Ctrl+E', 'Ctrl+Shift+E'
+    ]);
+    fileTrigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await harness.fixture.whenStable();
+    const input = document.querySelector<HTMLInputElement>('input[accept="application/json,.json"]')!;
+    const openFile = spyOn(input, 'click');
+    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'i', ctrlKey: true, bubbles: true, cancelable: true }));
+    expect(openFile).toHaveBeenCalledOnceWith();
+    expect(input.closest('dialog')).toBe(dialog);
+    const beforeCancelTitle = dialog.querySelector('.document-caption')!.textContent;
+    input.dispatchEvent(new Event('cancel', { bubbles: true }));
+    await harness.fixture.whenStable();
+    expect(dialog.open).toBeTrue();
+    expect(dialog.querySelector('.document-caption')!.textContent).toBe(beforeCancelTitle);
+    expect(document.querySelector('#leave-constructor')).toBeNull();
+    const download = spyOn(HTMLAnchorElement.prototype, 'click');
+    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', ctrlKey: true, shiftKey: true, bubbles: true, cancelable: true }));
+    expect(download).toHaveBeenCalledTimes(1);
+    const windowsMenu = dialog.querySelector('#constructor-view-menu')!;
+    const viewTrigger = windowsMenu.closest('app-dropdown')!.querySelector<HTMLButtonElement>('.trigger')!;
+    viewTrigger.click();
+    await harness.fixture.whenStable();
+    const windowEntries = Array.from(windowsMenu.querySelectorAll<HTMLButtonElement>('[role="menuitemcheckbox"]'));
+    expect(windowEntries.map((entry) => entry.querySelector('span')!.textContent?.trim())).toEqual([
+      'Main properties', 'Icon library', 'Properties', 'Layers'
+    ]);
+    expect(windowEntries.every((entry) => entry.getAttribute('aria-checked') === 'true')).toBeTrue();
+    const toggleWindow = async (index: number) => {
+      windowEntries[index].click();
+      await harness.fixture.whenStable();
+      expect(viewTrigger.getAttribute('aria-expanded')).toBe('true');
+    };
+    const leftPanels = dialog.querySelector<HTMLElement>('.page-panels')!;
+    const rightPanels = dialog.querySelector<HTMLElement>('.object-panels')!;
+    const mainPanel = dialog.querySelector<HTMLElement>('.page-properties-panel')!;
+    await toggleWindow(1);
+    expect(dialog.querySelector<HTMLElement>('.icon-library-panel')!.hidden).toBeTrue();
+    expect(windowEntries[1].getAttribute('aria-checked')).toBe('false');
+    expect(windowEntries[1].querySelector('lucide-icon')).toBeNull();
+    expect(mainPanel.getBoundingClientRect().height).toBeCloseTo(leftPanels.getBoundingClientRect().height, 0);
+    await toggleWindow(0);
+    expect(leftPanels.hidden).toBeTrue();
+    expect(dialog.querySelector('.workspace')!.classList.contains('no-left-panels')).toBeTrue();
+    await toggleWindow(1);
+    expect(leftPanels.hidden).toBeFalse();
+    expect(dialog.querySelector<HTMLElement>('.icon-library-panel')!.getBoundingClientRect().height).toBeCloseTo(leftPanels.getBoundingClientRect().height, 0);
+    await toggleWindow(0);
+    await toggleWindow(3);
+    expect(dialog.querySelector<HTMLElement>('.properties-panel')!.getBoundingClientRect().height).toBeCloseTo(rightPanels.getBoundingClientRect().height, 0);
+    await toggleWindow(2);
+    expect(rightPanels.hidden).toBeTrue();
+    await toggleWindow(3);
+    expect(dialog.querySelector<HTMLElement>('.layers-panel')!.getBoundingClientRect().height).toBeCloseTo(rightPanels.getBoundingClientRect().height, 0);
+    await toggleWindow(2);
+    expect(windowEntries.every((entry) => entry.getAttribute('aria-checked') === 'true')).toBeTrue();
+    viewTrigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await harness.fixture.whenStable();
+    expect(viewTrigger.getAttribute('aria-expanded')).toBe('false');
+    const rail = dialog.querySelector('.canvas-tools')!;
+    expect(rail.getAttribute('aria-orientation')).toBe('vertical');
+    expect(rail.querySelectorAll(':scope > button').length).toBe(5);
+    const shapes = rail.querySelector<HTMLButtonElement>('[aria-label="Add shape"]')!;
+    shapes.closest('app-dropdown')!.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    await harness.fixture.whenStable();
+    expect(shapes.getAttribute('aria-expanded')).toBe('true');
+    const star = rail.querySelector<HTMLButtonElement>('#constructor-shapes-menu button:last-child')!;
+    expect(star.getAttribute('aria-label')).toBe('Star');
+    expect(star.querySelector('lucide-icon')).not.toBeNull();
+    star.click();
+    await harness.fixture.whenStable();
+    expect(shapes.getAttribute('aria-expanded')).toBe('false');
+    expect(rail.querySelector('[aria-label="Add text"]')).not.toBeNull();
+    expect(dialog.querySelector('.main-toolbar [aria-label="Add text"]')).toBeNull();
+    expect(dialog.querySelector('.main-toolbar .history-tools [aria-label="Undo"]')).not.toBeNull();
+    expect(dialog.querySelector('.main-toolbar .typography-tools app-constructor-typography')).not.toBeNull();
+    expect(dialog.querySelector('.zoom-label lucide-icon')).not.toBeNull();
     const add = pages.querySelector<HTMLButtonElement>('[aria-label="Add page"]')!;
-    expect(add.closest('.pages-heading')).not.toBeNull();
-    const caption = pages.querySelector('h2')!.getBoundingClientRect();
-    const addBounds = add.getBoundingClientRect();
-    expect(addBounds.left).toBeGreaterThan(caption.right);
-    expect(Math.abs((caption.top + caption.height / 2) - (addBounds.top + addBounds.height / 2))).toBeLessThan(1);
+    expect(add.parentElement).toBe(pages);
+    expect(pages.lastElementChild).toBe(add);
     const remove = pages.querySelector<HTMLButtonElement>('[aria-label="Delete Page 1"]')!;
     expect(remove.disabled).toBeTrue();
+    const tabBounds = pages.querySelector('.page-select')!.getBoundingClientRect();
+    const crossBounds = remove.querySelector('svg')!.getBoundingClientRect();
+    expect(Math.abs(tabBounds.top + tabBounds.height / 2 - crossBounds.top - crossBounds.height / 2)).toBeLessThan(1);
     add.click();
     await harness.fixture.whenStable();
     expect(pages.querySelector('[aria-current="page"]')!.textContent).toContain('Page 2');
@@ -275,7 +367,7 @@ describe('Fullscreen constructor page', () => {
     expect(bounds.height).toBe(innerHeight);
     expect(repository.recordVisit).toHaveBeenCalledOnceWith(design.id);
     expect(dialog.querySelector<HTMLSelectElement>('.zoom-label select')!.value).toBe('fit');
-    expect(dialog.querySelector('p[role="status"]:not(.count), p[role="alert"]')).toBeNull();
+    expect(dialog.querySelector('p[role="status"]:not(.count):not(.file-status), p[role="alert"]')).toBeNull();
     expect(dialog.querySelector('app-constructor-icon-library .count')?.textContent).toContain('icons');
     const heading = dialog.querySelector('.document-heading')!;
     expect(heading.querySelector('.editor-close')).not.toBeNull();
@@ -322,7 +414,7 @@ describe('Fullscreen constructor page', () => {
     editor.setTool('select');
     expect(editor.layers()[0].color).toBe('#123456');
     const nativeInputUndo = new KeyboardEvent('keydown', { key: 'я', code: 'KeyZ', ctrlKey: true, bubbles: true, cancelable: true });
-    dialog.querySelector<HTMLInputElement>('[aria-label="Design name"]')!.dispatchEvent(nativeInputUndo);
+    dialog.querySelector<HTMLInputElement>('[aria-label="File name"]')!.dispatchEvent(nativeInputUndo);
     expect(nativeInputUndo.defaultPrevented).toBeFalse();
     const imageCanvas = document.createElement('canvas');
     imageCanvas.width = 400;
@@ -359,13 +451,13 @@ describe('Fullscreen constructor page', () => {
     expect(insert).toHaveBeenCalledOnceWith(image);
     expect(editor.layers().some((layer) => layer.kind === 'image')).toBeTrue();
     expect(document.querySelector('.photo-preview-dialog')).toBeNull();
-    const saveButton = Array.from(dialog.querySelectorAll<HTMLButtonElement>('.document-actions button'))
-      .find((button) => button.textContent?.trim() === 'Save')!;
+    const saveButton = Array.from(dialog.querySelectorAll<HTMLButtonElement>('#constructor-file-menu button'))
+      .find((button) => button.querySelector('span')?.textContent?.trim() === 'Save')!;
     saveButton.click();
     await harness.fixture.whenStable();
     expect(toasts.messages().some((message) => message.theme === 'success' && message.message === 'Design saved in this browser.')).toBeTrue();
     repository.save.and.rejectWith(new Error('Save unavailable'));
-    saveButton.click();
+    dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true, cancelable: true }));
     await harness.fixture.whenStable();
     expect(toasts.messages().some((message) => message.theme === 'danger' && message.message === 'Save unavailable')).toBeTrue();
     dialog.querySelector<HTMLButtonElement>('[aria-label="Close editor"]')!.click();

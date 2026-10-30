@@ -1,19 +1,27 @@
+import { Check, LucideAngularModule, LucideIconData } from 'lucide-angular';
 import { DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import { afterNextRender, ChangeDetectionStrategy, Component, ElementRef, inject, Injector, input, output, signal, TemplateRef, viewChild } from '@angular/core';
 
 export interface DropdownItem {
+  readonly icon?: LucideIconData;
   readonly id: string;
   readonly label: string;
   readonly disabled?: boolean;
+  readonly shortcut?: string;
+  readonly checked?: boolean;
 }
 
 @Component({
   selector: 'app-dropdown',
-  imports: [NgTemplateOutlet],
+  imports: [NgTemplateOutlet, LucideAngularModule],
   templateUrl: './dropdown.html',
   styleUrl: './dropdown.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
+    '[class.icon-grid]': 'iconGrid()',
+    '[class.opens-right]': 'opensRight()',
+    '[class.compact]': 'compact()',
+    '[class.align-start]': 'alignStart()',
     '(pointerenter)': 'onPointerEnter($event)',
     '(pointerleave)': 'onPointerLeave()',
     '(focusout)': 'onFocusOut($event)',
@@ -24,8 +32,14 @@ export interface DropdownItem {
   }
 })
 export class Dropdown {
+  protected readonly CheckIcon = Check;
+  readonly iconGrid = input(false);
+  readonly opensRight = input(false);
+  readonly compact = input(false);
+  readonly alignStart = input(false);
   readonly menuId = input.required<string>();
   readonly label = input.required<string>();
+  readonly closeOnSelect = input(true);
   readonly openOnHover = input(true);
   readonly items = input<readonly DropdownItem[]>([]);
   readonly content = input<TemplateRef<unknown> | null>(null);
@@ -57,8 +71,10 @@ export class Dropdown {
 
   protected choose(item: DropdownItem): void {
     if (item.disabled) return;
-    this.close();
-    this.trigger().nativeElement.focus();
+    if (this.closeOnSelect()) {
+      this.close();
+      this.trigger().nativeElement.focus();
+    }
     this.selected.emit(item);
   }
 

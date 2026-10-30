@@ -32,3 +32,24 @@
   }
   &:disabled { color: tokens.$text-disabled; cursor: default; }
 }
+
+.shortcut { margin-left: auto; padding-left: tokens.$spacing-6; font-size: tokens.$font-size-xs; color: tokens.$text-muted; white-space: nowrap; }
+:host(.align-start) .menu-container { inset-inline-start: 0; inset-inline-end: auto; }
+:host(.compact) {
+  .menu { min-width: 18rem; }
+  .trigger { min-height: var(--dropdown-trigger-height, #{tokens.$spacing-6}); line-height: tokens.$line-height-tight; padding: 0 tokens.$spacing-2; border-color: transparent; border-radius: tokens.$radius-sm; font-size: tokens.$font-size-sm; }
+  .menu button { min-height: tokens.$button-height-sm; padding: tokens.$spacing-1 tokens.$spacing-2; border-radius: tokens.$radius-sm; font-size: tokens.$font-size-sm; }
+}
+
+.item-check { display: flex; margin-left: auto; }
+
+:host(.opens-right) {
+  .trigger { width: tokens.$button-height-sm; min-height: tokens.$button-height-sm; padding: tokens.$spacing-1; }
+  .menu-container { top: 0; inset-inline-start: 100%; inset-inline-end: auto; padding-top: 0; padding-inline-start: tokens.$spacing-2; }
+}
+
+:host(.icon-grid) {
+  .menu { display: grid; grid-template-columns: repeat(3, auto); gap: tokens.$spacing-1; min-width: 0; }
+  .menu button { width: tokens.$button-height-sm; min-height: tokens.$button-height-sm; padding: tokens.$spacing-1; justify-content: center; }
+  lucide-icon { display: flex; }
+}

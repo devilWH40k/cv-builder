@@ -31,6 +31,19 @@ describe('Constructor editing', () => {
     canvas.remove();
   });
 
+  it('preserves additional vector shapes when saving and restoring a scene', async () => {
+    for (const shape of ['triangle', 'ellipse', 'diamond', 'pentagon', 'hexagon', 'star'] as const)
+      editor.addShape(shape);
+    const scene = editor.snapshot();
+    const objects = JSON.parse(scene).objects;
+    expect(objects.map((object: { type: string }) => object.type)).toEqual([
+      'Triangle', 'Ellipse', 'Polygon', 'Polygon', 'Polygon', 'Polygon',
+    ]);
+    expect(objects[5].points.length).toBe(10);
+    await editor.load({ ...blankDesign().pages[0], scene });
+    expect(JSON.parse(editor.snapshot()).objects.length).toBe(6);
+  });
+
   it('underlines selected characters and toggles underline for the full block', async () => {
     const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
     editor.addText();

@@ -1,3 +1,4 @@
+import { createDesignShape, DesignShape } from '../helpers/design-shapes';
 import { DESIGN_FONTS, loadSceneFonts, normalizeDesignFonts } from '../helpers/design-fonts';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import {
@@ -29,7 +30,7 @@ import { fileDataUrl, safeDesignLink } from '../helpers/design-assets';
 import { identifyObject } from '../helpers/fabric-metadata';
 import { validateDesignScene } from '../helpers/design-validation';
 import { boundsGuides, snapAxis, snappingGuides, SnapGuides } from '../helpers/design-snapping';
-import { EffectCircle, EffectGroup, EffectRect } from '../helpers/effect-shapes';
+import { EffectGroup } from '../helpers/effect-shapes';
 import { applyImageEffects, imageEffects } from '../helpers/image-effects';
 import { ConstructorClipboard } from './constructor-clipboard';
 import { LayoutTextbox } from '../helpers/layout-textbox';
@@ -263,20 +264,8 @@ export class ConstructorEditor {
     );
   }
 
-  addShape(shape: 'rectangle' | 'circle' | 'line'): void {
-    const options = {
-      left: 80,
-      top: 100,
-      fill: '#36d4f7',
-      originX: 'left',
-      originY: 'top',
-    } as const;
-    this.add(
-      shape === 'circle'
-        ? new EffectCircle({ ...options, radius: 50 })
-        : new EffectRect({ ...options, width: 180, height: shape === 'line' ? 3 : 100 }),
-      shape === 'circle' ? 'Circle' : shape === 'line' ? 'Line' : 'Rectangle',
-    );
+  addShape(shape: DesignShape): void {
+    this.add(createDesignShape(shape), shape[0].toUpperCase() + shape.slice(1));
   }
 
   async addIcon(name: string, data: LucideIconData): Promise<void> {

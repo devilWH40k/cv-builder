@@ -1,3 +1,5 @@
+import { DESIGN_SHAPES } from '../../helpers/design-shapes';
+import { Dropdown, DropdownItem } from '../../../../shared/ui/dropdown/dropdown';
 import { ConstructorTypography } from '../constructor-typography/constructor-typography';
 import { DebouncedColor } from '../../../../shared/directives/debounced-color';
 import { PhotoPreview, PhotoCropShape } from '../../../../shared/ui/photo-preview/photo-preview';
@@ -19,12 +21,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   LucideAngularModule,
   Save,
+  Search,
   Download,
   MousePointer2,
   Paintbrush,
   Pencil,
   Type,
   ImagePlus,
+  RectangleHorizontal, Triangle, Ellipse, Diamond, Pentagon, Hexagon, Star,
+  Shapes,
   Square,
   Circle,
   Minus,
@@ -66,7 +71,7 @@ import { ConstructorIconLibrary } from '../constructor-icon-library/constructor-
 
 @Component({
   selector: 'app-constructor-page',
-  imports: [ConstructorTypography, DebouncedColor,
+  imports: [Dropdown, ConstructorTypography, DebouncedColor,
     PhotoPreview,
     RouterLink,
     LucideAngularModule,
@@ -85,11 +90,59 @@ import { ConstructorIconLibrary } from '../constructor-icon-library/constructor-
   ],
   providers: [CvDraft, ConstructorEditor, ConstructorSession],
   templateUrl: './constructor-page.html',
-  styleUrls: ['./constructor-page.scss', './constructor-editor.scss', './constructor-panels.scss'],
+  styleUrls: ['./constructor-page.scss', './constructor-editor.scss', './constructor-panels.scss', './constructor-toolbars.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class ConstructorPageComponent {
+  protected readonly visiblePanels = signal({ main: true, icons: true, properties: true, layers: true });
+  protected readonly hasLeftPanels = computed(() => this.visiblePanels().main || this.visiblePanels().icons);
+  protected readonly hasRightPanels = computed(() => this.visiblePanels().properties || this.visiblePanels().layers);
+  protected readonly windowMenuItems = computed<readonly DropdownItem[]>(() => [
+    { id: 'main', label: 'Main properties', checked: this.visiblePanels().main },
+    { id: 'icons', label: 'Icon library', checked: this.visiblePanels().icons },
+    { id: 'properties', label: 'Properties', checked: this.visiblePanels().properties },
+    { id: 'layers', label: 'Layers', checked: this.visiblePanels().layers },
+  ]);
+
+  protected toggleWindow(item: DropdownItem): void {
+    const id = item.id;
+    if (id === 'main' || id === 'icons' || id === 'properties' || id === 'layers') {
+      this.visiblePanels.update((panels) => ({ ...panels, [id]: !panels[id] }));
+    }
+  }
+
+  private readonly designFileInput = viewChild.required<ElementRef<HTMLInputElement>>('designFile');
+  protected readonly fileMenuItems = computed<readonly DropdownItem[]>(() => {
+    const busy = this.workspaceLoading() || this.editor.busy() || this.session.saving();
+    return [
+      { id: 'new', label: 'New Design', disabled: busy },
+      { id: 'cv', label: 'Open From CV', disabled: busy },
+      { id: 'save', label: 'Save', shortcut: 'Ctrl+S', disabled: busy },
+      { id: 'import', label: 'Import Design File', shortcut: 'Ctrl+I', disabled: busy },
+      { id: 'pdf', label: 'Export PDF', shortcut: 'Ctrl+E', disabled: busy || this.exporting() },
+      { id: 'design', label: 'Export Design File', shortcut: 'Ctrl+Shift+E', disabled: busy },
+    ];
+  });
+
+  protected fileAction(item: DropdownItem): void {
+    if (this.fileMenuItems().find((entry) => entry.id === item.id)?.disabled) return;
+    switch (item.id) {
+      case 'new': void this.newBlank(); break;
+      case 'cv': void this.openFromCv(); break;
+      case 'save': void this.save(); break;
+      case 'import': this.designFileInput().nativeElement.click(); break;
+      case 'pdf': void this.exportPdf(); break;
+      case 'design': this.exportDesign(); break;
+    }
+  }
+
+  private async openFromCv(): Promise<void> {
+    if (!(await this.canDeactivate())) return;
+    this.session.close();
+    await this.router.navigate(['/']);
+  }
+
   protected readonly appVersion = environment.appVersion;
   protected readonly editor = inject(ConstructorEditor);
   protected readonly session = inject(ConstructorSession);
@@ -109,6 +162,7 @@ export class ConstructorPageComponent {
   private readonly canvasViewport = viewChild.required<ElementRef<HTMLElement>>('canvasViewport');
   private readonly returnTab = this.route.snapshot.queryParamMap.get('returnTab');
   private resizeObserver: ResizeObserver | null = null;
+  private resizeFrame: number | null = null;
   protected readonly propertiesHeight = signal(400);
   protected readonly pagePropertiesHeight = signal(400);
   protected readonly leftWidth = signal(240);
@@ -125,12 +179,14 @@ export class ConstructorPageComponent {
   private readonly toasts = inject(ToastService);
   protected readonly icons = {
     Save,
+    Search,
     Download,
     MousePointer2,
     Paintbrush,
     Pencil,
     Type,
     ImagePlus,
+    Shapes,
     Square,
     Circle,
     Minus,
@@ -143,6 +199,14 @@ export class ConstructorPageComponent {
     Trash2,
     X,
   };
+  protected readonly shapeItems: readonly DropdownItem[] = DESIGN_SHAPES.map((shape) => ({
+    icon: ({ rectangle: RectangleHorizontal, circle: Circle, line: Minus, triangle: Triangle, ellipse: Ellipse, diamond: Diamond, pentagon: Pentagon, hexagon: Hexagon, star: Star })[shape],
+    id: shape, label: shape[0].toUpperCase() + shape.slice(1),
+  }));
+  protected addShape(item: DropdownItem): void {
+    const shape = DESIGN_SHAPES.find((shape) => shape === item.id);
+    if (shape) this.editor.addShape(shape);
+  }
   protected readonly leaveOpen = signal(false);
   protected readonly leaveSaving = signal(false);
   private leaveDecision: Promise<boolean> | null = null;
@@ -154,7 +218,13 @@ export class ConstructorPageComponent {
       this.editor.attach(this.canvas().nativeElement, () => {
         this.session.markChanged();
       });
-      this.resizeObserver = new ResizeObserver(() => this.fitCanvas());
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
+        this.resizeFrame = requestAnimationFrame(() => {
+          this.resizeFrame = null;
+          this.fitCanvas();
+        });
+      });
       this.resizeObserver.observe(this.canvasViewport().nativeElement);
       void this.pendingTasks.run(() => this.initialize());
     });
@@ -169,6 +239,7 @@ export class ConstructorPageComponent {
       this.finishLeaving(false);
       this.routeRun++;
       this.resizeObserver?.disconnect();
+      if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
       void this.editor.dispose();
     });
   }
@@ -395,6 +466,15 @@ export class ConstructorPageComponent {
   }
 
   protected keyboard(event: KeyboardEvent): void {
+    const command = event.ctrlKey || event.metaKey;
+    const commandKey = /^Key[A-Z]$/.test(event.code) ? event.code.slice(3).toLowerCase() : event.key.toLowerCase();
+    if (command && !event.altKey && ['s', 'i', 'e'].includes(commandKey)) {
+      event.preventDefault();
+      if (event.repeat) return;
+      const id = commandKey === 's' ? 'save' : commandKey === 'i' ? 'import' : event.shiftKey ? 'design' : 'pdf';
+      this.fileAction({ id, label: '' });
+      return;
+    }
     if (
       event.target instanceof HTMLElement &&
       event.target.closest('input, textarea, select, [contenteditable="true"]')
