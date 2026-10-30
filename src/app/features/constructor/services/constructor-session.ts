@@ -45,7 +45,7 @@ export class ConstructorSession {
       ...design,
       updatedAt: Date.now(),
       pages: design.pages.map((page, index) =>
-        index === this.activePage() ? { ...page, scene: this.editor.snapshot() } : page,
+        index === this.activePage() ? { ...page, scene: this.editor.snapshot(), guides: this.editor.pageGuides() } : page,
       ),
     };
   }

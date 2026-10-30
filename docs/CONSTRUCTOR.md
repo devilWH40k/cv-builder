@@ -239,3 +239,10 @@ library, Properties and Layers. Visible panels have checkmarks. Escape and outsi
 a sidebar is hidden, the other fills its height; hiding both removes the sidebar
 and its width handle. Panel instances and resize settings remain intact when hidden.
 Visibility is kept for the current constructor session.
+
+Rulers display page coordinates in pixels and scale with zoom. Drag from the top
+ruler for a horizontal guide, or the left ruler for a vertical guide. Drag guides
+to move them or outside the page to remove them; focused guides support arrow
+keys (Shift for 10px steps) and Delete. Escape cancels guide dragging. Guides
+snap objects, persist per page in saved/imported design files, and never appear
+in PDF exports. Guide edits currently sit outside object undo/redo history.

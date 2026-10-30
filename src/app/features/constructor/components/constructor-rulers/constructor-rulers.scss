@@ -1,0 +1,32 @@
+@use 'styles/tokens' as tokens;
+:host { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.corner, .ruler { position: absolute; background: tokens.$background-surface; color: tokens.$text-muted; font-size: 9px; overflow: hidden; }
+.corner { top: 0; left: 0; width: tokens.$spacing-5; height: tokens.$spacing-5; text-align: center; }
+.ruler { pointer-events: auto; touch-action: none; user-select: none; }
+.horizontal { top: 0; left: tokens.$spacing-5; right: 0; height: tokens.$spacing-5; cursor: ns-resize; }
+.vertical { top: tokens.$spacing-5; left: 0; bottom: 0; width: tokens.$spacing-5; cursor: ew-resize; }
+.ruler span { position: absolute; border-color: tokens.$border-color-strong; }
+.horizontal span { bottom: 0; padding-bottom: tokens.$spacing-1; border-left: 1px solid; }
+.vertical span { left: 0; padding-top: tokens.$spacing-1; border-top: 1px solid; writing-mode: vertical-rl; }
+.guide { position: absolute; pointer-events: auto; touch-action: none; padding: 0; border: 0; background: transparent; }
+.guide::after { content: ''; position: absolute; background: tokens.$text-accent; }
+.x { width: tokens.$spacing-2; height: calc(100% - #{tokens.$spacing-5}); transform: translateX(-50%); cursor: ew-resize; }
+.x::after { left: 50%; top: 0; width: 1px; height: 100%; }
+.y { height: tokens.$spacing-2; width: calc(100% - #{tokens.$spacing-5}); transform: translateY(-50%); cursor: ns-resize; }
+.y::after { top: 50%; left: 0; height: 1px; width: 100%; }
+.guide:focus-visible { outline: 1px dashed tokens.$border-color-focus; }
+
+.guide-position {
+  display: none;
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  white-space: nowrap;
+  color: tokens.$text-accent;
+  font-size: tokens.$font-size-xs * 0.75;
+  line-height: tokens.$line-height-tight;
+}
+.guide:is(:hover, :focus-visible, .dragging) { z-index: 2; }
+.guide:is(:hover, :focus-visible, .dragging) .guide-position { display: block; }
+.x .guide-position { top: tokens.$spacing-1; right: 100%; }
+.y .guide-position { bottom: 100%; left: tokens.$spacing-1; }

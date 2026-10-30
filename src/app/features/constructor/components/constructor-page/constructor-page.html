@@ -153,7 +153,10 @@
         <div #canvasViewport class="canvas-viewport" tabindex="0" aria-label="A4 design workspace"
           (contextmenu)="objectMenu.open($event)" [class.is-loading]="workspaceLoading()"
           [attr.aria-busy]="workspaceLoading()">
-          <canvas #canvas></canvas>
+          <div class="ruled-page">
+            <canvas #canvas></canvas>
+            <app-constructor-rulers />
+          </div>
           @if (workspaceLoading()) { <app-spinner label="Loading design page" /> }
         </div>
         </div>

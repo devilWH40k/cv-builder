@@ -1,3 +1,4 @@
+import { A4_WIDTH, A4_HEIGHT, PageGuide } from '../interfaces/constructor-document';
 import { DESIGN_FONTS } from './design-fonts';
 import { ConstructorDocument } from '../interfaces/constructor-document';
 import { safeDesignLink } from './design-assets';
@@ -100,7 +101,24 @@ export function parseDesign(value: unknown): ConstructorDocument {
       throw new Error(INVALID);
     ids.add(page['id']);
     validateDesignScene(page['scene']);
-    return { id: page['id'], scene: page['scene'] };
+    const guides: PageGuide[] = [];
+    if (page['guides'] !== undefined) {
+      if (!Array.isArray(page['guides']) || page['guides'].length > 200) throw new Error(INVALID);
+      const guideIds = new Set<string>();
+      for (const entry of page['guides']) {
+        const guide = record(entry);
+        const axis = guide['axis'];
+        const position = guide['position'];
+        const id = guide['id'];
+        if (typeof id !== 'string' || !id || guideIds.has(id) ||
+            (axis !== 'x' && axis !== 'y') || typeof position !== 'number' ||
+            !Number.isFinite(position) || position < 0 || position > (axis === 'x' ? A4_WIDTH : A4_HEIGHT))
+          throw new Error(INVALID);
+        guideIds.add(id);
+        guides.push({ id, axis, position });
+      }
+    }
+    return { id: page['id'], scene: page['scene'], ...(guides.length ? { guides } : {}) };
   });
   return {
     schemaVersion: 1,

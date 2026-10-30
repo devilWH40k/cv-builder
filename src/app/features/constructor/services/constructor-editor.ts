@@ -18,6 +18,7 @@ import {
   util,
 } from 'fabric';
 import {
+  PageGuide,
   A4_HEIGHT,
   A4_WIDTH,
   ConstructorPage,
@@ -66,6 +67,7 @@ export class ConstructorEditor {
   private capturedStyle: VisualStyle | null = null;
   private resizeSelectedText: (() => void) | null = null;
   private styleSourceId: string | null = null;
+  readonly pageGuides = signal<readonly PageGuide[]>([]);
   private pageId = '';
   private readonly groupNumbers = new Map<string, number>();
   readonly selection = this.selected.asReadonly();
@@ -179,6 +181,7 @@ export class ConstructorEditor {
       await loadSceneFonts(scene);
       await this.canvas.loadFromJSON(scene);
       this.pageId = page.id;
+      this.pageGuides.set(page.guides ?? []);
       this.canvas.discardActiveObject();
       this.canvas.requestRenderAll();
       this.past.set([]);
@@ -190,6 +193,12 @@ export class ConstructorEditor {
       this.restoring = false;
       this.busy.set(false);
     }
+  }
+
+  setPageGuides(guides: readonly PageGuide[]): void {
+    if (this.busy()) return;
+    this.pageGuides.set(guides);
+    this.revisionCallback?.();
   }
 
   snapshot(): string {
@@ -745,7 +754,10 @@ export class ConstructorEditor {
         this.snapTargets(target).map(object => object.getBoundingRect()), A4_WIDTH, A4_HEIGHT,
       ) };
     }
-    return this.snapping.guides;
+    return { ...this.snapping.guides,
+      x: [...this.snapping.guides.x, ...this.pageGuides().filter(g => g.axis === 'x').map(g => g.position)],
+      y: [...this.snapping.guides.y, ...this.pageGuides().filter(g => g.axis === 'y').map(g => g.position)],
+    };
   }
 
   private snapMove(target: FabricObject, bypass = false): void {
