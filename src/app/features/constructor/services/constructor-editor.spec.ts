@@ -31,6 +31,77 @@ describe('Constructor editing', () => {
     canvas.remove();
   });
 
+  it('preserves additional vector shapes when saving and restoring a scene', async () => {
+    for (const shape of ['triangle', 'ellipse', 'diamond', 'pentagon', 'hexagon', 'star'] as const)
+      editor.addShape(shape);
+    const scene = editor.snapshot();
+    const objects = JSON.parse(scene).objects;
+    expect(objects.map((object: { type: string }) => object.type)).toEqual([
+      'Triangle', 'Ellipse', 'Polygon', 'Polygon', 'Polygon', 'Polygon',
+    ]);
+    expect(objects[5].points.length).toBe(10);
+    await editor.load({ ...blankDesign().pages[0], scene });
+    expect(JSON.parse(editor.snapshot()).objects.length).toBe(6);
+  });
+
+  it('underlines selected characters and toggles underline for the full block', async () => {
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.addText();
+    const text = activate.calls.mostRecent().args[0];
+    if (!(text instanceof IText)) throw new Error('Expected text');
+    text.set('text', 'Hello world');
+    text.enterEditing();
+    text.selectionStart = 0;
+    text.selectionEnd = 5;
+    editor.updateText({ underline: true });
+    expect(text.getSelectionStyles(0, 5).every((style) => style.underline)).toBeTrue();
+    expect(text.getSelectionStyles(6, 11).every((style) => !style.underline)).toBeTrue();
+    expect(editor.selection()?.underline).toBeTrue();
+    text.exitEditing();
+    editor.updateText({ underline: true });
+    expect(text.underline).toBeTrue();
+    const scene = editor.snapshot();
+    await editor.load({ ...blankDesign().pages[0], scene });
+    editor.selectAll();
+    expect(editor.selection()?.underline).toBeTrue();
+    editor.updateText({ underline: false });
+    expect(editor.selection()?.underline).toBeFalse();
+    await editor.undo();
+    editor.selectAll();
+    expect(editor.selection()?.underline).toBeTrue();
+  });
+
+  it('formats selected characters while applying typography to the full block', async () => {
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.addText();
+    const text = activate.calls.mostRecent().args[0];
+    if (!(text instanceof IText)) throw new Error('Expected text');
+    text.set('text', 'Hello world');
+    text.enterEditing();
+    text.selectionStart = 0;
+    text.selectionEnd = 5;
+    editor.updateText({ bold: true });
+    expect(text.getSelectionStyles(0, 5).every((style) => style.fontWeight === 'bold')).toBeTrue();
+    expect(text.getSelectionStyles(6, 11).every((style) => style.fontWeight !== 'bold')).toBeTrue();
+    expect(editor.selection()?.bold).toBeTrue();
+    editor.updateText({ italic: true, fontFamily: 'Roboto', fontSize: 22, lineHeight: 1.5, charSpacing: 80 });
+    expect(text.fontFamily).toBe('Roboto');
+    expect(text.fontSize).toBe(22);
+    expect(text.lineHeight).toBe(1.5);
+    expect(text.charSpacing).toBe(80);
+    expect(text.getSelectionStyles(0, 5).every((style) => style.fontWeight === 'bold' && style.fontStyle === 'italic')).toBeTrue();
+    editor.updateText({ bold: false });
+    expect(editor.selection()?.bold).toBeFalse();
+    text.exitEditing();
+    const scene = editor.snapshot();
+    const design = blankDesign();
+    expect(() => parseDesign({ ...design, pages: [{ ...design.pages[0], scene }] })).not.toThrow();
+    await editor.load({ ...design.pages[0], scene });
+    editor.selectAll();
+    expect(editor.selection()?.fontFamily).toBe('Roboto');
+    expect(editor.selection()?.charSpacing).toBe(80);
+  });
+
   it('reuses snapping bounds during dragging and resizing and refreshes them for the next gesture', async () => {
     const target = new Rect({ left: 200, top: 200, width: 60, height: 40, strokeWidth: 0 });
     target.designId = 'moving';

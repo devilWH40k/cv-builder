@@ -56,9 +56,13 @@ export interface SelectionProperties {
   readonly isText: boolean;
   readonly isImage: boolean;
   readonly locked: boolean;
+  readonly fontFamily: string;
+  readonly lineHeight: number;
+  readonly charSpacing: number;
   readonly fontSize: number;
   readonly bold: boolean;
   readonly italic: boolean;
+  readonly underline: boolean;
   readonly textAlign: string;
   readonly color: string;
   readonly gradientEnd: string | null;

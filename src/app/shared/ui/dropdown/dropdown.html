@@ -9,8 +9,12 @@
       <ng-container [ngTemplateOutlet]="template" />
     } @else {
       @for (item of items(); track item.id) {
-        <button type="button" role="menuitem" [disabled]="item.disabled" (click)="choose(item)">
-          {{ item.label }}
+        <button type="button" [attr.role]="item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'" [attr.aria-checked]="item.checked" [disabled]="item.disabled" [attr.aria-label]="iconGrid() ? item.label : null" [title]="iconGrid() ? item.label : ''" (click)="choose(item)">
+          @if (iconGrid() && item.icon) {
+            <lucide-icon [img]="item.icon" [size]="20" aria-hidden="true" />
+          } @else { <span>{{ item.label }}</span> }
+          @if (item.checked) { <lucide-icon class="item-check" [img]="CheckIcon" [size]="16" aria-hidden="true" /> }
+          @if (item.shortcut) { <span class="shortcut">{{ item.shortcut }}</span> }
         </button>
       }
     }

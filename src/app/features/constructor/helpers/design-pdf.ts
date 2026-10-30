@@ -1,3 +1,4 @@
+import { GOOGLE_DESIGN_FONTS, designFontFiles, loadSceneFonts, normalizeDesignFonts } from './design-fonts';
 import { FabricObject, Group, StaticCanvas } from 'fabric';
 import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces';
 import { A4_HEIGHT, A4_WIDTH, ConstructorDocument } from '../interfaces/constructor-document';
@@ -79,7 +80,9 @@ export async function buildDesignPdf(design: ConstructorDocument): Promise<TDocu
   for (const [index, page] of design.pages.entries()) {
     const canvas = new StaticCanvas(undefined, { width: A4_WIDTH, height: A4_HEIGHT });
     try {
-      await canvas.loadFromJSON(page.scene);
+      const scene = normalizeDesignFonts(page.scene);
+      await loadSceneFonts(scene);
+      await canvas.loadFromJSON(scene);
       // Keep <text>/<tspan> nodes and paint gradients; never rasterize the page.
       const svg = new DOMParser().parseFromString(
         canvas.toSVG({
@@ -130,5 +133,9 @@ export async function designPdfBlob(design: ConstructorDocument): Promise<Blob> 
     import('pdfmake/build/vfs_fonts'),
   ]);
   pdfMake.addVirtualFileSystem(fonts);
+  for (const family of GOOGLE_DESIGN_FONTS) {
+    const files = designFontFiles(family);
+    if (files) pdfMake.addFonts({ [family]: files });
+  }
   return pdfMake.createPdf(await buildDesignPdf(design)).getBlob();
 }
