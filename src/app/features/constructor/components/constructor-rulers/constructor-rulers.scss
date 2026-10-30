@@ -6,7 +6,7 @@
 .horizontal { top: 0; left: tokens.$spacing-5; right: 0; height: tokens.$spacing-5; cursor: ns-resize; }
 .vertical { top: tokens.$spacing-5; left: 0; bottom: 0; width: tokens.$spacing-5; cursor: ew-resize; }
 .ruler span { position: absolute; border-color: tokens.$border-color-strong; }
-.horizontal span { bottom: 0; padding-bottom: tokens.$spacing-1; border-left: 1px solid; }
+.horizontal span { bottom: 0; padding-bottom: tokens.$spacing-1; padding-left: tokens.$spacing-1; border-left: 1px solid; }
 .vertical span { left: 0; padding-top: tokens.$spacing-1; border-top: 1px solid; writing-mode: vertical-rl; }
 .guide { position: absolute; pointer-events: auto; touch-action: none; padding: 0; border: 0; background: transparent; }
 .guide::after { content: ''; position: absolute; background: tokens.$text-accent; }
