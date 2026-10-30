@@ -23,12 +23,11 @@ directive. The background becomes inert and focus stays within the editor.
 The top-right close action and Escape preserve unsaved-change confirmation and
 return to the originating Home tab, or to the constructor landing page. **Fit page**
 adjusts zoom to the available canvas space; manual zoom remains available.
-Page selection lives in a Pages section after Page properties in the left sidebar.
-A small Add page button sits opposite the heading; each page has a delete cross
+Page selection uses file-style tabs above the canvas with a small plus tab at the end; each page has a delete cross
 that confirms the specific page before removal. Deleting an inactive page keeps
 the current page and its history open. The last page cannot be deleted.
-The compact header keeps save status beside the design name
-and uses smaller action buttons to leave more vertical space for the canvas.
+The 20px header keeps the centered design name, File menu and close action compact.
+File properties above Page properties contains Status and the editable File name.
 
 ## Code boundaries
 
@@ -157,10 +156,22 @@ scene. Images cover the page with centered cropping. Background edits participat
 in undo/redo, save/reopen, portable designs, and PDF export, without becoming object
 layers. Constructor notifications use the shared toast service.
 
-The editor uses Roboto and its regular, bold, italic and bold-italic variants from
-pdfmake's existing virtual font files. Loading those same files through `FontFace`
-keeps browser and PDF font metrics aligned without external font requests. Adding
-font families requires registering files for both the canvas and PDF renderer.
+The main toolbar places undo/redo at the left, typography in the center and
+icon-labeled zoom at the right. Selection, style copying, drawing, text insertion,
+image insertion and shape tools use a vertical strip beside the canvas.
+Font family, size, line height and letter spacing apply to the complete text block.
+Select characters while editing text to apply bold/italic/underline to that range; without a
+range, emphasis applies to the whole block. Existing mixed emphasis is retained
+when changing block typography. Letter spacing is entered in em.
+
+The menu offers bundled Roboto and thirteen locally hosted
+Google Font families. Each local family has regular, bold, italic and bold-italic
+static TTFs under `public/fonts/`, with its license alongside them. The editor loads
+only selected families and reloads saved scene fonts before measuring text. PDF
+export registers the same files with pdfmake and embeds the selected families.
+No Google Fonts CDN requests are made. Generic browser families are no longer offered. Older scenes map sans-serif to
+Roboto, serif to Lora and monospace to Roboto Mono when loaded or exported. Local font files
+are served by the application; this does not add offline caching for the app itself.
 
 Constructor image uploads reuse the shared photo preview dialog, offering the
 original file, a transparent circular crop, or a rectangle with independent width
@@ -213,3 +224,18 @@ npm run build
 Tests cover conversion across preview columns, text and image serialization,
 gradient/link export, history, locking, independent pages, concurrent/failed saves,
 portable-file validation, and upgrading existing databases without losing CVs.
+
+The constructor header uses the shared compact File dropdown, a centered name and a small close button. File contains New Design, Open From CV, Save,
+Import Design File, Export PDF and Export Design File. Shortcut hints appear at
+the right of each command: Ctrl/Cmd+S, Ctrl/Cmd+I, Ctrl/Cmd+E and
+Ctrl/Cmd+Shift+E. File shortcuts also work in text fields; native editing shortcuts
+remain independent. New, open and import retain unsaved-change confirmation.
+
+File properties above Page properties shows Status followed by the editable File name.
+The name is also displayed in the centered 20px menu header.
+
+The hover View menu stays open when toggling Main properties (File and Page properties), Icon
+library, Properties and Layers. Visible panels have checkmarks. Escape and outside interaction dismiss the menu. When one panel in
+a sidebar is hidden, the other fills its height; hiding both removes the sidebar
+and its width handle. Panel instances and resize settings remain intact when hidden.
+Visibility is kept for the current constructor session.

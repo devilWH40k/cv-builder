@@ -1,0 +1,57 @@
+@use 'styles/tokens' as tokens;
+@use '../../../../shared/ui/button/variants' as buttons;
+
+.toolbar.main-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  padding-block: tokens.$spacing-1;
+}
+.history-tools { display: flex; align-items: center; gap: tokens.$spacing-2; justify-self: start; }
+.main-toolbar .history-tools button {
+  width: tokens.$button-height-sm;
+  height: tokens.$button-height-sm;
+  min-height: tokens.$button-height-sm;
+  padding: tokens.$spacing-1;
+}
+.history-tools lucide-icon { display: flex; }
+.typography-tools { display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: tokens.$spacing-2; }
+.main-toolbar .zoom-label { display: flex; align-items: center; gap: tokens.$spacing-2; justify-self: end; margin-left: 0; }
+.zoom-label lucide-icon { display: flex; }
+.canvas-area {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid tokens.$border-color;
+  background: tokens.$background-subtle;
+}
+.canvas-area .canvas-viewport { border: 0; }
+.canvas-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: tokens.$spacing-2;
+  align-self: start;
+  max-height: calc(100% - #{tokens.$spacing-4});
+  margin: tokens.$spacing-3 0 0 tokens.$spacing-3;
+  min-height: 0;
+  overflow: visible;
+  padding: tokens.$spacing-2;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  background: tokens.$background-surface;
+  button {
+    @include buttons.secondary;
+    & { width: tokens.$button-height-sm; min-height: tokens.$button-height-sm; padding: tokens.$spacing-1; flex-shrink: 0; }
+    &[aria-pressed='true'] { color: tokens.$text-accent; background: tokens.$background-primary-subtle; border-color: tokens.$border-color-focus; }
+    &:disabled { color: tokens.$text-disabled; cursor: default; }
+  }
+  lucide-icon { display: flex; }
+}
+@media (max-width: tokens.$breakpoint-lg) {
+  .toolbar.main-toolbar { display: flex; }
+  .typography-tools { order: 3; flex: 1 0 100%; }
+  .main-toolbar .zoom-label { margin-left: auto; }
+}

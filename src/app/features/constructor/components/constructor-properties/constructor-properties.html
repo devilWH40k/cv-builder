@@ -60,54 +60,10 @@
         <label class="border-control">Border radius (px)<input #radius type="number" min="0" step="1"
           [value]="selected.mixed?.includes('borderRadius') ? '' : selected.borderRadius" placeholder="Mixed" (change)="editor.updateRectangle({ borderRadius: radius.valueAsNumber })" /></label>
         <label class="border-control">Border color{{ selected.mixed?.includes('borderColor') ? ' (mixed)' : '' }}<input #borderColor type="color" [value]="selected.borderColor"
-          appDebouncedColor (colorCommitted)="editor.updateRectangle({ borderColor: $event })" /></label>
+          appDebouncedColor (colorCommitted)="editor.updateRectangle({ borderColor: $event })"
+ /></label>
         <label class="border-control">Border width (px)<input #borderWidth type="number" min="0" max="100" step="1"
           [value]="selected.mixed?.includes('borderWidth') ? '' : selected.borderWidth" placeholder="Mixed" (change)="editor.updateRectangle({ borderWidth: borderWidth.valueAsNumber })" /></label>
-      }
-      @if (selected.isText) {
-        <label
-          >Font size (px)<input
-            #fontSize
-            type="number"
-            min="6"
-            max="120"
-            [value]="selected.mixed?.includes('fontSize') ? '' : selected.fontSize"
-            placeholder="Mixed"
-            (change)="editor.updateText({ fontSize: fontSize.valueAsNumber })"
-        /></label>
-        <div class="actions">
-          <button
-            type="button"
-            aria-label="Bold"
-            [attr.aria-pressed]="selected.mixed?.includes('bold') ? 'mixed' : selected.bold"
-            (click)="editor.updateText({ bold: !selected.bold })"
-          >
-            <lucide-icon [img]="icons.Bold" [size]="18" />
-          </button>
-          <button
-            type="button"
-            aria-label="Italic"
-            [attr.aria-pressed]="selected.mixed?.includes('italic') ? 'mixed' : selected.italic"
-            (click)="editor.updateText({ italic: !selected.italic })"
-          >
-            <lucide-icon [img]="icons.Italic" [size]="18" />
-          </button>
-        </div>
-        <label
-          >Text alignment<select
-            #textAlign
-            [value]="selected.mixed?.includes('textAlign') ? '' : selected.textAlign"
-            (change)="editor.updateText({ textAlign: textAlign.value })"
-          >
-            @if (selected.mixed?.includes('textAlign')) {
-              <option value="" disabled>Mixed</option>
-            }
-            <option value="left">Left</option>
-            <option value="center">Center</option>
-            <option value="right">Right</option>
-            <option value="justify">Justify</option>
-          </select></label
-        >
       }
       @if (selected.canFill) {
         <label

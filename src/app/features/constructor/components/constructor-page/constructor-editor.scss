@@ -8,7 +8,7 @@
   max-width: none;
   max-height: none;
   margin: 0;
-  padding: tokens.$spacing-4 tokens.$spacing-4 0;
+  padding: tokens.$spacing-2 tokens.$spacing-4 0;
   border: 0;
   border-radius: 0;
   overflow: hidden;
@@ -17,15 +17,16 @@
   &[open] {
     display: flex;
     flex-direction: column;
-    gap: tokens.$spacing-3;
+    gap: tokens.$spacing-2;
   }
 }
 .document-heading {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  margin-bottom: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
   gap: tokens.$spacing-3;
-  min-height: tokens.$button-height-sm;
+  min-height: tokens.$spacing-5;
+  margin-bottom: 0;
+  align-items: center;
   flex-shrink: 0;
 }
 .editor-footer {
@@ -33,43 +34,29 @@
   justify-content: flex-end;
   flex-shrink: 0;
   margin-top: -#{tokens.$spacing-2};
-  padding-top: 0;
   border-top: 1px solid tokens.$border-color;
   color: tokens.$text-muted;
   font-size: tokens.$font-size-xs;
   line-height: tokens.$line-height-tight;
 }
 .document-info {
+  position: relative;
+  justify-content: center;
   display: flex;
   align-items: center;
-  gap: tokens.$spacing-2;
   min-width: 0;
 }
 .document-heading lucide-icon { display: flex; }
-.document-title {
-  display: flex;
-  align-items: center;
-  gap: tokens.$spacing-2;
-  flex: 0 1 24rem;
-  min-width: 0;
-  input {
-    min-width: 0;
-    font-size: tokens.$font-size-sm;
-    padding: tokens.$spacing-1 tokens.$spacing-2;
-  }
-}
-.save-state { flex-shrink: 0; white-space: nowrap; }
-.document-actions {
-  --button-min-height: #{tokens.$button-height-sm};
-  --button-padding: #{tokens.$spacing-1} #{tokens.$spacing-3};
-  line-height: tokens.$line-height-tight;
-  flex-wrap: nowrap;
-}
+.document-caption { max-width: 24rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: tokens.$font-size-xs; }
+.file-menu { display: flex; align-items: center; justify-self: start; --dropdown-trigger-height: #{tokens.$spacing-5}; }
+.file-menu app-dropdown { display: flex; }
 .editor-close {
   flex-shrink: 0;
-  width: tokens.$button-height-sm;
-  min-height: tokens.$button-height-sm;
-  padding: tokens.$spacing-1;
+  justify-self: end;
+  width: tokens.$spacing-5;
+  min-height: tokens.$spacing-5;
+  height: tokens.$spacing-5;
+  padding: 0;
   border-color: transparent;
   background: transparent;
   &:hover { border-color: transparent; }
@@ -95,41 +82,37 @@
 .stage-column {
   min-height: 0;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  gap: tokens.$spacing-2;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0;
 }
 .page-tabs {
-  flex-wrap: wrap;
-  overflow: visible;
-  padding-bottom: 0;
-  button {
-    min-height: tokens.$button-height-sm;
-    padding: tokens.$spacing-1 tokens.$spacing-2;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: tokens.$spacing-1;
+  overflow-x: auto;
+  padding: tokens.$spacing-1 tokens.$spacing-1 0;
+  min-width: 0;
+  button { min-height: tokens.$button-height-sm; padding: tokens.$spacing-1 tokens.$spacing-3; }
+  .page-select {
+    border-radius: tokens.$radius-md tokens.$radius-md 0 0;
+    border-bottom: 0;
+    background: tokens.$background-app;
   }
-  button[aria-current='page'] { background: tokens.$background-primary-subtle; }
+  .page-select[aria-current='page'] {
+    background: tokens.$background-subtle;
+    color: tokens.$text-accent;
+    border-color: tokens.$border-color-strong;
+  }
+  .add-page {
+    flex-shrink: 0;
+    width: tokens.$button-height-sm;
+    padding: tokens.$spacing-1;
+    border-radius: tokens.$radius-md tokens.$radius-md 0 0;
+    border-bottom: 0;
+    background: tokens.$background-app;
+  }
 }
-.pages-section {
-  margin-top: tokens.$spacing-4;
-  padding-top: tokens.$spacing-4;
-  border-top: 1px solid tokens.$border-color;
-  h2 { font-size: tokens.$font-size-md; margin: 0; }
-}
-.pages-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: tokens.$spacing-2;
-  margin-bottom: tokens.$spacing-3;
-}
-.add-page {
-  min-height: tokens.$button-height-sm;
-  width: tokens.$button-height-sm;
-  padding: tokens.$spacing-1;
-  border-color: transparent;
-  background: transparent;
-  &:hover { border-color: transparent; }
-}
-.page-item { position: relative; min-width: 0; }
+.page-item { position: relative; display: flex; align-items: center; flex-shrink: 0; min-width: 0; }
 .page-tabs .page-select { padding-right: tokens.$spacing-8; }
 .page-tabs .page-delete {
   position: absolute;
@@ -144,7 +127,7 @@
   color: tokens.$text-muted;
   &:hover:not(:disabled) { border-color: transparent; color: tokens.$text-danger; background: tokens.$color-danger-light; }
 }
-.pages-heading lucide-icon, .page-delete lucide-icon { display: flex; }
+.add-page lucide-icon, .page-delete lucide-icon { display: flex; }
 .canvas-viewport {
   min-height: 0;
   max-height: none;
@@ -214,3 +197,5 @@
     max-width: 100%;
   }
 }
+
+.zoom-label { margin-left: auto; }

@@ -1,0 +1,30 @@
+@let selected = editor.selection();
+<fieldset [disabled]="!selected?.isText || selected?.locked || editor.busy()" aria-label="Typography">
+  <label class="font-control"><span class="control-label">Font</span><select
+      title="Local font families are embedded in exported PDFs." #font [value]="selected?.fontFamily ?? 'Roboto'"
+      [disabled]="fontLoading()" [attr.aria-busy]="fontLoading()" (change)="changeFont(font.value)">
+      @for (family of fonts; track family) { <option [value]="family">{{ family }}</option> }
+    </select><lucide-icon class="font-arrow" [img]="FontArrowIcon" [size]="14" aria-hidden="true" /></label>
+  <label><span class="control-label">Font size</span><input title="Font size" #size type="text" inputmode="decimal"
+      [value]="selected?.mixed?.includes('fontSize') ? '' : selected?.fontSize ?? 16" placeholder="Mixed"
+      (change)="updateNumeric(size, 'fontSize')" /></label>
+  <button type="button" aria-label="Bold" title="Bold"
+    [attr.aria-pressed]="selected?.mixed?.includes('bold') ? 'mixed' : selected?.bold"
+    (mousedown)="$event.preventDefault()" (click)="editor.updateText({ bold: !selected?.bold })"><lucide-icon
+      [img]="BoldIcon" [size]="16" /></button>
+  <button type="button" aria-label="Italic" title="Italic"
+    [attr.aria-pressed]="selected?.mixed?.includes('italic') ? 'mixed' : selected?.italic"
+    (mousedown)="$event.preventDefault()" (click)="editor.updateText({ italic: !selected?.italic })"><lucide-icon
+      [img]="ItalicIcon" [size]="16" /></button>
+  <button type="button" aria-label="Underline" title="Underline"
+    [attr.aria-pressed]="selected?.mixed?.includes('underline') ? 'mixed' : selected?.underline"
+    (mousedown)="$event.preventDefault()" (click)="editor.updateText({ underline: !selected?.underline })"><lucide-icon
+      [img]="UnderlineIcon" [size]="16" /></button>
+  <span class="typography-divider" aria-hidden="true"></span>
+  <label class="spacing-control">Spacing<input aria-label="Letter spacing (em)" title="Letter spacing (em)" #spacing
+      type="text" inputmode="decimal" [value]="(selected?.charSpacing ?? 0) / 1000"
+      (change)="updateNumeric(spacing, 'charSpacing')" /></label>
+  <label>Line<input aria-label="Line height" title="Line height" #height type="text" inputmode="decimal"
+      [value]="selected?.lineHeight ?? 1.16"
+      (change)="updateNumeric(height, 'lineHeight')" /></label>
+</fieldset>
