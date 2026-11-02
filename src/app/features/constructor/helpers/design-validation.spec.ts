@@ -5,6 +5,14 @@ import { safeDesignLink } from './design-assets';
 import './fabric-metadata';
 
 describe('Portable constructor designs', () => {
+  it('accepts optional partial locks and rejects invalid lock metadata', () => {
+    for (const designPartialLock of [true, false])
+      expect(() => validateDesignScene(JSON.stringify({ objects: [{ type: 'Textbox', designPartialLock }] }))).not.toThrow();
+    for (const designPartialLock of ['partial', 1, null])
+      expect(() => validateDesignScene(JSON.stringify({ objects: [{ type: 'Textbox', designPartialLock }] }))).toThrow();
+    expect(() => validateDesignScene(JSON.stringify({ objects: [{ type: 'Group', designFullLock: true }] }))).not.toThrow();
+    expect(() => validateDesignScene(JSON.stringify({ objects: [{ type: 'Group', designFullLock: 'full' }] }))).toThrow();
+  });
   it('accepts optional layer names and rejects invalid names', () => {
     expect(() => validateDesignScene(JSON.stringify({ objects: [{ type: 'Rect', designLayerName: 'Section divider' }] }))).not.toThrow();
     for (const name of ['', '   ', 123, 'a'.repeat(101)]) {

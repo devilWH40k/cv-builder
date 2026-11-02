@@ -64,6 +64,8 @@ export interface SelectionProperties {
   readonly isText: boolean;
   readonly isImage: boolean;
   readonly locked: boolean;
+  readonly partiallyLocked?: boolean;
+  readonly lockInherited?: boolean;
   readonly fontFamily: string;
   readonly lineHeight: number;
   readonly charSpacing: number;

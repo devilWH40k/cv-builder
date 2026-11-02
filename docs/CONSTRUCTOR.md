@@ -253,3 +253,17 @@ Replace image accepts PNG, JPEG, and WebP, centers and crops the new image to
 fill the existing frame, and preserves geometry, layer identity, filters and links.
 Frame edits and replacements support undo/redo. Replacement is available for a
 single selected image; frame edits can apply to multiple unlocked images.
+
+Text, image and group layers offer a separate **Partial lock** action in Properties.
+Partial locks allow text content editing by double-clicking, or **Replace image**,
+while blocking movement, resize, rotation, formatting, effects, links and deletion.
+Full locks continue to block content changes too. Partial locks persist through
+history, saved designs and portable files using optional boolean
+`designPartialLock` metadata; older version 1 scenes retain their existing locks.
+Group partial locks apply to all nested descendants. Select members in Layers or
+double-click through groups to edit text or replace an image. Descendants cannot
+override an ancestor's lock. Unlocking the group restores each member's own lock
+state, including any full locks set before the group was partially locked.
+Optional boolean `designFullLock` metadata preserves explicit full locks. Native
+Fabric interaction flags are restored from lock metadata on reopen; inherited
+flags remain transient so unlocking a group does not change its members' locks.

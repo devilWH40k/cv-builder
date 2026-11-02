@@ -15,12 +15,20 @@
       <button
         type="button"
         (click)="editor.toggleLock()"
-        [attr.aria-pressed]="selected.locked"
-        title="Lock / unlock"
-        aria-label="Lock object"
+        [disabled]="editor.busy() || selected.lockInherited"
+        [attr.aria-pressed]="selected.locked && !selected.partiallyLocked"
+        title="Full lock / unlock"
+        aria-label="Full lock object"
       >
         <lucide-icon [img]="selected.locked ? icons.Lock : icons.Unlock" [size]="18" />
       </button>
+      @if (editor.selectionCount() === 1 && (selected.kind === 'text' || selected.kind === 'image' || selected.children?.length)) {
+        <button type="button" (click)="editor.togglePartialLock()" [disabled]="editor.busy() || selected.lockInherited"
+          [attr.aria-pressed]="!!selected.partiallyLocked"
+          title="Partial lock: allow text edits and image replacement only" aria-label="Partial lock object">
+          <lucide-icon [img]="icons.LockKeyhole" [size]="18" />
+        </button>
+      }
       <button
         type="button"
         (click)="editor.remove()"
@@ -31,6 +39,11 @@
         <lucide-icon [img]="icons.Trash2" [size]="18" />
       </button>
     </div>
+    @if (selected.kind === 'image' && editor.selectionCount() === 1) {
+      <button type="button" class="replace-image" [disabled]="(selected.locked && !selected.partiallyLocked) || editor.busy()" (click)="replacement.click()"><lucide-icon [img]="icons.ImagePlus" [size]="16" />Replace image</button>
+      <input #replacement type="file" accept="image/png,image/jpeg,image/webp" hidden (cancel)="$event.stopPropagation()" (change)="replaceImage(replacement)" />
+      <p class="hint">Replacement fills the current frame and keeps its position, size and effects.</p>
+    }
     <fieldset [disabled]="selected.locked || editor.busy()">
       @if (selected.mixed?.length || selected.mixedImageEffects?.length) {
         <p class="hint">Mixed values. Changes apply to all unlocked members.</p>
@@ -47,11 +60,6 @@
           <button type="button" title="Ellipse frame" aria-label="Ellipse frame" [attr.aria-pressed]="!selected.mixed?.includes('imageFrame') && selected.imageFrame === 'ellipse'" (click)="editor.setImageFrame('ellipse')"><lucide-icon [img]="icons.Circle" [size]="18" /></button>
           <button type="button" title="Diamond frame" aria-label="Diamond frame" [attr.aria-pressed]="!selected.mixed?.includes('imageFrame') && selected.imageFrame === 'diamond'" (click)="editor.setImageFrame('diamond')"><lucide-icon [img]="icons.Diamond" [size]="18" /></button>
         </div>
-        @if (editor.selectionCount() === 1 && !selected.children?.length) {
-          <button type="button" class="replace-image" (click)="replacement.click()"><lucide-icon [img]="icons.ImagePlus" [size]="16" />Replace image</button>
-          <input #replacement type="file" accept="image/png,image/jpeg,image/webp" hidden (cancel)="$event.stopPropagation()" (change)="replaceImage(replacement)" />
-          <p class="hint">Replacement fills the current frame and keeps its position, size and effects.</p>
-        }
 
         <label>Brightness (%)<input #brightness type="number" min="-100" max="100" step="1"
           [value]="selected.mixedImageEffects?.includes('brightness') ? '' : selected.imageEffects.brightness" placeholder="Mixed" (change)="editor.updateImageEffects({ brightness: brightness.valueAsNumber })" /></label>

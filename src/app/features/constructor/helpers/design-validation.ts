@@ -61,6 +61,7 @@ export function validateDesignScene(scene: string): void {
       if (key === 'fontFamily' && !DESIGN_FONTS.some((font) => font === child) && !['sans-serif', 'serif', 'monospace'].includes(String(child))) throw new Error(INVALID);
       if (key === 'strategy' && !['fit-content', 'fixed'].includes(String(child))) throw new Error(INVALID);
       if (key === 'designBlur' && (typeof child !== 'number' || child < 0 || child > 40)) throw new Error(INVALID);
+      if ((key === 'designPartialLock' || key === 'designFullLock') && typeof child !== 'boolean') throw new Error(INVALID);
       if ((key === 'designLayerName' || key === 'designIconName') && (typeof child !== 'string' || !child.trim() || child.length > 100)) throw new Error(INVALID);
       if (typeof properties['type'] === 'string' &&
           ['Brightness', 'Contrast', 'Saturation', 'Blur'].includes(properties['type']) &&
