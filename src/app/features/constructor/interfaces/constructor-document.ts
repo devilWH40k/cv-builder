@@ -2,7 +2,14 @@
 export const A4_WIDTH = (210 * 96) / 25.4;
 export const A4_HEIGHT = (297 * 96) / 25.4;
 
+export interface PageGuide {
+  readonly id: string;
+  readonly axis: 'x' | 'y';
+  readonly position: number;
+}
+
 export interface ConstructorPage {
+  readonly guides?: readonly PageGuide[];
   readonly id: string;
   /** Fabric JSON is kept at the adapter boundary, rather than leaking into UI state. */
   readonly scene: string;
@@ -49,6 +56,7 @@ export interface SelectionProperties {
   readonly canBlur: boolean;
   readonly canFill: boolean;
   readonly blur: number;
+  readonly imageFrame?: 'rectangle' | 'rounded' | 'ellipse' | 'diamond' | null;
   readonly imageEffects: ImageEffects;
   readonly borderRadius: number;
   readonly borderColor: string;

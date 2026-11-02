@@ -2,6 +2,8 @@ import { createDesignShape, DesignShape } from '../helpers/design-shapes';
 import { DESIGN_FONTS, loadSceneFonts, normalizeDesignFonts } from '../helpers/design-fonts';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import {
+  Ellipse,
+  Polygon,
   Circle,
   Color,
   FabricImage,
@@ -18,6 +20,7 @@ import {
   util,
 } from 'fabric';
 import {
+  PageGuide,
   A4_HEIGHT,
   A4_WIDTH,
   ConstructorPage,
@@ -66,6 +69,7 @@ export class ConstructorEditor {
   private capturedStyle: VisualStyle | null = null;
   private resizeSelectedText: (() => void) | null = null;
   private styleSourceId: string | null = null;
+  readonly pageGuides = signal<readonly PageGuide[]>([]);
   private pageId = '';
   private readonly groupNumbers = new Map<string, number>();
   readonly selection = this.selected.asReadonly();
@@ -77,6 +81,7 @@ export class ConstructorEditor {
   readonly busy = signal(false);
   readonly restoringHistory = signal(false);
   readonly clipboardBusy = signal(false);
+  readonly replacingImage = signal(false);
   readonly brushColor = signal('#111827');
   readonly brushWidth = signal(3);
   readonly backgroundColor = signal('#ffffff');
@@ -179,6 +184,7 @@ export class ConstructorEditor {
       await loadSceneFonts(scene);
       await this.canvas.loadFromJSON(scene);
       this.pageId = page.id;
+      this.pageGuides.set(page.guides ?? []);
       this.canvas.discardActiveObject();
       this.canvas.requestRenderAll();
       this.past.set([]);
@@ -190,6 +196,12 @@ export class ConstructorEditor {
       this.restoring = false;
       this.busy.set(false);
     }
+  }
+
+  setPageGuides(guides: readonly PageGuide[]): void {
+    if (this.busy()) return;
+    this.pageGuides.set(guides);
+    this.revisionCallback?.();
   }
 
   snapshot(): string {
@@ -572,6 +584,50 @@ export class ConstructorEditor {
     });
   }
 
+  setImageFrame(frame: 'rectangle' | 'rounded' | 'ellipse' | 'diamond'): void {
+    this.modifyMembers((object) => {
+      if (!(object instanceof FabricImage)) return;
+      const width = object.width;
+      const height = object.height;
+      const options = { originX: 'center', originY: 'center', left: 0, top: 0 } as const;
+      object.set('clipPath', frame === 'rectangle' ? undefined : frame === 'ellipse'
+        ? new Ellipse({ ...options, rx: width / 2, ry: height / 2 })
+        : frame === 'rounded' ? new Rect({ ...options, width, height, rx: Math.min(width, height) * 0.12, ry: Math.min(width, height) * 0.12 })
+        : new Polygon([{ x: width / 2, y: 0 }, { x: width, y: height / 2 }, { x: width / 2, y: height }, { x: 0, y: height / 2 }], options));
+      object.set('dirty', true);
+    });
+  }
+
+  async replaceImage(file: File): Promise<void> {
+    const canvas = this.canvas;
+    const target = canvas?.getActiveObject();
+    if (!canvas || !(target instanceof FabricImage) || this.isLocked(target) || this.busy()) return;
+    const pageId = this.pageId;
+    this.replacingImage.set(true);
+    this.busy.set(true);
+    try {
+      const replacement = await this.readImage(file);
+      if (this.canvas !== canvas || this.pageId !== pageId || !canvas.getObjects().includes(target) && !target.group) return;
+      const ratio = Math.max(target.width / replacement.width, target.height / replacement.height);
+      const width = target.width / ratio;
+      const height = target.height / ratio;
+      const scaleX = target.scaleX * ratio;
+      const scaleY = target.scaleY * ratio;
+      if (target.clipPath) target.clipPath.set({
+        scaleX: target.clipPath.scaleX / ratio, scaleY: target.clipPath.scaleY / ratio,
+        left: target.clipPath.left / ratio, top: target.clipPath.top / ratio,
+      });
+      target.setElement(replacement.getElement());
+      target.set({ width, height, cropX: (replacement.width - width) / 2,
+        cropY: (replacement.height - height) / 2, scaleX, scaleY });
+      target.setCoords();
+      this.commit();
+    } finally {
+      this.busy.set(false);
+      this.replacingImage.set(false);
+    }
+  }
+
   updateImageEffects(update: Partial<ImageEffects>): void {
     this.modifyMembers((object) => {
       if (object instanceof FabricImage) applyImageEffects(object, update);
@@ -745,7 +801,10 @@ export class ConstructorEditor {
         this.snapTargets(target).map(object => object.getBoundingRect()), A4_WIDTH, A4_HEIGHT,
       ) };
     }
-    return this.snapping.guides;
+    return { ...this.snapping.guides,
+      x: [...this.snapping.guides.x, ...this.pageGuides().filter(g => g.axis === 'x').map(g => g.position)],
+      y: [...this.snapping.guides.y, ...this.pageGuides().filter(g => g.axis === 'y').map(g => g.position)],
+    };
   }
 
   private snapMove(target: FabricObject, bypass = false): void {
@@ -930,6 +989,10 @@ export class ConstructorEditor {
       borderWidth: object.strokeWidth,
       isText: !!text,
       isImage: object instanceof FabricImage,
+      imageFrame: !(object instanceof FabricImage) ? null : !object.clipPath ? 'rectangle'
+        : object.clipPath instanceof Ellipse || object.clipPath instanceof Circle ? 'ellipse'
+        : object.clipPath instanceof Rect ? (object.clipPath.rx > 0 ? 'rounded' : 'rectangle')
+        : object.clipPath instanceof Polygon && object.clipPath.points.length === 4 ? 'diamond' : null,
       locked: this.isLocked(object),
       fontFamily: text?.fontFamily ?? 'Roboto',
       lineHeight: text?.lineHeight ?? 1.16,
@@ -989,6 +1052,7 @@ export class ConstructorEditor {
     const canFill = members.every((member) => member.canFill);
     const keys: (keyof SelectionProperties)[] = base.linkUrl ? [] : ['linkUrl'];
     if (isText) keys.push('fontFamily', 'lineHeight', 'charSpacing', 'fontSize', 'bold', 'italic', 'underline', 'textAlign');
+    if (isImage) keys.push('imageFrame');
     if (isRectangle) keys.push('borderRadius', 'borderColor', 'borderWidth');
     if (canBlur) keys.push('blur');
     if (canFill) keys.push('color', 'gradientEnd');

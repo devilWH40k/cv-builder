@@ -55,3 +55,5 @@
   .typography-tools { order: 3; flex: 1 0 100%; }
   .main-toolbar .zoom-label { margin-left: auto; }
 }
+
+.ruled-page { position: relative; width: max-content; margin-inline: auto; padding: tokens.$spacing-5 0 0 tokens.$spacing-5; }

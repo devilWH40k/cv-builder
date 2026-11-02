@@ -44,6 +44,51 @@ describe('Constructor editing', () => {
     expect(JSON.parse(editor.snapshot()).objects.length).toBe(6);
   });
 
+  it('preserves image frames and geometry through replacement, restore and undo', async () => {
+    const imageFile = async (width: number, height: number, color: string) => {
+      const source = document.createElement('canvas');
+      source.width = width; source.height = height;
+      const context = source.getContext('2d')!;
+      context.fillStyle = color; context.fillRect(0, 0, width, height);
+      const blob = await new Promise<Blob>((resolve) => source.toBlob(blob => resolve(blob!)));
+      return new File([blob], 'photo.png', { type: 'image/png' });
+    };
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    await editor.addImage(await imageFile(80, 120, 'red'));
+    const target = activate.calls.mostRecent().args[0];
+    if (!(target instanceof FabricImage)) throw new Error('Expected image');
+    target.set({ angle: 25, scaleX: 2, scaleY: 1.5 });
+    for (const frame of ['rounded', 'ellipse', 'diamond'] as const) {
+      editor.setImageFrame(frame);
+      expect(editor.selection()?.imageFrame).toBe(frame);
+      expect(target.clipPath).toBeDefined();
+    }
+    editor.updateImageEffects({ grayscale: true });
+    const before = editor.snapshot();
+    const width = target.getScaledWidth();
+    const height = target.getScaledHeight();
+    const replacementFile = await imageFile(200, 60, 'blue');
+    const replacing = editor.replaceImage(replacementFile);
+    expect(editor.replacingImage()).toBeTrue();
+    expect(editor.busy()).toBeTrue();
+    await replacing;
+    expect(editor.replacingImage()).toBeFalse();
+    expect(target.getScaledWidth()).toBeCloseTo(width);
+    expect(target.getScaledHeight()).toBeCloseTo(height);
+    expect(target.left).toBe(80);
+    expect(target.top).toBe(100);
+    expect(target.angle).toBe(25);
+    expect(target.clipPath).toBeDefined();
+    expect(editor.selection()?.imageEffects.grayscale).toBeTrue();
+    const replaced = editor.snapshot();
+    await editor.undo();
+    expect(editor.snapshot()).toBe(before);
+    await editor.redo();
+    expect(editor.snapshot()).toBe(replaced);
+    await editor.load({ ...blankDesign().pages[0], scene: replaced });
+    expect(editor.snapshot()).toBe(replaced);
+  });
+
   it('underlines selected characters and toggles underline for the full block', async () => {
     const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
     editor.addText();

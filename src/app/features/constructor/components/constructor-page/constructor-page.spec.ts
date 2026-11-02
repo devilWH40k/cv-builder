@@ -384,8 +384,10 @@ describe('Fullscreen constructor page', () => {
     Array.from(dialog.querySelectorAll<HTMLButtonElement>('.page-tabs button'))
       .find((button) => button.textContent?.trim() === 'Page 2')!.click();
     harness.fixture.detectChanges();
-    expect(dialog.querySelectorAll('.is-loading app-spinner').length).toBe(5);
-    expect(dialog.querySelectorAll('[aria-busy="true"]').length).toBe(5);
+    expect(dialog.querySelectorAll('.is-loading app-spinner').length).toBe(2);
+    expect(dialog.querySelector('.icon-library-panel app-spinner')).toBeNull();
+    expect(dialog.querySelector('.canvas-viewport app-spinner')).toBeNull();
+    expect(dialog.querySelectorAll('[aria-busy="true"]').length).toBe(2);
     expect(toasts.messages().length).toBe(0);
     release();
     await harness.fixture.whenStable();

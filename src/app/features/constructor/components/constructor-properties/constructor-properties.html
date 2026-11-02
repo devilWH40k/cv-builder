@@ -40,6 +40,19 @@
           [value]="selected.mixed?.includes('blur') ? '' : selected.blur" placeholder="Mixed" (change)="editor.setBlur(shapeBlur.valueAsNumber)" /></label>
       }
       @if (selected.isImage) {
+        <p class="field-title">Image frame</p>
+        <div class="actions">
+          <button type="button" title="Rectangle frame" aria-label="Rectangle frame" [attr.aria-pressed]="!selected.mixed?.includes('imageFrame') && selected.imageFrame === 'rectangle'" (click)="editor.setImageFrame('rectangle')"><lucide-icon [img]="icons.RectangleHorizontal" [size]="18" /></button>
+          <button type="button" title="Rounded frame" aria-label="Rounded frame" [attr.aria-pressed]="!selected.mixed?.includes('imageFrame') && selected.imageFrame === 'rounded'" (click)="editor.setImageFrame('rounded')"><lucide-icon [img]="icons.SquareRoundCorner" [size]="18" /></button>
+          <button type="button" title="Ellipse frame" aria-label="Ellipse frame" [attr.aria-pressed]="!selected.mixed?.includes('imageFrame') && selected.imageFrame === 'ellipse'" (click)="editor.setImageFrame('ellipse')"><lucide-icon [img]="icons.Circle" [size]="18" /></button>
+          <button type="button" title="Diamond frame" aria-label="Diamond frame" [attr.aria-pressed]="!selected.mixed?.includes('imageFrame') && selected.imageFrame === 'diamond'" (click)="editor.setImageFrame('diamond')"><lucide-icon [img]="icons.Diamond" [size]="18" /></button>
+        </div>
+        @if (editor.selectionCount() === 1 && !selected.children?.length) {
+          <button type="button" class="replace-image" (click)="replacement.click()"><lucide-icon [img]="icons.ImagePlus" [size]="16" />Replace image</button>
+          <input #replacement type="file" accept="image/png,image/jpeg,image/webp" hidden (cancel)="$event.stopPropagation()" (change)="replaceImage(replacement)" />
+          <p class="hint">Replacement fills the current frame and keeps its position, size and effects.</p>
+        }
+
         <label>Brightness (%)<input #brightness type="number" min="-100" max="100" step="1"
           [value]="selected.mixedImageEffects?.includes('brightness') ? '' : selected.imageEffects.brightness" placeholder="Mixed" (change)="editor.updateImageEffects({ brightness: brightness.valueAsNumber })" /></label>
         <label>Contrast (%)<input #contrast type="number" min="-100" max="99" step="1"
