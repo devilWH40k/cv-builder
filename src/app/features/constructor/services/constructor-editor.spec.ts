@@ -31,6 +31,18 @@ describe('Constructor editing', () => {
     canvas.remove();
   });
 
+  it('does not reset or repaint the canvas when applying the existing zoom and dimensions', () => {
+    editor.setZoom(0.8);
+    const resize = spyOn(Canvas.prototype, 'setDimensions').and.callThrough();
+    const repaint = spyOn(Canvas.prototype, 'requestRenderAll').and.callThrough();
+    editor.setZoom(0.8);
+    expect(resize).not.toHaveBeenCalled();
+    expect(repaint).not.toHaveBeenCalled();
+    editor.setZoom(0.5);
+    expect(resize).toHaveBeenCalledTimes(1);
+    expect(repaint).toHaveBeenCalled();
+  });
+
   it('preserves additional vector shapes when saving and restoring a scene', async () => {
     for (const shape of ['triangle', 'ellipse', 'diamond', 'pentagon', 'hexagon', 'star'] as const)
       editor.addShape(shape);

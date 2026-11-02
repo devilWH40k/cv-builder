@@ -19,6 +19,10 @@ export class ConstructorTour {
   private attempted = false;
   private original: ConstructorDocument | null = null;
   private originalDirty = false;
+  private originalPage = 0;
+  private originalUndo: readonly string[] = [];
+  private originalRedo: readonly string[] = [];
+  private originalZoom = 1;
   private readonly examples: string[] = [];
   readonly steps: readonly (JoyrideStep & { readonly previewContextMenu?: boolean })[] = [
     { target: 'canvas', title: 'Welcome to the constructor', description: 'Design on an A4 page. These three examples are temporary; your design will return when you finish or skip this tour.' },
@@ -35,12 +39,17 @@ export class ConstructorTour {
     { target: 'file', title: 'Save and export', description: 'File contains Save, Import, Export PDF, and Export Design File. Save keeps your work in this browser; export a design file for an editable backup. View lets you show or hide panels. Finish to return to your design.' },
   ];
 
-  async start(): Promise<void> {
-    if (this.attempted || !this.session.document()) return;
+  async start(restart = false): Promise<void> {
+    if ((!restart && this.attempted) || !this.session.document() || this.active() || this.restoring()) return;
     this.attempted = true;
-    try { if (localStorage.getItem(CONSTRUCTOR_TOUR_KEY) === 'done') return; } catch { /* Session-only when storage is unavailable. */ }
+    try { if (!restart && localStorage.getItem(CONSTRUCTOR_TOUR_KEY) === 'done') return; } catch { /* Session-only when storage is unavailable. */ }
     this.original = this.session.snapshot();
     this.originalDirty = this.session.dirty();
+    this.originalPage = this.session.activePage();
+    this.originalUndo = this.editor.undoCount();
+    this.originalRedo = this.editor.redoCount();
+    this.originalZoom = this.editor.zoom();
+    this.examples.length = 0;
     const rectangle = new Rect({ left: 140, top: 160, originX: 'left', originY: 'top', width: 480, height: 180, fill: '#d1faff', rx: 16, ry: 16 });
     const text = new Textbox('Make your own CV', { left: 140, top: 540, originX: 'left', originY: 'top', width: 480, fontFamily: 'Inter', fontSize: 36, fill: '#0f172a' });
     const logo = await FabricImage.fromURL('usense-logo.svg');
@@ -65,11 +74,20 @@ export class ConstructorTour {
     else if (index >= 2 && index <= 4) this.editor.select(this.examples[index - 2]);
   }
 
+  hasUnsavedOriginal(): boolean {
+    return this.active() && this.originalDirty;
+  }
+
   async finish(): Promise<void> {
     if (this.restoring()) return;
     this.restoring.set(true);
     try {
-      if (this.original) await this.session.open(this.original, this.originalDirty);
+      if (this.original) {
+        await this.session.open(this.original, this.originalDirty);
+        if (this.originalPage > 0) await this.session.switchPage(this.originalPage);
+        this.editor.restoreUndoHistory(this.originalUndo, this.originalRedo);
+        this.editor.setZoom(this.originalZoom);
+      }
       else this.session.close();
       try { localStorage.setItem(CONSTRUCTOR_TOUR_KEY, 'done'); } catch { /* Keep the current session usable. */ }
       this.active.set(false);

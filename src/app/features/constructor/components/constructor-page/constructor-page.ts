@@ -1,6 +1,7 @@
 import { Joyride } from '../../../../shared/ui/joyride/joyride';
 import { JoyrideTarget } from '../../../../shared/ui/joyride/joyride-target';
 import { ConstructorTour } from '../../services/constructor-tour';
+import { ConstructorShortcuts } from '../constructor-shortcuts/constructor-shortcuts';
 import { ConstructorRulers } from '../constructor-rulers/constructor-rulers';
 import { DESIGN_SHAPES } from '../../helpers/design-shapes';
 import { Dropdown, DropdownItem } from '../../../../shared/ui/dropdown/dropdown';
@@ -75,7 +76,7 @@ import { ConstructorIconLibrary } from '../constructor-icon-library/constructor-
 
 @Component({
   selector: 'app-constructor-page',
-  imports: [Joyride, JoyrideTarget, ConstructorRulers, Dropdown, ConstructorTypography, DebouncedColor,
+  imports: [ConstructorShortcuts, Joyride, JoyrideTarget, ConstructorRulers, Dropdown, ConstructorTypography, DebouncedColor,
     PhotoPreview,
     RouterLink,
     LucideAngularModule,
@@ -99,6 +100,30 @@ import { ConstructorIconLibrary } from '../constructor-icon-library/constructor-
   host: { '(window:beforeunload)': 'beforeUnload($event)' },
 })
 export class ConstructorPageComponent {
+  protected readonly shortcutsOpen = signal(false);
+  protected readonly helpMenuItems = computed<readonly DropdownItem[]>(() => [
+    { id: 'shortcuts', label: 'Shortcuts' },
+    { id: 'tour', label: 'Start guide tour again', disabled: this.workspaceLoading() || this.session.saving() || this.tour.active() },
+  ]);
+  private restoreTourLayout: (() => void) | null = null;
+
+  protected async helpAction(item: DropdownItem): Promise<void> {
+    if (this.helpMenuItems().find((entry) => entry.id === item.id)?.disabled) return;
+    if (item.id === 'shortcuts') {
+      this.shortcutsOpen.set(true);
+    } else if (item.id === 'tour') {
+      const panels = this.visiblePanels();
+      const fit = this.fitPage();
+      this.restoreTourLayout = () => { this.visiblePanels.set(panels); this.fitPage.set(fit); };
+      this.visiblePanels.set({ main: true, icons: true, properties: true, layers: true });
+      this.fitPage.set(true);
+      await this.run(() => this.startTour(true));
+      if (!this.tour.active()) {
+        this.restoreTourLayout?.();
+        this.restoreTourLayout = null;
+      }
+    }
+  }
   protected readonly visiblePanels = signal({ main: true, icons: true, properties: true, layers: true });
   protected readonly hasLeftPanels = computed(() => this.visiblePanels().main || this.visiblePanels().icons);
   protected readonly hasRightPanels = computed(() => this.visiblePanels().properties || this.visiblePanels().layers);
@@ -336,9 +361,9 @@ export class ConstructorPageComponent {
     });
   }
 
-  private async startTour(): Promise<void> {
+  private async startTour(restart = false): Promise<void> {
     try {
-      await this.tour.start();
+      await this.tour.start(restart);
     } catch {
       this.toasts.show('danger', 'The tutorial could not start. You can continue using the constructor.');
     }
@@ -357,6 +382,8 @@ export class ConstructorPageComponent {
     this.objectMenu().closePreview();
     try {
       await this.tour.finish();
+      this.restoreTourLayout?.();
+      this.restoreTourLayout = null;
     } catch {
       this.toasts.show('danger', 'Your design could not be restored. Try Finish again.');
     }
@@ -505,7 +532,7 @@ export class ConstructorPageComponent {
   }
 
   protected keyboard(event: KeyboardEvent): void {
-    if (this.tour.active()) return;
+    if (this.tour.active() || this.shortcutsOpen()) return;
     const command = event.ctrlKey || event.metaKey;
     const commandKey = /^Key[A-Z]$/.test(event.code) ? event.code.slice(3).toLowerCase() : event.key.toLowerCase();
     if (command && !event.altKey && ['s', 'i', 'e'].includes(commandKey)) {
@@ -606,7 +633,13 @@ export class ConstructorPageComponent {
   }
 
   protected beforeUnload(event: BeforeUnloadEvent): void {
-    if (this.tour.active()) return;
+    if (this.tour.active()) {
+      if (this.tour.hasUnsavedOriginal()) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+      return;
+    }
     this.editor.finishEditing();
     if (this.session.dirty() || this.session.saving() || this.leaveSaving()) {
       event.preventDefault();

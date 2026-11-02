@@ -15,12 +15,14 @@ describe('Constructor first-visit tutorial', () => {
   let editor: jasmine.SpyObj<ConstructorEditor>;
   let scene: string;
   let saved: string | null;
+  const undoHistory = signal<readonly string[]>([]);
 
   beforeEach(() => {
     saved = null;
+    undoHistory.set([]);
     scene = blankDesign().pages[0].scene;
-    editor = jasmine.createSpyObj<ConstructorEditor>('editor', ['load', 'snapshot', 'finishEditing', 'select'], {
-      busy: signal(false), pageGuides: signal([]),
+    editor = jasmine.createSpyObj<ConstructorEditor>('editor', ['load', 'snapshot', 'finishEditing', 'select', 'restoreUndoHistory', 'setZoom'], {
+      busy: signal(false), pageGuides: signal([]), undoCount: undoHistory, redoCount: signal([]), zoom: signal(1),
     });
     editor.load.and.callFake(async (page) => { scene = page.scene; });
     editor.snapshot.and.callFake(() => scene);
@@ -101,5 +103,29 @@ describe('Constructor first-visit tutorial', () => {
     expect(session.document()?.id).toBe(original.id);
     expect(session.dirty()).toBeFalse();
     expect(tour.active()).toBeFalse();
+  });
+
+  it('restarts a completed tour and restores the active page, edits, and undo history', async () => {
+    saved = 'done';
+    const original = blankDesign();
+    await session.open(original);
+    await session.addPage();
+    const activeScene = JSON.stringify({ objects: [], background: '#d1faff' });
+    scene = activeScene;
+    const undo = [original.pages[0].scene];
+    undoHistory.set(undo);
+    await tour.start();
+    expect(tour.active()).toBeFalse();
+    await tour.start(true);
+    expect(tour.active()).toBeTrue();
+    await tour.finish();
+    expect(session.document()?.id).toBe(original.id);
+    expect(session.activePage()).toBe(1);
+    expect(scene).toBe(activeScene);
+    expect(session.dirty()).toBeTrue();
+    expect(editor.restoreUndoHistory).toHaveBeenCalledWith(undo, []);
+    await tour.start(true);
+    expect(tour.active()).toBeTrue();
+    await tour.finish();
   });
 });

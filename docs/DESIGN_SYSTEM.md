@@ -1677,3 +1677,10 @@ Skip, Finish, and Escape persist
 `done` under `cv-builder.constructor-tour.v1` in local storage. With blocked
 storage the walkthrough runs at most once per constructor session. Remove that
 key to see the tutorial again.
+
+The constructor header's Help menu follows View. Shortcuts opens a centered
+shared dialog with categories for General, Text, Image, Figure, Layers and groups,
+and Guides. Action labels appear on the left, key combinations or mouse actions
+on the right. Start guide tour again bypasses the first-visit flag. Replay shows
+all panels temporarily and restores their visibility, the active page, unsaved
+changes, zoom preference, and undo/redo history when dismissed.

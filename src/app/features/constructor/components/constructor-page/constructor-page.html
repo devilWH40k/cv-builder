@@ -41,6 +41,8 @@
           [openOnHover]="true" [items]="fileMenuItems()" (selected)="fileAction($event)">File</app-dropdown>
         <app-dropdown menuId="constructor-view-menu" label="View" [closeOnSelect]="false" [compact]="true" [alignStart]="true"
           [openOnHover]="true" [items]="windowMenuItems()" (selected)="toggleWindow($event)">View</app-dropdown>
+        <app-dropdown menuId="constructor-help-menu" label="Help" [compact]="true" [alignStart]="true"
+          [openOnHover]="true" [items]="helpMenuItems()" (selected)="helpAction($event)">Help</app-dropdown>
       </div>
       <div class="document-info"><span class="document-caption" [title]="session.title()">{{ session.title() }}</span></div>
       <button type="button" class="editor-close" aria-label="Close editor" title="Close editor" (click)="closeEditor()">
@@ -194,6 +196,9 @@
     <app-preview [embedded]="true" [readOnly]="true" style="--preview-max-height: none; --preview-max-scale: 1" />
   </div>
 </main>
+@if (shortcutsOpen()) {
+  <app-constructor-shortcuts (dismissed)="shortcutsOpen.set(false)" />
+}
 @if (leaveOpen()) {
 <app-unsaved-changes-dialog subject="design" dialogId="leave-constructor" [busy]="leaveSaving()"
   (decision)="handleLeaveDecision($event)" />

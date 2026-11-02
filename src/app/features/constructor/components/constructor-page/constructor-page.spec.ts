@@ -7,7 +7,8 @@ import { ConstructorRepository } from '../../services/constructor-repository';
 import { blankDesign } from '../../helpers/preview-to-design';
 import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ConstructorEditor } from '../../services/constructor-editor';
-import { FabricObject } from 'fabric';
+import { ConstructorSession } from '../../services/constructor-session';
+import { Canvas, FabricObject } from 'fabric';
 import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
 import { ConstructorTour, CONSTRUCTOR_TOUR_KEY } from '../../services/constructor-tour';
 
@@ -17,6 +18,90 @@ describe('Fullscreen constructor page', () => {
     spyOn(Storage.prototype, 'getItem').and.callFake(function (this: Storage, key: string) {
       return key === CONSTRUCTOR_TOUR_KEY ? 'done' : getItem.call(this, key);
     });
+  });
+
+  it('opens centered shortcuts from Help and replays the tour without losing the active page or history', async () => {
+    const design = blankDesign();
+    const repository = jasmine.createSpyObj<ConstructorRepository>('repository', ['load', 'recentlyVisited', 'recordVisit']);
+    repository.load.and.resolveTo(design);
+    repository.recentlyVisited.and.resolveTo([]);
+    repository.recordVisit.and.resolveTo();
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(),
+      provideRouter([{ path: 'constructor', component: ConstructorPageComponent }]),
+      { provide: ConstructorRepository, useValue: repository }],
+    });
+    const harness = await RouterTestingHarness.create('/constructor?design=' + design.id);
+    await harness.fixture.whenStable();
+    const editorDialog = document.querySelector<HTMLDialogElement>('dialog.editor')!;
+    const initialEditor = harness.routeDebugElement!.injector.get(ConstructorEditor);
+    initialEditor.addShape('rectangle');
+    await harness.fixture.whenStable();
+    const openHelp = async () => {
+      editorDialog.querySelector<HTMLButtonElement>('app-dropdown[menuId="constructor-help-menu"] button')!.click();
+      await harness.fixture.whenStable();
+    };
+    const choose = (label: string) => Array.from(editorDialog.querySelectorAll<HTMLButtonElement>('#constructor-help-menu [role="menuitem"]'))
+      .find((button) => button.textContent?.trim() === label)!.click();
+    const headers = Array.from(editorDialog.querySelectorAll('.file-menu app-dropdown > button'));
+    expect(headers.map((button) => button.textContent?.trim())).toEqual(['File', 'View', 'Help']);
+    await openHelp();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    const footer = editorDialog.querySelector<HTMLElement>('.editor-footer')!;
+    const viewport = editorDialog.querySelector<HTMLElement>('.canvas-viewport')!;
+    const footerBefore = footer.getBoundingClientRect();
+    const viewportBefore = viewport.getBoundingClientRect();
+    const resized = spyOn(Canvas.prototype, 'setDimensions').and.callThrough();
+    const repaint = spyOn(Canvas.prototype, 'requestRenderAll').and.callThrough();
+    choose('Shortcuts');
+    await harness.fixture.whenStable();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    expect(footer.getBoundingClientRect().top).toBe(footerBefore.top);
+    expect(footer.getBoundingClientRect().height).toBe(footerBefore.height);
+    expect(viewport.getBoundingClientRect().height).toBe(viewportBefore.height);
+    expect(resized).not.toHaveBeenCalled();
+    expect(repaint).not.toHaveBeenCalled();
+    const shortcuts = document.querySelector<HTMLDialogElement>('#constructor-shortcuts')!;
+    expect(shortcuts.open).toBeTrue();
+    expect(Array.from(shortcuts.querySelectorAll('h3')).map((heading) => heading.textContent)).toEqual([
+      'General', 'Text', 'Image', 'Figure', 'Layers and groups', 'Guides',
+    ]);
+    const bounds = shortcuts.getBoundingClientRect();
+    expect(Math.abs(bounds.left + bounds.width / 2 - innerWidth / 2)).toBeLessThan(2);
+    const row = shortcuts.querySelector('.shortcut-row')!;
+    expect(row.querySelector('dt')!.textContent).toBe('Save design');
+    expect(row.querySelector('dd')!.textContent).toContain('Ctrl / Cmd + S');
+    expect(row.querySelector('dt')!.getBoundingClientRect().left).toBeLessThan(row.querySelector('dd')!.getBoundingClientRect().left);
+    shortcuts.querySelector<HTMLButtonElement>('[aria-label="Close Shortcuts"]')!.click();
+    await harness.fixture.whenStable();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    expect(document.querySelector('#constructor-shortcuts')).toBeNull();
+    expect(editorDialog.open).toBeTrue();
+    expect(footer.getBoundingClientRect().top).toBe(footerBefore.top);
+    expect(viewport.getBoundingClientRect().height).toBe(viewportBefore.height);
+    expect(resized).not.toHaveBeenCalled();
+    expect(repaint).not.toHaveBeenCalled();
+    const editor = harness.routeDebugElement!.injector.get(ConstructorEditor);
+    const session = harness.routeDebugElement!.injector.get(ConstructorSession);
+    await session.addPage();
+    editor.addShape('rectangle');
+    const scene = editor.snapshot();
+    const undo = editor.undoCount();
+    await harness.fixture.whenStable();
+    await openHelp();
+    choose('Start guide tour again');
+    await harness.fixture.whenStable();
+    const tutorial = document.querySelector<HTMLDialogElement>('dialog.joyride')!;
+    expect(tutorial.open).toBeTrue();
+    expect(harness.routeDebugElement!.injector.get(ConstructorTour).hasUnsavedOriginal()).toBeTrue();
+    tutorial.querySelector<HTMLButtonElement>('button')!.click();
+    await harness.fixture.whenStable();
+    expect(session.document()?.id).toBe(design.id);
+    expect(session.activePage()).toBe(1);
+    expect(session.dirty()).toBeTrue();
+    expect(editor.snapshot()).toBe(scene);
+    expect(editor.undoCount()).toEqual(undo);
+    await editor.undo();
+    expect(editor.layers().length).toBe(0);
   });
 
   it('runs the first-visit tutorial over the editor and restores the saved design on skip', async () => {

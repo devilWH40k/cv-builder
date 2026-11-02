@@ -213,6 +213,12 @@ export class ConstructorEditor {
       (key, value: unknown) => key === 'interactive' ? false : value);
   }
 
+  restoreUndoHistory(undo: readonly string[], redo: readonly string[]): void {
+    this.past.set([...undo]);
+    this.future.set([...redo]);
+    this.lastScene = this.snapshot();
+  }
+
   finishEditing(): void {
     const active = this.canvas?.getActiveObject();
     if (active instanceof IText && active.isEditing) active.exitEditing();
@@ -223,8 +229,13 @@ export class ConstructorEditor {
     if (!Number.isFinite(value)) return;
     const zoom = Math.min(2, Math.max(0.25, value));
     this.zoom.set(zoom);
-    this.canvas?.setDimensions({ width: A4_WIDTH * zoom, height: A4_HEIGHT * zoom });
-    this.canvas?.setZoom(zoom);
+    const canvas = this.canvas;
+    if (!canvas) return;
+    const width = A4_WIDTH * zoom;
+    const height = A4_HEIGHT * zoom;
+    if (canvas.getZoom() === zoom && canvas.getWidth() === width && canvas.getHeight() === height) return;
+    canvas.setDimensions({ width, height });
+    canvas.setZoom(zoom);
   }
 
   setTool(tool: ConstructorTool): void {
