@@ -15,6 +15,7 @@ export class ConstructorSession {
   readonly dirty = this.changed.asReadonly();
   readonly activePage = signal(0);
   readonly saving = signal(false);
+  readonly switchingPage = signal(false);
   readonly title = computed(() => this.current()?.title ?? 'CV Constructor');
 
   markChanged(): void {
@@ -60,9 +61,14 @@ export class ConstructorSession {
     const snapshot = this.snapshot();
     if (!snapshot || index < 0 || index >= snapshot.pages.length || index === this.activePage())
       return;
-    await this.editor.load(snapshot.pages[index]);
-    this.current.set(snapshot);
-    this.activePage.set(index);
+    this.switchingPage.set(true);
+    try {
+      await this.editor.load(snapshot.pages[index]);
+      this.current.set(snapshot);
+      this.activePage.set(index);
+    } finally {
+      this.switchingPage.set(false);
+    }
   }
 
   async addPage(): Promise<void> {

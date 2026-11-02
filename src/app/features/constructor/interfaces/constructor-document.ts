@@ -56,6 +56,7 @@ export interface SelectionProperties {
   readonly canBlur: boolean;
   readonly canFill: boolean;
   readonly blur: number;
+  readonly imageFrame?: 'rectangle' | 'rounded' | 'ellipse' | 'diamond' | null;
   readonly imageEffects: ImageEffects;
   readonly borderRadius: number;
   readonly borderColor: string;

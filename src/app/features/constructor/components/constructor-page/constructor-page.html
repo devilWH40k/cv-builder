@@ -81,8 +81,8 @@
     </div>
     <div class="workspace" [class.no-left-panels]="!hasLeftPanels()" [class.no-right-panels]="!hasRightPanels()" [style.--left-width]="leftWidth() + 'px'" [style.--right-width]="rightWidth() + 'px'">
       <aside class="page-panels" [hidden]="!hasLeftPanels()" [class.single-panel]="!visiblePanels().main || !visiblePanels().icons" [style.--page-properties-height]="pagePropertiesHeight() + 'px'">
-      <div class="page-properties-panel panel" [hidden]="!visiblePanels().main" [class.is-loading]="workspaceLoading()"
-        [attr.aria-busy]="workspaceLoading()">
+      <div class="page-properties-panel panel" [hidden]="!visiblePanels().main" [class.is-loading]="pagePanelsLoading()"
+        [attr.aria-busy]="pagePanelsLoading()">
         <section class="file-properties" aria-labelledby="file-properties-title">
           <h2 id="file-properties-title">File properties</h2>
           <p class="file-status" role="status">Status: {{ session.saving() ? 'Saving?' : session.dirty() ? 'Unsaved changes' : 'Saved' }}</p>
@@ -91,7 +91,7 @@
             [value]="session.title()" (change)="session.rename(title.value)" />
         </section>
         <app-constructor-page-properties />
-        @if (workspaceLoading()) { <app-spinner label="Loading page properties" /> }
+        @if (pagePanelsLoading()) { <app-spinner label="Loading page properties" /> }
       </div>
       <app-resize-handle [hidden]="!visiblePanels().main || !visiblePanels().icons" [(size)]="pagePropertiesHeight" axis="vertical" [min]="120" [max]="900"
         label="Resize page properties and icon library height" />
@@ -170,9 +170,9 @@
         </div>
         <app-resize-handle [hidden]="!visiblePanels().properties || !visiblePanels().layers" [(size)]="propertiesHeight" axis="vertical" [min]="120" [max]="900"
           label="Resize properties and layers height" />
-        <div class="layers-panel panel" [hidden]="!visiblePanels().layers" [class.is-loading]="workspaceLoading()" [attr.aria-busy]="workspaceLoading()">
+        <div class="layers-panel panel" [hidden]="!visiblePanels().layers" [class.is-loading]="pagePanelsLoading()" [attr.aria-busy]="pagePanelsLoading()">
           <app-constructor-layers (contextRequested)="objectMenu.open($event.event, $event.layerId)" />
-          @if (workspaceLoading()) { <app-spinner label="Loading layers" /> }
+          @if (pagePanelsLoading()) { <app-spinner label="Loading layers" /> }
         </div>
       </aside>
     </div>

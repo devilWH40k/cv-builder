@@ -34,6 +34,13 @@ button[aria-pressed='true'] {
   border-color: tokens.$color-primary;
   background: tokens.$background-primary-subtle;
 }
+.replace-image {
+  min-height: tokens.$button-height-sm;
+  padding: tokens.$spacing-1 tokens.$spacing-2;
+  gap: tokens.$spacing-2;
+  font-size: tokens.$font-size-xs;
+  lucide-icon { display: flex; }
+}
 button:disabled {
   opacity: 0.5;
   cursor: default;

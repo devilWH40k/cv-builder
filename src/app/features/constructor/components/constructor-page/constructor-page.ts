@@ -172,8 +172,9 @@ export class ConstructorPageComponent {
   protected readonly designs = signal<readonly DesignSummary[]>([]);
   protected readonly loading = signal(true);
   protected readonly workspaceLoading = computed(() =>
-    this.loading() || (this.editor.busy() && !this.editor.restoringHistory() && !this.editor.clipboardBusy()),
+    this.loading() || (this.editor.busy() && !this.editor.restoringHistory() && !this.editor.clipboardBusy() && !this.editor.replacingImage() && !this.session.switchingPage()),
   );
+  protected readonly pagePanelsLoading = computed(() => this.workspaceLoading() || this.session.switchingPage());
   protected readonly exporting = signal(false);
   protected readonly pendingImage = signal<File | null>(null);
   protected readonly imageShapes: readonly PhotoCropShape[] = ['full', 'circle', 'rectangle'];
@@ -460,7 +461,7 @@ export class ConstructorPageComponent {
   }
 
   protected async page(index: number): Promise<void> {
-    await this.run(() => this.session.switchPage(index));
+    await this.run(() => this.session.switchPage(index), false);
   }
   protected async addPage(): Promise<void> {
     await this.run(() => this.session.addPage());
