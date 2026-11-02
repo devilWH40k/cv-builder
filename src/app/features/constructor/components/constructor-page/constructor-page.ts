@@ -1,3 +1,4 @@
+import { ConstructorRulers } from '../constructor-rulers/constructor-rulers';
 import { DESIGN_SHAPES } from '../../helpers/design-shapes';
 import { Dropdown, DropdownItem } from '../../../../shared/ui/dropdown/dropdown';
 import { ConstructorTypography } from '../constructor-typography/constructor-typography';
@@ -71,7 +72,7 @@ import { ConstructorIconLibrary } from '../constructor-icon-library/constructor-
 
 @Component({
   selector: 'app-constructor-page',
-  imports: [Dropdown, ConstructorTypography, DebouncedColor,
+  imports: [ConstructorRulers, Dropdown, ConstructorTypography, DebouncedColor,
     PhotoPreview,
     RouterLink,
     LucideAngularModule,
@@ -171,8 +172,9 @@ export class ConstructorPageComponent {
   protected readonly designs = signal<readonly DesignSummary[]>([]);
   protected readonly loading = signal(true);
   protected readonly workspaceLoading = computed(() =>
-    this.loading() || (this.editor.busy() && !this.editor.restoringHistory() && !this.editor.clipboardBusy()),
+    this.loading() || (this.editor.busy() && !this.editor.restoringHistory() && !this.editor.clipboardBusy() && !this.editor.replacingImage() && !this.session.switchingPage()),
   );
+  protected readonly pagePanelsLoading = computed(() => this.workspaceLoading() || this.session.switchingPage());
   protected readonly exporting = signal(false);
   protected readonly pendingImage = signal<File | null>(null);
   protected readonly imageShapes: readonly PhotoCropShape[] = ['full', 'circle', 'rectangle'];
@@ -354,9 +356,9 @@ export class ConstructorPageComponent {
     const viewport = this.canvasViewport().nativeElement;
     const style = getComputedStyle(viewport);
     const width =
-      viewport.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      viewport.clientWidth - 20 - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
     const height =
-      viewport.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+      viewport.clientHeight - 20 - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
     if (width > 0 && height > 0)
       this.editor.setZoom(Math.min(width / A4_WIDTH, height / A4_HEIGHT, 1));
   }
@@ -459,7 +461,7 @@ export class ConstructorPageComponent {
   }
 
   protected async page(index: number): Promise<void> {
-    await this.run(() => this.session.switchPage(index));
+    await this.run(() => this.session.switchPage(index), false);
   }
   protected async addPage(): Promise<void> {
     await this.run(() => this.session.addPage());

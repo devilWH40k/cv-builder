@@ -1,0 +1,17 @@
+<div class="corner" title="Rulers in pixels. Drag a ruler onto the page to add a guide.">px</div>
+<div class="ruler horizontal" title="Drag down to add a horizontal guide" (pointerdown)="start($event, 'y')">
+  @for (tick of horizontalTicks; track tick) { <span [style.left.px]="tick * editor.zoom()">{{ tick }}</span> }
+</div>
+<div class="ruler vertical" title="Drag right to add a vertical guide" (pointerdown)="start($event, 'x')">
+  @for (tick of verticalTicks; track tick) { <span [style.top.px]="tick * editor.zoom()">{{ tick }}</span> }
+</div>
+@for (guide of guides(); track guide.id) {
+  <button type="button" class="guide" [class.dragging]="draft()?.id === guide.id" [class.x]="guide.axis === 'x'" [class.y]="guide.axis === 'y'"
+    [style.left.px]="guide.axis === 'x' ? 20 + guide.position * editor.zoom() : 20"
+    [style.top.px]="guide.axis === 'y' ? 20 + guide.position * editor.zoom() : 20"
+    [attr.aria-label]="(guide.axis === 'x' ? 'Vertical' : 'Horizontal') + ' guide at ' + guide.position.toFixed(0) + ' pixels'"
+    title="Drag to move; drag outside page or press Delete to remove. Arrow keys move the guide."
+    (pointerdown)="start($event, guide.axis, guide)" (keydown)="key($event, guide)">
+    <span class="guide-position" aria-hidden="true">{{ guide.position.toFixed(0) }}</span>
+  </button>
+}

@@ -1,3 +1,4 @@
+import { parseDesign } from '../helpers/design-validation';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ConstructorSession } from './constructor-session';
@@ -34,6 +35,24 @@ describe('Constructor document sessions', () => {
   afterEach(async () => {
     await editor.dispose();
     canvas.remove();
+  });
+
+  it('persists page guides independently through page changes and design files', async () => {
+    const guide = { id: 'margin', axis: 'x', position: 60 } as const;
+    editor.setPageGuides([guide]);
+    expect(session.dirty()).toBeTrue();
+    await session.addPage();
+    expect(editor.pageGuides()).toEqual([]);
+    await session.switchPage(0);
+    expect(editor.pageGuides()).toEqual([guide]);
+    const design = parseDesign(session.snapshot());
+    expect(design.pages[0].guides).toEqual([guide]);
+    await session.save();
+    expect(repository.save.calls.mostRecent().args[0].pages[0].guides).toEqual([guide]);
+    const invalid = { ...design, pages: [{ ...design.pages[0], guides: [{ ...guide, position: -1 }] }] };
+    expect(() => parseDesign(invalid)).toThrow();
+    editor.setPageGuides([]);
+    expect(session.snapshot()?.pages[0].guides).toEqual([]);
   });
 
   it('keeps independent scenes when switching, adding and removing pages', async () => {

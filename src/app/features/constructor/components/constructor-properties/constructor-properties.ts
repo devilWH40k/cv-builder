@@ -2,6 +2,7 @@ import { DebouncedColor } from '../../../../shared/directives/debounced-color';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   LucideAngularModule,
+  ImagePlus, RectangleHorizontal, Circle, Diamond, SquareRoundCorner,
   Bold,
   Italic,
   Copy,
@@ -28,6 +29,7 @@ import { safeDesignLink } from '../../helpers/design-assets';
 export class ConstructorProperties {
   protected readonly editor = inject(ConstructorEditor);
   protected readonly icons = {
+    ImagePlus, RectangleHorizontal, Circle, Diamond, SquareRoundCorner,
     Bold,
     Italic,
     Copy,
@@ -42,6 +44,16 @@ export class ConstructorProperties {
   };
   private readonly toasts = inject(ToastService);
   protected readonly invalidLink = signal(false);
+
+  protected async replaceImage(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    try { await this.editor.replaceImage(file); }
+    catch (error: unknown) {
+      this.toasts.show('danger', error instanceof Error ? error.message : 'The image could not be replaced.');
+    }
+  }
 
   protected changeLink(value: string): void {
     this.invalidLink.set(false);
