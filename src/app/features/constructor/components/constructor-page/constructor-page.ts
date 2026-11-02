@@ -1,3 +1,6 @@
+import { Joyride } from '../../../../shared/ui/joyride/joyride';
+import { JoyrideTarget } from '../../../../shared/ui/joyride/joyride-target';
+import { ConstructorTour } from '../../services/constructor-tour';
 import { ConstructorRulers } from '../constructor-rulers/constructor-rulers';
 import { DESIGN_SHAPES } from '../../helpers/design-shapes';
 import { Dropdown, DropdownItem } from '../../../../shared/ui/dropdown/dropdown';
@@ -72,7 +75,7 @@ import { ConstructorIconLibrary } from '../constructor-icon-library/constructor-
 
 @Component({
   selector: 'app-constructor-page',
-  imports: [ConstructorRulers, Dropdown, ConstructorTypography, DebouncedColor,
+  imports: [Joyride, JoyrideTarget, ConstructorRulers, Dropdown, ConstructorTypography, DebouncedColor,
     PhotoPreview,
     RouterLink,
     LucideAngularModule,
@@ -89,7 +92,7 @@ import { ConstructorIconLibrary } from '../constructor-icon-library/constructor-
     Spinner,
     UnsavedChangesDialog,
   ],
-  providers: [CvDraft, ConstructorEditor, ConstructorSession],
+  providers: [CvDraft, ConstructorEditor, ConstructorSession, ConstructorTour],
   templateUrl: './constructor-page.html',
   styleUrls: ['./constructor-page.scss', './constructor-editor.scss', './constructor-panels.scss', './constructor-toolbars.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -144,6 +147,7 @@ export class ConstructorPageComponent {
     await this.router.navigate(['/']);
   }
 
+  protected readonly tour = inject(ConstructorTour);
   protected readonly appVersion = environment.appVersion;
   protected readonly editor = inject(ConstructorEditor);
   protected readonly session = inject(ConstructorSession);
@@ -161,6 +165,7 @@ export class ConstructorPageComponent {
   private readonly preview = viewChild.required<ElementRef<HTMLElement>>('previewSource');
   private readonly overlay = viewChild.required(DialogOverlay);
   private readonly canvasViewport = viewChild.required<ElementRef<HTMLElement>>('canvasViewport');
+  private readonly objectMenu = viewChild.required(ConstructorObjectMenu);
   private readonly returnTab = this.route.snapshot.queryParamMap.get('returnTab');
   private resizeObserver: ResizeObserver | null = null;
   private resizeFrame: number | null = null;
@@ -310,7 +315,11 @@ export class ConstructorPageComponent {
     } finally {
       if (run === this.routeRun && !this.destroyRef.destroyed) {
         this.previewDraft.reset();
-        this.loading.set(false);
+        try {
+          await this.startTour();
+        } finally {
+          this.loading.set(false);
+        }
       }
     }
   }
@@ -323,7 +332,34 @@ export class ConstructorPageComponent {
         queryParams: { new: this.session.document()!.id },
         replaceUrl: true,
       });
+      await this.startTour();
     });
+  }
+
+  private async startTour(): Promise<void> {
+    try {
+      await this.tour.start();
+    } catch {
+      this.toasts.show('danger', 'The tutorial could not start. You can continue using the constructor.');
+    }
+  }
+
+  protected tourStep(index: number): void {
+    this.objectMenu().closePreview();
+    this.tour.selectStep(index);
+    if (this.tour.steps[index]?.previewContextMenu) {
+      const bounds = this.editor.selectionClientBounds();
+      if (bounds) this.objectMenu().showPreview(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+    }
+  }
+
+  protected async finishTour(): Promise<void> {
+    this.objectMenu().closePreview();
+    try {
+      await this.tour.finish();
+    } catch {
+      this.toasts.show('danger', 'Your design could not be restored. Try Finish again.');
+    }
   }
 
   protected async library(): Promise<void> {
@@ -413,6 +449,7 @@ export class ConstructorPageComponent {
         queryParams: { new: this.session.document()!.id },
         replaceUrl: true,
       });
+      await this.startTour();
     });
   }
 
@@ -468,6 +505,7 @@ export class ConstructorPageComponent {
   }
 
   protected keyboard(event: KeyboardEvent): void {
+    if (this.tour.active()) return;
     const command = event.ctrlKey || event.metaKey;
     const commandKey = /^Key[A-Z]$/.test(event.code) ? event.code.slice(3).toLowerCase() : event.key.toLowerCase();
     if (command && !event.altKey && ['s', 'i', 'e'].includes(commandKey)) {
@@ -526,6 +564,7 @@ export class ConstructorPageComponent {
   }
 
   canDeactivate(): boolean | Promise<boolean> {
+    if (this.tour.active()) return false;
     this.editor.finishEditing();
     if (this.leaveDecision) return this.leaveDecision;
     if (this.session.saving() || this.editor.busy() || (this.loading() && !!this.session.document())) return false;
@@ -567,6 +606,7 @@ export class ConstructorPageComponent {
   }
 
   protected beforeUnload(event: BeforeUnloadEvent): void {
+    if (this.tour.active()) return;
     this.editor.finishEditing();
     if (this.session.dirty() || this.session.saving() || this.leaveSaving()) {
       event.preventDefault();

@@ -9,8 +9,111 @@ import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ConstructorEditor } from '../../services/constructor-editor';
 import { FabricObject } from 'fabric';
 import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
+import { ConstructorTour, CONSTRUCTOR_TOUR_KEY } from '../../services/constructor-tour';
 
 describe('Fullscreen constructor page', () => {
+  beforeEach(() => {
+    const getItem = Storage.prototype.getItem;
+    spyOn(Storage.prototype, 'getItem').and.callFake(function (this: Storage, key: string) {
+      return key === CONSTRUCTOR_TOUR_KEY ? 'done' : getItem.call(this, key);
+    });
+  });
+
+  it('runs the first-visit tutorial over the editor and restores the saved design on skip', async () => {
+    (Storage.prototype.getItem as jasmine.Spy).and.returnValue(null);
+    const persist = spyOn(Storage.prototype, 'setItem');
+    const design = blankDesign();
+    const repository = jasmine.createSpyObj<ConstructorRepository>('repository', [
+      'load', 'recentlyVisited', 'recordVisit',
+    ]);
+    repository.load.and.resolveTo(design);
+    repository.recentlyVisited.and.resolveTo([]);
+    repository.recordVisit.and.resolveTo();
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(),
+      provideRouter([{ path: 'constructor', component: ConstructorPageComponent }]),
+      { provide: ConstructorRepository, useValue: repository }],
+    });
+    const harness = await RouterTestingHarness.create('/constructor?design=' + design.id);
+    await harness.fixture.whenStable();
+    const tutorial = document.querySelector<HTMLDialogElement>('dialog.joyride')!;
+    expect(tutorial).not.toBeNull();
+    expect(tutorial.open).toBeTrue();
+    const dialog = document.querySelector<HTMLDialogElement>('dialog.editor')!;
+    expect(dialog.open).toBeTrue();
+    expect(dialog.parentElement!.inert).toBeTrue();
+    expect(dialog.querySelector('.document-caption')?.textContent).toContain('Constructor tutorial');
+    const next = () => Array.from(tutorial.querySelectorAll<HTMLButtonElement>('button')).find((button) => button.textContent?.trim() === 'Next')!.click();
+    next();
+    await harness.fixture.whenStable();
+    next();
+    await harness.fixture.whenStable();
+    expect(tutorial.textContent).toContain('Rectangle properties');
+    const component = harness.routeDebugElement!;
+    const editor = component.injector.get(ConstructorEditor);
+    expect(editor.selection()?.kind).toBe('rectangle');
+    const contextMenuIndex = component.injector.get(ConstructorTour).steps.findIndex((step) => step.previewContextMenu);
+    expect(contextMenuIndex).toBeGreaterThan(2);
+    for (let index = 3; index <= contextMenuIndex; index++) {
+      next();
+      await harness.fixture.whenStable();
+    }
+    const menu = () => document.querySelector<HTMLElement>('.context-menu');
+    expect(menu()).not.toBeNull();
+    expect(menu()!.inert).toBeTrue();
+    expect(menu()!.textContent).toContain('Bring to front');
+    expect(editor.selection()?.kind).toBe('rectangle');
+    const objectBounds = editor.selectionClientBounds()!;
+    const menuBounds = menu()!.getBoundingClientRect();
+    const anchorX = objectBounds.left + objectBounds.width / 2;
+    expect(menuBounds.left).toBeCloseTo(Math.max(0, Math.min(anchorX,
+      document.documentElement.clientWidth - menuBounds.width)), 0);
+    const spotlight = tutorial.querySelector<HTMLElement>('.spotlight')!;
+    expect(parseFloat(spotlight.style.left)).toBeCloseTo(Math.max(8, menuBounds.left - 4), 0);
+    expect(parseFloat(spotlight.style.width)).toBeCloseTo(menuBounds.width + 8, 0);
+    expect(tutorial.contains(document.activeElement)).toBeTrue();
+    next();
+    await harness.fixture.whenStable();
+    expect(menu()).toBeNull();
+    Array.from(tutorial.querySelectorAll<HTMLButtonElement>('button')).find((button) => button.textContent?.trim() === 'Prev')!.click();
+    await harness.fixture.whenStable();
+    expect(menu()).not.toBeNull();
+    tutorial.querySelector<HTMLButtonElement>('button')!.click();
+    await harness.fixture.whenStable();
+    expect(document.querySelector('dialog.joyride')).toBeNull();
+    expect(menu()).toBeNull();
+    expect(dialog.parentElement!.inert).toBeFalse();
+    expect(dialog.querySelector('.document-caption')?.textContent).toContain(design.title);
+    expect(dialog.querySelector('.file-status')?.textContent).toContain('Saved');
+    expect(editor.layers().length).toBe(0);
+    expect(persist).toHaveBeenCalledWith(CONSTRUCTOR_TOUR_KEY, 'done');
+  });
+
+  it('waits on the library page and starts the tour when the user creates a blank design', async () => {
+    (Storage.prototype.getItem as jasmine.Spy).and.returnValue(null);
+    spyOn(Storage.prototype, 'setItem');
+    const repository = jasmine.createSpyObj<ConstructorRepository>('repository', ['recentlyVisited']);
+    repository.recentlyVisited.and.resolveTo([]);
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(),
+      provideRouter([{ path: 'constructor', component: ConstructorPageComponent }]),
+      { provide: ConstructorRepository, useValue: repository }],
+    });
+    const harness = await RouterTestingHarness.create('/constructor');
+    await harness.fixture.whenStable();
+    expect(document.querySelector('dialog.joyride')).toBeNull();
+    expect(document.querySelector<HTMLDialogElement>('dialog.editor')?.open).toBeFalse();
+    const blank = Array.from(harness.routeNativeElement!.querySelectorAll<HTMLButtonElement>('button'))
+      .find((button) => button.textContent?.includes('Blank design'))!;
+    blank.click();
+    await harness.fixture.whenStable();
+    const tutorial = document.querySelector<HTMLDialogElement>('dialog.joyride')!;
+    expect(tutorial.open).toBeTrue();
+    tutorial.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    await harness.fixture.whenStable();
+    expect(document.querySelector('dialog.joyride')).toBeNull();
+    expect(document.querySelector<HTMLDialogElement>('dialog.editor')?.open).toBeTrue();
+    expect(document.querySelector('.document-caption')?.textContent).toContain('Untitled design');
+    expect(document.querySelector('.file-status')?.textContent).toContain('Unsaved changes');
+  });
   it('shows file-style page actions above the canvas and uses a compact document header', async () => {
     const design = blankDesign();
     const repository = jasmine.createSpyObj<ConstructorRepository>('repository', [

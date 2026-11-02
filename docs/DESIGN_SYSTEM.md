@@ -1655,3 +1655,25 @@ library, Properties and Layers. Visible panels have checkmarks. Escape and outsi
 a sidebar is hidden, the other fills its height; hiding both removes the sidebar
 and its width handle. Panel instances and resize settings remain intact when hidden.
 Visibility is kept for the current constructor session.
+
+The constructor shows a walkthrough when the user first opens, imports, or
+creates a design, provided they have not seen it yet. Visiting the constructor
+library alone does not open the editor or consume the tutorial. It uses shared `app-joyride` and
+`[appJoyrideTarget]` from `shared/ui/joyride`. Each step supplies a target name,
+title, and description. The overlay highlights that target, follows viewport
+changes, traps focus, and supports Escape. Buttons use the compact 32px height.
+Skip sits on the left; Prev and Next sit on the right. On the last step, Prev
+sits on the left and the primary Finish button sits on the right. `stepChanged` lets the feature select
+an example; `finished` handles dismissal and cleanup.
+The context-menu step opens the constructor's actual menu at the center of the
+sample rectangle, using its zoomed screen coordinates. The spotlight targets the
+menu itself and positions the tour card beside it. The menu is an inert preview,
+keeping keyboard focus on the tour controls. Leaving the step or ending the
+tour closes the preview; ordinary context menus retain their normal interaction.
+
+The tutorial opens a temporary design with a rectangle, a logo image, and text,
+then restores the opened design and its unsaved status. Samples are never saved.
+Skip, Finish, and Escape persist
+`done` under `cv-builder.constructor-tour.v1` in local storage. With blocked
+storage the walkthrough runs at most once per constructor session. Remove that
+key to see the tutorial again.

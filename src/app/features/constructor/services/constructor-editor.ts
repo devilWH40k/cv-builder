@@ -365,6 +365,18 @@ export class ConstructorEditor {
     }
   }
 
+  selectionClientBounds(): DOMRect | null {
+    const canvas = this.canvas;
+    const selected = canvas?.getActiveObject();
+    if (!canvas || !selected) return null;
+    const bounds = selected.getBoundingRect();
+    const viewport = canvas.upperCanvasEl.getBoundingClientRect();
+    const scaleX = viewport.width / canvas.getWidth() * canvas.getZoom();
+    const scaleY = viewport.height / canvas.getHeight() * canvas.getZoom();
+    return new DOMRect(viewport.left + bounds.left * scaleX, viewport.top + bounds.top * scaleY,
+      bounds.width * scaleX, bounds.height * scaleY);
+  }
+
   private allObjects(objects = this.canvas?.getObjects() ?? []): FabricObject[] {
     return objects.flatMap((object) => [object,
       ...(object instanceof Group ? this.allObjects(object.getObjects()) : [])]);
