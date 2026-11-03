@@ -12,7 +12,7 @@ export interface DropdownItem {
 }
 
 @Component({
-  selector: 'app-dropdown',
+  selector: 'ui-dropdown',
   imports: [NgTemplateOutlet, LucideAngularModule],
   templateUrl: './dropdown.html',
   styleUrl: './dropdown.scss',

@@ -56,7 +56,7 @@ button:disabled, input:disabled { cursor: not-allowed; opacity: 0.6; }
 #backup-description { margin-top: tokens.$spacing-2; }
 section > p { margin: tokens.$spacing-2 0 tokens.$spacing-4; }
 form, .import-controls { display: grid; gap: tokens.$spacing-4; justify-items: start; }
-.file-field, app-input { width: 100%; min-width: 0; }
+.file-field, ui-input { width: 100%; min-width: 0; }
 .file-field .hint { margin-top: tokens.$spacing-1; }
 
 .caution-icon { color: tokens.$color-warning; display: inline-flex; vertical-align: middle; }

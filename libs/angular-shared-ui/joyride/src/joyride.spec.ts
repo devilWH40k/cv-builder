@@ -6,10 +6,10 @@ import { JoyrideTarget } from './joyride-target';
 @Component({
   imports: [Joyride, JoyrideTarget],
   template: `
-    <button appJoyrideTarget="first">First tool</button>
-    <button appJoyrideTarget="second">Second tool</button>
+    <button uiJoyrideTarget="first">First tool</button>
+    <button uiJoyrideTarget="second">Second tool</button>
     @if (open()) {
-      <app-joyride [steps]="steps" (stepChanged)="selected.set($event)" (finished)="open.set(false)" />
+      <ui-joyride [steps]="steps" (stepChanged)="selected.set($event)" (finished)="open.set(false)" />
     }
   `,
 })

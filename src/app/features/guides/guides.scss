@@ -52,9 +52,9 @@ p, ol { margin: 0; }
   background: tokens.$background-surface;
 }
 
-app-expand-panel { margin-bottom: 0; }
+ui-expand-panel { margin-bottom: 0; }
 
-app-expand-panel + app-expand-panel {
+ui-expand-panel + ui-expand-panel {
   margin-top: tokens.$spacing-6;
   padding-top: tokens.$spacing-6;
   border-top: 1px solid tokens.$border-color;

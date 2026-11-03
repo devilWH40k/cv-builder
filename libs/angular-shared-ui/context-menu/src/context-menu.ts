@@ -13,7 +13,7 @@ export interface ContextMenuItem {
 }
 
 @Component({
-  selector: 'app-context-menu',
+  selector: 'ui-context-menu',
   imports: [LucideAngularModule],
   templateUrl: './context-menu.html',
   styleUrl: './context-menu.scss',

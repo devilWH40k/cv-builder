@@ -1,8 +1,9 @@
 # angular-shared-ui
 
 Standalone Angular 20 components, directives, supporting services, and utilities.
-The existing `app-*` selectors are retained. Application features import the public
-API from component entry points such as `angular-shared-ui/button`. Relative
+Shared controls use `ui-*` component selectors and `ui...` directive selectors.
+Application features import the public API from component entry points such as
+`angular-shared-ui/button`. Relative
 imports stay within an entry point; imports between entry points use package paths.
 The root `angular-shared-ui` entry point also re-exports the complete API. Prefer
 component entry points in applications with lazy routes to keep bundles separate.
@@ -47,7 +48,7 @@ import { Button } from 'angular-shared-ui/button';
 @Component({
   selector: 'app-example',
   imports: [Button],
-  template: '<app-button variant="outline">Continue</app-button>',
+  template: '<ui-button variant="outline">Continue</ui-button>',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Example {}

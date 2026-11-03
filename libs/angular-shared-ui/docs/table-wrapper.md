@@ -2,7 +2,7 @@
 
 A typed table with column templates, optional search/visibility controls, loading and empty states, and optional Router query-parameter synchronization.
 
-Selector: `app-table-wrapper`.
+Selector: `ui-table-wrapper`.
 
 ## Inputs
 
@@ -41,5 +41,5 @@ readonly trackPerson = (person: { id: number }) => person.id;
 ```
 
 ```html
-<app-table-wrapper tableId="people" label="People" [data]="people" [columns]="columns" [trackBy]="trackPerson" [settings]="{ search: true }" />
+<ui-table-wrapper tableId="people" label="People" [data]="people" [columns]="columns" [trackBy]="trackPerson" [settings]="{ search: true }" />
 ```

@@ -10,7 +10,7 @@
   </header>
 
   <div class="guide-list">
-    <app-expand-panel heading="How to Import/Export the DB" panelId="import-export-guide"
+    <ui-expand-panel heading="How to Import/Export the DB" panelId="import-export-guide"
       [initiallyExpanded]="requestedGuide() === 'import-export-guide'">
       <article class="guide-content" aria-label="Database import and export instructions">
         <p>Back up your saved CVs, folders, experiences and technologies, or move them to another
@@ -64,8 +64,8 @@
           </figure>
         </section>
       </article>
-    </app-expand-panel>
-    <app-expand-panel heading="How to manage folders" panelId="manage-folders-guide"
+    </ui-expand-panel>
+    <ui-expand-panel heading="How to manage folders" panelId="manage-folders-guide"
       [initiallyExpanded]="requestedGuide() === 'manage-folders-guide'">
       <article class="guide-content" aria-label="Folder management instructions">
         <p>Use folders to organize your saved CVs on the home page. Folders work in both list and
@@ -147,8 +147,8 @@
             The trash icon on a CV asks you to confirm deletion of the saved CV itself.</p>
         </section>
       </article>
-    </app-expand-panel>
-    <app-expand-panel heading="How to manage experiences" panelId="manage-experiences-guide"
+    </ui-expand-panel>
+    <ui-expand-panel heading="How to manage experiences" panelId="manage-experiences-guide"
       [initiallyExpanded]="requestedGuide() === 'manage-experiences-guide'">
       <article class="guide-content" aria-label="Experience management instructions">
         <p>Save projects and work experiences in your library, then reuse them when building a CV.
@@ -266,6 +266,6 @@
             again creates additional entries.</p>
         </section>
       </article>
-    </app-expand-panel>
+    </ui-expand-panel>
   </div>
 </main>

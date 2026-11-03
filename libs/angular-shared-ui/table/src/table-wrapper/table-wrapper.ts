@@ -23,7 +23,7 @@ interface ColumnOption<T> {
 }
 
 @Component({
-  selector: 'app-table-wrapper',
+  selector: 'ui-table-wrapper',
   imports: [NgTemplateOutlet, Table, TableHeader, TableRow, TableCell, Checkbox, Dropdown, Input, Select, Tooltip, LucideAngularModule],
   templateUrl: './table-wrapper.html',
   styleUrl: './table-wrapper.scss',
@@ -131,7 +131,7 @@ export class TableWrapper<T> {
   }
 
   protected templateFor(key: string): TemplateRef<TableCellContext<T>> | null {
-    return (this.templates().find((template) => template.appTableCell() === key)
-      ?? this.templates().find((template) => !template.appTableCell()))?.template ?? null;
+    return (this.templates().find((template) => template.uiTableCell() === key)
+      ?? this.templates().find((template) => !template.uiTableCell()))?.template ?? null;
   }
 }

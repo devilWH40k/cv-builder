@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 let nextTooltipId = 0;
 
 @Directive({
-  selector: '[appTooltip]',
+  selector: '[uiTooltip]',
   host: {
     '(mouseenter)': 'show()',
     '(mouseleave)': 'leave($event)',
@@ -17,8 +17,8 @@ let nextTooltipId = 0;
   }
 })
 export class Tooltip {
-  readonly appTooltip = input.required<string>();
-  readonly appTooltipLink = input('');
+  readonly uiTooltip = input.required<string>();
+  readonly uiTooltipLink = input('');
   private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router, { optional: true });
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
@@ -26,8 +26,8 @@ export class Tooltip {
   private readonly link = this.document.createElement('a');
 
   constructor() {
-    this.tooltip.id = `app-tooltip-${nextTooltipId++}`;
-    this.tooltip.className = 'app-tooltip';
+    this.tooltip.id = `ui-tooltip-${nextTooltipId++}`;
+    this.tooltip.className = 'ui-tooltip';
     this.tooltip.setAttribute('role', 'tooltip');
     this.tooltip.hidden = true;
     this.tooltip.addEventListener('mouseleave', this.leaveTooltip);
@@ -37,8 +37,8 @@ export class Tooltip {
     this.link.addEventListener('click', this.followLink);
 
     effect(() => {
-      const text = this.appTooltip();
-      const destination = this.appTooltipLink();
+      const text = this.uiTooltip();
+      const destination = this.uiTooltipLink();
       const hasLink = destination.startsWith('/') && !/^\/[/\\\s]/.test(destination)
         && !/[\\\s]/.test(destination);
       this.tooltip.textContent = text;
@@ -77,7 +77,7 @@ export class Tooltip {
   }
 
   protected show(): void {
-    if (!this.appTooltip().trim()) return;
+    if (!this.uiTooltip().trim()) return;
     this.tooltip.hidden = false;
     this.position();
     this.document.addEventListener('scroll', this.onScroll, true);
@@ -122,7 +122,7 @@ export class Tooltip {
     if (!this.router || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     this.hide();
-    void this.router.navigateByUrl(this.appTooltipLink());
+    void this.router.navigateByUrl(this.uiTooltipLink());
   };
 
   private inside(target: EventTarget | null): boolean {

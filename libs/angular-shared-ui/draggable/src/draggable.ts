@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, Eleme
 import { DragDrop } from './drag-drop';
 
 @Component({
-  selector: 'app-draggable',
+  selector: 'ui-draggable',
   template: '<ng-content />',
   styleUrl: './draggable.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

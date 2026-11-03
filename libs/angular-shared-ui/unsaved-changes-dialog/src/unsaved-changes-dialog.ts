@@ -5,7 +5,7 @@ import { Dialog } from 'angular-shared-ui/dialog';
 export type UnsavedChangesDecision = 'save' | 'leave' | 'cancel';
 
 @Component({
-  selector: 'app-unsaved-changes-dialog',
+  selector: 'ui-unsaved-changes-dialog',
   imports: [Button, Dialog],
   templateUrl: './unsaved-changes-dialog.html',
   styleUrl: './unsaved-changes-dialog.scss',

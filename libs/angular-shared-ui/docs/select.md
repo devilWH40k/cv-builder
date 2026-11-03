@@ -2,7 +2,7 @@
 
 A labeled native select accepting either strings or value/label option objects.
 
-Selector: `app-select`.
+Selector: `ui-select`.
 
 ## Inputs
 
@@ -36,5 +36,5 @@ readonly size = new FormControl('Small', { nonNullable: true });
 ```
 
 ```html
-<app-select inputId="size" label="Size" [control]="size" [options]="['Small', 'Large']" />
+<ui-select inputId="size" label="Size" [control]="size" [options]="['Small', 'Large']" />
 ```

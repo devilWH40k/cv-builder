@@ -4,7 +4,7 @@ import { FormField } from 'angular-shared-ui/form-field';
 import { DateMode, DateViewMode, formatCalendarDate, parseCalendarDate } from './date-value';
 
 @Component({
-  selector: 'app-date-picker',
+  selector: 'ui-date-picker',
   imports: [LucideAngularModule],
   templateUrl: './date-picker.html',
   styleUrl: './date-picker.scss',

@@ -2,11 +2,11 @@ import { computed, DestroyRef, Directive, ElementRef, inject, input, output } fr
 import { DragDrop, DragItem } from './drag-drop';
 
 @Directive({
-  selector: '[appDropTarget]',
+  selector: '[uiDropTarget]',
   host: { '[class.drop-target]': 'hovered()' }
 })
 export class DropTarget {
-  readonly appDropTarget = input.required<string>();
+  readonly uiDropTarget = input.required<string>();
   readonly dropDisabled = input(false);
   readonly itemDropped = output<DragItem>();
 
@@ -18,7 +18,7 @@ export class DropTarget {
   constructor() {
     const unregister = this.drag.register({
       element: this.element,
-      accepts: (item) => !this.dropDisabled() && item.type === this.appDropTarget(),
+      accepts: (item) => !this.dropDisabled() && item.type === this.uiDropTarget(),
       dropped: (item) => this.itemDropped.emit(item)
     });
 

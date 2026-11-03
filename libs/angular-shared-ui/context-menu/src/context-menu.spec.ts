@@ -6,7 +6,7 @@ import { ContextMenu, ContextMenuItem } from './context-menu';
   imports: [ContextMenu],
   template: `<button class="source" (contextmenu)="menu().open($event)">Source</button>
     <button class="outside">Outside</button>
-    <app-context-menu [items]="items" (selected)="selected = $event" />`
+    <ui-context-menu [items]="items" (selected)="selected = $event" />`
 })
 class MenuHarness {
   readonly menu = viewChild.required(ContextMenu);

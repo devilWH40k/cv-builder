@@ -7,8 +7,8 @@ import { Tooltip } from './tooltip';
   imports: [Tooltip],
   template: `
     <p id="existing-help">Existing description</p>
-    <button [appTooltip]="text()" [appTooltipLink]="link()" aria-describedby="existing-help">First</button>
-    <button appTooltip="Second hint">Second</button>
+    <button [uiTooltip]="text()" [uiTooltipLink]="link()" aria-describedby="existing-help">First</button>
+    <button uiTooltip="Second hint">Second</button>
   `
 })
 class TooltipHost {

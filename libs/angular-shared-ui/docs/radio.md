@@ -2,7 +2,7 @@
 
 A native radio choice controlled through checked/disabled inputs and a selected event.
 
-Selector: `app-radio`.
+Selector: `ui-radio`.
 
 ## Inputs
 
@@ -36,5 +36,5 @@ readonly layout = signal('list');
 ```
 
 ```html
-<app-radio name="layout" value="list" label="List" [checked]="layout() === 'list'" (selected)="layout.set('list')" />
+<ui-radio name="layout" value="list" label="List" [checked]="layout() === 'list'" (selected)="layout.set('list')" />
 ```

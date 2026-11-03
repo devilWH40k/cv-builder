@@ -532,7 +532,7 @@ There should normally be only one visually dominant primary action in a local co
 
 ## Secondary Button
 
-`app-button` supports `variant="outline"` for primary outline actions: a
+`ui-button` supports `variant="outline"` for primary outline actions: a
 transparent background with a primary border and text, a subtle primary hover
 fill, and a secondary pressed fill. The CV editor uses this variant for Add social
 network, Add experience, Load experiences, Add education, and Add language.
@@ -739,11 +739,11 @@ Use muted text below the field.
 
 Helper text should explain useful constraints rather than repeat the label.
 
-For `app-input`, pass `helpText="..."` to display an accessible hint directly below
+For `ui-input`, pass `helpText="..."` to display an accessible hint directly below
 the control. Error space is reserved below the hint, keeping the layout stable
 when validation messages appear after the field is touched.
 
-`app-input` supports an optional leading Lucide `icon` or an `iconSrc` image.
+`ui-input` supports an optional leading Lucide `icon` or an `iconSrc` image.
 The icon sits inside the field on the left, with padding for both the text and
 floating label. Icons are decorative; the associated label names the field.
 
@@ -1234,7 +1234,7 @@ rejected. SVG paths remain editable and recolorable in the constructor. Existing
 saved PNG icons remain supported. Pickers and chips display them at 20×20px;
 experience preview icons use 24×24px, matching the built-in icons.
 
-The icon field reuses `app-file-upload` with `mode="icon"`, a configurable `accept`
+The icon field reuses `ui-file-upload` with `mode="icon"`, a configurable `accept`
 filter and `helpText`. Icon mode displays a square, uncropped preview and applies
 files directly to the provided control; the caller handles validation. The default
 photo mode retains the circular preview and photo cropping dialog.
@@ -1264,7 +1264,7 @@ On smaller screens, navigation wraps onto a centered second row. The footer uses
 
 Shared dropdowns use `angular-shared-ui/dropdown`. Pass a unique `menuId`, an
 accessible `label`, and an `items` array of `{ id, label, disabled? }` entries.
-Project trigger content inside `app-dropdown` and handle its `selected` output.
+Project trigger content inside `ui-dropdown` and handle its `selected` output.
 Menus open on hover or click, support arrow/Home/End navigation and Escape, and
 close when focus or the pointer leaves, or when the user clicks outside.
 Set `[openOnHover]="false"` for click-only dropdowns, such as the table's column
@@ -1286,14 +1286,14 @@ to the list; cancellation leaves the library unchanged.
 ## Tooltips
 
 Import `Tooltip` from `angular-shared-ui/directives` and add
-`appTooltip="Hint text"` (or `[appTooltip]="hint"`) to a focusable control.
+`uiTooltip="Hint text"` (or `[uiTooltip]="hint"`) to a focusable control.
 The directive opens a plain-text hint on hover, focus, or tap and dismisses it
 on Escape, blur, or resize. On scroll, focused hints reposition and other hints
 close. It preserves existing `aria-describedby`
 references and removes its tooltip when the control is destroyed. Shared styles
 are loaded by `src/styles/styles.scss`; tooltip positioning stays within the viewport.
 
-Use `appTooltipLink="/guides?guide=manage-experiences-guide"` to append a small
+Use `uiTooltipLink="/guides?guide=manage-experiences-guide"` to append a small
 "more" link to internal help. Linked hints use note semantics and stay beside
 the control in DOM order so Tab reaches the link. Hovering or focusing the link
 keeps the hint open; Escape returns focus to the control and dismisses it.
@@ -1353,7 +1353,7 @@ shared checkboxes. All data columns start visible; toggles update headers,
 cells, grid tracks and minimum width together. Actions remain visible and sticky.
 
 Import sits immediately right of Add experience. Its shared dialog uses
-`app-file-upload` with `mode="file"` and `.xlsx` filtering; file mode applies the
+`ui-file-upload` with `mode="file"` and `.xlsx` filtering; file mode applies the
 file directly without image previews or cropping. The Report region has a fixed
 height and scrolls, with success and error messages for each populated record.
 File structure errors include a reason. Apply becomes available when at least
@@ -1378,15 +1378,15 @@ generator load on demand. Import limits are 10 MB compressed and 1,000 records.
 settings types, `directives/` contains typed cell templates, and `utils/` contains
 URL synchronization and its tests. `Table`, `TableHeader`, `TableRow`, and `TableCell` provide
 accessible table/row/columnheader/cell roles and CSS Grid. Supply `columns` as a grid column
-template and optional `minWidth` on `app-table`; header and rows inherit the same
-template. `app-table-header` takes a `headers` array and uses `app-table-cell`
-with `[header]="true"` for column headers. Project row content into `app-table-cell`;
+template and optional `minWidth` on `ui-table`; header and rows inherit the same
+template. `ui-table-header` takes a `headers` array and uses `ui-table-cell`
+with `[header]="true"` for column headers. Project row content into `ui-table-cell`;
 it supplies the cell role and wrapping styles. Wide tables scroll horizontally inside the focusable table.
 Cells supply padding and vertical borders. Set `[stickyRight]="true"` on a cell
 and `[stickyLastColumn]="true"` on the header to keep an actions column on the right.
 Project metadata is preserved in CV snapshots and ZIP backups.
 
-Use `TableWrapper` (`app-table-wrapper`) for a table managed from data and column
+Use `TableWrapper` (`ui-table-wrapper`) for a table managed from data and column
 definitions. Pass a unique `tableId`, an accessible `label`, `data`, typed
 `TableColumn<T>[]` definitions, and a `trackBy` function returning stable row IDs.
 The wrapper renders the existing table primitives and owns column visibility,
@@ -1430,16 +1430,16 @@ empty-value entry can represent Any; other selects keep the disabled empty place
 For custom cells, import `TableCellTemplate` and project a typed template:
 
 ```html
-<app-table-wrapper tableId="people" label="People" [data]="people()"
+<ui-table-wrapper tableId="people" label="People" [data]="people()"
   [columns]="columns" [trackBy]="personKey" [settings]="{ search: true }">
-  <ng-template appTableCell="actions" [tableCellOf]="people()" let-person>
+  <ng-template uiTableCell="actions" [tableCellOf]="people()" let-person>
     <button type="button" (click)="edit(person)">Edit</button>
   </ng-template>
-</app-table-wrapper>
+</ui-table-wrapper>
 ```
 
 `tableCellOf` supplies the row type for template checking. `let-column="column"`
-exposes the column definition. An empty `appTableCell` supplies a fallback template;
+exposes the column definition. An empty `uiTableCell` supplies a fallback template;
 a template with a matching column key takes precedence. Default cells render plain
 text. Feature templates remain responsible for rich text, links and action callbacks.
 
@@ -1492,8 +1492,8 @@ and must be valid and ordered when supplied. Date format supports year, month
 and year, or full dates. Education is preserved in saved CVs and ZIP backups and
 included in preview, print, and PDF export. Older CVs start with no education.
 
-University uses the shared `app-async-select`, an editable combobox styled like
-`app-select`. Pass asynchronous string `options`, `loading`, `helpText`, and
+University uses the shared `ui-async-select`, an editable combobox styled like
+`ui-select`. Pass asynchronous string `options`, `loading`, `helpText`, and
 `emptyText` alongside the standard form field inputs. Suggestions filter
 immediately against every typed word, ignoring case, including while a newer
 request is pending. Clicking an option or using Arrow keys and Enter selects it;
@@ -1526,7 +1526,7 @@ theme. See [Constructor architecture](CONSTRUCTOR.md) for persistence and export
 
 ## Resizable CV photo
 
-The preview photo uses the shared `app-resizable` square wrapper. Drag the photo
+The preview photo uses the shared `ui-resizable` square wrapper. Drag the photo
 or its corner grip to resize; the diagonal resize cursor is visible on hover.
 Arrow keys adjust its size, Home/End select the limits, and Escape cancels a drag.
 Photo size ranges from 24 to 60mm, defaults to 40mm, and is saved in
@@ -1563,7 +1563,7 @@ signal and persists `list` or `card` under `cv-builder.home-view` in local stora
 The preference survives navigation and reloads. Missing or invalid preferences
 default to List; if browser storage is blocked, switches still work for the session.
 
-New dialogs can use `angular-shared-ui/dialog` (`app-dialog`). Supply a unique
+New dialogs can use `angular-shared-ui/dialog` (`ui-dialog`). Supply a unique
 `dialogId` and `title`, project the body normally, and project actions with
 `dialogActions`. Optional `wide`, `minHeight`, `busy`, and `showClose` inputs control the shell;
 project optional header actions with `dialogHeaderActions` to place them before Close.
@@ -1603,7 +1603,7 @@ the manual order; ZIP backups retain their existing content and folder format.
 
 ## Shared context menus
 
-The shared `app-context-menu` takes typed `items`, an accessible `label`, and emits
+The shared `ui-context-menu` takes typed `items`, an accessible `label`, and emits
 `selected` action IDs. Call `open($event)` from a context-menu trigger. Optional
 icons, disabled actions, and safe new-tab links are supported. The menu is mounted
 at body level above dialogs, fits within the viewport, supports keyboard navigation,
@@ -1623,7 +1623,7 @@ the selection for retry. The move uses existing IndexedDB folder persistence.
 
 ## Shared pointer dragging
 
-Wrap draggable content in `angular-shared-ui/draggable` (`app-draggable`) and
+Wrap draggable content in `angular-shared-ui/draggable` (`ui-draggable`) and
 provide `dragId`, `dragType`, and an optional `disabled` input. The component
 waits for pointer movement before dragging, preserving normal clicks. It hides
 the source from layout while held and creates a full-size opaque preview above
@@ -1633,7 +1633,7 @@ or intercept pointer events. Nested buttons, form fields, and `data-no-drag`
 elements remain independent actions.
 
 Use `DropTarget` from `angular-shared-ui/draggable` with
-`[appDropTarget]="acceptedType"`, optional `dropDisabled`, and `(itemDropped)`.
+`[uiDropTarget]="acceptedType"`, optional `dropDisabled`, and `(itemDropped)`.
 Accepted targets receive the `drop-target` class while hovered. The shared
 `DragDrop` service owns the active item, hit testing, and cleanup; features
 handle the resulting domain operation. Dialog backdrops use the same service
@@ -1659,8 +1659,8 @@ Visibility is kept for the current constructor session.
 
 The constructor shows a walkthrough when the user first opens, imports, or
 creates a design, provided they have not seen it yet. Visiting the constructor
-library alone does not open the editor or consume the tutorial. It uses shared `app-joyride` and
-`[appJoyrideTarget]` from `angular-shared-ui/joyride`. Each step supplies a target name,
+library alone does not open the editor or consume the tutorial. It uses shared `ui-joyride` and
+`[uiJoyrideTarget]` from `angular-shared-ui/joyride`. Each step supplies a target name,
 title, and description. The overlay highlights that target, follows viewport
 changes, traps focus, and supports Escape. Buttons use the compact 32px height.
 Skip sits on the left; Prev and Next sit on the right. On the last step, Prev

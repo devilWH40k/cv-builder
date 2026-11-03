@@ -11,7 +11,7 @@ import { CV_DATABASE_NAME, SavedCvs } from '../../services/saved-cvs';
   template: `
     <app-technology-select inputId="general" label="General" [groups]="groups" [control]="general" [customIcons]="generalIcons" />
     <app-technology-select inputId="used" label="Used" [groups]="groups" [control]="used" [customIcons]="usedIcons" />
-    <app-multi-select inputId="other" label="Other" [groups]="groups" [control]="other" [allowCustom]="true" />
+    <ui-multi-select inputId="other" label="Other" [groups]="groups" [control]="other" [allowCustom]="true" />
   `
 })
 class Host {
@@ -61,7 +61,7 @@ describe('Technology library selectors', () => {
     expect(fixture.componentInstance.general.value).toEqual(['My SDK']);
     const selectors = Array.from(page.querySelectorAll('app-technology-select'));
     for (const selector of selectors) expect(selector.textContent).toContain('My SDK');
-    expect(page.querySelector('app-multi-select #other')!.closest('app-multi-select')!.textContent).not.toContain('My SDK');
+    expect(page.querySelector('ui-multi-select #other')!.closest('ui-multi-select')!.textContent).not.toContain('My SDK');
     const record = TestBed.inject(SavedCvs).technologies()[0];
     expect(record.name).toBe('My SDK');
     fixture.destroy();
@@ -74,7 +74,7 @@ describe('Technology library selectors', () => {
 
   it('Apply selects a local entry without saving it to the shared library', async () => {
     const { fixture, page, dialog } = await open();
-    dialog.querySelector<HTMLButtonElement>('app-button button')!.click();
+    dialog.querySelector<HTMLButtonElement>('ui-button button')!.click();
     await fixture.whenStable();
     expect(fixture.componentInstance.general.value).toEqual(['My SDK']);
     expect(TestBed.inject(SavedCvs).technologies()).toEqual([]);

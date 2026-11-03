@@ -2,7 +2,7 @@
 
 A modal photo crop/preview editor. Mount it while editing and remove it after applied or cancelled. The applied event contains the resulting File.
 
-Selector: `app-photo-preview`.
+Selector: `ui-photo-preview`.
 
 ## Inputs
 
@@ -36,6 +36,6 @@ readonly result = signal<File | null>(null);
 
 ```html
 @if (photo(); as file) {
-  <app-photo-preview [file]="file" [shapes]="['circle', 'rectangle']" (applied)="result.set($event); photo.set(null)" (cancelled)="photo.set(null)" />
+  <ui-photo-preview [file]="file" [shapes]="['circle', 'rectangle']" (applied)="result.set($event); photo.set(null)" (cancelled)="photo.set(null)" />
 }
 ```

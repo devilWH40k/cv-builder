@@ -2,7 +2,7 @@
 
 A guided walkthrough that highlights registered JoyrideTarget elements. Mount it conditionally and remove it after finished; stepChanged emits the current zero-based index.
 
-Selector: `app-joyride`.
+Selector: `ui-joyride`.
 
 ## Inputs
 
@@ -34,8 +34,8 @@ readonly steps = [{ target: 'save', title: 'Save your work', description: 'Use t
 ```
 
 ```html
-<button appJoyrideTarget="save">Save</button>
+<button uiJoyrideTarget="save">Save</button>
 @if (tourOpen()) {
-  <app-joyride [steps]="steps" (finished)="tourOpen.set(false)" />
+  <ui-joyride [steps]="steps" (finished)="tourOpen.set(false)" />
 }
 ```

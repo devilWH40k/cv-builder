@@ -7,7 +7,7 @@
   <section class="saved-cvs" aria-label="Your library">
     <h2 id="saved-title">{{ activeTab() === 'files' ? 'Your CVs' : 'Your designs' }}</h2>
     <div class="saved-toolbar">
-      <app-tabs [tabs]="tabs" [active]="activeTab()" (activeChange)="selectTab($event)" label="Library" />
+      <ui-tabs [tabs]="tabs" [active]="activeTab()" (activeChange)="selectTab($event)" label="Library" />
       @if (activeTab() === 'files') {
       <div class="view-actions">
         <button class="folder-add" type="button" aria-label="New folder" title="New folder" (click)="createFolderOpen.set(true)">

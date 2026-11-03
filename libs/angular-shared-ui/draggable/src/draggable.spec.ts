@@ -8,22 +8,22 @@ import { DropTarget } from './drop-target';
   imports: [Draggable, DropTarget],
   template: `
     <div class="stage">
-      <app-draggable dragId="document" dragType="document" [disabled]="disabled()">
+      <ui-draggable dragId="document" dragType="document" [disabled]="disabled()">
         <article class="sample">
           <a id="original-link" href="#" [draggable]="false" (click)="$event.preventDefault(); clicks.update(increment)">
             <strong>Document title</strong><span>General position</span>
           </a>
           <button type="button">Delete</button>
         </article>
-      </app-draggable>
-      <div class="target" [appDropTarget]="targetType()" [dropDisabled]="targetDisabled()"
+      </ui-draggable>
+      <div class="target" [uiDropTarget]="targetType()" [dropDisabled]="targetDisabled()"
         (itemDropped)="drops.update(appendDrop($event))"><span>Folder</span></div>
     </div>
   `,
   styles: `
     :host { display: block; }
     .stage { display: flex; gap: 20px; }
-    app-draggable { width: 180px; }
+    ui-draggable { width: 180px; }
     .sample { width: 100%; height: 120px; background: rgb(241, 245, 249); color: rgb(15, 23, 42); }
     a { display: flex; flex-direction: column; font-size: 18px; }
     .target { width: 160px; height: 120px; }
@@ -52,7 +52,7 @@ describe('Shared pointer draggable', () => {
     TestBed.configureTestingModule({ imports: [DragHarness], providers: [provideZonelessChangeDetection()] });
     fixture = TestBed.createComponent(DragHarness);
     await fixture.whenStable();
-    source = fixture.nativeElement.querySelector('app-draggable');
+    source = fixture.nativeElement.querySelector('ui-draggable');
     link = source.querySelector('a')!;
     target = fixture.nativeElement.querySelector('.target');
     source.scrollIntoView({ block: 'center' });
@@ -85,14 +85,14 @@ describe('Shared pointer draggable', () => {
     link.click();
     await fixture.whenStable();
     expect(fixture.componentInstance.clicks()).toBe(1);
-    expect(document.querySelector('.app-drag-preview')).toBeNull();
+    expect(document.querySelector('.ui-drag-preview')).toBeNull();
     expect(getComputedStyle(source).display).not.toBe('none');
   });
 
   it('holds the full opaque item at its original size and removes the source from layout', async () => {
     const color = getComputedStyle(source.querySelector('article')!).backgroundColor;
     const rect = await start();
-    const preview = document.querySelector<HTMLElement>('.app-drag-preview')!;
+    const preview = document.querySelector<HTMLElement>('.ui-drag-preview')!;
     expect(preview.textContent).toContain('Document title');
     expect(preview.textContent).toContain('General position');
     expect(preview.textContent).toContain('Delete');
@@ -119,7 +119,7 @@ describe('Shared pointer draggable', () => {
     await fixture.whenStable();
     expect(fixture.componentInstance.drops()).toEqual([{ id: 'document', type: 'document' }]);
     expect(target.classList.contains('drop-target')).toBeFalse();
-    expect(document.querySelector('.app-drag-preview')).toBeNull();
+    expect(document.querySelector('.ui-drag-preview')).toBeNull();
     expect(getComputedStyle(source).display).not.toBe('none');
   });
 
@@ -133,7 +133,7 @@ describe('Shared pointer draggable', () => {
       await fixture.whenStable();
       expect(fixture.componentInstance.drops()).toEqual([]);
       expect(getComputedStyle(source).display).not.toBe('none');
-      expect(document.querySelector('.app-drag-preview')).toBeNull();
+      expect(document.querySelector('.ui-drag-preview')).toBeNull();
     });
   }
 
@@ -147,8 +147,8 @@ describe('Shared pointer draggable', () => {
       await fixture.whenStable();
       expect(fixture.componentInstance.drops()).toEqual([]);
       expect(getComputedStyle(source).display).not.toBe('none');
-      expect(document.querySelector('.app-drag-preview')).toBeNull();
-      expect(document.body.classList.contains('app-dragging')).toBeFalse();
+      expect(document.querySelector('.ui-drag-preview')).toBeNull();
+      expect(document.body.classList.contains('ui-dragging')).toBeFalse();
     });
   }
 
@@ -170,7 +170,7 @@ describe('Shared pointer draggable', () => {
     fixture.componentInstance.disabled.set(true);
     await fixture.whenStable();
     await start();
-    expect(document.querySelector('.app-drag-preview')).toBeNull();
+    expect(document.querySelector('.ui-drag-preview')).toBeNull();
   });
 
   it('removes previews and listeners if the source is destroyed during a drag', async () => {
@@ -178,9 +178,9 @@ describe('Shared pointer draggable', () => {
     await start();
     fixture.destroy();
     expect(drag.active()).toBeNull();
-    expect(document.querySelector('.app-drag-preview')).toBeNull();
+    expect(document.querySelector('.ui-drag-preview')).toBeNull();
     pointer('pointermove', 100, 100);
     pointer('pointerup', 100, 100);
-    expect(document.querySelector('.app-drag-preview')).toBeNull();
+    expect(document.querySelector('.ui-drag-preview')).toBeNull();
   });
 });

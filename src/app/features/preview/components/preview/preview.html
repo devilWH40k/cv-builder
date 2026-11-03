@@ -3,9 +3,9 @@
   @if (info(); as cv) {
   <div class="preview-layout">
     @if (!embedded()) {
-    <app-responsive-drawer class="structure-menu" label="Structure" panelId="structure-panel">
+    <ui-responsive-drawer class="structure-menu" label="Structure" panelId="structure-panel">
       <app-structure-options [structure]="structure()" (structureChange)="draft.updateStructure($event)" />
-    </app-responsive-drawer>
+    </ui-responsive-drawer>
     }
     <div #viewport class="document-viewport" role="region" aria-label="A4 CV preview" tabindex="0">
       <p class="page-count" role="status">{{ pages().length }} {{ pages().length === 1 ? 'page' : 'pages' }}</p>
@@ -23,11 +23,11 @@
           <img class="portrait" draggable="false" [src]="url" [alt]="cv.name + ' — portrait'"
             [style.width.mm]="photoSizeMm()" [style.height.mm]="photoSizeMm()" (error)="photoUrl.set(null)" />
           } @else {
-          <app-resizable [size]="photoSize()" [minSize]="minPhotoSize" [maxSize]="maxPhotoSize"
+          <ui-resizable [size]="photoSize()" [minSize]="minPhotoSize" [maxSize]="maxPhotoSize"
             [step]="photoSizeStep" label="Photo size" [valueText]="photoSizeMm() + ' millimeters'"
             (sizeChange)="resizePhoto($event)">
           <img class="portrait" draggable="false" [src]="url" [alt]="cv.name + ' — portrait'" (error)="photoUrl.set(null)" />
-          </app-resizable>
+          </ui-resizable>
           }
           }
           <div class="cv-info">
@@ -40,12 +40,12 @@
               <img class="company-logo" [src]="url" alt="Company logo" draggable="false"
                 [style.width.mm]="logoSizeMm()" [style.height.mm]="logoSizeMm()" (error)="companyLogoUrl.set(null)" />
             } @else {
-              <app-resizable class="logo-resizer" [size]="logoSizeMm() * pixelsPerMm"
+              <ui-resizable class="logo-resizer" [size]="logoSizeMm() * pixelsPerMm"
                 [minSize]="10 * pixelsPerMm" [maxSize]="40 * pixelsPerMm" [step]="pixelsPerMm"
                 label="Company logo size" [valueText]="logoSizeMm() + ' millimeters'" (sizeChange)="resizeLogo($event)">
                 <img class="company-logo" [src]="url" alt="Company logo" draggable="false"
                   (error)="companyLogoUrl.set(null)" />
-              </app-resizable>
+              </ui-resizable>
             }
           }
         </header>
@@ -150,18 +150,18 @@
       </div>
     </div>
     @if (!embedded()) {
-    <app-responsive-drawer #actionsMenu class="actions-menu" label="CV actions" panelId="actions-panel" side="right">
+    <ui-responsive-drawer #actionsMenu class="actions-menu" label="CV actions" panelId="actions-panel" side="right">
     <nav class="actions" aria-label="CV actions">
-      <app-button (click)="actionsMenu.close(); export()" [disabled]="pdf.exporting()">
+      <ui-button (click)="actionsMenu.close(); export()" [disabled]="pdf.exporting()">
         <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
         {{ pdf.exporting() ? 'Exporting…' : 'Export' }}
-      </app-button>
+      </ui-button>
       <app-save-cv-button [info]="info" />
       <a routerLink="/constructor" [queryParams]="{ from: 'draft' }">Open in constructor</a>
       <a routerLink="/create">Edit CV info</a>
       <a routerLink="/">Back to home</a>
     </nav>
-    </app-responsive-drawer>
+    </ui-responsive-drawer>
     }
   </div>
   }

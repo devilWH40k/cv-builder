@@ -9,7 +9,7 @@ export interface SelectOption {
 }
 
 @Component({
-  selector: 'app-select',
+  selector: 'ui-select',
   imports: [ReactiveFormsModule, LucideAngularModule],
   templateUrl: './select.html',
   styleUrl: './select.scss',

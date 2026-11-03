@@ -2,7 +2,7 @@
 
 A reactive-form calendar supporting year, month/year, or complete date selection. Values use YYYY, YYYY-MM, or YYYY-MM-DD according to mode.
 
-Selector: `app-date-picker`.
+Selector: `ui-date-picker`.
 
 ## Inputs
 
@@ -38,5 +38,5 @@ readonly started = new FormControl('', { nonNullable: true });
 ```
 
 ```html
-<app-date-picker inputId="started" label="Started" [control]="started" mode="month-year" />
+<ui-date-picker inputId="started" label="Started" [control]="started" mode="month-year" />
 ```

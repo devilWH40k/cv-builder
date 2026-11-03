@@ -5,7 +5,7 @@ import { debounceTime, Subject } from 'rxjs';
 
 /** Preview after a pause; commit before an outside click changes the active canvas object. */
 @Directive({
-  selector: 'input[type=color][appDebouncedColor]',
+  selector: 'input[type=color][uiDebouncedColor]',
   host: { '(input)': 'queue()', '(blur)': 'flush()' },
 })
 export class DebouncedColor {

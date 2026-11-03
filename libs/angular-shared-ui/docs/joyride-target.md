@@ -2,13 +2,13 @@
 
 Registers a named element for Joyride walkthrough steps. Use unique target names within the active view.
 
-Selector: `[appJoyrideTarget]`.
+Selector: `[uiJoyrideTarget]`.
 
 ## Inputs
 
 | Input | Type | Default |
 | --- | --- | --- |
-| `appJoyrideTarget` | `string` | **Required** |
+| `uiJoyrideTarget` | `string` | **Required** |
 
 ## Outputs
 
@@ -23,5 +23,5 @@ import { JoyrideTarget } from 'angular-shared-ui/joyride';
 Add `JoyrideTarget` to the parent component's `imports`.
 
 ```html
-<button appJoyrideTarget="save">Save</button>
+<button uiJoyrideTarget="save">Save</button>
 ```

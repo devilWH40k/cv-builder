@@ -1,4 +1,4 @@
-<dialog #card class="joyride" appDialogOverlay aria-labelledby="joyride-title" aria-describedby="joyride-description"
+<dialog #card class="joyride" uiDialogOverlay aria-labelledby="joyride-title" aria-describedby="joyride-description"
   (cancel)="dismiss($event)" (keydown)="keyboard($event)"
   [style.left.px]="position().left" [style.top.px]="position().top">
   <div class="spotlight" aria-hidden="true" [style.left.px]="highlight().left"
@@ -11,12 +11,12 @@
     <footer>
       @if (last()) {
         <button type="button" class="secondary-button" [disabled]="index() === 0" (click)="move(-1)">Prev</button>
-        <app-button (click)="dismiss()">Finish</app-button>
+        <ui-button (click)="dismiss()">Finish</ui-button>
       } @else {
         <button type="button" class="secondary-button" (click)="dismiss()">Skip</button>
         <div class="navigation">
           <button type="button" class="secondary-button" [disabled]="index() === 0" (click)="move(-1)">Prev</button>
-          <app-button (click)="move(1)">Next</app-button>
+          <ui-button (click)="move(1)">Next</ui-button>
         </div>
       }
     </footer>

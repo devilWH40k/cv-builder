@@ -1,5 +1,5 @@
 @use 'tokens' as tokens;
-.app-drag-preview {
+.ui-drag-preview {
   position: fixed;
   top: 0;
   left: 0;
@@ -10,5 +10,5 @@
   user-select: none;
   cursor: grabbing;
 }
-.app-dragging { cursor: grabbing; user-select: none; }
-@media print { .app-drag-preview { display: none; } }
+.ui-dragging { cursor: grabbing; user-select: none; }
+@media print { .ui-drag-preview { display: none; } }

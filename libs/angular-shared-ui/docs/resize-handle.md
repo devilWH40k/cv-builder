@@ -2,7 +2,7 @@
 
 A keyboard/pointer separator controlling an adjacent panel size in CSS pixels. Bind the size model to the panel dimension.
 
-Selector: `app-resize-handle`.
+Selector: `ui-resize-handle`.
 
 ## Inputs
 
@@ -38,5 +38,5 @@ readonly width = signal(280);
 
 ```html
 <aside [style.width.px]="width()">Panel</aside>
-<app-resize-handle label="Panel width" [(size)]="width" [min]="200" [max]="420" />
+<ui-resize-handle label="Panel width" [(size)]="width" [min]="200" [max]="420" />
 ```

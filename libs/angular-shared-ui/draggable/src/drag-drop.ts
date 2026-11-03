@@ -106,7 +106,7 @@ export class DragDrop {
     this.session.set(null);
     this.over.set(null);
 
-    this.document.body.classList.remove('app-dragging');
+    this.document.body.classList.remove('ui-dragging');
 
     if (wasDragging) this.clickTimer = setTimeout(() => this.clearClickGuard(), 0);
   }
@@ -122,7 +122,7 @@ export class DragDrop {
       this.preview = this.createPreview(drag.source);
       this.clearClickGuard();
       this.document.addEventListener('click', this.suppressClick, true);
-      this.document.body.classList.add('app-dragging');
+      this.document.body.classList.add('ui-dragging');
       this.session.set(drag);
       this.candidate = null;
     }
@@ -217,7 +217,7 @@ export class DragDrop {
 
     const preview = this.document.createElement('div');
 
-    preview.className = 'app-drag-preview';
+    preview.className = 'ui-drag-preview';
     preview.setAttribute('aria-hidden', 'true');
     preview.inert = true;
     preview.style.width = `${rect.width}px`;

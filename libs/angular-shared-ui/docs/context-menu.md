@@ -2,7 +2,7 @@
 
 A body-mounted context menu with keyboard navigation, viewport fitting, disabled actions, icons, and safe links. Call open(event) on the component reference.
 
-Selector: `app-context-menu`.
+Selector: `ui-context-menu`.
 
 ## Inputs
 
@@ -37,5 +37,5 @@ readonly action = signal('');
 
 ```html
 <section (contextmenu)="menu.open($event)">Right-click here</section>
-<app-context-menu #menu [items]="items" (selected)="action.set($event)" />
+<ui-context-menu #menu [items]="items" (selected)="action.set($event)" />
 ```

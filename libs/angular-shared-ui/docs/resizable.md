@@ -2,7 +2,7 @@
 
 A square content wrapper with pointer and keyboard resizing. Sizes use unscaled CSS pixels and pointer interaction compensates for scaled previews.
 
-Selector: `app-resizable`.
+Selector: `ui-resizable`.
 
 ## Inputs
 
@@ -37,7 +37,7 @@ readonly size = signal(120);
 ```
 
 ```html
-<app-resizable [size]="size()" [minSize]="80" [maxSize]="240" label="Photo size" (sizeChange)="size.set($event)">
+<ui-resizable [size]="size()" [minSize]="80" [maxSize]="240" label="Photo size" (sizeChange)="size.set($event)">
   <span>Resizable content</span>
-</app-resizable>
+</ui-resizable>
 ```

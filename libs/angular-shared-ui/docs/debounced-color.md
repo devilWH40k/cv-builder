@@ -2,7 +2,7 @@
 
 Debounces native color input previews for 150ms, then flushes pending color changes on blur or outside interaction.
 
-Selector: `input[type=color][appDebouncedColor]`.
+Selector: `input[type=color][uiDebouncedColor]`.
 
 ## Inputs
 
@@ -30,5 +30,5 @@ readonly color = signal('#36d4f7');
 ```
 
 ```html
-<input type="color" appDebouncedColor [value]="color()" (colorCommitted)="color.set($event)" aria-label="Color" />
+<input type="color" uiDebouncedColor [value]="color()" (colorCommitted)="color.set($event)" aria-label="Color" />
 ```

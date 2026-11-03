@@ -2,7 +2,7 @@
 
 A sidebar on wide screens that becomes a modal drawer on compact screens. Project navigation or actions into its body.
 
-Selector: `app-responsive-drawer`.
+Selector: `ui-responsive-drawer`.
 
 ## Inputs
 
@@ -25,7 +25,7 @@ import { ResponsiveDrawer } from 'angular-shared-ui/responsive-drawer';
 Add `ResponsiveDrawer` to the parent component's `imports`.
 
 ```html
-<app-responsive-drawer label="Navigation" panelId="navigation" side="left">
+<ui-responsive-drawer label="Navigation" panelId="navigation" side="left">
   <nav>Navigation content</nav>
-</app-responsive-drawer>
+</ui-responsive-drawer>
 ```

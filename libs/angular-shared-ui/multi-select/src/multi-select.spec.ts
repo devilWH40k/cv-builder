@@ -6,7 +6,7 @@ import { CustomEntryIcons } from 'angular-shared-ui/custom-entry-dialog';
 
 @Component({
   imports: [MultiSelect],
-  template: `<app-multi-select inputId="tools" label="Tools" [control]="control"
+  template: `<ui-multi-select inputId="tools" label="Tools" [control]="control"
     [groups]="groups" [allowCustom]="true" [customIcons]="icons()" (customIconsChange)="icons.set($event)" />`
 })
 class Host {
@@ -32,7 +32,7 @@ describe('Custom multi-select entries', () => {
     await fixture.whenStable();
     const dialog = document.querySelector<HTMLDialogElement>('dialog')!;
     const name = dialog.querySelector<HTMLInputElement>('input[type="text"]')!;
-    const apply = dialog.querySelector<HTMLButtonElement>('app-button button')!;
+    const apply = dialog.querySelector<HTMLButtonElement>('ui-button button')!;
     return { fixture, page, dialog, name, apply, trigger };
   }
 
@@ -79,7 +79,7 @@ describe('Custom multi-select entries', () => {
     await fixture.whenStable();
     const pixel = async (): Promise<number[]> => {
       const image = new Image();
-      image.src = dialog.querySelector<HTMLImageElement>('app-file-upload img')!.src;
+      image.src = dialog.querySelector<HTMLImageElement>('ui-file-upload img')!.src;
       await image.decode();
       const canvas = document.createElement('canvas');
       canvas.width = canvas.height = 96;
@@ -113,11 +113,11 @@ describe('Custom multi-select entries', () => {
     upload.dispatchEvent(new Event('change'));
     await fixture.whenStable();
     expect(apply.disabled).toBeFalse();
-    const preview = dialog.querySelector<HTMLImageElement>('app-file-upload .icon-preview img')!;
+    const preview = dialog.querySelector<HTMLImageElement>('ui-file-upload .icon-preview img')!;
     expect(preview.alt).toBe('Selected icon preview');
     expect(getComputedStyle(preview).objectFit).toBe('contain');
-    expect(dialog.querySelector('app-file-upload .filename')?.textContent).toBe('wide.svg');
-    expect(document.querySelector('app-photo-preview')).toBeNull();
+    expect(dialog.querySelector('ui-file-upload .filename')?.textContent).toBe('wide.svg');
+    expect(document.querySelector('ui-photo-preview')).toBeNull();
     apply.click();
     await fixture.whenStable();
     expect(fixture.componentInstance.control.value).toEqual(['My SDK']);
@@ -151,8 +151,8 @@ describe('Custom multi-select entries', () => {
     expect(apply.disabled).toBeTrue();
     dialog.querySelector<HTMLButtonElement>('[aria-label="Remove icon"]')!.click();
     await fixture.whenStable();
-    expect(dialog.querySelector('app-file-upload .filename')?.textContent).toBe('');
-    expect(dialog.querySelector('app-file-upload img')).toBeNull();
+    expect(dialog.querySelector('ui-file-upload .filename')?.textContent).toBe('');
+    expect(dialog.querySelector('ui-file-upload img')).toBeNull();
     apply.click();
     await fixture.whenStable();
     expect(fixture.componentInstance.control.value).toEqual(['SDK']);

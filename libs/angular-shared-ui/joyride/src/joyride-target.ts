@@ -21,15 +21,15 @@ export class JoyrideTargets {
   }
 }
 
-@Directive({ selector: '[appJoyrideTarget]' })
+@Directive({ selector: '[uiJoyrideTarget]' })
 export class JoyrideTarget {
-  readonly appJoyrideTarget = input.required<string>();
+  readonly uiJoyrideTarget = input.required<string>();
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly targets = inject(JoyrideTargets);
 
   constructor() {
     effect((onCleanup) => {
-      onCleanup(this.targets.register(this.appJoyrideTarget(), this.element.nativeElement));
+      onCleanup(this.targets.register(this.uiJoyrideTarget(), this.element.nativeElement));
     });
   }
 }

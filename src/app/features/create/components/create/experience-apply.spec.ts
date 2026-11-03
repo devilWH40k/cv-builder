@@ -44,7 +44,7 @@ describe('Applying updated library experiences', () => {
     const untouched = form.controls.experiences.at(1).getRawValue();
     dialog.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((checkbox) => checkbox.click());
     await fixture.whenStable();
-    dialog.querySelector<HTMLButtonElement>('footer app-button button')!.click();
+    dialog.querySelector<HTMLButtonElement>('footer ui-button button')!.click();
     await fixture.whenStable();
     expect(form.controls.experiences.length).toBe(3);
     expect(form.controls.experiences.at(0)).toBe(linkedRow);

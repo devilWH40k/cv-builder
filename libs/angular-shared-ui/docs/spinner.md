@@ -2,7 +2,7 @@
 
 A visual loading indicator with a screen-reader label.
 
-Selector: `app-spinner`.
+Selector: `ui-spinner`.
 
 ## Inputs
 
@@ -23,5 +23,5 @@ import { Spinner } from 'angular-shared-ui/spinner';
 Add `Spinner` to the parent component's `imports`.
 
 ```html
-<app-spinner label="Loading files" />
+<ui-spinner label="Loading files" />
 ```

@@ -2,7 +2,7 @@
 
 A native button wrapper with primary, monochrome, danger, and outline variants. Project text or Lucide icons into its content.
 
-Selector: `app-button`.
+Selector: `ui-button`.
 
 ## Inputs
 
@@ -25,5 +25,5 @@ import { Button } from 'angular-shared-ui/button';
 Add `Button` to the parent component's `imports`.
 
 ```html
-<app-button variant="outline">Continue</app-button>
+<ui-button variant="outline">Continue</ui-button>
 ```

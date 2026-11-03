@@ -2,7 +2,7 @@
 
 A reactive file picker with photo/icon previews, optional removal, and an additional action. Add file validators to the FormControl for the accepted content rules.
 
-Selector: `app-file-upload`.
+Selector: `ui-file-upload`.
 
 ## Inputs
 
@@ -45,5 +45,5 @@ readonly photo = new FormControl<File | null>(null);
 ```
 
 ```html
-<app-file-upload inputId="photo" label="Photo" [control]="photo" [removable]="true" />
+<ui-file-upload inputId="photo" label="Photo" [control]="photo" [removable]="true" />
 ```

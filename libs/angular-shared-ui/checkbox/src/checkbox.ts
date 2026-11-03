@@ -3,7 +3,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Check, LucideAngularModule } from 'lucide-angular';
 
 @Component({
-  selector: 'app-checkbox',
+  selector: 'ui-checkbox',
   imports: [ReactiveFormsModule, LucideAngularModule],
   templateUrl: './checkbox.html',
   styleUrl: './checkbox.scss',

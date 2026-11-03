@@ -6,7 +6,7 @@ import { FormControl } from '@angular/forms';
 import { PhotoPreview } from 'angular-shared-ui/photo-preview';
 
 @Component({
-  selector: 'app-file-upload',
+  selector: 'ui-file-upload',
   imports: [LucideAngularModule, PhotoPreview],
   templateUrl: './file-upload.html',
   styleUrl: './file-upload.scss',

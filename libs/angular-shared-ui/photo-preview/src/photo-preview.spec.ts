@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Toasts } from 'angular-shared-ui/toast';
 import { PhotoPreview } from './photo-preview';
 
-@Component({ imports: [Toasts], template: '<app-toasts />' })
+@Component({ imports: [Toasts], template: '<ui-toasts />' })
 class ToastHost {}
 
 describe('PhotoPreview', () => {
@@ -52,7 +52,7 @@ describe('PhotoPreview', () => {
     await fixture.whenStable();
     expect(parseFloat(circle.style.left)).toBe(60);
     const result = new Promise<File>((resolve) => fixture.componentInstance.applied.subscribe(resolve));
-    page.querySelector<HTMLButtonElement>('app-button button')!.click();
+    page.querySelector<HTMLButtonElement>('ui-button button')!.click();
     const file = await result;
     const bitmap = await createImageBitmap(file);
     expect(bitmap.width).toBe(160);
@@ -79,7 +79,7 @@ describe('PhotoPreview', () => {
     fixture.componentRef.setInput('circularOutput', true);
     await fixture.whenStable();
     const result = new Promise<File>((resolve) => fixture.componentInstance.applied.subscribe(resolve));
-    page.querySelector<HTMLButtonElement>('app-button button')!.click();
+    page.querySelector<HTMLButtonElement>('ui-button button')!.click();
     const bitmap = await createImageBitmap(await result);
     const canvas = document.createElement('canvas');
     canvas.width = bitmap.width;
@@ -104,7 +104,7 @@ describe('PhotoPreview', () => {
     sliders[1].dispatchEvent(new Event('input'));
     await fixture.whenStable();
     const result = new Promise<File>((resolve) => fixture.componentInstance.applied.subscribe(resolve));
-    page.querySelector<HTMLButtonElement>('app-button button')!.click();
+    page.querySelector<HTMLButtonElement>('ui-button button')!.click();
     const bitmap = await createImageBitmap(await result);
     expect(bitmap.width).toBe(160);
     expect(bitmap.height).toBe(100);
@@ -126,7 +126,7 @@ describe('PhotoPreview', () => {
     const encode = spyOn(HTMLCanvasElement.prototype, 'toBlob').and.callThrough();
     const applied = jasmine.createSpy('applied');
     fixture.componentInstance.applied.subscribe(applied);
-    page.querySelector<HTMLButtonElement>('app-button button')!.click();
+    page.querySelector<HTMLButtonElement>('ui-button button')!.click();
     expect(applied).toHaveBeenCalledOnceWith(fixture.componentInstance.file());
     expect(encode).not.toHaveBeenCalled();
   });
@@ -161,22 +161,22 @@ describe('PhotoPreview', () => {
   it('reports decode errors with a dismissible custom toast and prevents applying an unreadable image', async () => {
     page.querySelector('.source-photo')!.dispatchEvent(new Event('error'));
     await fixture.whenStable();
-    const toast = page.querySelector('app-toasts .toast.danger')!;
+    const toast = page.querySelector('ui-toasts .toast.danger')!;
     expect(toast.getAttribute('role')).toBe('alert');
     expect(toast.textContent).toContain('could not be opened');
     expect(page.querySelector('[role="status"]')).toBeNull();
     toast.querySelector<HTMLButtonElement>('button')!.click();
     await fixture.whenStable();
-    expect(page.querySelector('app-toasts .toast')).toBeNull();
-    expect(page.querySelector<HTMLButtonElement>('app-button button')!.disabled).toBeTrue();
+    expect(page.querySelector('ui-toasts .toast')).toBeNull();
+    expect(page.querySelector<HTMLButtonElement>('ui-button button')!.disabled).toBeTrue();
   });
 
   it('reports crop export failures in the dialog and allows retrying', async () => {
     const exportImage = spyOn(HTMLCanvasElement.prototype, 'toBlob').and.callFake((callback) => callback(null));
-    const apply = page.querySelector<HTMLButtonElement>('app-button button')!;
+    const apply = page.querySelector<HTMLButtonElement>('ui-button button')!;
     apply.click();
     await fixture.whenStable();
-    const toast = page.querySelector('app-toasts .toast.danger')!;
+    const toast = page.querySelector('ui-toasts .toast.danger')!;
     expect(toast.textContent).toContain('The crop could not be applied. Please try again.');
     expect(page.querySelector('dialog')!.open).toBeTrue();
     expect(apply.disabled).toBeFalse();

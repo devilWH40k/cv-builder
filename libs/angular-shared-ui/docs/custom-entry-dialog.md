@@ -2,7 +2,7 @@
 
 A reusable modal for adding a name and optional SVG icon. Its asynchronous saveEntry callback enables Apply and save; the dialog does not own storage.
 
-Selector: `app-custom-entry-dialog`.
+Selector: `ui-custom-entry-dialog`.
 
 ## Inputs
 
@@ -37,6 +37,6 @@ readonly name = signal('');
 
 ```html
 @if (open()) {
-  <app-custom-entry-dialog inputId="custom-skill" (applied)="name.set($event.name); open.set(false)" (cancelled)="open.set(false)" />
+  <ui-custom-entry-dialog inputId="custom-skill" (applied)="name.set($event.name); open.set(false)" (cancelled)="open.set(false)" />
 }
 ```

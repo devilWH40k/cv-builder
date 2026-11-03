@@ -75,15 +75,15 @@ describe('ZIP imports on the open Experiences page', () => {
     input.dispatchEvent(new Event('change'));
     if (wipe) dialog.querySelector<HTMLInputElement>('#wipe-previous-data')!.click();
     await header.whenStable();
-    dialog.querySelector<HTMLButtonElement>('section app-button button')!.click();
+    dialog.querySelector<HTMLButtonElement>('section ui-button button')!.click();
     await importZip.calls.mostRecent().returnValue;
     await header.whenStable();
     await settlePage();
   }
 
   function projects(): string[] {
-    return Array.from((page.nativeElement as HTMLElement).querySelectorAll('app-table-row'))
-      .map((row) => row.querySelector('app-table-cell')!.textContent!.trim()).sort();
+    return Array.from((page.nativeElement as HTMLElement).querySelectorAll('ui-table-row'))
+      .map((row) => row.querySelector('ui-table-cell')!.textContent!.trim()).sort();
   }
 
   it('shows merged experiences immediately and updates existing IDs without duplicating rows', async () => {

@@ -37,6 +37,6 @@
   </div>
 </details>
 @if (dialogOpen()) {
-  <app-custom-entry-dialog [inputId]="inputId() + '-custom'" [saveEntry]="saveEntry()"
+  <ui-custom-entry-dialog [inputId]="inputId() + '-custom'" [saveEntry]="saveEntry()"
     (applied)="addCustom($event)" (cancelled)="dialogOpen.set(false)" />
 }

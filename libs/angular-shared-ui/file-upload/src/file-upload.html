@@ -32,5 +32,5 @@
     <ng-content />
   </div>
 </div>@if (pendingPhoto(); as file) {
-  <app-photo-preview [file]="file" (cancelled)="pendingPhoto.set(null)" (applied)="applyPhoto($event)" />
+  <ui-photo-preview [file]="file" (cancelled)="pendingPhoto.set(null)" (applied)="applyPhoto($event)" />
 }

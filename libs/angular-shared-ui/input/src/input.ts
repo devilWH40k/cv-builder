@@ -4,7 +4,7 @@ import { Check, LucideAngularModule, LucideIconData } from 'lucide-angular';
 import { FormField } from 'angular-shared-ui/form-field';
 
 @Component({
-  selector: 'app-input',
+  selector: 'ui-input',
   imports: [ReactiveFormsModule, LucideAngularModule],
   templateUrl: './input.html',
   styleUrl: './input.scss',

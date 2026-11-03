@@ -5,7 +5,7 @@ import { ExperiencesDialog } from './experiences-dialog';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { SavedExperience } from '../../../cv/interfaces/experience';
 
-@Component({ imports: [Toasts], template: '<app-toasts />' })
+@Component({ imports: [Toasts], template: '<ui-toasts />' })
 class ToastHost {}
 
 const record: SavedExperience = {
@@ -34,7 +34,7 @@ describe('Experiences dialog', () => {
     const bounds = dialog.getBoundingClientRect();
     expect(bounds.left + bounds.width / 2).toBeCloseTo(window.innerWidth / 2, 0);
     expect(bounds.top + bounds.height / 2).toBeCloseTo(window.innerHeight / 2, 0);
-    const apply = dialog.querySelector<HTMLButtonElement>('app-button button')!;
+    const apply = dialog.querySelector<HTMLButtonElement>('ui-button button')!;
     const card = dialog.querySelector<HTMLElement>('.experience')!;
     const normalBorder = getComputedStyle(card).borderColor;
     expect(apply.disabled).toBeTrue();
@@ -104,14 +104,14 @@ describe('Experiences dialog', () => {
     expect(cards().length).toBe(6);
     expect(dialog.textContent).toContain('Page 1 of 2');
     expect(dialog.textContent).not.toContain('You have no selected experiences.');
-    dialog.querySelector<HTMLButtonElement>('footer app-button button')!.click();
+    dialog.querySelector<HTMLButtonElement>('footer ui-button button')!.click();
     expect(applied).toHaveBeenCalledWith([records[0], records[6]]);
   });
 
   it('allows selecting linked entries to update and describes the overwrite warning', async () => {
     const { fixture, dialog, applied } = await setup([record], [record.id]);
     const checkbox = dialog.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
-    const apply = dialog.querySelector<HTMLButtonElement>('footer app-button button')!;
+    const apply = dialog.querySelector<HTMLButtonElement>('footer ui-button button')!;
     expect(checkbox.disabled).toBeFalse();
     expect(checkbox.checked).toBeFalse();
     expect(apply.disabled).toBeTrue();
@@ -175,13 +175,13 @@ describe('Experiences dialog', () => {
     toasts.detectChanges();
     await fixture.whenStable();
     await toasts.whenStable();
-    const toast: HTMLElement = toasts.nativeElement.querySelector('app-toasts');
+    const toast: HTMLElement = toasts.nativeElement.querySelector('ui-toasts');
     expect(toast.querySelector('.toast.danger')?.textContent).toContain('could not be loaded');
     expect(toast.inert).toBeFalse();
     const dialog = document.querySelector<HTMLDialogElement>('.dialog-overlay dialog')!;
     expect(Number(getComputedStyle(toast).zIndex)).toBeGreaterThan(Number(getComputedStyle(dialog.parentElement!).zIndex));
     list.and.resolveTo([record]);
-    dialog.querySelector<HTMLButtonElement>('app-button button')!.click();
+    dialog.querySelector<HTMLButtonElement>('ui-button button')!.click();
     await fixture.whenStable();
     expect(dialog.textContent).toContain('Example');
   });

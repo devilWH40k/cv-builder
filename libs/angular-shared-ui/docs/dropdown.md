@@ -2,7 +2,7 @@
 
 A menu trigger with projected trigger content, typed actions, keyboard navigation, and optional custom menu template. selected emits the complete DropdownItem.
 
-Selector: `app-dropdown`.
+Selector: `ui-dropdown`.
 
 ## Inputs
 
@@ -42,5 +42,5 @@ readonly action = signal('');
 ```
 
 ```html
-<app-dropdown menuId="file-menu" label="File actions" [items]="items" (selected)="action.set($event.id)">File</app-dropdown>
+<ui-dropdown menuId="file-menu" label="File actions" [items]="items" (selected)="action.set($event.id)">File</ui-dropdown>
 ```

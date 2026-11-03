@@ -3,7 +3,7 @@ import { DestroyRef, Directive, effect, ElementRef, inject, input, output } from
 import { DragDrop, DragItem } from 'angular-shared-ui/draggable';
 
 /** Moves an Angular-owned dialog to the body without entering the browser top layer. */
-@Directive({ selector: 'dialog[appDialogOverlay]' })
+@Directive({ selector: 'dialog[uiDialogOverlay]' })
 export class DialogOverlay {
   readonly backdropDropType = input('');
   readonly backdropDropped = output<DragItem>();
@@ -39,8 +39,8 @@ export class DialogOverlay {
     // Leave the global toast outlet interactive and available to assistive technology.
     const disable = (parent: Element) => {
       for (const child of Array.from(parent.children)) {
-        if (!(child instanceof HTMLElement) || child === this.layer || child.matches('app-toasts') || child.inert) continue;
-        if (child.querySelector('app-toasts')) disable(child);
+        if (!(child instanceof HTMLElement) || child === this.layer || child.matches('ui-toasts') || child.inert) continue;
+        if (child.querySelector('ui-toasts')) disable(child);
         else { child.inert = true; this.inertElements.push(child); }
       }
     };

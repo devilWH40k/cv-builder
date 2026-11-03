@@ -7,7 +7,7 @@ export interface Tab {
 }
 
 @Component({
-  selector: 'app-tabs',
+  selector: 'ui-tabs',
   templateUrl: './tabs.html',
   styleUrl: './tabs.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

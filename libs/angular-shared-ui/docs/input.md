@@ -2,7 +2,7 @@
 
 A labeled typed reactive-form input with validation feedback, suggestions, and optional icons.
 
-Selector: `app-input`.
+Selector: `ui-input`.
 
 ## Inputs
 
@@ -41,5 +41,5 @@ readonly name = new FormControl('', { nonNullable: true });
 ```
 
 ```html
-<app-input inputId="name" label="Name" [control]="name" [required]="true" />
+<ui-input inputId="name" label="Name" [control]="name" [required]="true" />
 ```

@@ -12,7 +12,7 @@
 
 @media (max-width: tokens.$breakpoint-lg) {
   .page-panels { grid-template-rows: auto auto; gap: tokens.$spacing-3; }
-  .page-panels > app-resize-handle { display: none; }
+  .page-panels > ui-resize-handle { display: none; }
   .icon-library-panel { height: 50dvh; }
 }
 

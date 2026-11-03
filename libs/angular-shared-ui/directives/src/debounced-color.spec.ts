@@ -4,7 +4,7 @@ import { DebouncedColor } from './debounced-color';
 
 @Component({
   imports: [DebouncedColor],
-  template: '<input type="color" appDebouncedColor (colorCommitted)="colors.push($event)" /><button>Outside</button>',
+  template: '<input type="color" uiDebouncedColor (colorCommitted)="colors.push($event)" /><button>Outside</button>',
 })
 class Host {
   readonly colors: string[] = [];

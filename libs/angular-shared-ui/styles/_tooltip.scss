@@ -1,6 +1,6 @@
 @use 'tokens' as tokens;
 
-.app-tooltip {
+.ui-tooltip {
   position: fixed;
   z-index: tokens.$z-tooltip;
   box-sizing: border-box;
@@ -31,5 +31,5 @@
 }
 
 @media print {
-  .app-tooltip { display: none; }
+  .ui-tooltip { display: none; }
 }

@@ -12,8 +12,8 @@ interface Person { readonly id: number; readonly name: string; readonly role: st
 @Component({
   imports: [TableWrapper],
   template: `
-    <app-table-wrapper tableId="people" label="People" [data]="people" [columns]="columns" [settings]="settings" [trackBy]="key" />
-    <app-table-wrapper tableId="teams" label="Teams" [data]="people" [columns]="columns" [settings]="settings" [trackBy]="key" />
+    <ui-table-wrapper tableId="people" label="People" [data]="people" [columns]="columns" [settings]="settings" [trackBy]="key" />
+    <ui-table-wrapper tableId="teams" label="Teams" [data]="people" [columns]="columns" [settings]="settings" [trackBy]="key" />
   `
 })
 class TableRoute {
@@ -54,10 +54,10 @@ describe('Table query parameters', () => {
     expect(field<HTMLInputElement>(harness, '#people-search').value).toBe('Alice');
     expect(field<HTMLSelectElement>(harness, '#people-search-column').value).toBe('name');
     expect(field<HTMLInputElement>(harness, '#people-column-role').checked).toBeFalse();
-    const tables = harness.routeNativeElement!.querySelectorAll('app-table-wrapper');
-    expect(tables[0].querySelector('app-table-header')!.textContent).toBe('NameActions');
-    expect(tables[0].querySelectorAll('app-table-row').length).toBe(1);
-    expect(tables[1].querySelectorAll('app-table-row').length).toBe(2);
+    const tables = harness.routeNativeElement!.querySelectorAll('ui-table-wrapper');
+    expect(tables[0].querySelector('ui-table-header')!.textContent).toBe('NameActions');
+    expect(tables[0].querySelectorAll('ui-table-row').length).toBe(1);
+    expect(tables[1].querySelectorAll('ui-table-row').length).toBe(2);
     expect(field<HTMLInputElement>(harness, '#teams-search').value).toBe('');
   });
 
@@ -88,7 +88,7 @@ describe('Table query parameters', () => {
   it('restores defaults through the icon button and clears only this table query state', async () => {
     const harness = await RouterTestingHarness.create('/tables?page=2&teams.search=Bob&people.search=Alice&people.searchIn=name&people.columns=name#section');
     await settle(harness);
-    field<HTMLButtonElement>(harness, 'app-table-wrapper [aria-label="Restore filters to default"]').click();
+    field<HTMLButtonElement>(harness, 'ui-table-wrapper [aria-label="Restore filters to default"]').click();
     await settle(harness);
     expect(field<HTMLInputElement>(harness, '#people-search').value).toBe('');
     expect(field<HTMLSelectElement>(harness, '#people-search-column').value).toBe('');
@@ -140,7 +140,7 @@ describe('Table query parameters', () => {
     await settle(harness);
     expect(parameters().get('people.columns')).toBe('actions');
     expect(parameters().get('people.searchIn')).toBeNull();
-    expect(field<HTMLElement>(harness, 'app-table-header').textContent).toBe('Actions');
+    expect(field<HTMLElement>(harness, 'ui-table-header').textContent).toBe('Actions');
   });
 
   it('merges simultaneous updates from multiple tables without losing either state', async () => {

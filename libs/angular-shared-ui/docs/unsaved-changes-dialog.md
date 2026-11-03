@@ -2,7 +2,7 @@
 
 A modal prompt with Save, Leave, and Cancel decisions. The host handles persistence, busy/error state, navigation, and removal of the prompt.
 
-Selector: `app-unsaved-changes-dialog`.
+Selector: `ui-unsaved-changes-dialog`.
 
 ## Inputs
 
@@ -37,6 +37,6 @@ readonly decision = signal('');
 
 ```html
 @if (open()) {
-  <app-unsaved-changes-dialog subject="document" (decision)="decision.set($event); open.set(false)" />
+  <ui-unsaved-changes-dialog subject="document" (decision)="decision.set($event); open.set(false)" />
 }
 ```

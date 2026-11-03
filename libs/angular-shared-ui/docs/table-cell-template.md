@@ -1,14 +1,14 @@
 # TableCellTemplate
 
-A typed projected cell template for TableWrapper. appTableCell selects a column key; an empty key is the fallback. tableCellOf provides the row type for template checking.
+A typed projected cell template for TableWrapper. uiTableCell selects a column key; an empty key is the fallback. tableCellOf provides the row type for template checking.
 
-Selector: `ng-template[appTableCell]`.
+Selector: `ng-template[uiTableCell]`.
 
 ## Inputs
 
 | Input | Type | Default |
 | --- | --- | --- |
-| `appTableCell` | `string` | `''` |
+| `uiTableCell` | `string` | `''` |
 | `tableCellOf` | `readonly T[]` | **Required** |
 
 ## Outputs
@@ -32,9 +32,9 @@ readonly trackPerson = (person: { id: number }) => person.id;
 ```
 
 ```html
-<app-table-wrapper tableId="people" label="People" [data]="people" [columns]="columns" [trackBy]="trackPerson">
-  <ng-template appTableCell="name" [tableCellOf]="people" let-person>
+<ui-table-wrapper tableId="people" label="People" [data]="people" [columns]="columns" [trackBy]="trackPerson">
+  <ng-template uiTableCell="name" [tableCellOf]="people" let-person>
     <strong>{{ person.name }}</strong>
   </ng-template>
-</app-table-wrapper>
+</ui-table-wrapper>
 ```

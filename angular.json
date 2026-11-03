@@ -111,7 +111,7 @@
       "projectType": "library",
       "root": "libs/angular-shared-ui",
       "sourceRoot": "libs/angular-shared-ui",
-      "prefix": "app",
+      "prefix": "ui",
       "schematics": {
         "@schematics/angular:component": { "style": "scss" }
       },

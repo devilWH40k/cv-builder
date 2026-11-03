@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
-  selector: 'app-table-row',
+  selector: 'ui-table-row',
   template: '<ng-content />',
   styleUrl: './table-row.scss',
   host: { role: 'row' },

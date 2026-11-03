@@ -3,7 +3,7 @@ import { CircleCheck, CircleAlert, TriangleAlert, X, LucideAngularModule } from 
 import { ToastService } from './toast.service';
 
 @Component({
-  selector: 'app-toasts',
+  selector: 'ui-toasts',
   imports: [LucideAngularModule],
   templateUrl: './toast.html',
   styleUrl: './toast.scss',

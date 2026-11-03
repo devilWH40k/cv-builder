@@ -31,7 +31,7 @@ describe('Experiences table query parameters', () => {
     await settle(harness);
     expect(field<HTMLInputElement>(harness, '#experience-search').value).toBe('Engineer');
     expect(field<HTMLSelectElement>(harness, '#experience-search-column').value).toBe('position');
-    expect(field<HTMLElement>(harness, 'app-table-header').textContent).toBe('Project NamePositionActions');
-    expect(harness.routeNativeElement!.querySelectorAll('app-table-row').length).toBe(1);
+    expect(field<HTMLElement>(harness, 'ui-table-header').textContent).toBe('Project NamePositionActions');
+    expect(harness.routeNativeElement!.querySelectorAll('ui-table-row').length).toBe(1);
   });
 });

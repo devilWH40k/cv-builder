@@ -2,7 +2,7 @@
 
 An editable combobox that filters supplied suggestions while allowing custom text. The host owns asynchronous loading and errors.
 
-Selector: `app-async-select`.
+Selector: `ui-async-select`.
 
 ## Inputs
 
@@ -39,5 +39,5 @@ readonly city = new FormControl('', { nonNullable: true });
 ```
 
 ```html
-<app-async-select inputId="city" label="City" [control]="city" [options]="['Kyiv', 'Lviv']" />
+<ui-async-select inputId="city" label="City" [control]="city" [options]="['Kyiv', 'Lviv']" />
 ```

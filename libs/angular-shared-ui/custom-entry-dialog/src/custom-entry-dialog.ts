@@ -16,7 +16,7 @@ export interface CustomEntry {
 }
 
 @Component({
-  selector: 'app-custom-entry-dialog',
+  selector: 'ui-custom-entry-dialog',
   imports: [ReactiveFormsModule, Button, DialogOverlay, Input, FileUpload, Checkbox, Tooltip, LucideAngularModule],
   templateUrl: './custom-entry-dialog.html',
   styleUrl: './custom-entry-dialog.scss',

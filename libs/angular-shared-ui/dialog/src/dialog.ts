@@ -4,7 +4,7 @@ import { DialogOverlay } from './dialog-overlay';
 import { DragItem } from 'angular-shared-ui/draggable';
 
 @Component({
-  selector: 'app-dialog',
+  selector: 'ui-dialog',
   imports: [DialogOverlay, LucideAngularModule],
   templateUrl: './dialog.html',
   styleUrl: './dialog.scss',

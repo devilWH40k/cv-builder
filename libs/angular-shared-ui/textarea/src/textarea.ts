@@ -4,7 +4,7 @@ import { Check, LucideAngularModule } from 'lucide-angular';
 import { FormField } from 'angular-shared-ui/form-field';
 
 @Component({
-  selector: 'app-textarea',
+  selector: 'ui-textarea',
   imports: [ReactiveFormsModule, LucideAngularModule],
   templateUrl: './textarea.html',
   styleUrl: './textarea.scss',

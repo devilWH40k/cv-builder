@@ -10,7 +10,7 @@ import { Spinner } from 'angular-shared-ui/spinner';
 export type PhotoCropShape = 'circle' | 'rectangle' | 'full';
 
 @Component({
-  selector: 'app-photo-preview',
+  selector: 'ui-photo-preview',
   imports: [Button, DialogOverlay, Spinner],
   templateUrl: './photo-preview.html',
   styleUrl: './photo-preview.scss',

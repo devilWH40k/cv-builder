@@ -2,7 +2,7 @@
 
 A modal confirmation prompt for destructive actions. The host performs deletion only after confirmed, then removes the dialog.
 
-Selector: `app-delete-confirmation`.
+Selector: `ui-delete-confirmation`.
 
 ## Inputs
 
@@ -37,6 +37,6 @@ readonly confirmed = signal(false);
 
 ```html
 @if (open()) {
-  <app-delete-confirmation title="Delete file?" itemName="Draft" (confirmed)="confirmed.set(true); open.set(false)" (cancelled)="open.set(false)" />
+  <ui-delete-confirmation title="Delete file?" itemName="Draft" (confirmed)="confirmed.set(true); open.set(false)" (cancelled)="open.set(false)" />
 }
 ```

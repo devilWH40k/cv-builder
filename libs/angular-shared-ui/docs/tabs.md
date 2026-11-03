@@ -2,7 +2,7 @@
 
 An accessible tab strip with a required active model. The host renders panels matching the supplied panelId values.
 
-Selector: `app-tabs`.
+Selector: `ui-tabs`.
 
 ## Inputs
 
@@ -35,6 +35,6 @@ readonly active = signal('details');
 ```
 
 ```html
-<app-tabs [tabs]="tabs" [(active)]="active" label="Document sections" />
+<ui-tabs [tabs]="tabs" [(active)]="active" label="Document sections" />
 <section id="details-panel" role="tabpanel" [hidden]="active() !== 'details'">Details</section>
 ```

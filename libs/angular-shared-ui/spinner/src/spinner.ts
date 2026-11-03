@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 @Component({
-  selector: 'app-spinner',
+  selector: 'ui-spinner',
   template: '<span aria-hidden="true"></span>',
   styleUrl: './spinner.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

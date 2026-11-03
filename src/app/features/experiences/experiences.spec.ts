@@ -46,11 +46,11 @@ describe('Experiences page', () => {
       'Start date', 'End date', 'Description', 'Responsibilities', 'Technologies', 'Teamlead', 'Developer',
       'Is Updated', 'Actions']);
     expect(root.querySelector('table, tr, td, th')).toBeNull();
-    const row = root.querySelector<HTMLElement>('app-table-row')!;
-    const header = root.querySelector<HTMLElement>('app-table-header')!;
-    expect(header.querySelectorAll('app-table-cell[role="columnheader"]').length).toBe(headers.length);
-    expect(row.querySelectorAll('app-table-cell[role="cell"]').length).toBe(headers.length);
-    const cells = row.querySelectorAll('app-table-cell[role="cell"]');
+    const row = root.querySelector<HTMLElement>('ui-table-row')!;
+    const header = root.querySelector<HTMLElement>('ui-table-header')!;
+    expect(header.querySelectorAll('ui-table-cell[role="columnheader"]').length).toBe(headers.length);
+    expect(row.querySelectorAll('ui-table-cell[role="cell"]').length).toBe(headers.length);
+    const cells = row.querySelectorAll('ui-table-cell[role="cell"]');
     expect(cells[2].textContent).toBe('Engineer');
     expect(cells[5].textContent).toBe('2020-01');
     expect(cells[6].textContent).toBe('2021-04');
@@ -59,10 +59,10 @@ describe('Experiences page', () => {
     expect(getComputedStyle(row).gridTemplateColumns).toBe(getComputedStyle(header).gridTemplateColumns);
     expect(row.textContent).toContain('Angular, TypeScript');
     expect(row.textContent).toContain('false');
-    const table = root.querySelector<HTMLElement>('app-table')!;
-    const actions = row.querySelector<HTMLElement>('app-table-cell:last-child')!;
-    const headerActions = header.querySelector<HTMLElement>('app-table-cell:last-child')!;
-    expect(getComputedStyle(row.querySelector<HTMLElement>('app-table-cell')!).borderRightStyle).toBe('solid');
+    const table = root.querySelector<HTMLElement>('ui-table')!;
+    const actions = row.querySelector<HTMLElement>('ui-table-cell:last-child')!;
+    const headerActions = header.querySelector<HTMLElement>('ui-table-cell:last-child')!;
+    expect(getComputedStyle(row.querySelector<HTMLElement>('ui-table-cell')!).borderRightStyle).toBe('solid');
     expect(getComputedStyle(actions).position).toBe('sticky');
     for (const scrollLeft of [0, 400, table.scrollWidth]) {
       table.scrollLeft = scrollLeft;
@@ -75,7 +75,7 @@ describe('Experiences page', () => {
     const input = dialog.querySelector<HTMLInputElement>('#experience-alternative-names')!;
     input.value = 'Updated alternative';
     input.dispatchEvent(new Event('input'));
-    dialog.querySelector<HTMLButtonElement>('[dialogActions] app-button:last-child button')!.click();
+    dialog.querySelector<HTMLButtonElement>('[dialogActions] ui-button:last-child button')!.click();
     await save.calls.mostRecent().returnValue;
     await fixture.whenStable();
     expect(save).toHaveBeenCalled();
@@ -93,14 +93,14 @@ describe('Experiences page', () => {
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    const links = root.querySelectorAll<HTMLAnchorElement>('app-table-row a');
+    const links = root.querySelectorAll<HTMLAnchorElement>('ui-table-row a');
     expect(Array.from(links, (link) => link.href)).toEqual(['https://example.com/project', 'https://example.com/photos']);
     for (const link of links) {
       expect(link.target).toBe('_blank');
       expect(link.relList.contains('noopener')).toBeTrue();
       expect(link.relList.contains('noreferrer')).toBeTrue();
     }
-    const invalidRow = root.querySelectorAll('app-table-row')[1];
+    const invalidRow = root.querySelectorAll('ui-table-row')[1];
     expect(invalidRow.querySelector('a')).toBeNull();
     expect(invalidRow.textContent).toContain('javascript:alert(1)');
   });
@@ -116,12 +116,12 @@ describe('Experiences page', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('false');
     trigger.click();
     await fixture.whenStable();
-    const choices = root.querySelectorAll<HTMLInputElement>('app-checkbox input');
+    const choices = root.querySelectorAll<HTMLInputElement>('ui-checkbox input');
     expect(choices.length).toBe(13);
     expect(Array.from(choices).every((checkbox) => checkbox.checked)).toBeTrue();
     const position = root.querySelector<HTMLInputElement>('#experience-column-position')!;
-    const row = root.querySelector<HTMLElement>('app-table-row')!;
-    const header = root.querySelector<HTMLElement>('app-table-header')!;
+    const row = root.querySelector<HTMLElement>('ui-table-row')!;
+    const header = root.querySelector<HTMLElement>('ui-table-header')!;
     const originalWidth = row.getBoundingClientRect().width;
     position.click();
     await fixture.whenStable();
@@ -193,7 +193,7 @@ describe('Experiences page', () => {
     trigger.focus();
     trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     await fixture.whenStable();
-    const checkboxes = root.querySelectorAll<HTMLInputElement>('app-checkbox input');
+    const checkboxes = root.querySelectorAll<HTMLInputElement>('ui-checkbox input');
     expect(document.activeElement).toBe(checkboxes[0]);
     checkboxes[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
     await fixture.whenStable();
@@ -220,17 +220,17 @@ describe('Experiences page', () => {
     search.value = 'engineer';
     search.dispatchEvent(new Event('input'));
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(1);
-    expect(root.querySelector('app-table-row')!.textContent).toContain('Project');
+    expect(root.querySelectorAll('ui-table-row').length).toBe(1);
+    expect(root.querySelector('ui-table-row')!.textContent).toContain('Project');
     search.value = 'missing';
     search.dispatchEvent(new Event('input'));
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(0);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(0);
     expect(root.textContent).toContain('No records match your search.');
     search.value = '';
     search.dispatchEvent(new Event('input'));
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(2);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(2);
   });
 
   it('displays load failures and allows retry to the empty state', async () => {
@@ -251,7 +251,7 @@ describe('Experiences page', () => {
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    const add = root.querySelector<HTMLButtonElement>('.page-heading app-button button')!;
+    const add = root.querySelector<HTMLButtonElement>('.page-heading ui-button button')!;
     add.click();
     await fixture.whenStable();
     const dialog = document.querySelector<HTMLDialogElement>('#experience-details')!;
@@ -259,7 +259,7 @@ describe('Experiences page', () => {
     expect(dialog.textContent).not.toContain('Experience 1');
     const input = dialog.querySelector<HTMLInputElement>('#company-0')!;
     expect(input.required).toBeTrue();
-    const submit = dialog.querySelector<HTMLButtonElement>('[dialogActions] app-button:last-child button')!;
+    const submit = dialog.querySelector<HTMLButtonElement>('[dialogActions] ui-button:last-child button')!;
     submit.click();
     await fixture.whenStable();
     expect(save).not.toHaveBeenCalled();
@@ -270,14 +270,14 @@ describe('Experiences page', () => {
     await save.calls.mostRecent().returnValue;
     await fixture.whenStable();
     expect(save).toHaveBeenCalledOnceWith(jasmine.objectContaining({ company: 'New project', savedExperienceId: null }));
-    expect(root.querySelectorAll('app-table-row').length).toBe(1);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(1);
     expect(root.textContent).toContain('New project');
     expect(document.querySelector('#experience-details')).toBeNull();
     add.click();
     await fixture.whenStable();
-    document.querySelector<HTMLButtonElement>('#experience-details [dialogActions] app-button:first-child button')!.click();
+    document.querySelector<HTMLButtonElement>('#experience-details [dialogActions] ui-button:first-child button')!.click();
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(1);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(1);
     expect(save).toHaveBeenCalledTimes(1);
   });
 
@@ -292,7 +292,7 @@ describe('Experiences page', () => {
     document.querySelector<HTMLButtonElement>('#delete-confirmation .cancel button')!.click();
     await fixture.whenStable();
     expect(remove).not.toHaveBeenCalled();
-    expect(root.querySelector('app-table-row')).not.toBeNull();
+    expect(root.querySelector('ui-table-row')).not.toBeNull();
     expect(document.querySelector('#delete-confirmation')).toBeNull();
   });
 
@@ -317,11 +317,11 @@ describe('Experiences page', () => {
     await fixture.whenStable();
     expect(remove).toHaveBeenCalledOnceWith(record.id);
     expect(button.disabled).toBeTrue();
-    expect(root.querySelector('app-table-row')).not.toBeNull();
+    expect(root.querySelector('ui-table-row')).not.toBeNull();
     complete();
     await remove.calls.mostRecent().returnValue;
     await fixture.whenStable();
-    expect(root.querySelector('app-table-row')).toBeNull();
+    expect(root.querySelector('ui-table-row')).toBeNull();
     expect(root.textContent).toContain('You have no saved experiences');
   });
 
@@ -337,7 +337,7 @@ describe('Experiences page', () => {
     expect(remove).not.toHaveBeenCalled();
     document.querySelector<HTMLButtonElement>('#delete-confirmation .confirm-delete button')!.click();
     await fixture.whenStable();
-    expect(root.querySelector('app-table-row')).not.toBeNull();
+    expect(root.querySelector('ui-table-row')).not.toBeNull();
     expect(root.querySelector('[role="alert"]')?.textContent).toContain('could not be deleted');
     expect(button.disabled).toBeFalse();
     remove.and.callThrough();
@@ -347,7 +347,7 @@ describe('Experiences page', () => {
     await fixture.whenStable();
     await remove.calls.mostRecent().returnValue;
     await fixture.whenStable();
-    expect(root.querySelector('app-table-row')).toBeNull();
+    expect(root.querySelector('ui-table-row')).toBeNull();
     expect(root.querySelector('[role="alert"]')).toBeNull();
   });
 
@@ -360,7 +360,7 @@ describe('Experiences page', () => {
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    const actions = root.querySelectorAll<HTMLButtonElement>('.page-actions app-button button');
+    const actions = root.querySelectorAll<HTMLButtonElement>('.page-actions ui-button button');
     expect(actions[0].textContent).toContain('Add experience');
     expect(actions[1].textContent).toContain('Import');
     expect(actions[1].getBoundingClientRect().left).toBeGreaterThan(actions[0].getBoundingClientRect().left);
@@ -374,10 +374,10 @@ describe('Experiences page', () => {
     input.dispatchEvent(new Event('change'));
     await fixture.whenStable();
     expect(save).not.toHaveBeenCalled();
-    expect(root.querySelectorAll('app-table-row').length).toBe(1);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(1);
     dialog.querySelector<HTMLButtonElement>('.apply button')!.click();
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(2);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(2);
     expect(root.textContent).toContain('Imported project');
     expect(document.querySelector('#experience-import')).toBeNull();
   });

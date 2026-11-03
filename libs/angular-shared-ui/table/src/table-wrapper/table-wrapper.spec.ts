@@ -25,18 +25,18 @@ const columns: readonly TableColumn<TestRecord>[] = [
 @Component({
   imports: [TableWrapper, TableCellTemplate],
   template: `
-    <app-table-wrapper tableId="first" label="First table" [data]="records()" [columns]="columns" [trackBy]="key">
-      <ng-template appTableCell [tableCellOf]="records()" let-record let-column="column">
+    <ui-table-wrapper tableId="first" label="First table" [data]="records()" [columns]="columns" [trackBy]="key">
+      <ng-template uiTableCell [tableCellOf]="records()" let-record let-column="column">
         <em>{{ column.value?.(record) }}</em>
       </ng-template>
-      <ng-template appTableCell="name" [tableCellOf]="records()" let-record let-column="column">
+      <ng-template uiTableCell="name" [tableCellOf]="records()" let-record let-column="column">
         <strong>{{ column.label }}: {{ record.name }}</strong>
       </ng-template>
-      <ng-template appTableCell="actions" [tableCellOf]="records()" let-record>
+      <ng-template uiTableCell="actions" [tableCellOf]="records()" let-record>
         <button (click)="selected.set(record.id)">Open {{ record.name }}</button>
       </ng-template>
-    </app-table-wrapper>
-    <app-table-wrapper tableId="second" label="Second table" [data]="records()" [columns]="columns" [trackBy]="key" />
+    </ui-table-wrapper>
+    <ui-table-wrapper tableId="second" label="Second table" [data]="records()" [columns]="columns" [trackBy]="key" />
   `
 })
 class TableHost {
@@ -65,12 +65,12 @@ describe('Table wrapper', () => {
     const { root } = await setup();
     expect(Array.from(root.querySelectorAll('[role="columnheader"]'), (cell) => cell.textContent))
       .toEqual(['Name', 'Role', 'Active', 'Actions']);
-    const row = root.querySelector<HTMLElement>('app-table-row')!;
+    const row = root.querySelector<HTMLElement>('ui-table-row')!;
     expect(row.textContent).toContain('Alice');
     expect(row.textContent).toContain('true');
-    expect(root.querySelector('app-table')!.getAttribute('style')).toContain('--table-min-width: 32rem');
+    expect(root.querySelector('ui-table')!.getAttribute('style')).toContain('--table-min-width: 32rem');
     expect(getComputedStyle(row).gridTemplateColumns)
-      .toBe(getComputedStyle(root.querySelector('app-table-header')!).gridTemplateColumns);
+      .toBe(getComputedStyle(root.querySelector('ui-table-header')!).gridTemplateColumns);
     expect(getComputedStyle(row.lastElementChild!).position).toBe('sticky');
   });
 
@@ -85,7 +85,7 @@ describe('Table wrapper', () => {
     search.dispatchEvent(new Event('input'));
     await fixture.whenStable();
     expect(changed).toHaveBeenCalledWith({ query: 'unloaded result', columns: ['name', 'role'] });
-    expect(root.querySelectorAll('app-table-row').length).toBe(2);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(2);
     const scope = root.querySelector<HTMLSelectElement>('#test-search-column')!;
     scope.value = 'role';
     scope.dispatchEvent(new Event('change'));
@@ -116,10 +116,10 @@ describe('Table wrapper', () => {
       .toEqual(['Role', 'Active', 'Actions']);
     expect(root.querySelector<HTMLInputElement>('#test-column-name')!.checked).toBeFalse();
     expect(root.querySelector<HTMLInputElement>('#test-column-extra')!.checked).toBeFalse();
-    expect(root.querySelectorAll('app-table-row').length).toBe(3);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(3);
     root.querySelector<HTMLInputElement>('#test-column-extra')!.click();
     await fixture.whenStable();
-    expect(root.querySelector('app-table-header')!.textContent).toContain('Extra');
+    expect(root.querySelector('ui-table-header')!.textContent).toContain('Extra');
   });
 
   it('searches case-insensitively across searchable columns and supports clearing', async () => {
@@ -130,17 +130,17 @@ describe('Table wrapper', () => {
     search.value = '  ENGINEER  ';
     search.dispatchEvent(new Event('input'));
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(1);
-    expect(root.querySelector('app-table-row')!.textContent).toContain('Alice');
+    expect(root.querySelectorAll('ui-table-row').length).toBe(1);
+    expect(root.querySelector('ui-table-row')!.textContent).toContain('Alice');
     search.value = 'true';
     search.dispatchEvent(new Event('input'));
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(0);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(0);
     expect(root.querySelector('[role="status"]')!.textContent).toBe('No records match your search.');
     search.value = '';
     search.dispatchEvent(new Event('input'));
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(2);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(2);
     expect(root.querySelector('[role="status"]')).toBeNull();
   });
 
@@ -157,33 +157,33 @@ describe('Table wrapper', () => {
     scope.value = 'role';
     scope.dispatchEvent(new Event('change'));
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(0);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(0);
     scope.value = 'name';
     scope.dispatchEvent(new Event('change'));
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(1);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(1);
     search.value = 'engineer';
     search.dispatchEvent(new Event('input'));
     scope.value = 'role';
     scope.dispatchEvent(new Event('change'));
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(1);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(1);
     root.querySelector<HTMLButtonElement>('[aria-label="Choose visible columns"]')!.click();
     await fixture.whenStable();
     root.querySelector<HTMLInputElement>('#test-column-role')!.click();
     await fixture.whenStable();
     expect(scope.value).toBe('');
     expect(Array.from(scope.options, (option) => option.text)).toEqual(['Any', 'Name']);
-    expect(root.querySelectorAll('app-table-row').length).toBe(0);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(0);
     root.querySelector<HTMLInputElement>('#test-column-role')!.click();
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(1);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(1);
     scope.value = 'role';
     scope.dispatchEvent(new Event('change'));
     fixture.componentRef.setInput('columns', columns.filter((column) => column.key !== 'role'));
     await fixture.whenStable();
     expect(scope.value).toBe('');
-    expect(root.querySelectorAll('app-table-row').length).toBe(0);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(0);
   });
 
   it('restores search, scope and configured default visibility', async () => {
@@ -199,15 +199,15 @@ describe('Table wrapper', () => {
     search.value = 'Engineer'; search.dispatchEvent(new Event('input'));
     scope.value = 'role'; scope.dispatchEvent(new Event('change'));
     await fixture.whenStable();
-    expect(root.querySelectorAll('app-table-row').length).toBe(1);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(1);
     root.querySelector<HTMLButtonElement>('[aria-label="Restore filters to default"]')!.click();
     await fixture.whenStable();
     expect(search.value).toBe('');
     expect(scope.value).toBe('');
     expect(root.querySelector<HTMLInputElement>('#test-column-name')!.checked).toBeTrue();
     expect(root.querySelector<HTMLInputElement>('#test-column-role')!.checked).toBeFalse();
-    expect(root.querySelectorAll('app-table-row').length).toBe(2);
-    expect(root.querySelector('app-table-header')!.textContent).toBe('NameActiveActions');
+    expect(root.querySelectorAll('ui-table-row').length).toBe(2);
+    expect(root.querySelector('ui-table-header')!.textContent).toBe('NameActiveActions');
   });
 
   it('keeps search, column select, restore and gear aligned on one row close to the table', async () => {
@@ -220,7 +220,7 @@ describe('Table wrapper', () => {
       const scope = root.querySelector<HTMLSelectElement>('#test-search-column')!.getBoundingClientRect();
       const gear = root.querySelector<HTMLButtonElement>('[aria-label="Choose visible columns"]')!.getBoundingClientRect();
       const restore = root.querySelector<HTMLButtonElement>('[aria-label="Restore filters to default"]')!.getBoundingClientRect();
-      const table = root.querySelector('app-table')!.getBoundingClientRect();
+      const table = root.querySelector('ui-table')!.getBoundingClientRect();
       expect(search.bottom).toBeCloseTo(scope.bottom, 0);
       expect(scope.bottom).toBeCloseTo(gear.bottom, 0);
       expect(search.top).toBeCloseTo(gear.top, 0);
@@ -246,17 +246,17 @@ describe('Table wrapper', () => {
     const { fixture, root } = await setup();
     fixture.componentRef.setInput('data', [{ ...records[0], name: '<b>Alice</b>' }]);
     await fixture.whenStable();
-    expect(root.querySelector('app-table-row')!.textContent).toContain('<b>Alice</b>');
-    expect(root.querySelector('app-table-row b')).toBeNull();
+    expect(root.querySelector('ui-table-row')!.textContent).toContain('<b>Alice</b>');
+    expect(root.querySelector('ui-table-row b')).toBeNull();
   });
 
   it('supports typed cell and action templates and independent controls for multiple tables', async () => {
     const fixture = TestBed.createComponent(TableHost);
     await fixture.whenStable();
-    const tables: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('app-table-wrapper');
+    const tables: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('ui-table-wrapper');
     expect(tables[0].querySelector('strong')!.textContent).toBe('Name: Alice');
     expect(tables[0].querySelector('em')!.textContent).toBe('Engineer');
-    tables[0].querySelector<HTMLButtonElement>('app-table-row button')!.click();
+    tables[0].querySelector<HTMLButtonElement>('ui-table-row button')!.click();
     expect(fixture.componentInstance.selected()).toBe(1);
     tables[0].querySelector<HTMLButtonElement>('[aria-label="Choose visible columns"]')!.click();
     await fixture.whenStable();
@@ -264,10 +264,10 @@ describe('Table wrapper', () => {
     await fixture.whenStable();
     expect(tables[0].querySelector('strong')).toBeNull();
     expect(tables[1].querySelector<HTMLInputElement>('#second-column-name')!.checked).toBeTrue();
-    expect(tables[1].querySelector('app-table-header')!.textContent).toContain('Name');
+    expect(tables[1].querySelector('ui-table-header')!.textContent).toContain('Name');
     fixture.componentInstance.records.set([{ ...records[0], name: 'Updated Alice' }]);
     await fixture.whenStable();
-    expect(tables[0].querySelector('app-table-row button')!.textContent).toBe('Open Updated Alice');
-    expect(tables[1].querySelector('app-table-row')!.textContent).toContain('Updated Alice');
+    expect(tables[0].querySelector('ui-table-row button')!.textContent).toBe('Open Updated Alice');
+    expect(tables[1].querySelector('ui-table-row')!.textContent).toContain('Updated Alice');
   });
 });

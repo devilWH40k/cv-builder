@@ -2,9 +2,9 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TableCell } from '../table-cell/table-cell';
 
 @Component({
-  selector: 'app-table-header',
+  selector: 'ui-table-header',
   imports: [TableCell],
-  template: '@for (header of headers(); track $index; let last = $last) { <app-table-cell [header]="true" [stickyRight]="stickyLastColumn() && last">{{ header }}</app-table-cell> }',
+  template: '@for (header of headers(); track $index; let last = $last) { <ui-table-cell [header]="true" [stickyRight]="stickyLastColumn() && last">{{ header }}</ui-table-cell> }',
   styleUrls: ['../table-row/table-row.scss', './table-header.scss'],
   host: { role: 'row' },
   changeDetection: ChangeDetectionStrategy.OnPush

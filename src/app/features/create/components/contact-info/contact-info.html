@@ -1,15 +1,15 @@
-<app-input inputId="contact-phone" label="Phone" type="tel" autocomplete="tel"
+<ui-input inputId="contact-phone" label="Phone" type="tel" autocomplete="tel"
   [icon]="PhoneIcon" [control]="form().controls.phone" helpText="Use 7–15 digits; an international prefix is recommended.">
   @if (form().controls.phone.touched && form().controls.phone.invalid) {
     <span>Enter a valid phone number, e.g. +380 50 123 4567.</span>
   }
-</app-input>
-<app-input inputId="contact-email" label="Email" type="email" autocomplete="email"
+</ui-input>
+<ui-input inputId="contact-email" label="Email" type="email" autocomplete="email"
   [icon]="MailIcon" [control]="form().controls.email">
   @if (form().controls.email.touched && form().controls.email.invalid) {
     <span>Enter a valid email address, e.g. name@example.com.</span>
   }
-</app-input>
+</ui-input>
 <h4>Social networks</h4>
 @for (row of form().controls.socials.controls; track row; let index = $index) {
   <div class="social-row">
@@ -37,17 +37,17 @@
         @if (row.controls.network.touched && row.controls.network.invalid) { Choose a social network. }
       </p>
     </div>
-    <app-input [inputId]="'social-value-' + index" label="Nickname or URL" [control]="row.controls.value"
+    <ui-input [inputId]="'social-value-' + index" label="Nickname or URL" [control]="row.controls.value"
       (paste)="paste($event, index)" (focusout)="normalize(index)"
       [iconSrc]="network(row.controls.network.value)?.icon ?? ''" [required]="true"
       [helpText]="network(row.controls.network.value)?.hint ?? 'Choose a network, then enter your contact.'">
       @if (row.controls.value.touched && row.controls.value.invalid) {
         <span>Enter a valid nickname, profile URL, or international phone number for this network.</span>
       }
-    </app-input>
+    </ui-input>
     <div class="social-actions">
       @let link = socialLink(row.getRawValue());
-      <button class="icon-button" type="button" appTooltip="Copy social link"
+      <button class="icon-button" type="button" uiTooltip="Copy social link"
         [attr.aria-label]="link ? 'Copy ' + link.label + ' link' : 'Copy social link'"
         [disabled]="!link" (click)="link && copy(link.href)">
         <lucide-icon [img]="CopyIcon" [size]="18" aria-hidden="true" />
@@ -57,4 +57,4 @@
     </div>
   </div>
 } @empty { <p class="empty-state">Add a social profile or messaging contact.</p> }
-<app-button class="add-social" variant="outline" (click)="add()" aria-label="Add social network">Add social network</app-button>
+<ui-button class="add-social" variant="outline" (click)="add()" aria-label="Add social network">Add social network</ui-button>

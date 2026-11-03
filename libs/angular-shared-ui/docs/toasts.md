@@ -2,7 +2,7 @@
 
 The application-wide notification outlet backed by ToastService. Mount one outlet near the root so services and dialogs share the same queue.
 
-Selector: `app-toasts`.
+Selector: `ui-toasts`.
 
 ## Inputs
 
@@ -29,6 +29,6 @@ readonly toasts = inject(ToastService);
 ```
 
 ```html
-<app-button (click)="toasts.show('success', 'Saved')">Save</app-button>
-<app-toasts />
+<ui-button (click)="toasts.show('success', 'Saved')">Save</ui-button>
+<ui-toasts />
 ```

@@ -8,7 +8,7 @@ import { SavedCvs } from '../../services/saved-cvs';
   selector: 'app-technology-select',
   imports: [MultiSelect],
   template: `
-    <app-multi-select [inputId]="inputId()" [label]="label()" [control]="control()"
+    <ui-multi-select [inputId]="inputId()" [label]="label()" [control]="control()"
       [groups]="groups()" [optionIcons]="optionIcons()" [allowCustom]="true"
       [customIcons]="customIcons().value" (customIconsChange)="customIcons().setValue($event)"
       [savedEntries]="saved.technologies()" [saveEntry]="saveEntry" [showIcons]="showIcons()" />

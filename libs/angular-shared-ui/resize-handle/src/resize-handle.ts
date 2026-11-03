@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input, model } from '@angular/core'
 
 /** Accessible panel resizing; the parent owns layout and size. */
 @Component({
-  selector: 'app-resize-handle',
+  selector: 'ui-resize-handle',
   templateUrl: './resize-handle.html',
   styleUrl: './resize-handle.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

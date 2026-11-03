@@ -2,7 +2,7 @@
 
 A searchable grouped multi-select with optional custom entries and SVG icons. A host-supplied save callback owns persistence.
 
-Selector: `app-multi-select`.
+Selector: `ui-multi-select`.
 
 ## Inputs
 
@@ -47,5 +47,5 @@ readonly groups = [{ label: 'Languages', options: ['TypeScript', 'JavaScript'] }
 ```
 
 ```html
-<app-multi-select inputId="skills" label="Skills" [control]="skills" [groups]="groups" />
+<ui-multi-select inputId="skills" label="Skills" [control]="skills" [groups]="groups" />
 ```

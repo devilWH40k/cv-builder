@@ -21,7 +21,7 @@ export class DeleteConfirmationService {
 
   confirm(request: DeleteConfirmationRequest, owner: DestroyRef): Promise<boolean> {
     if (this.active || owner.destroyed) return Promise.resolve(false);
-    const host = this.document.createElement('app-delete-confirmation');
+    const host = this.document.createElement('ui-delete-confirmation');
     const component = createComponent(DeleteConfirmation, { environmentInjector: this.environment, hostElement: host });
     component.setInput('title', request.title);
     component.setInput('itemName', request.itemName);

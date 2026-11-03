@@ -9,7 +9,7 @@ import { ConstructorEditor } from '../../services/constructor-editor';
 @Component({
   selector: 'app-constructor-object-menu',
   imports: [ContextMenu],
-  template: '<app-context-menu [items]="items()" [compact]="true" label="Constructor objects" (opened)="menuOpened($event)" (selected)="choose($event)" />',
+  template: '<ui-context-menu [items]="items()" [compact]="true" label="Constructor objects" (opened)="menuOpened($event)" (selected)="choose($event)" />',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConstructorObjectMenu {

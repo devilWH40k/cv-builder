@@ -35,7 +35,7 @@ describe('Experiences scroll paging', () => {
     const fixture = TestBed.createComponent(Experiences);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    const rows = () => root.querySelectorAll('app-table-row');
+    const rows = () => root.querySelectorAll('ui-table-row');
     expect(rows().length).toBe(24);
     expect(read.calls.count()).toBe(1);
     const first = rows()[0];
@@ -70,12 +70,12 @@ describe('Experiences scroll paging', () => {
     expect(read.calls.count()).toBe(2);
     expect(read.calls.mostRecent().args[0]).toBe(0);
     expect(read.calls.mostRecent().args[2]?.query).toBe('matching');
-    expect(root.querySelectorAll('app-table-row').length).toBe(24);
-    expect(root.querySelector('app-table-row')?.textContent).toContain('Matching project');
+    expect(root.querySelectorAll('ui-table-row').length).toBe(24);
+    expect(root.querySelector('ui-table-row')?.textContent).toContain('Matching project');
     endReached();
     await fixture.whenStable();
     expect(read.calls.mostRecent().args[0]).toBe(24);
-    expect(root.querySelectorAll('app-table-row').length).toBe(48);
+    expect(root.querySelectorAll('ui-table-row').length).toBe(48);
   });
 
   it('disables actions only during initial loading and keeps them enabled while searching an empty library', async () => {

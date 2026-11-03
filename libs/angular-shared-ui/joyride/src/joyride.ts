@@ -13,7 +13,7 @@ export interface JoyrideStep {
 }
 
 @Component({
-  selector: 'app-joyride',
+  selector: 'ui-joyride',
   imports: [Button, DialogOverlay],
   templateUrl: './joyride.html',
   styleUrl: './joyride.scss',

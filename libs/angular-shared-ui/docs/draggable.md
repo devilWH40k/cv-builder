@@ -2,7 +2,7 @@
 
 A pointer-driven wrapper with a floating preview and cancellation handling. Pair it with DropTarget; features handle persistence after itemDropped.
 
-Selector: `app-draggable`.
+Selector: `ui-draggable`.
 
 ## Inputs
 
@@ -32,6 +32,6 @@ readonly dropped = signal('');
 ```
 
 ```html
-<app-draggable dragId="draft-1" dragType="document">Draft</app-draggable>
-<section appDropTarget="document" (itemDropped)="dropped.set($event.id)">Drop here</section>
+<ui-draggable dragId="draft-1" dragType="document">Draft</ui-draggable>
+<section uiDropTarget="document" (itemDropped)="dropped.set($event.id)">Drop here</section>
 ```

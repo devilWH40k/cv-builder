@@ -2,7 +2,7 @@
 
 A low-level accessible table row projecting TableCell children. Inherits its grid dimensions from Table.
 
-Selector: `app-table-row`.
+Selector: `ui-table-row`.
 
 ## Inputs
 
@@ -21,7 +21,7 @@ import { TableRow, Table, TableCell } from 'angular-shared-ui/table';
 Add `TableRow, Table, TableCell` to the parent component's `imports`.
 
 ```html
-<app-table label="People" columns="1fr">
-  <app-table-row><app-table-cell>Alex</app-table-cell></app-table-row>
-</app-table>
+<ui-table label="People" columns="1fr">
+  <ui-table-row><ui-table-cell>Alex</ui-table-cell></ui-table-row>
+</ui-table>
 ```

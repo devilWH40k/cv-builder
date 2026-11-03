@@ -48,7 +48,7 @@ describe('Experience import dialog', () => {
     await fixture.whenStable();
     expect(parse).toHaveBeenCalledOnceWith(file);
     expect(dialog.querySelector<HTMLInputElement>('input[type="file"]')!.accept).toBe('.xlsx');
-    expect(dialog.querySelector('app-file-upload img')).toBeNull();
+    expect(dialog.querySelector('ui-file-upload img')).toBeNull();
     expect(dialog.querySelector('.report .success')?.textContent).toContain('Record 1 is successfully parsed');
     expect(dialog.querySelector('.report .error')?.textContent).toContain('Record 3 had following issues');
     expect(parseFloat(getComputedStyle(dialog.querySelector<HTMLElement>('.report')!).height)).toBe(256);

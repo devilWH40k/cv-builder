@@ -64,7 +64,7 @@ validation and tested through save/reopen and PDF export.
 
 ## Fonts, assets and exports
 
-Constructor color pickers share `appDebouncedColor`: preview updates wait for a
+Constructor color pickers share `uiDebouncedColor`: preview updates wait for a
 150 ms input pause, with an immediate final commit on blur or an outside pointer
 press before canvas selection changes. Pending work is canceled on destruction.
 
@@ -147,7 +147,7 @@ description links are embedded with the text and preserved in PDF exports.
 
 CV-based designs default to `<cv_name>_design`. The editor has Page properties on
 the left and separate Properties and Layers panels on the right. The shared
-`app-resize-handle` controls sidebar widths with pointer dragging or arrow keys
+`ui-resize-handle` controls sidebar widths with pointer dragging or arrow keys
 (Shift for larger steps, Home/End for limits). Its `size` model and `axis` input
 also support the vertical divider between Properties and Layers, using Up/Down
 keys. Layers scroll only at the outer panel. Panels stack on narrow screens.

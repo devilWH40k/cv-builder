@@ -4,7 +4,7 @@ import { ChevronDown, LucideAngularModule } from 'lucide-angular';
 import { FormField } from 'angular-shared-ui/form-field';
 
 @Component({
-  selector: 'app-async-select',
+  selector: 'ui-async-select',
   imports: [ReactiveFormsModule, LucideAngularModule],
   templateUrl: './async-select.html',
   styleUrl: './async-select.scss',

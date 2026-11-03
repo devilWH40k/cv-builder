@@ -95,7 +95,7 @@ a, .mobile-switch, .icon-button, .skill-chip button {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .language-row app-select {
+  .language-row ui-select {
     grid-column: 1;
   }
 

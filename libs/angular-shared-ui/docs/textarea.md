@@ -2,7 +2,7 @@
 
 A labeled multiline reactive-form control with shared validation feedback.
 
-Selector: `app-textarea`.
+Selector: `ui-textarea`.
 
 ## Inputs
 
@@ -36,5 +36,5 @@ readonly notes = new FormControl('', { nonNullable: true });
 ```
 
 ```html
-<app-textarea inputId="notes" label="Notes" [control]="notes" [rows]="5" />
+<ui-textarea inputId="notes" label="Notes" [control]="notes" [rows]="5" />
 ```

@@ -71,7 +71,7 @@ describe('Delete confirmation', () => {
     fixture.destroy();
     expect(await result).toBeFalse();
     expect(document.querySelector('#delete-confirmation')).toBeNull();
-    expect(document.querySelector('app-delete-confirmation')).toBeNull();
+    expect(document.querySelector('ui-delete-confirmation')).toBeNull();
     expect(document.querySelector('.dialog-overlay')).toBeNull();
   });
 });

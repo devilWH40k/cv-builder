@@ -2,13 +2,13 @@
 
 Registers a drop zone with DragDrop for the accepted drag type. A matching hovered zone receives the drop-target class.
 
-Selector: `[appDropTarget]`.
+Selector: `[uiDropTarget]`.
 
 ## Inputs
 
 | Input | Type | Default |
 | --- | --- | --- |
-| `appDropTarget` | `string` | **Required** |
+| `uiDropTarget` | `string` | **Required** |
 | `dropDisabled` | `boolean` | `false` |
 
 ## Outputs
@@ -33,6 +33,6 @@ readonly dropped = signal('');
 ```
 
 ```html
-<app-draggable dragId="draft" dragType="document">Draft</app-draggable>
-<section appDropTarget="document" (itemDropped)="dropped.set($event.id)">Drop here</section>
+<ui-draggable dragId="draft" dragType="document">Draft</ui-draggable>
+<section uiDropTarget="document" (itemDropped)="dropped.set($event.id)">Drop here</section>
 ```

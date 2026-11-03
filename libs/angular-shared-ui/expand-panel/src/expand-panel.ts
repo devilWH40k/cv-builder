@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input, linkedSignal } from '@angula
 import { ChevronDown, ChevronUp, LucideAngularModule } from 'lucide-angular';
 
 @Component({
-  selector: 'app-expand-panel',
+  selector: 'ui-expand-panel',
   imports: [LucideAngularModule],
   templateUrl: './expand-panel.html',
   styleUrl: './expand-panel.scss',

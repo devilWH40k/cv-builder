@@ -6,7 +6,7 @@ import {
 import { Form, LucideAngularModule, TableOfContents, X } from 'lucide-angular';
 
 @Component({
-  selector: 'app-responsive-drawer',
+  selector: 'ui-responsive-drawer',
   imports: [LucideAngularModule, DialogOverlay],
   templateUrl: './responsive-drawer.html',
   styleUrl: './responsive-drawer.scss',

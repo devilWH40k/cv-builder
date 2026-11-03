@@ -2,7 +2,7 @@
 
 A labeled boolean reactive-form control with optional help text. Disable it through its FormControl.
 
-Selector: `app-checkbox`.
+Selector: `ui-checkbox`.
 
 ## Inputs
 
@@ -35,5 +35,5 @@ readonly updates = new FormControl(false, { nonNullable: true });
 ```
 
 ```html
-<app-checkbox inputId="updates" label="Receive updates" [control]="updates" />
+<ui-checkbox inputId="updates" label="Receive updates" [control]="updates" />
 ```

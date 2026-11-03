@@ -2,7 +2,7 @@
 
 A modal shell providing focus handling, backdrop/Escape dismissal, and projected body/actions. Create it conditionally and remove it when dismissed.
 
-Selector: `app-dialog`.
+Selector: `ui-dialog`.
 
 ## Inputs
 
@@ -46,9 +46,9 @@ readonly open = signal(true);
 
 ```html
 @if (open()) {
-  <app-dialog dialogId="details" title="Details" (dismissed)="open.set(false)">
+  <ui-dialog dialogId="details" title="Details" (dismissed)="open.set(false)">
     <p>Dialog body</p>
-    <app-button dialogActions (click)="open.set(false)">Done</app-button>
-  </app-dialog>
+    <ui-button dialogActions (click)="open.set(false)">Done</ui-button>
+  </ui-dialog>
 }
 ```

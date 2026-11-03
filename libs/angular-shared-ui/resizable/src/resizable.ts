@@ -11,7 +11,7 @@ interface ResizeDrag {
 
 /** A square content wrapper. Sizes and keyboard steps are in unscaled CSS pixels. */
 @Component({
-  selector: 'app-resizable',
+  selector: 'ui-resizable',
   imports: [LucideAngularModule],
   templateUrl: './resizable.html',
   styleUrl: './resizable.scss',

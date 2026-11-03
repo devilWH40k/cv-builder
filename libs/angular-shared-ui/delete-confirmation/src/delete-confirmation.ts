@@ -3,7 +3,7 @@ import { Button } from 'angular-shared-ui/button';
 import { Dialog } from 'angular-shared-ui/dialog';
 
 @Component({
-  selector: 'app-delete-confirmation',
+  selector: 'ui-delete-confirmation',
   imports: [Dialog, Button],
   templateUrl: './delete-confirmation.html',
   styleUrl: './delete-confirmation.scss',

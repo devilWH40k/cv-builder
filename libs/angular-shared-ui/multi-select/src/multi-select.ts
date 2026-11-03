@@ -10,7 +10,7 @@ export interface MultiSelectGroup {
 }
 
 @Component({
-  selector: 'app-multi-select',
+  selector: 'ui-multi-select',
   imports: [LucideAngularModule, CustomEntryDialog],
   templateUrl: './multi-select.html',
   styleUrl: './multi-select.scss',
