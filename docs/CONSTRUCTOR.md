@@ -202,7 +202,9 @@ order follows object order; free-form designs are not tagged or guaranteed to
 provide a semantic document reading order for every PDF consumer.
 
 The **Icon Library** below Page properties and Pages lists the complete Lucide
-catalogue alphabetically. Search filters names; clearing it restores every icon.
+catalogue alphabetically, rendering the first 50 icons initially. Load more appends
+up to 50 icons at a time and disappears when all matches are visible. Search filters
+the full catalogue; changing or clearing the search resets the visible batch to 50.
 Click an icon to add a vector layer, then use its color properties to recolor it.
 Icons remain single layers and are preserved in saved designs and PDF export.
 

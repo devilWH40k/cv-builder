@@ -19,13 +19,26 @@ export class ConstructorIconLibrary {
   readonly loading = signal(true);
   readonly inserting = signal(false);
   readonly error = signal('');
+  private readonly batchSize = 50;
+  private readonly visibleCount = signal(this.batchSize);
   readonly filtered = computed(() => {
     const words = this.query().trim().toLowerCase().split(/\s+/);
     return this.icons().filter(icon => words.every(word =>
       `${icon.label} ${icon.name}`.toLowerCase().includes(word)));
   });
+  readonly visibleIcons = computed(() => this.filtered().slice(0, this.visibleCount()));
+  readonly hasMore = computed(() => this.visibleIcons().length < this.filtered().length);
 
   constructor() { this.load(); }
+
+  setQuery(query: string): void {
+    this.query.set(query);
+    this.visibleCount.set(this.batchSize);
+  }
+
+  loadMore(): void {
+    this.visibleCount.update(count => count + this.batchSize);
+  }
 
   load(): void {
     void this.pendingTasks.run(async () => {
