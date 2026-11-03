@@ -45,9 +45,12 @@ import { iconSvg } from './constructor-icons';
 import { svgVector } from '../helpers/svg-vector';
 import { ConstructorCanvas } from '../helpers/constructor-canvas';
 
+type ObjectLockState = Pick<FabricObject, 'lockMovementX' | 'lockMovementY' | 'lockScalingX' | 'lockScalingY' | 'lockRotation' | 'hasControls'> & { editable?: boolean };
+
 /** Owns live Fabric objects. Components consume snapshots and issue editor commands. */
 @Injectable()
 export class ConstructorEditor {
+  private readonly inheritedLocks = new Map<FabricObject, ObjectLockState>();
   private canvas: ConstructorCanvas | null = null;
   private readonly clipboard = inject(ConstructorClipboard);
   readonly selectionCount = signal(0);
@@ -128,7 +131,7 @@ export class ConstructorEditor {
       const active = this.canvas?.getActiveObject();
       if (!(active instanceof Group) || active instanceof ActiveSelection || !active.subTargetCheck) return;
       const target = subTargets?.find((object) => object.parent === active);
-      if (!target?.designId || this.isLocked(target)) return;
+      if (!target?.designId || (this.isLocked(target) && !this.isPartiallyLocked(target))) return;
       this.select(target.designId);
       if (target instanceof IText) {
         target.enterEditing();
@@ -210,6 +213,12 @@ export class ConstructorEditor {
       (key, value: unknown) => key === 'interactive' ? false : value);
   }
 
+  restoreUndoHistory(undo: readonly string[], redo: readonly string[]): void {
+    this.past.set([...undo]);
+    this.future.set([...redo]);
+    this.lastScene = this.snapshot();
+  }
+
   finishEditing(): void {
     const active = this.canvas?.getActiveObject();
     if (active instanceof IText && active.isEditing) active.exitEditing();
@@ -220,8 +229,13 @@ export class ConstructorEditor {
     if (!Number.isFinite(value)) return;
     const zoom = Math.min(2, Math.max(0.25, value));
     this.zoom.set(zoom);
-    this.canvas?.setDimensions({ width: A4_WIDTH * zoom, height: A4_HEIGHT * zoom });
-    this.canvas?.setZoom(zoom);
+    const canvas = this.canvas;
+    if (!canvas) return;
+    const width = A4_WIDTH * zoom;
+    const height = A4_HEIGHT * zoom;
+    if (canvas.getZoom() === zoom && canvas.getWidth() === width && canvas.getHeight() === height) return;
+    canvas.setDimensions({ width, height });
+    canvas.setZoom(zoom);
   }
 
   setTool(tool: ConstructorTool): void {
@@ -350,7 +364,7 @@ export class ConstructorEditor {
   select(id: string): void {
     const object = this.allObjects().find((object) => object.designId === id);
     if (object && this.canvas) {
-      if (object.group && !(object.group instanceof ActiveSelection) && this.isLocked(object.group)) {
+      if (object.group && !(object.group instanceof ActiveSelection) && this.hasFullLock(object.group)) {
         this.select(object.group.designId ?? '');
         return;
       }
@@ -360,6 +374,18 @@ export class ConstructorEditor {
       this.canvas.requestRenderAll();
       this.refreshSelection();
     }
+  }
+
+  selectionClientBounds(): DOMRect | null {
+    const canvas = this.canvas;
+    const selected = canvas?.getActiveObject();
+    if (!canvas || !selected) return null;
+    const bounds = selected.getBoundingRect();
+    const viewport = canvas.upperCanvasEl.getBoundingClientRect();
+    const scaleX = viewport.width / canvas.getWidth() * canvas.getZoom();
+    const scaleY = viewport.height / canvas.getHeight() * canvas.getZoom();
+    return new DOMRect(viewport.left + bounds.left * scaleX, viewport.top + bounds.top * scaleY,
+      bounds.width * scaleX, bounds.height * scaleY);
   }
 
   private allObjects(objects = this.canvas?.getObjects() ?? []): FabricObject[] {
@@ -378,7 +404,42 @@ export class ConstructorEditor {
   }
 
   private isLocked(object: FabricObject): boolean {
-    return (!(object instanceof IText && object.isEditing) && object.lockMovementX) || (!!object.group && this.isLocked(object.group));
+    return !!object.designPartialLock || (!(object instanceof IText && object.isEditing) && object.lockMovementX) || (!!object.group && this.isLocked(object.group));
+  }
+
+  private hasFullLock(object: FabricObject): boolean {
+    const movementLocked = this.inheritedLocks.get(object)?.lockMovementX ?? object.lockMovementX;
+    return !!object.designFullLock || (!object.designPartialLock && !(object instanceof IText && object.isEditing) && movementLocked)
+      || (!!object.group && this.hasFullLock(object.group));
+  }
+
+  private isPartiallyLocked(object: FabricObject): boolean {
+    if (this.hasFullLock(object)) return false;
+    return !!object.designPartialLock || (!!object.group && this.isPartiallyLocked(object.group));
+  }
+
+  private syncInheritedLocks(): void {
+    for (const [object, state] of this.inheritedLocks) object.set(state);
+    this.inheritedLocks.clear();
+    // Fabric omits interaction flags from JSON; restore owned locks from metadata.
+    for (const object of this.allObjects()) {
+      if (!object.designPartialLock && !object.designFullLock) continue;
+      object.set({ lockMovementX: true, lockMovementY: true, lockScalingX: true,
+        lockScalingY: true, lockRotation: true, hasControls: false });
+      if (object instanceof IText) object.set('editable', !object.designFullLock);
+    }
+    for (const object of this.allObjects()) {
+      if (!object.group || !this.isPartiallyLocked(object.group)) continue;
+      this.inheritedLocks.set(object, {
+        lockMovementX: object.lockMovementX, lockMovementY: object.lockMovementY,
+        lockScalingX: object.lockScalingX, lockScalingY: object.lockScalingY,
+        lockRotation: object.lockRotation, hasControls: object.hasControls,
+        ...(object instanceof IText ? { editable: object.editable } : {}),
+      });
+      object.set({ lockMovementX: true, lockMovementY: true, lockScalingX: true,
+        lockScalingY: true, lockRotation: true, hasControls: false });
+      if (object instanceof IText) object.set('editable', !this.hasFullLock(object) && object.editable);
+    }
   }
 
   group(): void {
@@ -451,7 +512,7 @@ export class ConstructorEditor {
     let target = layerId
       ? this.allObjects().find((object) => object.designId === layerId)
       : this.canvas.findTarget(event).target;
-    while (target?.group && !(target.group instanceof ActiveSelection) && this.isLocked(target.group))
+    while (target?.group && !(target.group instanceof ActiveSelection) && this.hasFullLock(target.group))
       target = target.group;
     const active = this.canvas.getActiveObject();
     if (target && (target === active || this.canvas.getActiveObjects().includes(target))) return;
@@ -601,7 +662,8 @@ export class ConstructorEditor {
   async replaceImage(file: File): Promise<void> {
     const canvas = this.canvas;
     const target = canvas?.getActiveObject();
-    if (!canvas || !(target instanceof FabricImage) || this.isLocked(target) || this.busy()) return;
+    if (!canvas || !(target instanceof FabricImage) ||
+        (this.isLocked(target) && !this.isPartiallyLocked(target)) || this.busy()) return;
     const pageId = this.pageId;
     this.replacingImage.set(true);
     this.busy.set(true);
@@ -751,9 +813,24 @@ export class ConstructorEditor {
   }
 
   toggleLock(): void {
+    const selected = this.selection();
+    this.setLock(selected?.locked && !selected.partiallyLocked ? 'none' : 'full');
+  }
+
+  togglePartialLock(): void {
+    this.setLock(this.selection()?.partiallyLocked ? 'none' : 'partial');
+  }
+
+  private setLock(mode: 'none' | 'full' | 'partial'): void {
+    if (this.busy()) return;
+    this.finishEditing();
     const object = this.canvas?.getActiveObject();
     if (!object || (object.group && !(object.group instanceof ActiveSelection) && this.isLocked(object.group))) return;
-    const locked = !object.lockMovementX;
+    if (mode === 'partial' && !(object instanceof IText || object instanceof FabricImage ||
+        (object instanceof Group && !(object instanceof ActiveSelection) && object.subTargetCheck))) return;
+    const locked = mode !== 'none';
+    object.designPartialLock = mode === 'partial';
+    object.designFullLock = mode === 'full';
     object.set({
       lockMovementX: locked,
       lockMovementY: locked,
@@ -761,7 +838,7 @@ export class ConstructorEditor {
       lockScalingY: locked,
       lockRotation: locked,
       hasControls: !locked,
-      ...(object instanceof IText ? { editable: !locked } : {}),
+      ...(object instanceof IText ? { editable: mode !== 'full' } : {}),
     });
     this.commit();
   }
@@ -994,6 +1071,8 @@ export class ConstructorEditor {
         : object.clipPath instanceof Rect ? (object.clipPath.rx > 0 ? 'rounded' : 'rectangle')
         : object.clipPath instanceof Polygon && object.clipPath.points.length === 4 ? 'diamond' : null,
       locked: this.isLocked(object),
+      partiallyLocked: this.isPartiallyLocked(object),
+      lockInherited: !!object.group && !(object.group instanceof ActiveSelection) && this.isLocked(object.group),
       fontFamily: text?.fontFamily ?? 'Roboto',
       lineHeight: text?.lineHeight ?? 1.16,
       charSpacing: text?.charSpacing ?? 0,
@@ -1011,6 +1090,7 @@ export class ConstructorEditor {
   }
 
   private refreshSelection(): void {
+    this.syncInheritedLocks();
     const activeObjects = this.canvas?.getActiveObjects() ?? [];
     this.selectionCount.set(activeObjects.length);
     this.selectedIds.set(new Set(activeObjects.flatMap((object) => object.designId ? [object.designId] : [])));
@@ -1032,6 +1112,11 @@ export class ConstructorEditor {
     );
     this.objectList.set(objects.map((object) => this.properties(object)).reverse());
     const active = this.canvas?.getActiveObject();
+    if (active instanceof ActiveSelection) {
+      const partiallyLocked = this.propertyMembers(active.getObjects()).some((object) => object.designPartialLock);
+      if (partiallyLocked) active.set({ lockMovementX: true, lockMovementY: true,
+        lockScalingX: true, lockScalingY: true, lockRotation: true, hasControls: false });
+    }
     if (active && active.cornerSize !== 8) {
       active.set('cornerSize', 8);
       active.setCoords();
@@ -1063,6 +1148,8 @@ export class ConstructorEditor {
       ...first,
       id: base.id, label: base.label, kind: base.kind, children: base.children,
       locked: base.locked,
+      partiallyLocked: base.partiallyLocked,
+      lockInherited: base.lockInherited,
       linkUrl: base.linkUrl || (members.every((member) => member.linkUrl === first.linkUrl) ? first.linkUrl : ''),
       isText, isImage, isRectangle, canBlur, canFill,
       bold: members.every((member) => member.bold),

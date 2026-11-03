@@ -31,6 +31,18 @@ describe('Constructor editing', () => {
     canvas.remove();
   });
 
+  it('does not reset or repaint the canvas when applying the existing zoom and dimensions', () => {
+    editor.setZoom(0.8);
+    const resize = spyOn(Canvas.prototype, 'setDimensions').and.callThrough();
+    const repaint = spyOn(Canvas.prototype, 'requestRenderAll').and.callThrough();
+    editor.setZoom(0.8);
+    expect(resize).not.toHaveBeenCalled();
+    expect(repaint).not.toHaveBeenCalled();
+    editor.setZoom(0.5);
+    expect(resize).toHaveBeenCalledTimes(1);
+    expect(repaint).toHaveBeenCalled();
+  });
+
   it('preserves additional vector shapes when saving and restoring a scene', async () => {
     for (const shape of ['triangle', 'ellipse', 'diamond', 'pentagon', 'hexagon', 'star'] as const)
       editor.addShape(shape);
@@ -64,10 +76,16 @@ describe('Constructor editing', () => {
       expect(target.clipPath).toBeDefined();
     }
     editor.updateImageEffects({ grayscale: true });
-    const before = editor.snapshot();
     const width = target.getScaledWidth();
     const height = target.getScaledHeight();
     const replacementFile = await imageFile(200, 60, 'blue');
+    editor.togglePartialLock();
+    const lockedImage = editor.snapshot();
+    editor.setImageFrame('rectangle');
+    editor.updateImageEffects({ grayscale: false });
+    editor.nudge(10, 10);
+    editor.remove();
+    expect(editor.snapshot()).toBe(lockedImage);
     const replacing = editor.replaceImage(replacementFile);
     expect(editor.replacingImage()).toBeTrue();
     expect(editor.busy()).toBeTrue();
@@ -81,8 +99,9 @@ describe('Constructor editing', () => {
     expect(target.clipPath).toBeDefined();
     expect(editor.selection()?.imageEffects.grayscale).toBeTrue();
     const replaced = editor.snapshot();
+    expect(editor.selection()?.partiallyLocked).toBeTrue();
     await editor.undo();
-    expect(editor.snapshot()).toBe(before);
+    expect(editor.snapshot()).toBe(lockedImage);
     await editor.redo();
     expect(editor.snapshot()).toBe(replaced);
     await editor.load({ ...blankDesign().pages[0], scene: replaced });
@@ -743,6 +762,182 @@ describe('Constructor editing', () => {
     editor.toggleLock();
     editor.remove();
     expect(editor.layers().length).toBe(0);
+  });
+
+  it('allows partial-locked text editing while retaining protection, history and persistence', async () => {
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.addText();
+    const text = activate.calls.mostRecent().args[0];
+    if (!(text instanceof IText)) throw new Error('Expected text');
+    editor.togglePartialLock();
+    expect(text.editable).toBeTrue();
+    expect(text.hasControls).toBeFalse();
+    text.enterEditing();
+    expect(text.isEditing).toBeTrue();
+    const before = editor.snapshot();
+    editor.nudge(10, 10);
+    editor.updateText({ fontSize: 40, bold: true });
+    editor.setLink('https://example.com');
+    editor.remove();
+    expect(editor.snapshot()).toBe(before);
+    text.selectAll();
+    text.insertChars('Updated content', undefined, 0, text.text.length);
+    text.exitEditing();
+    expect(editor.selection()?.label).toBe('Updated content');
+    expect(editor.selection()?.locked).toBeTrue();
+    expect(editor.canCut()).toBeFalse();
+    const edited = editor.snapshot();
+    await editor.undo();
+    expect(editor.layers()[0].label).not.toBe('Updated content');
+    await editor.redo();
+    expect(editor.snapshot()).toBe(edited);
+    await editor.load({ ...blankDesign().pages[0], scene: edited });
+    editor.select(editor.layers()[0].id);
+    expect(editor.selection()?.partiallyLocked).toBeTrue();
+    editor.togglePartialLock();
+    expect(editor.selection()?.locked).toBeFalse();
+    editor.toggleLock();
+    expect(editor.selection()?.partiallyLocked).toBeFalse();
+    editor.togglePartialLock();
+    expect(editor.selection()?.partiallyLocked).toBeTrue();
+    editor.toggleLock();
+    expect(editor.selection()?.partiallyLocked).toBeFalse();
+    expect(editor.selection()?.locked).toBeTrue();
+  });
+
+  it('inherits partial locks through nested groups without changing descendant lock ownership', async () => {
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.addText();
+    const text = activate.calls.mostRecent().args[0];
+    if (!(text instanceof IText)) throw new Error('Expected text');
+    editor.addShape('rectangle');
+    editor.selectAll();
+    editor.group();
+    editor.addShape('circle');
+    editor.selectAll();
+    editor.group();
+    const outer = activate.calls.mostRecent().args[0];
+    if (!(outer instanceof Group) || !(outer.canvas instanceof Canvas)) throw new Error('Expected group');
+    const groupId = outer.designId!;
+    const unlocked = editor.snapshot();
+    editor.togglePartialLock();
+    const locked = editor.snapshot();
+    expect(editor.selection()?.partiallyLocked).toBeTrue();
+    expect(editor.canUngroup()).toBeFalse();
+    editor.nudge(10, 10);
+    editor.setFill('#ff0000');
+    editor.remove();
+    editor.ungroup();
+    expect(editor.snapshot()).toBe(locked);
+    const inner = text.parent!;
+    outer.canvas.fire('mouse:dblclick', { e: new MouseEvent('dblclick'), target: outer, subTargets: [text, inner],
+      scenePoint: new Point(), viewportPoint: new Point() });
+    expect(editor.selection()?.id).toBe(inner.designId);
+    outer.canvas.fire('mouse:dblclick', { e: new MouseEvent('dblclick'), target: inner, subTargets: [text],
+      scenePoint: new Point(), viewportPoint: new Point() });
+    expect(editor.selection()?.id).toBe(text.designId);
+    expect(editor.selection()?.partiallyLocked).toBeTrue();
+    expect(editor.selection()?.lockInherited).toBeTrue();
+    expect(text.lockMovementX).toBeTrue();
+    expect(text.lockScalingX).toBeTrue();
+    expect(text.hasControls).toBeFalse();
+    text.enterEditing();
+    expect(text.isEditing).toBeTrue();
+    editor.updateText({ fontSize: 70 });
+    expect(text.fontSize).not.toBe(70);
+    text.insertChars('Group text edited', undefined, 0, text.text.length);
+    text.exitEditing();
+    const edited = editor.snapshot();
+    expect(editor.selection()?.label).toBe('Group text edited');
+    await editor.undo();
+    expect(editor.snapshot()).toBe(locked);
+    await editor.redo();
+    expect(editor.snapshot()).toBe(edited);
+    await editor.load({ ...blankDesign().pages[0], scene: edited });
+    editor.select(text.designId!);
+    const restored = activate.calls.mostRecent().args[0];
+    expect(editor.selection()?.partiallyLocked).toBeTrue();
+    expect(restored.lockMovementX).toBeTrue();
+    expect(restored.lockScalingX).toBeTrue();
+    expect(restored.hasControls).toBeFalse();
+    editor.select(groupId);
+    editor.togglePartialLock();
+    expect(restored.lockMovementX).toBeFalse();
+    expect(restored.hasControls).toBeTrue();
+    // Unlocking the ancestor must not leave inherited flags in the saved children.
+    await editor.load({ ...blankDesign().pages[0], scene: unlocked });
+    editor.select(groupId);
+    editor.togglePartialLock();
+    editor.togglePartialLock();
+    expect(editor.selection()?.locked).toBeFalse();
+    expect(editor.layers()[0].children!.every((child) => !child.locked)).toBeTrue();
+    editor.togglePartialLock();
+    await editor.duplicate();
+    expect(editor.selection()?.partiallyLocked).toBeTrue();
+    editor.togglePartialLock();
+    expect(editor.selection()?.locked).toBeFalse();
+    expect(editor.selection()?.children!.every((child) => !child.locked)).toBeTrue();
+  });
+
+  it('replaces images in partially locked groups while preserving explicit descendant full locks', async () => {
+    const source = document.createElement('canvas');
+    source.width = source.height = 20;
+    const image = new FabricImage(source);
+    image.designId = crypto.randomUUID();
+    const text = new IText('Full lock', { fontFamily: 'Roboto', lockMovementX: true, lockMovementY: true, editable: false });
+    text.designFullLock = true;
+    text.designId = crypto.randomUUID();
+    const group = new Group([image, text], { subTargetCheck: true });
+    group.designId = crypto.randomUUID();
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    await editor.load({ ...blankDesign().pages[0], scene: JSON.stringify({ objects: [group.toObject()] }) });
+    editor.select(group.designId);
+    editor.togglePartialLock();
+    editor.select(text.designId);
+    expect(editor.selection()?.partiallyLocked).toBeFalse();
+    const restoredText = activate.calls.mostRecent().args[0];
+    if (!(restoredText instanceof IText)) throw new Error('Expected text');
+    restoredText.enterEditing();
+    expect(restoredText.isEditing).toBeFalse();
+    editor.select(image.designId);
+    const before = editor.snapshot();
+    editor.setImageFrame('ellipse');
+    editor.updateImageEffects({ grayscale: true });
+    editor.nudge(15, 15);
+    editor.remove();
+    expect(editor.snapshot()).toBe(before);
+    source.width = 40;
+    source.getContext('2d')!.fillRect(0, 0, 40, 20);
+    const blob = await new Promise<Blob>((resolve) => source.toBlob((blob) => resolve(blob!)));
+    await editor.replaceImage(new File([blob], 'replacement.png', { type: 'image/png' }));
+    expect(editor.snapshot()).not.toBe(before);
+    expect(editor.selection()?.partiallyLocked).toBeTrue();
+    await editor.undo();
+    expect(editor.snapshot()).toBe(before);
+    editor.select(group.designId);
+    editor.togglePartialLock();
+    editor.select(text.designId);
+    expect(editor.selection()?.locked).toBeTrue();
+    editor.select(image.designId);
+    expect(editor.selection()?.locked).toBeFalse();
+  });
+
+  it('protects partially locked text when selecting multiple objects', () => {
+    editor.addText();
+    editor.togglePartialLock();
+    editor.addShape('rectangle');
+    const activate = spyOn(Canvas.prototype, 'setActiveObject').and.callThrough();
+    editor.selectAll();
+    const selection = activate.calls.mostRecent().args[0];
+    expect(selection.lockMovementX).toBeTrue();
+    expect(selection.lockScalingX).toBeTrue();
+    expect(selection.lockRotation).toBeTrue();
+    expect(selection.hasControls).toBeFalse();
+    const before = editor.snapshot();
+    editor.nudge(10, 0);
+    expect(editor.snapshot()).toBe(before);
+    expect(editor.canCut()).toBeFalse();
+    expect(editor.canGroup()).toBeFalse();
   });
 
   it('moves the selection box with repeated arrow nudges in page coordinates', () => {

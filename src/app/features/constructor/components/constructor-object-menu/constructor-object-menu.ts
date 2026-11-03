@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, viewChild } from '@angular/core';
+import { JoyrideTargets } from '../../../../shared/ui/joyride/joyride-target';
 import { Copy, Scissors, ClipboardPaste, Group, Ungroup } from 'lucide-angular';
 import { LayersArrowUp, LayerArrowUp, LayerArrowDown, LayersArrowDown } from '../../../../shared/ui/icons/layer-arrows';
 import { ContextMenu, ContextMenuItem } from '../../../../shared/ui/context-menu/context-menu';
@@ -8,13 +9,24 @@ import { ConstructorEditor } from '../../services/constructor-editor';
 @Component({
   selector: 'app-constructor-object-menu',
   imports: [ContextMenu],
-  template: '<app-context-menu [items]="items()" [compact]="true" label="Constructor objects" (selected)="choose($event)" />',
+  template: '<app-context-menu [items]="items()" [compact]="true" label="Constructor objects" (opened)="menuOpened($event)" (selected)="choose($event)" />',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConstructorObjectMenu {
   private readonly editor = inject(ConstructorEditor);
   private readonly toasts = inject(ToastService);
   private readonly menu = viewChild.required(ContextMenu);
+  private readonly tourTargets = inject(JoyrideTargets);
+  private previewing = false;
+  private unregisterPreview: (() => void) | null = null;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.unregisterPreview?.());
+  }
+
+  protected menuOpened(panel: HTMLElement): void {
+    if (this.previewing) this.unregisterPreview = this.tourTargets.register('constructor-context-menu', panel);
+  }
   protected readonly items = computed<readonly ContextMenuItem[]>(() => [
     { id: 'copy', label: 'Copy', icon: Copy, disabled: this.editor.busy() || !this.editor.selectionCount() },
     { id: 'cut', label: 'Cut', icon: Scissors, disabled: this.editor.busy() || !this.editor.canCut() },
@@ -31,6 +43,18 @@ export class ConstructorObjectMenu {
     if (this.editor.busy()) return;
     this.editor.selectContext(event, layerId);
     this.menu().open(event);
+  }
+
+  showPreview(x: number, y: number): void {
+    this.previewing = true;
+    this.menu().openPreview(x, y);
+  }
+
+  closePreview(): void {
+    this.previewing = false;
+    this.unregisterPreview?.();
+    this.unregisterPreview = null;
+    this.menu().close(false);
   }
 
   protected async choose(action: string): Promise<void> {
