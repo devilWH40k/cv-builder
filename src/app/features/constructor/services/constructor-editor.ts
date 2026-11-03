@@ -112,7 +112,7 @@ export class ConstructorEditor {
     }
     this.canvas.on('text:selection:changed', () => this.refreshSelection());
     this.canvas.on('before:transform', ({ transform }) => {
-      this.canvas?.beginGesture(transform.target);
+      this.canvas?.beginGesture(transform.target, transform.action);
       this.snapping = null;
       this.snapGuides(transform.target);
       this.resizeSelectedText = transform.target instanceof Group && transform.action?.startsWith('scale')
