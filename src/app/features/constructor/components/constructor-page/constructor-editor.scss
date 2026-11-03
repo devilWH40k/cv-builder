@@ -48,7 +48,7 @@
 }
 .document-heading lucide-icon { display: flex; }
 .document-caption { max-width: 24rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: tokens.$font-size-xs; }
-.file-menu { display: flex; align-items: center; justify-self: start; --dropdown-trigger-height: #{tokens.$spacing-5}; }
+.file-menu { display: flex; align-items: center; gap: tokens.$spacing-2; justify-self: start; --dropdown-trigger-height: #{tokens.$spacing-5}; }
 .file-menu app-dropdown { display: flex; }
 .editor-close {
   flex-shrink: 0;

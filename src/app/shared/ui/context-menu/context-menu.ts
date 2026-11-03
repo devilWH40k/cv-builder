@@ -24,11 +24,13 @@ export class ContextMenu {
   readonly label = input('Context menu');
   readonly compact = input(false);
   readonly selected = output<string>();
+  readonly opened = output<HTMLElement>();
   protected readonly position = signal<{ x: number; y: number } | null>(null);
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
   private readonly document = inject(DOCUMENT);
   private anchor: Comment | null = null;
   private returnFocus: HTMLElement | null = null;
+  private readonly preview = signal(false);
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
@@ -38,29 +40,36 @@ export class ContextMenu {
     afterRenderEffect(() => {
       this.items();
       const position = this.position();
+      const preview = this.preview();
       const panel = this.panel()?.nativeElement;
       if (!position || !panel) return;
       panel.hidden = false;
+      panel.inert = preview;
+      const opening = !this.anchor;
       if (!this.anchor) {
         this.anchor = this.document.createComment('context menu outlet');
         panel.before(this.anchor);
         this.document.body.append(panel);
-        this.document.addEventListener('pointerdown', this.outside, true);
-        this.document.addEventListener('contextmenu', this.outside, true);
-        this.document.addEventListener('focusin', this.outside, true);
-        this.document.addEventListener('keydown', this.keydown, true);
-        this.document.addEventListener('scroll', this.scrolled, true);
-        this.document.defaultView?.addEventListener('resize', this.resized);
+        if (!preview) {
+          this.document.addEventListener('pointerdown', this.outside, true);
+          this.document.addEventListener('contextmenu', this.outside, true);
+          this.document.addEventListener('focusin', this.outside, true);
+          this.document.addEventListener('keydown', this.keydown, true);
+          this.document.addEventListener('scroll', this.scrolled, true);
+          this.document.defaultView?.addEventListener('resize', this.resized);
+        }
       }
       const bounds = panel.getBoundingClientRect();
       const viewport = this.document.documentElement;
       panel.style.left = `${Math.max(0, Math.min(position.x, viewport.clientWidth - bounds.width))}px`;
       panel.style.top = `${Math.max(0, Math.min(position.y, viewport.clientHeight - bounds.height))}px`;
-      (this.controls()[0] ?? panel).focus({ preventScroll: true });
+      if (opening) this.opened.emit(panel);
+      if (!preview) (this.controls()[0] ?? panel).focus({ preventScroll: true });
     });
   }
 
   open(event: MouseEvent): void {
+    if (this.preview()) this.close(false);
     event.preventDefault();
     event.stopPropagation();
     const target = event.target instanceof Element ? event.target.closest<HTMLElement>('a[href], button, [tabindex]') : null;
@@ -73,6 +82,13 @@ export class ContextMenu {
     });
   }
 
+  /** Display the real menu for a walkthrough without stealing focus or running actions. */
+  openPreview(x: number, y: number): void {
+    this.close(false);
+    this.preview.set(true);
+    this.position.set({ x, y });
+  }
+
   close(restoreFocus = true): void {
     this.document.removeEventListener('focusin', this.outside, true);
     const panel = this.panel()?.nativeElement;
@@ -80,6 +96,7 @@ export class ContextMenu {
     if (panel && this.anchor) this.anchor.replaceWith(panel);
     this.anchor = null;
     this.position.set(null);
+    this.preview.set(false);
     this.document.removeEventListener('pointerdown', this.outside, true);
     this.document.removeEventListener('contextmenu', this.outside, true);
     this.document.removeEventListener('keydown', this.keydown, true);
@@ -89,7 +106,7 @@ export class ContextMenu {
   }
 
   protected choose(item: ContextMenuItem): void {
-    if (item.disabled) return;
+    if (this.preview() || item.disabled) return;
     this.close();
     this.selected.emit(item.id);
   }

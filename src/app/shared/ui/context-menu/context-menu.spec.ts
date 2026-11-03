@@ -21,6 +21,28 @@ class MenuHarness {
 describe('Shared context menu', () => {
   beforeEach(() => TestBed.configureTestingModule({ imports: [MenuHarness], providers: [provideZonelessChangeDetection()] }));
 
+  it('previews the real menu without taking focus, executing actions, or handling Escape', async () => {
+    const fixture = TestBed.createComponent(MenuHarness);
+    await fixture.whenStable();
+    const source: HTMLButtonElement = fixture.nativeElement.querySelector('.source');
+    source.focus();
+    fixture.componentInstance.menu().openPreview(100, 100);
+    await fixture.whenStable();
+    const menu = document.querySelector<HTMLElement>('.context-menu')!;
+    expect(menu.getBoundingClientRect().width).toBeGreaterThan(0);
+    expect(menu.inert).toBeTrue();
+    expect(document.activeElement).toBe(source);
+    menu.querySelector<HTMLButtonElement>('[data-menu-id="cut"]')!.click();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.selected).toBe('');
+    const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    document.dispatchEvent(escape);
+    expect(escape.defaultPrevented).toBeFalse();
+    fixture.componentInstance.menu().close(false);
+    await fixture.whenStable();
+    expect(document.querySelector('.context-menu')).toBeNull();
+  });
+
   async function open(x = 50, y = 50) {
     const fixture = TestBed.createComponent(MenuHarness);
     await fixture.whenStable();

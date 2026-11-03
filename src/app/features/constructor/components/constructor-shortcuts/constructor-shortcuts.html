@@ -1,0 +1,19 @@
+<app-dialog dialogId="constructor-shortcuts" title="Shortcuts" (dismissed)="dismissed.emit()">
+  <div class="shortcuts-content">
+    <p class="hint">Object shortcuts apply outside text editing and form fields. Image and figure sections also include
+      mouse and toolbar actions.</p>
+    @for (category of categories; track category.name) {
+    <section [attr.aria-label]="category.name">
+      <h3>{{ category.name }}</h3>
+      <dl>
+        @for (entry of category.entries; track entry.label) {
+        <div class="shortcut-row">
+          <dt>{{ entry.label }}</dt>
+          <dd>{{ entry.keys }}</dd>
+        </div>
+        }
+      </dl>
+    </section>
+    }
+  </div>
+</app-dialog>

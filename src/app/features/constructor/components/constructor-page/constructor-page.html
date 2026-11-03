@@ -36,11 +36,13 @@
     (cancel)="closeEditor($event)" aria-label="Visual CV editor">
   <input #designFile type="file" accept="application/json,.json" hidden (cancel)="$event.stopPropagation()" (change)="importDesign(designFile)" />
     <div class="document-heading" [attr.inert]="workspaceLoading() ? '' : null">
-      <div class="file-menu">
+      <div class="file-menu" appJoyrideTarget="file">
         <app-dropdown menuId="constructor-file-menu" label="File" [compact]="true" [alignStart]="true"
           [openOnHover]="true" [items]="fileMenuItems()" (selected)="fileAction($event)">File</app-dropdown>
         <app-dropdown menuId="constructor-view-menu" label="View" [closeOnSelect]="false" [compact]="true" [alignStart]="true"
           [openOnHover]="true" [items]="windowMenuItems()" (selected)="toggleWindow($event)">View</app-dropdown>
+        <app-dropdown menuId="constructor-help-menu" label="Help" [compact]="true" [alignStart]="true"
+          [openOnHover]="true" [items]="helpMenuItems()" (selected)="helpAction($event)">Help</app-dropdown>
       </div>
       <div class="document-info"><span class="document-caption" [title]="session.title()">{{ session.title() }}</span></div>
       <button type="button" class="editor-close" aria-label="Close editor" title="Close editor" (click)="closeEditor()">
@@ -48,7 +50,7 @@
       </button>
     </div>
     <div class="toolbar main-toolbar" role="toolbar" aria-label="Design tools" [attr.inert]="workspaceLoading() ? '' : null">
-      <div class="history-tools" role="group" aria-label="History">
+      <div class="history-tools" appJoyrideTarget="history" role="group" aria-label="History">
       <button type="button" (click)="history('undo')" [disabled]="!editor.undoCount().length" title="Undo (Ctrl/Cmd+Z)"
         aria-label="Undo">
         <lucide-icon [img]="icons.Undo2" [size]="16" />
@@ -58,7 +60,7 @@
         <lucide-icon [img]="icons.Redo2" [size]="16" />
       </button>
       </div>
-      <div class="typography-tools">
+      <div class="typography-tools" appJoyrideTarget="typography">
       <app-constructor-typography />
       @if (editor.tool() === 'draw') {
       <label>Brush color<input #brushColor type="color" [value]="editor.brushColor()"
@@ -81,7 +83,7 @@
     </div>
     <div class="workspace" [class.no-left-panels]="!hasLeftPanels()" [class.no-right-panels]="!hasRightPanels()" [style.--left-width]="leftWidth() + 'px'" [style.--right-width]="rightWidth() + 'px'">
       <aside class="page-panels" [hidden]="!hasLeftPanels()" [class.single-panel]="!visiblePanels().main || !visiblePanels().icons" [style.--page-properties-height]="pagePropertiesHeight() + 'px'">
-      <div class="page-properties-panel panel" [hidden]="!visiblePanels().main" [class.is-loading]="pagePanelsLoading()"
+      <div class="page-properties-panel panel" appJoyrideTarget="page-properties" [hidden]="!visiblePanels().main" [class.is-loading]="pagePanelsLoading()"
         [attr.aria-busy]="pagePanelsLoading()">
         <section class="file-properties" aria-labelledby="file-properties-title">
           <h2 id="file-properties-title">File properties</h2>
@@ -95,7 +97,7 @@
       </div>
       <app-resize-handle [hidden]="!visiblePanels().main || !visiblePanels().icons" [(size)]="pagePropertiesHeight" axis="vertical" [min]="120" [max]="900"
         label="Resize page properties and icon library height" />
-      <div class="icon-library-panel panel" [hidden]="!visiblePanels().icons" [class.is-loading]="workspaceLoading()"
+      <div class="icon-library-panel panel" appJoyrideTarget="icons" [hidden]="!visiblePanels().icons" [class.is-loading]="workspaceLoading()"
         [attr.aria-busy]="workspaceLoading()">
         <app-constructor-icon-library [attr.inert]="workspaceLoading() ? '' : null" />
         @if (workspaceLoading()) { <app-spinner label="Loading icon library" /> }
@@ -103,7 +105,7 @@
       </aside>
       <app-resize-handle [hidden]="!hasLeftPanels()" [(size)]="leftWidth" [max]="360" label="Resize page properties" />
       <div class="stage-column">
-          <nav class="page-tabs pages-section" [attr.inert]="workspaceLoading() ? '' : null" aria-label="Design pages">
+          <nav class="page-tabs pages-section" appJoyrideTarget="pages" [attr.inert]="workspaceLoading() ? '' : null" aria-label="Design pages">
             @for (pageItem of session.document()?.pages; track pageItem.id; let index = $index) {
               <div class="page-item">
                 <button type="button" class="page-select" [attr.aria-current]="session.activePage() === index ? 'page' : null"
@@ -124,7 +126,7 @@
             </button>
           </nav>
         <div class="canvas-area">
-          <div class="canvas-tools" role="toolbar" aria-label="Canvas tools" aria-orientation="vertical"
+          <div class="canvas-tools" appJoyrideTarget="tools" role="toolbar" aria-label="Canvas tools" aria-orientation="vertical"
             [attr.inert]="workspaceLoading() ? '' : null">
       <button type="button" aria-label="Select objects" title="Select" [attr.aria-pressed]="editor.tool() === 'select'"
         (click)="editor.setTool('select')">
@@ -150,7 +152,7 @@
         <lucide-icon [img]="icons.Shapes" [size]="20" aria-hidden="true" />
       </app-dropdown>
           </div>
-        <div #canvasViewport class="canvas-viewport" tabindex="0" aria-label="A4 design workspace"
+        <div #canvasViewport appJoyrideTarget="canvas" class="canvas-viewport" tabindex="0" aria-label="A4 design workspace"
           (contextmenu)="objectMenu.open($event)" [class.is-loading]="workspaceLoading()"
           [attr.aria-busy]="workspaceLoading()">
           <div class="ruled-page">
@@ -163,14 +165,14 @@
       </div>
       <app-resize-handle [hidden]="!hasRightPanels()" [(size)]="rightWidth" edge="left" [max]="400" label="Resize properties and layers" />
       <aside class="object-panels" [hidden]="!hasRightPanels()" [class.single-panel]="!visiblePanels().properties || !visiblePanels().layers" [style.--properties-height]="propertiesHeight() + 'px'">
-        <div class="properties-panel panel" [hidden]="!visiblePanels().properties" [class.is-loading]="workspaceLoading()"
+        <div class="properties-panel panel" appJoyrideTarget="properties" [hidden]="!visiblePanels().properties" [class.is-loading]="workspaceLoading()"
           [attr.aria-busy]="workspaceLoading()">
           <app-constructor-properties />
           @if (workspaceLoading()) { <app-spinner label="Loading object properties" /> }
         </div>
         <app-resize-handle [hidden]="!visiblePanels().properties || !visiblePanels().layers" [(size)]="propertiesHeight" axis="vertical" [min]="120" [max]="900"
           label="Resize properties and layers height" />
-        <div class="layers-panel panel" [hidden]="!visiblePanels().layers" [class.is-loading]="pagePanelsLoading()" [attr.aria-busy]="pagePanelsLoading()">
+        <div class="layers-panel panel" appJoyrideTarget="layers" [hidden]="!visiblePanels().layers" [class.is-loading]="pagePanelsLoading()" [attr.aria-busy]="pagePanelsLoading()">
           <app-constructor-layers (contextRequested)="objectMenu.open($event.event, $event.layerId)" />
           @if (pagePanelsLoading()) { <app-spinner label="Loading layers" /> }
         </div>
@@ -179,6 +181,10 @@
     <footer class="editor-footer">
       <span aria-label="App version">{{ appVersion }}</span>
     </footer>
+    @if (tour.active()) {
+      <app-joyride [steps]="tour.steps" (stepChanged)="tourStep($event)"
+        (finished)="finishTour()" />
+    }
     <app-constructor-object-menu #objectMenu />
     <input #imageFile type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="insertImage(imageFile)" />
     @if (pendingImage(); as file) {
@@ -190,6 +196,9 @@
     <app-preview [embedded]="true" [readOnly]="true" style="--preview-max-height: none; --preview-max-scale: 1" />
   </div>
 </main>
+@if (shortcutsOpen()) {
+  <app-constructor-shortcuts (dismissed)="shortcutsOpen.set(false)" />
+}
 @if (leaveOpen()) {
 <app-unsaved-changes-dialog subject="design" dialogId="leave-constructor" [busy]="leaveSaving()"
   (decision)="handleLeaveDecision($event)" />

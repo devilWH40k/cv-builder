@@ -15,6 +15,8 @@ declare module 'fabric' {
     designTextLinks?: DesignTextLink[];
     designBlur?: number;
     designTextHeight?: number;
+    designPartialLock?: boolean;
+    designFullLock?: boolean;
   }
   interface SerializedObjectProps {
     designId?: string;
@@ -25,11 +27,13 @@ declare module 'fabric' {
     designTextLinks?: DesignTextLink[];
     designBlur?: number;
     designTextHeight?: number;
+    designPartialLock?: boolean;
+    designFullLock?: boolean;
   }
 }
 
 FabricObject.customProperties = [
-  ...new Set([...FabricObject.customProperties, 'designId', 'designLabel', 'designLayerName', 'designIconName', 'linkUrl', 'designTextLinks', 'designBlur', 'designTextHeight']),
+  ...new Set([...FabricObject.customProperties, 'designId', 'designLabel', 'designLayerName', 'designIconName', 'linkUrl', 'designTextLinks', 'designBlur', 'designTextHeight', 'designPartialLock', 'designFullLock']),
 ];
 
 export function identifyObject(object: FabricObject, label: string): void {
