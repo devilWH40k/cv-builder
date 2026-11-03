@@ -172,7 +172,7 @@ describe('CV preview', () => {
     download.and.callFake(async () => {
       expect(page.querySelector<HTMLDialogElement>('#actions-panel')!.open).toBeFalse();
     });
-    document.querySelector<HTMLButtonElement>('.actions app-button button')!.click();
+    document.querySelector<HTMLButtonElement>('.actions ui-button button')!.click();
     expect(download).toHaveBeenCalledTimes(1);
   });
 
@@ -231,7 +231,7 @@ describe('CV preview', () => {
     expect(parseFloat(getComputedStyle(document).minHeight)).toBeCloseTo(297 * 96 / 25.4, 0);
     expect(getComputedStyle(document).color).toBe('rgb(0, 0, 0)');
     expect(getComputedStyle(document).backgroundColor).toBe('rgb(255, 255, 255)');
-    page.querySelector<HTMLButtonElement>('.actions > app-button button')!.click();
+    page.querySelector<HTMLButtonElement>('.actions > ui-button button')!.click();
     expect(TestBed.inject(CvPdf).download).toHaveBeenCalledTimes(1);
     expect(TestBed.inject(Router).url).toBe('/create');
     expect(page.querySelector<HTMLInputElement>('#name')?.value).toBe(info.name);
@@ -240,7 +240,7 @@ describe('CV preview', () => {
     for (let attempt = 0; attempt < 50; attempt++) {
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
       harness.fixture.detectChanges();
-      leave = Array.from(page.ownerDocument.querySelectorAll<HTMLButtonElement>('#leave-create app-button button'))
+      leave = Array.from(page.ownerDocument.querySelectorAll<HTMLButtonElement>('#leave-create ui-button button'))
         .find((button) => button.textContent?.trim() === 'Leave');
       if (leave) break;
     }

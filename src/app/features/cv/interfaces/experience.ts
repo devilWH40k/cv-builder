@@ -1,4 +1,4 @@
-import { CustomEntryIcons } from "../../../core/dialogs/custom-entry-dialog/custom-entry-icon";
+import { CustomEntryIcons } from 'angular-shared-ui/custom-entry-dialog';
 
 export interface CvExperience {
   readonly alternativeNames?: string;

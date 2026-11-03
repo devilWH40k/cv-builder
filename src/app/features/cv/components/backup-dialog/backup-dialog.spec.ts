@@ -88,7 +88,7 @@ describe('Header backup dialog', () => {
     page.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await fixture.whenStable();
     expect(backup.export).toHaveBeenCalledOnceWith('my-backup');
-    expect(page.querySelector('app-toasts .toast.success')!.textContent).toContain('download has started');
+    expect(page.querySelector('ui-toasts .toast.success')!.textContent).toContain('download has started');
   });
 
   it('does not export blank or unsafe filenames', async () => {
@@ -106,12 +106,12 @@ describe('Header backup dialog', () => {
   it('imports the selected file, refreshes feedback and clears the selection', async () => {
     const file = selectFile();
     await fixture.whenStable();
-    page.querySelector<HTMLButtonElement>('section app-button button')!.click();
+    page.querySelector<HTMLButtonElement>('section ui-button button')!.click();
     await fixture.whenStable();
     expect(backup.import).toHaveBeenCalledOnceWith(file, false);
-    expect(page.querySelector('app-toasts .toast.success')!.textContent).toContain('Imported 2 CVs, 1 saved experience and 3 technologies.');
+    expect(page.querySelector('ui-toasts .toast.success')!.textContent).toContain('Imported 2 CVs, 1 saved experience and 3 technologies.');
     expect(page.querySelector<HTMLInputElement>('#backup-file')!.value).toBe('');
-    expect(page.querySelector<HTMLButtonElement>('section app-button button')!.disabled).toBeTrue();
+    expect(page.querySelector<HTMLButtonElement>('section ui-button button')!.disabled).toBeTrue();
   });
 
   it('prevents duplicate operations and dismissal while importing, then allows retry after errors', async () => {
@@ -119,7 +119,7 @@ describe('Header backup dialog', () => {
     backup.import.and.returnValue(new Promise<ImportCounts>((_, reject) => { rejectImport = reject; }));
     selectFile();
     await fixture.whenStable();
-    const button = page.querySelector<HTMLButtonElement>('section app-button button')!;
+    const button = page.querySelector<HTMLButtonElement>('section ui-button button')!;
     button.click();
     await fixture.whenStable();
     expect(button.disabled).toBeTrue();
@@ -137,7 +137,7 @@ describe('Header backup dialog', () => {
     rejectImport(new Error('Invalid backup.'));
     await new Promise<void>((resolve) => setTimeout(resolve));
     await fixture.whenStable();
-    expect(page.querySelector('app-toasts .toast.danger .content p')!.textContent).toBe('Invalid backup.');
+    expect(page.querySelector('ui-toasts .toast.danger .content p')!.textContent).toBe('Invalid backup.');
     expect(button.disabled).toBeFalse();
   });
 
@@ -169,11 +169,11 @@ describe('Header backup dialog', () => {
     expect(error.hidden).toBeFalse();
     expect(error.getBoundingClientRect().height).toBeCloseTo(32, 0);
     expect(hint.getBoundingClientRect().top - input.getBoundingClientRect().bottom).toBeCloseTo(4, 0);
-    const exportButton = page.querySelector<HTMLElement>('form app-button')!;
+    const exportButton = page.querySelector<HTMLElement>('form ui-button')!;
     expect(exportButton.getBoundingClientRect().top - error.getBoundingClientRect().bottom).toBeCloseTo(16, 0);
     const importHint = page.querySelector<HTMLElement>('#backup-file-hint')!;
-    const importButton = page.querySelector<HTMLElement>('.import-controls app-button')!;
-    const checkbox = page.querySelector<HTMLElement>('app-checkbox')!;
+    const importButton = page.querySelector<HTMLElement>('.import-controls ui-button')!;
+    const checkbox = page.querySelector<HTMLElement>('ui-checkbox')!;
     expect(checkbox.getBoundingClientRect().top - importHint.getBoundingClientRect().bottom).toBeCloseTo(16, 0);
     expect(importButton.getBoundingClientRect().top - checkbox.getBoundingClientRect().bottom).toBeCloseTo(16, 0);
   });
@@ -181,12 +181,12 @@ describe('Header backup dialog', () => {
   it('defaults wipe to unchecked, imports the selected option and resets on reopening', async () => {
     const checkbox = page.querySelector<HTMLInputElement>('#wipe-previous-data')!;
     expect(checkbox.checked).toBeFalse();
-    expect(page.querySelector('app-checkbox .caution-icon')).not.toBeNull();
-    expect(page.querySelector('app-checkbox')!.textContent).toContain('all saved CVs, folders, experiences and technologies are cleared');
+    expect(page.querySelector('ui-checkbox .caution-icon')).not.toBeNull();
+    expect(page.querySelector('ui-checkbox')!.textContent).toContain('all saved CVs, folders, experiences and technologies are cleared');
     checkbox.click();
     const file = selectFile();
     await fixture.whenStable();
-    page.querySelector<HTMLButtonElement>('section app-button button')!.click();
+    page.querySelector<HTMLButtonElement>('section ui-button button')!.click();
     await fixture.whenStable();
     expect(backup.import).toHaveBeenCalledOnceWith(file, true);
     expect(checkbox.checked).toBeFalse();
@@ -200,7 +200,7 @@ describe('Header backup dialog', () => {
   it('supports dismissing feedback and clears old toasts when reopened', async () => {
     page.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
     await fixture.whenStable();
-    page.querySelector<HTMLButtonElement>('app-toasts button')!.click();
+    page.querySelector<HTMLButtonElement>('ui-toasts button')!.click();
     await fixture.whenStable();
     expect(page.querySelector('.toast')).toBeNull();
     page.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));

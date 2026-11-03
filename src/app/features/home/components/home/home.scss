@@ -1,5 +1,5 @@
 @use 'styles/tokens' as tokens;
-@use '../../../../shared/ui/button/variants' as buttons;
+@use 'angular-shared-ui/styles/button-variants' as buttons;
 
 :host {
   display: grid;
@@ -103,7 +103,7 @@ lucide-icon {
   margin: tokens.$spacing-3 0 tokens.$spacing-6;
   border-bottom: 1px solid tokens.$border-color;
 
-  app-tabs { margin-bottom: -1px; }
+  ui-tabs { margin-bottom: -1px; }
 }
 .root-collection {
   min-height: tokens.$spacing-16;

@@ -1,5 +1,5 @@
+import { ToastService } from 'angular-shared-ui/toast';
 ﻿import { inject, Injectable, PendingTasks, signal } from '@angular/core';
-import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { CvDraft, CvInfo } from './cv-draft';
 import { SavedCvs } from './saved-cvs';
 

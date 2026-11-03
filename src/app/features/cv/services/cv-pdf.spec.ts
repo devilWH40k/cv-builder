@@ -1,10 +1,10 @@
+import { ToastService } from 'angular-shared-ui/toast';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import pdfMake from 'pdfmake/build/pdfmake';
 import { buildCvPdf, pdfRichText } from '../helpers/cv-pdf-document';
 import { CvInfo } from './cv-draft';
 import { CvPdf } from './cv-pdf';
-import { ToastService } from '../../../shared/ui/toast/toast.service';
 
 const cv: CvInfo = {
   name: 'Alex Morgan', positionTitle: 'Developer', description: 'Accessible applications.',

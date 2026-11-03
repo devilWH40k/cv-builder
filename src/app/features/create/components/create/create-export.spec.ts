@@ -23,7 +23,7 @@ describe('Export validation navigation', () => {
   });
 
   async function exportCv(): Promise<void> {
-    const button = page.querySelector<HTMLButtonElement>('.actions > app-button button')!;
+    const button = page.querySelector<HTMLButtonElement>('.actions > ui-button button')!;
     expect(button.disabled).toBeFalse();
     button.click();
     await fixture.whenStable();

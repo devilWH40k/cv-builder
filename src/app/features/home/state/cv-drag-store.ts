@@ -1,5 +1,5 @@
+import { DragDrop, DragItem } from 'angular-shared-ui/draggable';
 import { computed, inject, Injectable } from '@angular/core';
-import { DragDrop, DragItem } from '../../../shared/ui/draggable/drag-drop';
 
 export const CV_DRAG_TYPE = 'application/x-cv-builder-cv';
 

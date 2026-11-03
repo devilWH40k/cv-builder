@@ -404,7 +404,7 @@ describe('Saved CV navigation', () => {
     const dialog = document.querySelector<HTMLDialogElement>('#create-folder-dialog')!;
     expect(dialog.open).toBeTrue();
     expect(document.activeElement?.id).toBe('folder-name');
-    dialog.querySelector<HTMLButtonElement>('app-button button')!.click();
+    dialog.querySelector<HTMLButtonElement>('ui-button button')!.click();
     await harness.fixture.whenStable();
     expect(document.querySelector('#create-folder-dialog')).toBeNull();
     expect(TestBed.inject(SavedCvs).folders()[0].name).toBe('Applications');
@@ -422,7 +422,7 @@ describe('Saved CV navigation', () => {
     await harness.fixture.whenStable();
     for (const dismissal of ['cancel', 'escape', 'backdrop']) {
       await newFolder(harness, '   ');
-      expect(document.querySelector<HTMLButtonElement>('#create-folder-dialog app-button button')!.disabled).toBeTrue();
+      expect(document.querySelector<HTMLButtonElement>('#create-folder-dialog ui-button button')!.disabled).toBeTrue();
       if (dismissal === 'cancel') document.querySelector<HTMLButtonElement>('#create-folder-dialog .cancel')!.click();
       else if (dismissal === 'escape') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
       else document.querySelector<HTMLElement>('.dialog-overlay')!.click();
@@ -438,13 +438,13 @@ describe('Saved CV navigation', () => {
     await harness.fixture.whenStable();
     await newFolder(harness, 'Applications');
     const add = spyOn(IDBObjectStore.prototype, 'add').and.throwError('Storage unavailable');
-    document.querySelector<HTMLButtonElement>('#create-folder-dialog app-button button')!.click();
+    document.querySelector<HTMLButtonElement>('#create-folder-dialog ui-button button')!.click();
     await harness.fixture.whenStable();
     expect(document.querySelector('#create-folder-dialog [role="alert"]')?.textContent).toContain('could not be created');
-    expect(document.querySelector<HTMLButtonElement>('#create-folder-dialog app-button button')!.disabled).toBeFalse();
+    expect(document.querySelector<HTMLButtonElement>('#create-folder-dialog ui-button button')!.disabled).toBeFalse();
     expect(TestBed.inject(SavedCvs).folders()).toEqual([]);
     add.and.callThrough();
-    document.querySelector<HTMLButtonElement>('#create-folder-dialog app-button button')!.click();
+    document.querySelector<HTMLButtonElement>('#create-folder-dialog ui-button button')!.click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(SavedCvs).folders().length).toBe(1);
   });
@@ -487,8 +487,8 @@ describe('Saved CV navigation', () => {
       expect(source.draggable).toBeFalse();
       startDrag(source);
       await harness.fixture.whenStable();
-      expect(getComputedStyle(source.closest('app-draggable')!).display).toBe('none');
-      expect(document.querySelector('.app-drag-preview')?.textContent).toContain('Ada');
+      expect(getComputedStyle(source.closest('ui-draggable')!).display).toBe('none');
+      expect(document.querySelector('.ui-drag-preview')?.textContent).toContain('Ada');
       const target = root.querySelector('.saved-folder')!;
       const closedIcon = target.querySelector<HTMLElement>('.folder-closed')!;
       const openIcon = target.querySelector<HTMLElement>('.folder-open')!;
@@ -516,7 +516,7 @@ describe('Saved CV navigation', () => {
       expectFolderOpen(false);
       expect(root.querySelector('a.cv-card')).toBeNull();
       expect(saved.folders()[0].cvIds).toEqual([id]);
-      expect(document.querySelector('.app-drag-preview')).toBeNull();
+      expect(document.querySelector('.ui-drag-preview')).toBeNull();
       expect(root.querySelector<HTMLButtonElement>('.delete-folder')!.disabled).toBeTrue();
       if (view === 'list') expect(root.querySelector('.folder-count')?.textContent).toBe('1');
       root.querySelector<HTMLButtonElement>('.folder-card')!.click();
@@ -528,7 +528,7 @@ describe('Saved CV navigation', () => {
       const inside = dialog.querySelector('a.cv-card')!;
       startDrag(inside);
       await harness.fixture.whenStable();
-      expect(getComputedStyle(inside.closest('app-draggable')!).display).toBe('none');
+      expect(getComputedStyle(inside.closest('ui-draggable')!).display).toBe('none');
       expect(saved.folders()[0].cvIds).toEqual([id]);
       const backdrop = document.querySelector('.dialog-overlay')!;
       onBackdrop('pointermove');
@@ -656,7 +656,7 @@ describe('Saved CV navigation', () => {
         expect(ids()).toEqual(['a', 'c', 'b']);
         expect(collection().querySelector('.insert-target')).toBeNull();
         expect(collection().querySelector('.cv-placeholder')).toBeNull();
-        expect(document.querySelector('.app-drag-preview')).toBeNull();
+        expect(document.querySelector('.ui-drag-preview')).toBeNull();
         if (folderId) expect(saved.folders()[0].cvIds).toEqual(['a', 'b', 'c']);
         await harness.navigateByUrl('/guides');
         await harness.navigateByUrl('/');
@@ -871,9 +871,9 @@ describe('Saved CV navigation', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
     await harness.fixture.whenStable();
     expect(dialog.open).toBeTrue();
-    expect(getComputedStyle(dialog.querySelector('app-draggable')!).display).not.toBe('none');
+    expect(getComputedStyle(dialog.querySelector('ui-draggable')!).display).not.toBe('none');
     expect(saved.folders()[0].cvIds).toEqual([id]);
-    expect(document.querySelector('.app-drag-preview')).toBeNull();
+    expect(document.querySelector('.ui-drag-preview')).toBeNull();
     await saved.moveCv(id, null);
     await harness.fixture.whenStable();
     expect(dialog.getBoundingClientRect().height).toBeGreaterThanOrEqual(minHeight);
@@ -925,7 +925,7 @@ describe('Saved CV navigation', () => {
         harness.fixture.detectChanges();
         expect(root.querySelector('a.cv-card')).toBeNull();
         expect(dialog?.querySelector('a.cv-card') ?? null).toBeNull();
-        expect(document.querySelector('.app-drag-preview')).toBeNull();
+        expect(document.querySelector('.ui-drag-preview')).toBeNull();
         expect((dialog ?? target).getBoundingClientRect().height).toBeCloseTo(heldHeight, 0);
         await entered;
         harness.fixture.detectChanges();

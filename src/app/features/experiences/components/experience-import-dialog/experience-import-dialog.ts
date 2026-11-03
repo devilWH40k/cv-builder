@@ -1,11 +1,11 @@
+import { Button } from 'angular-shared-ui/button';
+import { Dialog } from 'angular-shared-ui/dialog';
+import { FileUpload } from 'angular-shared-ui/file-upload';
+import { ToastService } from 'angular-shared-ui/toast';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, output, PendingTasks, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
 import { Download, LucideAngularModule } from 'lucide-angular';
-import { Button } from '../../../../shared/ui/button/button';
-import { Dialog } from '../../../../shared/ui/dialog/dialog';
-import { FileUpload } from '../../../../shared/ui/file-upload/file-upload';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { CvExperience, SavedExperience } from '../../../cv/interfaces/experience';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import type { ExperienceImportMessage } from '../../helpers/experience-excel';

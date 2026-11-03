@@ -1,4 +1,4 @@
-<app-dialog dialogId="experience-details" [title]="title()"
+<ui-dialog dialogId="experience-details" [title]="title()"
   [wide]="true" [busy]="saving()" (dismissed)="cancelled.emit()">
   @if (readOnly()) {
     @if (record(); as savedRecord) {
@@ -21,26 +21,26 @@
     <form id="experience-edit-form" [formGroup]="form" (ngSubmit)="save()">
       <app-experience-entry [form]="form" [index]="0" [showActions]="false" [showHeading]="false" companyLabel="Project Name" />
       <div class="fields">
-        <app-input inputId="experience-alternative-names" label="Alternative names" [control]="form.controls.alternativeNames" />
-        <app-input inputId="experience-web-link" label="Web link" type="url" [control]="form.controls.webLink" />
-        <app-input inputId="experience-photos" label="Photos" type="url" helpText="Link to project photos or a shared folder." [control]="form.controls.photos" />
-        <app-input inputId="experience-teamlead" label="Teamlead" [control]="form.controls.teamlead" />
-        <app-input inputId="experience-developer" label="Developer" [control]="form.controls.developer" />
+        <ui-input inputId="experience-alternative-names" label="Alternative names" [control]="form.controls.alternativeNames" />
+        <ui-input inputId="experience-web-link" label="Web link" type="url" [control]="form.controls.webLink" />
+        <ui-input inputId="experience-photos" label="Photos" type="url" helpText="Link to project photos or a shared folder." [control]="form.controls.photos" />
+        <ui-input inputId="experience-teamlead" label="Teamlead" [control]="form.controls.teamlead" />
+        <ui-input inputId="experience-developer" label="Developer" [control]="form.controls.developer" />
         <div class="updated" role="radiogroup" aria-labelledby="experience-updated-label">
           <span id="experience-updated-label">Is Updated</span>
-          <app-radio name="experience-is-updated" value="true" label="Yes" [checked]="form.controls.isUpdated.value === true"
+          <ui-radio name="experience-is-updated" value="true" label="Yes" [checked]="form.controls.isUpdated.value === true"
             [disabled]="saving()" (selected)="form.controls.isUpdated.setValue(true)" />
-          <app-radio name="experience-is-updated" value="false" label="No" [checked]="form.controls.isUpdated.value === false"
+          <ui-radio name="experience-is-updated" value="false" label="No" [checked]="form.controls.isUpdated.value === false"
             [disabled]="saving()" (selected)="form.controls.isUpdated.setValue(false)" />
         </div>
       </div>
-      <app-textarea inputId="experience-responsibilities" label="Responsibilities" [rows]="5" [control]="form.controls.responsibilities" />
+      <ui-textarea inputId="experience-responsibilities" label="Responsibilities" [rows]="5" [control]="form.controls.responsibilities" />
     </form>
   }
   <div dialogActions class="actions">
-    <app-button variant="monochrome" [disabled]="saving()" (click)="cancelled.emit()">{{ readOnly() ? 'Close' : 'Cancel' }}</app-button>
+    <ui-button variant="monochrome" [disabled]="saving()" (click)="cancelled.emit()">{{ readOnly() ? 'Close' : 'Cancel' }}</ui-button>
     @if (!readOnly()) {
-      <app-button [disabled]="saving()" (click)="save()">{{ saving() ? 'Saving...' : record() ? 'Save changes' : 'Add experience' }}</app-button>
+      <ui-button [disabled]="saving()" (click)="save()">{{ saving() ? 'Saving...' : record() ? 'Save changes' : 'Add experience' }}</ui-button>
     }
   </div>
-</app-dialog>
+</ui-dialog>

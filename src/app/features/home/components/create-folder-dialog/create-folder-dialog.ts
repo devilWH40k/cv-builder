@@ -1,8 +1,8 @@
+import { Button } from 'angular-shared-ui/button';
+import { Dialog } from 'angular-shared-ui/dialog';
+import { Input } from 'angular-shared-ui/input';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, output, PendingTasks, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Button } from '../../../../shared/ui/button/button';
-import { Dialog } from '../../../../shared/ui/dialog/dialog';
-import { Input } from '../../../../shared/ui/input/input';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 
 @Component({

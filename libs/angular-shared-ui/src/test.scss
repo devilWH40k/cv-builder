@@ -1,0 +1,8 @@
+@use '../styles/reset';
+@use '../styles';
+@use '../styles/tokens' as tokens;
+
+body {
+  font-family: tokens.$font-family-base;
+  line-height: tokens.$line-height-normal;
+}

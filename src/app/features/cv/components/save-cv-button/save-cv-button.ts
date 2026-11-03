@@ -1,6 +1,6 @@
+import { Button } from 'angular-shared-ui/button';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { LucideAngularModule, LoaderCircle, Save } from 'lucide-angular';
-import { Button } from '../../../../shared/ui/button/button';
 import { CvInfo } from '../../services/cv-draft';
 import { SaveCv } from '../../services/save-cv';
 
@@ -8,10 +8,10 @@ import { SaveCv } from '../../services/save-cv';
   selector: 'app-save-cv-button',
   imports: [Button, LucideAngularModule],
   template: `
-    <app-button [attr.aria-busy]="saveCv.saving()" [disabled]="saveCv.saving()" (click)="saveCv.save(info()())">
+    <ui-button [attr.aria-busy]="saveCv.saving()" [disabled]="saveCv.saving()" (click)="saveCv.save(info()())">
       <lucide-icon [img]="saveCv.saving() ? SpinnerIcon : SaveIcon" [class.spinning]="saveCv.saving()" [size]="20" aria-hidden="true" />
       Save
-    </app-button>
+    </ui-button>
   `,
   styles: `
     :host { display: block; }
@@ -21,7 +21,7 @@ import { SaveCv } from '../../services/save-cv';
     @media (prefers-reduced-motion: reduce) {
       .spinning { animation: none; }
     }
-    app-button { display: block; width: var(--button-width, auto); }
+    ui-button { display: block; width: var(--button-width, auto); }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

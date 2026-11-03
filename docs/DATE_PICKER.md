@@ -1,6 +1,6 @@
 # Date picker
 
-`app-date-picker` is a shared reactive-form field. Pass a non-nullable
+`ui-date-picker` is a shared reactive-form field. Pass a non-nullable
 `FormControl<string>`, `inputId`, and `label`, as with the other shared controls.
 
 - `mode`: `year`, `month-year` (default), or `day-month-year`.

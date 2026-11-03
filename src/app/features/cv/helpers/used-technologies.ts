@@ -1,4 +1,4 @@
-import { CustomEntryIcons, entryIcon } from "../../../core/dialogs/custom-entry-dialog/custom-entry-icon";
+import { CustomEntryIcons, entryIcon } from 'angular-shared-ui/custom-entry-dialog';
 
 interface UsedTechnologyGroup {
   readonly label: string;

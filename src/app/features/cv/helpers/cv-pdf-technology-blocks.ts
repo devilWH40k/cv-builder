@@ -1,6 +1,6 @@
+import { CustomEntryIcons, entryIcon } from 'angular-shared-ui/custom-entry-dialog';
 ﻿import fonts from 'pdfmake/build/vfs_fonts';
 import type { Content } from 'pdfmake/interfaces';
-import { CustomEntryIcons, entryIcon } from '../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 
 // Match the preview's 3mm gap, 2mm padding, 9mm minimum height and 8px radius.
 const GAP = 3 * 72 / 25.4;

@@ -1,13 +1,12 @@
+import { Button } from 'angular-shared-ui/button';
+import { Checkbox } from 'angular-shared-ui/checkbox';
+import { Input } from 'angular-shared-ui/input';
+import { Toasts, ToastService } from 'angular-shared-ui/toast';
+import { DialogOverlay } from 'angular-shared-ui/dialog';
 import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TriangleAlert, Download, LucideAngularModule, Upload, X } from 'lucide-angular';
-import { Button } from '../../../../shared/ui/button/button';
-import { Checkbox } from '../../../../shared/ui/checkbox/checkbox';
-import { Input } from '../../../../shared/ui/input/input';
 import { CvBackup, defaultBackupName } from '../../services/cv-backup';
-import { Toasts } from '../../../../shared/ui/toast/toast';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
-import { DialogOverlay } from '../../../../shared/ui/dialog/dialog-overlay';
 
 @Component({
   selector: 'app-backup-dialog',

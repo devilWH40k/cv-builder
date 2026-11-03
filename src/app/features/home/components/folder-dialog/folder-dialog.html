@@ -1,4 +1,4 @@
-<app-dialog dialogId="folder-dialog" [title]="folder().name" [wide]="true" minHeight="32rem"
+<ui-dialog dialogId="folder-dialog" [title]="folder().name" [wide]="true" minHeight="32rem"
   [backdropDropType]="dragType" (backdropDropped)="dropOutside($event)" (dismissed)="dismissed.emit()"
   (contextRequested)="collection.openBackgroundMenu($event)">
   <p class="hint" [class.dragging]="!!drag.draggedId()">Drag a CV outside this dialog to return it to Your CVs.</p>
@@ -8,4 +8,4 @@
     [reorderDisabled]="reorderDisabled()" (reordered)="reordered.emit($event)" (cvDeleted)="cvDeleted.emit($event)" />
   @if (loading() && !cvs().length) { <p role="status">Loading CVs…</p> }
   @else if (!cvs().length) { <p class="empty-state" role="status">This folder is empty. Drag a CV onto it to add one.</p> }
-</app-dialog>
+</ui-dialog>

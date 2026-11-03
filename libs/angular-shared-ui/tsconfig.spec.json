@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../out-tsc/angular-shared-ui-spec",
+    "types": ["jasmine"],
+    "paths": {
+      "angular-shared-ui": ["./src/public-api.ts"],
+      "angular-shared-ui/*": ["./*/public-api.ts"]
+    }
+  },
+  "include": ["**/*.spec.ts", "**/*.d.ts"]
+}

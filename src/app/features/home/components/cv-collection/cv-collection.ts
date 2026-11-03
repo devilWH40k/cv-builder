@@ -1,8 +1,10 @@
+import { ContextMenu, ContextMenuItem } from 'angular-shared-ui/context-menu';
+import { Draggable, DropTarget, DragDrop, DragItem } from 'angular-shared-ui/draggable';
+import { formatCompactRelativeTime } from 'angular-shared-ui/utils';
 import { DatePipe, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, linkedSignal, output, signal, viewChild, viewChildren } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ClipboardPaste, Download, ExternalLink, Eye, FileText, Folder, FolderOpen, LucideAngularModule, PenTool, Scissors, Trash2 } from 'lucide-angular';
-import { ContextMenu, ContextMenuItem } from '../../../../shared/ui/context-menu/context-menu';
 import { CvClipboard } from '../../state/cv-clipboard';
 import { CvFolder } from '../../../cv/interfaces/cv-folder';
 import { CvDraft } from '../../../cv/services/cv-draft';
@@ -11,12 +13,8 @@ import { CvPdf } from '../../../cv/services/cv-pdf';
 import { CvReorder } from '../../../cv/interfaces/cv-reorder';
 import { CvPreviewDialog } from '../cv-preview-dialog/cv-preview-dialog';
 import { CvDragStore, CV_DRAG_TYPE } from '../../state/cv-drag-store';
-import { Draggable } from '../../../../shared/ui/draggable/draggable';
-import { DropTarget } from '../../../../shared/ui/draggable/drop-target';
-import { DragDrop, DragItem } from '../../../../shared/ui/draggable/drag-drop';
 import { CvInsertion, CvInsertionTarget } from './cv-insertion-target';
 import { CvCollectionMotion } from './cv-collection-motion';
-import { formatCompactRelativeTime } from '../../../../shared/utils/compact-relative-time';
 
 export interface CvMove {
   readonly cvId: string;

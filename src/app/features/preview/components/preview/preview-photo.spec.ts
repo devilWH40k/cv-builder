@@ -85,7 +85,7 @@ describe('Preview photo visibility', () => {
     const fixture = TestBed.createComponent(Preview);
     await fixture.whenStable();
     const page: HTMLElement = fixture.nativeElement;
-    const resizable = page.querySelector<HTMLElement>('app-resizable')!;
+    const resizable = page.querySelector<HTMLElement>('ui-resizable')!;
     expect(resizable.getAttribute('aria-valuetext')).toBe('40 millimeters');
     resizable.dispatchEvent(new KeyboardEvent('keydown', { key: 'End' }));
     await fixture.whenStable();
@@ -95,10 +95,10 @@ describe('Preview photo visibility', () => {
     await fixture.whenStable();
     page.querySelector<HTMLInputElement>('input[value="show"]')!.click();
     await fixture.whenStable();
-    expect(page.querySelector('app-resizable')?.getAttribute('aria-valuetext')).toBe('60 millimeters');
+    expect(page.querySelector('ui-resizable')?.getAttribute('aria-valuetext')).toBe('60 millimeters');
     draft.save({ ...info, structure: { ...info.structure!, photoSizeMm: 32 } });
     await fixture.whenStable();
-    expect(page.querySelector('app-resizable')?.getAttribute('aria-valuetext')).toBe('32 millimeters');
+    expect(page.querySelector('ui-resizable')?.getAttribute('aria-valuetext')).toBe('32 millimeters');
   });
 
   it('honors a saved hidden photo in the embedded preview and handles missing photos', async () => {
@@ -126,7 +126,7 @@ describe('Preview photo visibility', () => {
     const photo = page.querySelector<HTMLImageElement>('.portrait')!;
     expect(photo.style.width).toBe('32mm');
     expect(photo.style.height).toBe('32mm');
-    expect(page.querySelector('app-resizable')).toBeNull();
+    expect(page.querySelector('ui-resizable')).toBeNull();
     expect(draft.current()?.structure?.photoSizeMm).toBe(32);
   });
 });

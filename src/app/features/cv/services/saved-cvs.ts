@@ -1,10 +1,10 @@
+import { CustomEntry } from 'angular-shared-ui/custom-entry-dialog';
 import { inject, Injectable, signal } from '@angular/core';
 import { completed, CvDatabase } from './cv-database';
 export { CV_DATABASE_NAME } from './cv-database';
 import { CvExperience, SavedExperience } from '../interfaces/experience';
 import { CvInfo } from './cv-draft';
 import { SavedTechnology, technologyId } from '../helpers/saved-technology';
-import { CustomEntry } from '../../../core/dialogs/custom-entry-dialog/custom-entry-dialog';
 import { CvFolder } from '../interfaces/cv-folder';
 import { CvReorder } from '../interfaces/cv-reorder';
 import { orderSavedCvs } from '../helpers/cv-order';

@@ -1,0 +1,9 @@
+<ui-dialog [dialogId]="dialogId()" title="Unsaved changes" [busy]="busy()" (dismissed)="decision.emit('cancel')">
+  <p>You have unsaved changes. Would you like to save your {{ subject() }} before leaving?</p>
+  @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+  <div dialogActions class="actions">
+    <ui-button variant="monochrome" [disabled]="busy()" (click)="decision.emit('cancel')">Cancel</ui-button>
+    <ui-button variant="outline" [disabled]="busy()" (click)="decision.emit('leave')">Leave</ui-button>
+    <ui-button [disabled]="busy()" (click)="decision.emit('save')">{{ busy() ? 'Saving…' : 'Save and leave' }}</ui-button>
+  </div>
+</ui-dialog>

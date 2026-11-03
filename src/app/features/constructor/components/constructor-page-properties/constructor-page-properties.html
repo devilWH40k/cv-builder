@@ -2,17 +2,17 @@
   <h2 id="page-properties-title">Page properties</h2>
   <label>Background color
     <input #color type="color" [value]="editor.backgroundColor()" [disabled]="editor.busy()"
-      appDebouncedColor (colorCommitted)="editor.setBackgroundColor($event)"
+      uiDebouncedColor (colorCommitted)="editor.setBackgroundColor($event)"
  />
   </label>
-  <app-button variant="outline" [disabled]="editor.busy()" (click)="image.click()">
+  <ui-button variant="outline" [disabled]="editor.busy()" (click)="image.click()">
     <lucide-icon [img]="ImageIcon" [size]="16" />
     {{ editor.hasBackgroundImage() ? 'Replace image' : 'Background image' }}
-  </app-button>
+  </ui-button>
   @if (editor.hasBackgroundImage()) {
-    <app-button variant="outline" [disabled]="editor.busy()" (click)="editor.removeBackgroundImage()">
+    <ui-button variant="outline" [disabled]="editor.busy()" (click)="editor.removeBackgroundImage()">
       <lucide-icon [img]="RemoveIcon" [size]="16" />Remove image
-    </app-button>
+    </ui-button>
   }
   <p class="hint">Applies to this page. Images fill the page and are cropped to fit.</p>
   <input #image type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="upload(image)" />

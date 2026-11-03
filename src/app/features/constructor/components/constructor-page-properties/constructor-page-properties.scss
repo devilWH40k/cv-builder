@@ -19,7 +19,7 @@ input[type='color'] {
   background: tokens.$background-surface;
   &:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-offset: 2px; }
 }
-app-button {
+ui-button {
   --button-min-height: #{tokens.$button-height-sm};
   --button-padding: #{tokens.$spacing-1} #{tokens.$spacing-3};
   display: block;

@@ -1,5 +1,5 @@
+import { Dialog } from 'angular-shared-ui/dialog';
 import { ChangeDetectionStrategy, Component, output } from '@angular/core';
-import { Dialog } from '../../../../shared/ui/dialog/dialog';
 
 @Component({
   selector: 'app-constructor-shortcuts',

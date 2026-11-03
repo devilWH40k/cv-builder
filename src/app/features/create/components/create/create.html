@@ -17,18 +17,18 @@
   </button>
   <div class="editor-layout" [class.show-preview]="mobilePreview()">
   <div class="editor-pane">
-    <app-tabs [tabs]="tabs" [(active)]="activeTab" />
+    <ui-tabs [tabs]="tabs" [(active)]="activeTab" />
     <div id="info-panel" role="tabpanel" aria-labelledby="info-panel-tab" [hidden]="activeTab() !== 'info'">
   <form #cvForm [formGroup]="form" (ngSubmit)="submit()" novalidate>
     <section aria-labelledby="general-info-title">
       <h3 id="general-info-title">General Info</h3>
-      <app-file-upload inputId="photo" label="Upload a photo" [control]="form.controls.photo">
+      <ui-file-upload inputId="photo" label="Upload a photo" [control]="form.controls.photo">
         @if (form.controls.photo.touched && form.controls.photo.invalid) {
         <span>Please choose a JPG, JPEG or PNG image.</span>
         }
-      </app-file-upload>
+      </ui-file-upload>
 
-      <app-file-upload [actionLabel]="loadingCompanyLogo() ? 'Loading?' : 'Use Usense logo'"
+      <ui-file-upload [actionLabel]="loadingCompanyLogo() ? 'Loading?' : 'Use Usense logo'"
         [actionDisabled]="loadingCompanyLogo()" (action)="useUsenseLogo()"
         inputId="company-logo" label="Company logo (optional)" mode="icon" removeLabel="Remove company logo" [removable]="true"
         accept=".jpg,.jpeg,.png,.svg" helpText="JPG, JPEG, PNG or SVG"
@@ -36,26 +36,26 @@
         @if (form.controls.companyLogo.touched && form.controls.companyLogo.invalid) {
         <span>Please choose a JPG, JPEG, PNG or SVG image.</span>
         }
-      </app-file-upload>
-      <app-input inputId="name" label="Name" autocomplete="name" [control]="form.controls.name" [required]="true">
+      </ui-file-upload>
+      <ui-input inputId="name" label="Name" autocomplete="name" [control]="form.controls.name" [required]="true">
         @if (form.controls.name.touched && form.controls.name.invalid) {
         <span>Please enter your name.</span>
         }
-      </app-input>
+      </ui-input>
 
-      <app-input inputId="position-title" label="Position title" autocomplete="organization-title"
+      <ui-input inputId="position-title" label="Position title" autocomplete="organization-title"
         [control]="form.controls.positionTitle" [required]="true">
         @if (form.controls.positionTitle.touched && form.controls.positionTitle.invalid) {
         <span>Please enter your position title.</span>
         }
-      </app-input>
+      </ui-input>
 
-      <app-textarea inputId="description" label="Short description" [control]="form.controls.description"
+      <ui-textarea inputId="description" label="Short description" [control]="form.controls.description"
         [required]="true">
         @if (form.controls.description.touched && form.controls.description.invalid) {
         <span>Please enter a short description.</span>
         }
-      </app-textarea>
+      </ui-textarea>
     </section>
 
     <section aria-labelledby="contact-info-title">
@@ -63,7 +63,7 @@
       <app-contact-info [form]="form.controls.contact" />
     </section>
 
-    <app-expand-panel heading="Experience" panelId="experience-panel"
+    <ui-expand-panel heading="Experience" panelId="experience-panel"
       [count]="form.controls.experiences.length">
       @for (row of form.controls.experiences.controls; track row; let index = $index) {
       <app-experience-entry [form]="row" [index]="index" (remove)="removeExperience(index)" />
@@ -71,37 +71,37 @@
       <p class="empty-state">Add an experience to boost your CV</p>
       }
       <div class="experience-actions">
-      <app-button class="add-entry" variant="outline" aria-label="Add experience" (click)="addExperience()">Add experience</app-button>
-      <app-button variant="outline" aria-label="Load experiences" (click)="experiencesOpen.set(true)">Load experiences</app-button>
+      <ui-button class="add-entry" variant="outline" aria-label="Add experience" (click)="addExperience()">Add experience</ui-button>
+      <ui-button variant="outline" aria-label="Load experiences" (click)="experiencesOpen.set(true)">Load experiences</ui-button>
       </div>
-    </app-expand-panel>
+    </ui-expand-panel>
 
-    <app-expand-panel heading="Education" panelId="education-panel"
+    <ui-expand-panel heading="Education" panelId="education-panel"
       [count]="form.controls.education.length">
       @for (row of form.controls.education.controls; track row; let index = $index) {
         <app-education-entry [form]="row" [index]="index" (remove)="removeEducation(index)" />
       } @empty {
         <p class="empty-state">Add your education to highlight your qualifications</p>
       }
-      <app-button class="add-entry" variant="outline" aria-label="Add education" (click)="addEducation()">Add education</app-button>
-    </app-expand-panel>
+      <ui-button class="add-entry" variant="outline" aria-label="Add education" (click)="addEducation()">Add education</ui-button>
+    </ui-expand-panel>
 
-    <app-expand-panel heading="Languages" panelId="languages-panel"
+    <ui-expand-panel heading="Languages" panelId="languages-panel"
       [count]="form.controls.languages.length">
       @for (row of form.controls.languages.controls; track row; let index = $index) {
       <div class="language-row">
-        <app-select [inputId]="'language-' + index" label="Language" [control]="row.controls.language"
+        <ui-select [inputId]="'language-' + index" label="Language" [control]="row.controls.language"
           [options]="languageOptions" [required]="true">
           @if (row.controls.language.touched && row.controls.language.invalid) {
           <span>Please choose a language.</span>
           }
-        </app-select>
-        <app-select [inputId]="'level-' + index" label="Level" [control]="row.controls.level" [options]="levelOptions"
+        </ui-select>
+        <ui-select [inputId]="'level-' + index" label="Level" [control]="row.controls.level" [options]="levelOptions"
           [required]="true">
           @if (row.controls.level.touched && row.controls.level.invalid) {
           <span>Please choose a level.</span>
           }
-        </app-select>
+        </ui-select>
         <button class="icon-button remove-language" type="button" [attr.aria-label]="'Remove language ' + (index + 1)"
           (click)="removeLanguage(index)">
           <lucide-icon [img]="XIcon" [size]="18" aria-hidden="true" />
@@ -110,8 +110,8 @@
       } @empty {
       <p class="empty-state">Add a language to highlight your communication skills</p>
       }
-      <app-button class="add-entry" variant="outline" aria-label="Add language" (click)="addLanguage()">Add language</app-button>
-    </app-expand-panel>
+      <ui-button class="add-entry" variant="outline" aria-label="Add language" (click)="addLanguage()">Add language</ui-button>
+    </ui-expand-panel>
 
     <section aria-labelledby="technologies-title">
       <h3 id="technologies-title">Tools/Technologies</h3>
@@ -152,10 +152,10 @@
   </div>
   <nav class="actions" aria-label="CV actions">
     <app-save-cv-button [info]="snapshot" />
-    <app-button (click)="submit()" [disabled]="pdf.exporting()">
+    <ui-button (click)="submit()" [disabled]="pdf.exporting()">
       <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
       {{ pdf.exporting() ? 'Exporting…' : 'Export' }}
-    </app-button>
+    </ui-button>
   </nav>
   }
 </main>

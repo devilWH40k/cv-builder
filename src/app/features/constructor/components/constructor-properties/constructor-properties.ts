@@ -1,4 +1,5 @@
-import { DebouncedColor } from '../../../../shared/directives/debounced-color';
+import { DebouncedColor } from 'angular-shared-ui/directives';
+import { ToastService } from 'angular-shared-ui/toast';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import {
   LucideAngularModule,
@@ -16,7 +17,6 @@ import {
   AlignCenter,
   AlignRight,
 } from 'lucide-angular';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ConstructorEditor } from '../../services/constructor-editor';
 import { safeDesignLink } from '../../helpers/design-assets';
 

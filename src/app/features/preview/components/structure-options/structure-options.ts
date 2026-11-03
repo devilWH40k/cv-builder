@@ -1,5 +1,5 @@
+import { Radio } from 'angular-shared-ui/radio';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { Radio } from '../../../../shared/ui/radio/radio';
 import { CvStructure } from '../../../cv/services/cv-draft';
 import { CV_THEMES } from '../../../cv/constants/cv-themes';
 

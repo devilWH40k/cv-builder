@@ -1,5 +1,5 @@
+import { ToastService } from 'angular-shared-ui/toast';
 import { inject, Injectable, signal } from '@angular/core';
-import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { CvInfo } from './cv-draft';
 
 @Injectable({ providedIn: 'root' })

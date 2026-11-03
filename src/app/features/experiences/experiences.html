@@ -2,61 +2,61 @@
   <div class="page-heading">
     <h1>Experiences</h1>
     <div class="page-actions">
-      <app-button [disabled]="collection.initialLoading() || failed()" (click)="adding.set(true)">
+      <ui-button [disabled]="collection.initialLoading() || failed()" (click)="adding.set(true)">
         <lucide-icon [img]="AddIcon" [size]="20" aria-hidden="true" /> Add experience
-      </app-button>
-      <app-button class="import" variant="monochrome" [disabled]="collection.initialLoading() || failed()" (click)="importing.set(true)">
+      </ui-button>
+      <ui-button class="import" variant="monochrome" [disabled]="collection.initialLoading() || failed()" (click)="importing.set(true)">
         <lucide-icon [img]="ImportIcon" [size]="20" aria-hidden="true" /> Import
-      </app-button>
+      </ui-button>
     </div>
   </div>
   <p class="intro">Manage your saved projects and experiences.</p>
   @if (failed()) {
     <p role="alert">Saved experiences could not be loaded.</p>
-    <app-button class="retry" (click)="load()">Try again</app-button>
+    <ui-button class="retry" (click)="load()">Try again</ui-button>
   }
     @if (deleteError()) { <p class="error" role="alert">{{ deleteError() }}</p> }
-    <app-table-wrapper tableId="experience" label="Saved experiences" [data]="records()"
+    <ui-table-wrapper tableId="experience" label="Saved experiences" [data]="records()"
       [columns]="columns" [settings]="tableSettings" [trackBy]="recordKey"
       [loading]="loading() || collection.searchPending() || failed()" (searchChanged)="collection.setSearch($event)">
-      <ng-template appTableCell="description" [tableCellOf]="records()" let-record>
+      <ng-template uiTableCell="description" [tableCellOf]="records()" let-record>
         <div class="description" [innerHTML]="record.experience.description"></div>
       </ng-template>
-      <ng-template appTableCell="webLink" [tableCellOf]="records()" let-record>
+      <ng-template uiTableCell="webLink" [tableCellOf]="records()" let-record>
         @if (link(record.experience.webLink); as href) {
           <a [href]="href" target="_blank" rel="noopener noreferrer">{{ record.experience.webLink }}</a>
         } @else {
           {{ record.experience.webLink }}
         }
       </ng-template>
-      <ng-template appTableCell="photos" [tableCellOf]="records()" let-record>
+      <ng-template uiTableCell="photos" [tableCellOf]="records()" let-record>
         @if (link(record.experience.photos); as href) {
           <a [href]="href" target="_blank" rel="noopener noreferrer">{{ record.experience.photos }}</a>
         } @else {
           {{ record.experience.photos }}
         }
       </ng-template>
-      <ng-template appTableCell="actions" [tableCellOf]="records()" let-record>
+      <ng-template uiTableCell="actions" [tableCellOf]="records()" let-record>
         <div class="row-actions">
           <button type="button" class="edit" [attr.aria-label]="'Edit ' + record.experience.company"
-            [disabled]="deletingIds().includes(record.id)" appTooltip="Edit experience" (click)="editing.set(record)">
+            [disabled]="deletingIds().includes(record.id)" uiTooltip="Edit experience" (click)="editing.set(record)">
             <lucide-icon [img]="EditIcon" [size]="20" aria-hidden="true" />
           </button>
           <button type="button" class="delete" [attr.aria-label]="'Delete ' + record.experience.company"
             [disabled]="deletingIds().includes(record.id)" [attr.aria-busy]="deletingIds().includes(record.id)"
-            appTooltip="Delete experience" (click)="deleteExperience(record.id)">
+            uiTooltip="Delete experience" (click)="deleteExperience(record.id)">
             <lucide-icon [img]="DeleteIcon" [size]="20" aria-hidden="true" />
           </button>
         </div>
       </ng-template>
-    </app-table-wrapper>
+    </ui-table-wrapper>
   @if (collection.hasMore()) {
     <div #experiencesEnd class="experiences-end" role="status">
       @if (collection.loadingMore()) { Loading more experiences… }
     </div>
     @if (collection.moreError()) {
       <p class="error" role="alert">{{ collection.moreError() }}</p>
-      <app-button (click)="collection.loadMore()">Try again</app-button>
+      <ui-button (click)="collection.loadMore()">Try again</ui-button>
     }
   }
 </main>
