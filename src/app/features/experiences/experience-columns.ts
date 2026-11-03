@@ -1,4 +1,4 @@
-import { TableColumn } from '../../shared/ui/table/models/table-column';
+import { TableColumn } from 'angular-shared-ui/table';
 import { CvExperience, SavedExperience } from '../cv/interfaces/experience';
 
 export const EXPERIENCE_COLUMNS = [

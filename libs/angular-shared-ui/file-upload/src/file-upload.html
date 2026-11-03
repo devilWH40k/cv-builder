@@ -1,0 +1,36 @@
+<div class="field" [class.invalid]="invalid()" [class.success]="success()">
+  <div class="photo-preview" [class.icon-preview]="mode() !== 'photo'">
+    @if (previewSource() !== undefined ? previewSource() : previewUrl(); as url) {
+    <img [src]="url" [alt]="mode() === 'icon' ? 'Selected icon preview' : 'Selected photo preview'" (error)="previewUrl.set(null)" />
+    } @else {
+    <lucide-icon [img]="mode() === 'file' ? FileIcon : mode() === 'icon' ? ImageIcon : UserIcon" [size]="24" aria-hidden="true" />
+    }
+  </div>
+  <div class="control-wrap upload" [class.has-remove]="removable() && value()">
+    <input class="file-input" type="file" [id]="inputId()" [accept]="accept()" [disabled]="disabled()"
+      [attr.aria-required]="required()" [attr.aria-invalid]="invalid()"
+      [attr.aria-describedby]="inputId() + '-hint ' + inputId() + '-error'" (change)="selectFile($event)"
+      (blur)="control().markAsTouched()" />
+    <div class="control upload-display">
+      <lucide-icon [img]="UploadIcon" [size]="20" aria-hidden="true" />
+      <div class="upload-text">
+        <label [for]="inputId()">{{ label() }}{{ required() ? ' *' : '' }}</label>
+        <span class="filename">{{ value()?.name }}</span>
+      </div>
+      @if (actionLabel()) {
+        <button class="upload-action" type="button" [disabled]="disabled() || actionDisabled()"
+          (click)="action.emit()">{{ actionLabel() }}</button>
+      }
+    </div>
+    @if (removable() && value()) {
+      <button class="remove-file" type="button" [disabled]="disabled()" [attr.aria-label]="removeLabel()"
+        (click)="removeFile()"><lucide-icon [img]="XIcon" [size]="18" aria-hidden="true" /></button>
+    }
+    <p class="hint" [id]="inputId() + '-hint'">{{ helpText() }}</p>
+  </div>
+  <div class="error" [id]="inputId() + '-error'" aria-live="polite">
+    <ng-content />
+  </div>
+</div>@if (pendingPhoto(); as file) {
+  <ui-photo-preview [file]="file" (cancelled)="pendingPhoto.set(null)" (applied)="applyPhoto($event)" />
+}

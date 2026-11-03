@@ -6,7 +6,7 @@ import { ConstructorIcons } from '../../services/constructor-icons';
 import { ConstructorEditor } from '../../services/constructor-editor';
 
 describe('Constructor icon library', () => {
-  it('shows every icon, filters search, restores the full list and adds the chosen icon', async () => {
+  it('shows a small catalogue, filters search, restores the list and adds the chosen icon', async () => {
     const icons = [
       { name: 'Mail', label: 'Mail', data: Mail },
       { name: 'MapPin', label: 'Map Pin', data: MapPin },
@@ -21,7 +21,7 @@ describe('Constructor icon library', () => {
     const fixture = TestBed.createComponent(ConstructorIconLibrary);
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    const buttons = () => root.querySelectorAll<HTMLButtonElement>('.icons button');
+    const buttons = () => root.querySelectorAll<HTMLButtonElement>('.icons button:not(.load-more)');
     const search = root.querySelector('input')!;
     const query = async (value: string) => {
       search.value = value;
@@ -43,7 +43,69 @@ describe('Constructor icon library', () => {
     expect(buttons().length).toBe(3);
     busy.set(true);
     await fixture.whenStable();
-    expect(buttons()[0].disabled).toBeTrue();
+    // The library blocks interaction with the entire section while the editor is busy.
+    expect(root.querySelector('section')?.inert).toBeTrue();
+  });
+
+  it('renders batches of 50, searches the full catalogue, and resets batches when searching or clearing', async () => {
+    const icons = Array.from({ length: 125 }, (_, index) => ({
+      name: `Icon${index}`,
+      label: `${index < 105 ? 'Mail' : 'User'} ${index}`,
+      data: Mail,
+    }));
+    const addIcon = jasmine.createSpy('addIcon').and.resolveTo();
+    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(),
+      { provide: ConstructorIcons, useValue: { load: () => Promise.resolve(icons) } },
+      { provide: ConstructorEditor, useValue: { busy: signal(false), addIcon } },
+    ] });
+    const fixture = TestBed.createComponent(ConstructorIconLibrary);
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const buttons = () => root.querySelectorAll<HTMLButtonElement>('.icons button:not(.load-more)');
+    const more = () => root.querySelector<HTMLButtonElement>('.load-more');
+    const loadMore = async () => {
+      more()!.click();
+      await fixture.whenStable();
+    };
+    const search = async (query: string) => {
+      const input = root.querySelector('input')!;
+      input.value = query;
+      input.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+    };
+
+    expect(buttons().length).toBe(50);
+    expect(more()?.parentElement).toBe(root.querySelector<HTMLElement>('.icons'));
+    expect(root.querySelector('.count')?.textContent).toContain('50 of 125 icons');
+    await loadMore();
+    expect(buttons().length).toBe(100);
+    await loadMore();
+    expect(buttons().length).toBe(125);
+    expect(more()).toBeNull();
+    buttons()[124].click();
+    await fixture.whenStable();
+    expect(addIcon).toHaveBeenCalledOnceWith('User 124', Mail);
+
+    await search('mail');
+    expect(buttons().length).toBe(50);
+    expect(root.querySelector('.count')?.textContent).toContain('50 of 105 icons');
+    await loadMore();
+    expect(buttons().length).toBe(100);
+    await loadMore();
+    expect(buttons().length).toBe(105);
+    expect(more()).toBeNull();
+
+    await search('user');
+    expect(buttons().length).toBe(20);
+    expect(buttons()[0].getAttribute('aria-label')).toBe('Add User 105 icon');
+    expect(more()).toBeNull();
+    await search('');
+    expect(buttons().length).toBe(50);
+    expect(more()).not.toBeNull();
+    await search('no match');
+    expect(buttons().length).toBe(0);
+    expect(root.textContent).toContain('No icons found');
+    expect(more()).toBeNull();
   });
 
   it('loads the complete alphabetically sorted Lucide catalogue', async () => {

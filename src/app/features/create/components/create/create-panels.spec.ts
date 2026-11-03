@@ -44,7 +44,7 @@ describe('CV expandable sections', () => {
     languageToggle.click();
     await fixture.whenStable();
     expect(languagePanel.hidden).toBeTrue();
-    expect(page.querySelector<HTMLButtonElement>('.actions > app-button button')!.disabled).toBeFalse();
+    expect(page.querySelector<HTMLButtonElement>('.actions > ui-button button')!.disabled).toBeFalse();
 
     experienceToggle.click();
     languageToggle.click();

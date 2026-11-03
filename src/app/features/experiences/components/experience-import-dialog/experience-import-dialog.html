@@ -1,6 +1,6 @@
-<app-dialog dialogId="experience-import" title="Import experiences" [wide]="true" [busy]="applying()"
+<ui-dialog dialogId="experience-import" title="Import experiences" [wide]="true" [busy]="applying()"
   (dismissed)="cancelled.emit()">
-  <app-file-upload inputId="experience-import-file" label="Choose an Excel file" mode="file"
+  <ui-file-upload inputId="experience-import-file" label="Choose an Excel file" mode="file"
     accept=".xlsx" helpText="XLSX, up to 10 MB. Uses the first worksheet." [control]="file" />
   <p class="help">Project Name is required. Separate technologies with commas. Is Updated accepts Yes/No or true/false.
     Each valid row is added as a new experience.</p>
@@ -19,13 +19,13 @@
     </div>
   </section>
   <div dialogActions class="actions">
-    <app-button class="download-template" variant="monochrome" [disabled]="downloading() || applying()" (click)="downloadTemplate()">
+    <ui-button class="download-template" variant="monochrome" [disabled]="downloading() || applying()" (click)="downloadTemplate()">
       <lucide-icon [img]="DownloadIcon" [size]="20" aria-hidden="true" />
       {{ downloading() ? 'Downloading...' : 'Download template' }}
-    </app-button>
+    </ui-button>
     <div class="apply-actions">
-      <app-button class="cancel" variant="monochrome" [disabled]="applying()" (click)="cancelled.emit()">Cancel</app-button>
-      <app-button class="apply" [disabled]="!canApply()" (click)="apply()">{{ applying() ? 'Applying...' : 'Apply' }}</app-button>
+      <ui-button class="cancel" variant="monochrome" [disabled]="applying()" (click)="cancelled.emit()">Cancel</ui-button>
+      <ui-button class="apply" [disabled]="!canApply()" (click)="apply()">{{ applying() ? 'Applying...' : 'Apply' }}</ui-button>
     </div>
   </div>
-</app-dialog>
+</ui-dialog>

@@ -18,7 +18,7 @@ describe('CV education section', () => {
     const fixture = TestBed.createComponent(Create);
     const page: HTMLElement = fixture.nativeElement;
     await fixture.whenStable();
-    const panels = Array.from(page.querySelectorAll('app-expand-panel')).map((panel) => panel.getAttribute('panelId'));
+    const panels = Array.from(page.querySelectorAll('ui-expand-panel')).map((panel) => panel.getAttribute('panelId'));
     expect(panels.slice(0, 3)).toEqual(['experience-panel', 'education-panel', 'languages-panel']);
     page.querySelector<HTMLButtonElement>('[aria-label="Add education"] button')!.click();
     await fixture.whenStable();
@@ -60,14 +60,14 @@ describe('CV education section', () => {
     form.patchValue({ university: 'University', startDate: '2025', endDate: '2024' });
     page.querySelector<HTMLButtonElement>('#education-panel-heading')!.click();
     await fixture.whenStable();
-    page.querySelector<HTMLButtonElement>('.actions > app-button button')!.click();
+    page.querySelector<HTMLButtonElement>('.actions > ui-button button')!.click();
     await fixture.whenStable();
     expect(page.querySelector<HTMLElement>('#education-panel')!.hidden).toBeFalse();
     expect(document.activeElement).toBe(page.querySelector('app-education-entry fieldset'));
     expect(download).not.toHaveBeenCalled();
     form.controls.endDate.setValue('2026');
     await fixture.whenStable();
-    page.querySelector<HTMLButtonElement>('.actions > app-button button')!.click();
+    page.querySelector<HTMLButtonElement>('.actions > ui-button button')!.click();
     await fixture.whenStable();
     expect(download).toHaveBeenCalledWith(jasmine.objectContaining({ education: [form.getRawValue()] }));
   });

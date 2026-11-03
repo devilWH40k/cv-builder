@@ -96,12 +96,12 @@ describe('Header technologies dialog', () => {
     const custom = document.querySelector<HTMLDialogElement>('dialog[aria-labelledby="saved-technology-custom-title"]')!;
     expect(custom.open).toBeTrue();
     expect(library.open).toBeFalse();
-    expect(custom.querySelector('app-file-upload')).not.toBeNull();
+    expect(custom.querySelector('ui-file-upload')).not.toBeNull();
     const input = custom.querySelector<HTMLInputElement>('#saved-technology-custom-name')!;
     input.value = 'New tool';
     input.dispatchEvent(new Event('input'));
     await fixture.whenStable();
-    custom.querySelector<HTMLButtonElement>('app-button button')!.click();
+    custom.querySelector<HTMLButtonElement>('ui-button button')!.click();
     await fixture.whenStable();
     expect(saved.saveTechnology).toHaveBeenCalledOnceWith({ name: 'New tool' });
     expect(library.open).toBeTrue();

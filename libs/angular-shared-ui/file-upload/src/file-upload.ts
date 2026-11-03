@@ -1,0 +1,86 @@
+import { ChangeDetectionStrategy, Component, effect, input, output, signal } from '@angular/core';
+import { File as FileIcon, Image, LucideAngularModule, Upload, UserRound, X } from 'lucide-angular';
+import { FormField } from 'angular-shared-ui/form-field';
+import { imageFileValidator } from './image-file.validator';
+import { FormControl } from '@angular/forms';
+import { PhotoPreview } from 'angular-shared-ui/photo-preview';
+
+@Component({
+  selector: 'ui-file-upload',
+  imports: [LucideAngularModule, PhotoPreview],
+  templateUrl: './file-upload.html',
+  styleUrl: './file-upload.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class FileUpload extends FormField<File | null> {
+  readonly actionLabel = input('');
+  readonly actionDisabled = input(false);
+  readonly action = output<void>();
+  readonly previewSource = input<string | null | undefined>(undefined);
+  readonly removeLabel = input('Remove file');
+  readonly removable = input(false);
+  protected readonly XIcon = X;
+  readonly mode = input<'photo' | 'icon' | 'file'>('photo');
+  readonly accept = input('.jpg,.jpeg,.png');
+  readonly helpText = input('JPG, JPEG or PNG');
+  protected readonly UploadIcon = Upload;
+  protected readonly UserIcon = UserRound;
+  protected readonly ImageIcon = Image;
+  protected readonly FileIcon = FileIcon;
+  protected readonly pendingPhoto = signal<File | null>(null);
+  protected readonly previewUrl = signal<string | null>(null);
+
+  constructor() {
+    super();
+    effect(() => { if (this.disabled()) this.pendingPhoto.set(null); });
+    effect((onCleanup) => {
+      const file = this.value();
+      if (this.mode() === 'file' || !file || (this.mode() === 'photo' ? imageFileValidator(this.control()) : this.invalid())) {
+        this.previewUrl.set(null);
+        return;
+      }
+
+      const url = URL.createObjectURL(file);
+      this.previewUrl.set(url);
+      onCleanup(() => URL.revokeObjectURL(url));
+    });
+  }
+
+  protected removeFile(): void {
+    if (this.disabled()) return;
+    this.pendingPhoto.set(null);
+    this.control().setValue(null);
+    this.control().markAsDirty();
+    this.control().markAsTouched();
+  }
+
+  protected selectFile(event: Event): void {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) {
+      return;
+    }
+    const file = input.files?.item(0);
+    if (!file) {
+      return;
+    }
+    if (this.disabled()) return;
+    input.value = '';
+    if (this.mode() !== 'photo') {
+      this.applyPhoto(file);
+      return;
+    }
+    if (imageFileValidator(new FormControl(file))) {
+      this.applyPhoto(file);
+      return;
+    }
+    this.pendingPhoto.set(file);
+  }
+
+  protected applyPhoto(file: File): void {
+    this.pendingPhoto.set(null);
+    if (this.disabled()) return;
+    this.control().setValue(file);
+    this.control().markAsDirty();
+    this.control().markAsTouched();
+  }
+}

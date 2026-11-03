@@ -1,13 +1,12 @@
+import { DatePicker, DateMode, parseCalendarDate } from 'angular-shared-ui/date-picker';
+import { Input } from 'angular-shared-ui/input';
+import { Select } from 'angular-shared-ui/select';
+import { AsyncSelect } from 'angular-shared-ui/async-select';
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl } from '@angular/forms';
 import { LucideAngularModule, X } from 'lucide-angular';
 import { catchError, distinctUntilChanged, map, of, scan, startWith, switchMap, timer } from 'rxjs';
-import { DatePicker } from '../../../../shared/ui/date-picker/date-picker';
-import { DateMode, parseCalendarDate } from '../../../../shared/ui/date-picker/date-value';
-import { Input } from '../../../../shared/ui/input/input';
-import { Select } from '../../../../shared/ui/select/select';
-import { AsyncSelect } from '../../../../shared/ui/async-select/async-select';
 import { EDUCATION_DEGREES } from '../../../cv/interfaces/education';
 import { UniversitiesApi } from '../../data-access/universities-api';
 import { createEducationForm } from '../../helpers/cv-form';

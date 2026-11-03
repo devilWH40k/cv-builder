@@ -37,6 +37,19 @@ Feature code lives under `src/app/features/<feature>/`, grouped by responsibilit
 
 Tests stay beside the code they cover. Feature route definitions stay at the feature root.
 
+### Shared UI library
+
+Reusable components, directives, and their supporting services live in
+[`libs/angular-shared-ui`](libs/angular-shared-ui/README.md). Import public APIs
+from entry points such as `angular-shared-ui/button`. Each component has input, output, and usage documentation
+in the [library reference](libs/angular-shared-ui/docs/README.md).
+
+`npm start` builds the library before starting its watcher and the app dev server.
+`npm run build` builds the production library and application in order. `npm test`
+builds the library and runs both projects' tests. Use `npm run test:lib` or
+`npm run test:app` to test one project; add `-- --watch=false --browsers=ChromeHeadless`
+for a single headless run.
+
 ### App version
 
 Set `appVersion` in `src/environments/environment.ts` to change the version shown
@@ -109,7 +122,7 @@ and gradient headings. The existing browser-print styles still support manual pr
 To start a local development server, run:
 
 ```bash
-ng serve
+npm start
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
@@ -119,7 +132,7 @@ Once the server is running, open your browser and navigate to `http://localhost:
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
 
 ```bash
-ng generate component component-name
+ng generate component component-name --project cv-builder
 ```
 
 For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
@@ -133,7 +146,7 @@ ng generate --help
 To build the project run:
 
 ```bash
-ng build
+npm run build
 ```
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
@@ -143,7 +156,7 @@ This will compile your project and store the build artifacts in the `dist/` dire
 To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
 
 ```bash
-ng test
+npm test
 ```
 
 ### Running end-to-end tests

@@ -141,7 +141,7 @@ describe('Contact information editor', () => {
     const page: HTMLElement = fixture.nativeElement;
     await fixture.whenStable();
     fixture.componentInstance.form.patchValue({ name: 'Alex', positionTitle: 'Developer', description: 'Summary', contact: { email: 'invalid' } });
-    page.querySelector<HTMLButtonElement>('.actions > app-button button')!.click();
+    page.querySelector<HTMLButtonElement>('.actions > ui-button button')!.click();
     await fixture.whenStable();
     expect(download).not.toHaveBeenCalled();
     expect(document.activeElement).toBe(page.querySelector('#contact-email'));

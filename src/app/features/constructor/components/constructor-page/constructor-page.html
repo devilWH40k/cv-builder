@@ -9,7 +9,7 @@
     <p>Create a design from your CV, then make it your own or start from scratch.</p>
   </header>
   @if (!session.document() && loading()) {
-  <app-spinner class="initial-spinner" label="Preparing your design" />
+  <ui-spinner class="initial-spinner" label="Preparing your design" />
   }
 
   @if (!session.document() && !loading()) {
@@ -20,9 +20,9 @@
     </p>
     <div class="library-actions">
       <a routerLink="/" class="secondary-link"><lucide-icon [img]="icons.FolderOpen" [size]="18" />Choose a CV</a>
-      <app-button variant="outline" (click)="designFile.click()"><lucide-icon [img]="icons.FileJson"
-          [size]="18" />Import design</app-button>
-      <app-button (click)="newBlank()"><lucide-icon [img]="icons.Plus" [size]="18" />Blank design</app-button>
+      <ui-button variant="outline" (click)="designFile.click()"><lucide-icon [img]="icons.FileJson"
+          [size]="18" />Import design</ui-button>
+      <ui-button (click)="newBlank()"><lucide-icon [img]="icons.Plus" [size]="18" />Blank design</ui-button>
     </div>
     <h2>Recently</h2>
     <p class="hint">
@@ -32,17 +32,17 @@
   </section>
   }
 
-  <dialog appDialogOverlay class="editor" [class.operation-busy]="editor.restoringHistory() || editor.clipboardBusy()" [attr.inert]="session.saving() ? '' : null" (keydown)="keyboard($event)"
+  <dialog uiDialogOverlay class="editor" [class.operation-busy]="editor.restoringHistory() || editor.clipboardBusy()" [attr.inert]="session.saving() ? '' : null" (keydown)="keyboard($event)"
     (cancel)="closeEditor($event)" aria-label="Visual CV editor">
   <input #designFile type="file" accept="application/json,.json" hidden (cancel)="$event.stopPropagation()" (change)="importDesign(designFile)" />
     <div class="document-heading" [attr.inert]="workspaceLoading() ? '' : null">
-      <div class="file-menu" appJoyrideTarget="file">
-        <app-dropdown menuId="constructor-file-menu" label="File" [compact]="true" [alignStart]="true"
-          [openOnHover]="true" [items]="fileMenuItems()" (selected)="fileAction($event)">File</app-dropdown>
-        <app-dropdown menuId="constructor-view-menu" label="View" [closeOnSelect]="false" [compact]="true" [alignStart]="true"
-          [openOnHover]="true" [items]="windowMenuItems()" (selected)="toggleWindow($event)">View</app-dropdown>
-        <app-dropdown menuId="constructor-help-menu" label="Help" [compact]="true" [alignStart]="true"
-          [openOnHover]="true" [items]="helpMenuItems()" (selected)="helpAction($event)">Help</app-dropdown>
+      <div class="file-menu" uiJoyrideTarget="file">
+        <ui-dropdown menuId="constructor-file-menu" label="File" [compact]="true" [alignStart]="true"
+          [openOnHover]="true" [items]="fileMenuItems()" (selected)="fileAction($event)">File</ui-dropdown>
+        <ui-dropdown menuId="constructor-view-menu" label="View" [closeOnSelect]="false" [compact]="true" [alignStart]="true"
+          [openOnHover]="true" [items]="windowMenuItems()" (selected)="toggleWindow($event)">View</ui-dropdown>
+        <ui-dropdown menuId="constructor-help-menu" label="Help" [compact]="true" [alignStart]="true"
+          [openOnHover]="true" [items]="helpMenuItems()" (selected)="helpAction($event)">Help</ui-dropdown>
       </div>
       <div class="document-info"><span class="document-caption" [title]="session.title()">{{ session.title() }}</span></div>
       <button type="button" class="editor-close" aria-label="Close editor" title="Close editor" (click)="closeEditor()">
@@ -50,7 +50,7 @@
       </button>
     </div>
     <div class="toolbar main-toolbar" role="toolbar" aria-label="Design tools" [attr.inert]="workspaceLoading() ? '' : null">
-      <div class="history-tools" appJoyrideTarget="history" role="group" aria-label="History">
+      <div class="history-tools" uiJoyrideTarget="history" role="group" aria-label="History">
       <button type="button" (click)="history('undo')" [disabled]="!editor.undoCount().length" title="Undo (Ctrl/Cmd+Z)"
         aria-label="Undo">
         <lucide-icon [img]="icons.Undo2" [size]="16" />
@@ -60,11 +60,11 @@
         <lucide-icon [img]="icons.Redo2" [size]="16" />
       </button>
       </div>
-      <div class="typography-tools" appJoyrideTarget="typography">
+      <div class="typography-tools" uiJoyrideTarget="typography">
       <app-constructor-typography />
       @if (editor.tool() === 'draw') {
       <label>Brush color<input #brushColor type="color" [value]="editor.brushColor()"
-          appDebouncedColor (colorCommitted)="editor.setBrush($event, editor.brushWidth())"
+          uiDebouncedColor (colorCommitted)="editor.setBrush($event, editor.brushWidth())"
  /></label>
       <label>Brush size<input #brushWidth type="number" min="1" max="40" [value]="editor.brushWidth()"
           (change)="editor.setBrush(editor.brushColor(), brushWidth.valueAsNumber)" /></label>
@@ -83,7 +83,7 @@
     </div>
     <div class="workspace" [class.no-left-panels]="!hasLeftPanels()" [class.no-right-panels]="!hasRightPanels()" [style.--left-width]="leftWidth() + 'px'" [style.--right-width]="rightWidth() + 'px'">
       <aside class="page-panels" [hidden]="!hasLeftPanels()" [class.single-panel]="!visiblePanels().main || !visiblePanels().icons" [style.--page-properties-height]="pagePropertiesHeight() + 'px'">
-      <div class="page-properties-panel panel" appJoyrideTarget="page-properties" [hidden]="!visiblePanels().main" [class.is-loading]="pagePanelsLoading()"
+      <div class="page-properties-panel panel" uiJoyrideTarget="page-properties" [hidden]="!visiblePanels().main" [class.is-loading]="pagePanelsLoading()"
         [attr.aria-busy]="pagePanelsLoading()">
         <section class="file-properties" aria-labelledby="file-properties-title">
           <h2 id="file-properties-title">File properties</h2>
@@ -93,19 +93,19 @@
             [value]="session.title()" (change)="session.rename(title.value)" />
         </section>
         <app-constructor-page-properties />
-        @if (pagePanelsLoading()) { <app-spinner label="Loading page properties" /> }
+        @if (pagePanelsLoading()) { <ui-spinner label="Loading page properties" /> }
       </div>
-      <app-resize-handle [hidden]="!visiblePanels().main || !visiblePanels().icons" [(size)]="pagePropertiesHeight" axis="vertical" [min]="120" [max]="900"
+      <ui-resize-handle [hidden]="!visiblePanels().main || !visiblePanels().icons" [(size)]="pagePropertiesHeight" axis="vertical" [min]="120" [max]="900"
         label="Resize page properties and icon library height" />
-      <div class="icon-library-panel panel" appJoyrideTarget="icons" [hidden]="!visiblePanels().icons" [class.is-loading]="workspaceLoading()"
+      <div class="icon-library-panel panel" uiJoyrideTarget="icons" [hidden]="!visiblePanels().icons" [class.is-loading]="workspaceLoading()"
         [attr.aria-busy]="workspaceLoading()">
         <app-constructor-icon-library [attr.inert]="workspaceLoading() ? '' : null" />
-        @if (workspaceLoading()) { <app-spinner label="Loading icon library" /> }
+        @if (workspaceLoading()) { <ui-spinner label="Loading icon library" /> }
       </div>
       </aside>
-      <app-resize-handle [hidden]="!hasLeftPanels()" [(size)]="leftWidth" [max]="360" label="Resize page properties" />
+      <ui-resize-handle [hidden]="!hasLeftPanels()" [(size)]="leftWidth" [max]="360" label="Resize page properties" />
       <div class="stage-column">
-          <nav class="page-tabs pages-section" appJoyrideTarget="pages" [attr.inert]="workspaceLoading() ? '' : null" aria-label="Design pages">
+          <nav class="page-tabs pages-section" uiJoyrideTarget="pages" [attr.inert]="workspaceLoading() ? '' : null" aria-label="Design pages">
             @for (pageItem of session.document()?.pages; track pageItem.id; let index = $index) {
               <div class="page-item">
                 <button type="button" class="page-select" [attr.aria-current]="session.activePage() === index ? 'page' : null"
@@ -126,7 +126,7 @@
             </button>
           </nav>
         <div class="canvas-area">
-          <div class="canvas-tools" appJoyrideTarget="tools" role="toolbar" aria-label="Canvas tools" aria-orientation="vertical"
+          <div class="canvas-tools" uiJoyrideTarget="tools" role="toolbar" aria-label="Canvas tools" aria-orientation="vertical"
             [attr.inert]="workspaceLoading() ? '' : null">
       <button type="button" aria-label="Select objects" title="Select" [attr.aria-pressed]="editor.tool() === 'select'"
         (click)="editor.setTool('select')">
@@ -147,34 +147,34 @@
       <button type="button" (click)="imageFile.click()" title="Insert image" aria-label="Insert image">
         <lucide-icon [img]="icons.ImagePlus" [size]="20" />
       </button>
-      <app-dropdown menuId="constructor-shapes-menu" label="Add shape" [opensRight]="true"
+      <ui-dropdown menuId="constructor-shapes-menu" label="Add shape" [opensRight]="true"
         [iconGrid]="true" [items]="shapeItems" (selected)="addShape($event)">
         <lucide-icon [img]="icons.Shapes" [size]="20" aria-hidden="true" />
-      </app-dropdown>
+      </ui-dropdown>
           </div>
-        <div #canvasViewport appJoyrideTarget="canvas" class="canvas-viewport" tabindex="0" aria-label="A4 design workspace"
+        <div #canvasViewport uiJoyrideTarget="canvas" class="canvas-viewport" tabindex="0" aria-label="A4 design workspace"
           (contextmenu)="objectMenu.open($event)" [class.is-loading]="workspaceLoading()"
           [attr.aria-busy]="workspaceLoading()">
           <div class="ruled-page">
             <canvas #canvas></canvas>
             <app-constructor-rulers />
           </div>
-          @if (workspaceLoading()) { <app-spinner label="Loading design page" /> }
+          @if (workspaceLoading()) { <ui-spinner label="Loading design page" /> }
         </div>
         </div>
       </div>
-      <app-resize-handle [hidden]="!hasRightPanels()" [(size)]="rightWidth" edge="left" [max]="400" label="Resize properties and layers" />
+      <ui-resize-handle [hidden]="!hasRightPanels()" [(size)]="rightWidth" edge="left" [max]="400" label="Resize properties and layers" />
       <aside class="object-panels" [hidden]="!hasRightPanels()" [class.single-panel]="!visiblePanels().properties || !visiblePanels().layers" [style.--properties-height]="propertiesHeight() + 'px'">
-        <div class="properties-panel panel" appJoyrideTarget="properties" [hidden]="!visiblePanels().properties" [class.is-loading]="workspaceLoading()"
+        <div class="properties-panel panel" uiJoyrideTarget="properties" [hidden]="!visiblePanels().properties" [class.is-loading]="workspaceLoading()"
           [attr.aria-busy]="workspaceLoading()">
           <app-constructor-properties />
-          @if (workspaceLoading()) { <app-spinner label="Loading object properties" /> }
+          @if (workspaceLoading()) { <ui-spinner label="Loading object properties" /> }
         </div>
-        <app-resize-handle [hidden]="!visiblePanels().properties || !visiblePanels().layers" [(size)]="propertiesHeight" axis="vertical" [min]="120" [max]="900"
+        <ui-resize-handle [hidden]="!visiblePanels().properties || !visiblePanels().layers" [(size)]="propertiesHeight" axis="vertical" [min]="120" [max]="900"
           label="Resize properties and layers height" />
-        <div class="layers-panel panel" appJoyrideTarget="layers" [hidden]="!visiblePanels().layers" [class.is-loading]="pagePanelsLoading()" [attr.aria-busy]="pagePanelsLoading()">
+        <div class="layers-panel panel" uiJoyrideTarget="layers" [hidden]="!visiblePanels().layers" [class.is-loading]="pagePanelsLoading()" [attr.aria-busy]="pagePanelsLoading()">
           <app-constructor-layers (contextRequested)="objectMenu.open($event.event, $event.layerId)" />
-          @if (pagePanelsLoading()) { <app-spinner label="Loading layers" /> }
+          @if (pagePanelsLoading()) { <ui-spinner label="Loading layers" /> }
         </div>
       </aside>
     </div>
@@ -182,13 +182,13 @@
       <span aria-label="App version">{{ appVersion }}</span>
     </footer>
     @if (tour.active()) {
-      <app-joyride [steps]="tour.steps" (stepChanged)="tourStep($event)"
+      <ui-joyride [steps]="tour.steps" (stepChanged)="tourStep($event)"
         (finished)="finishTour()" />
     }
     <app-constructor-object-menu #objectMenu />
     <input #imageFile type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="insertImage(imageFile)" />
     @if (pendingImage(); as file) {
-      <app-photo-preview [file]="file" [shapes]="imageShapes" [circularOutput]="true"
+      <ui-photo-preview [file]="file" [shapes]="imageShapes" [circularOutput]="true"
         (cancelled)="pendingImage.set(null)" (applied)="applyImage($event)" />
     }
   </dialog>
@@ -200,6 +200,6 @@
   <app-constructor-shortcuts (dismissed)="shortcutsOpen.set(false)" />
 }
 @if (leaveOpen()) {
-<app-unsaved-changes-dialog subject="design" dialogId="leave-constructor" [busy]="leaveSaving()"
+<ui-unsaved-changes-dialog subject="design" dialogId="leave-constructor" [busy]="leaveSaving()"
   (decision)="handleLeaveDecision($event)" />
 }

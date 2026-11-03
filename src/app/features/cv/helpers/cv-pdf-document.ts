@@ -1,3 +1,4 @@
+import { formatCalendarDate } from 'angular-shared-ui/date-picker';
 import { cvLogoSizeMm } from './cv-logo-size';
 import { cvPhotoSizeMm } from './cv-photo-size';
 import { contactLinks } from './cv-contact';
@@ -9,7 +10,6 @@ import htmlToPdfmake from 'html-to-pdfmake';
 import type { Content, ContentColumns, Column, TDocumentDefinitions } from 'pdfmake/interfaces';
 import { CvInfo, DEFAULT_CV_STRUCTURE } from '../services/cv-draft';
 import { usedTechnologyIcon, usedTechnologiesView } from './used-technologies';
-import { formatCalendarDate } from '../../../shared/ui/date-picker/date-value';
 
 pdfMake.addVirtualFileSystem(fonts);
 

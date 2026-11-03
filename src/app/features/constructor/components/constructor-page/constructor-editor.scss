@@ -49,7 +49,7 @@
 .document-heading lucide-icon { display: flex; }
 .document-caption { max-width: 24rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: tokens.$font-size-xs; }
 .file-menu { display: flex; align-items: center; gap: tokens.$spacing-2; justify-self: start; --dropdown-trigger-height: #{tokens.$spacing-5}; }
-.file-menu app-dropdown { display: flex; }
+.file-menu ui-dropdown { display: flex; }
 .editor-close {
   flex-shrink: 0;
   justify-self: end;
@@ -157,8 +157,8 @@
 .panel, .canvas-viewport { position: relative; }
 .is-loading {
   overflow: clip;
-  > :not(app-spinner) { visibility: hidden; }
-  > app-spinner {
+  > :not(ui-spinner) { visibility: hidden; }
+  > ui-spinner {
     position: absolute;
     inset: 0;
     background: tokens.$background-surface;
@@ -178,9 +178,9 @@
   .canvas-viewport {
     min-height: 40dvh;
   }
-  .workspace > app-resize-handle { display: none; }
+  .workspace > ui-resize-handle { display: none; }
   .object-panels { grid-template-rows: auto auto; gap: tokens.$spacing-3; }
-  .object-panels > app-resize-handle { display: none; }
+  .object-panels > ui-resize-handle { display: none; }
   .panel { max-height: 50dvh; }
 }
 @media (max-width: tokens.$breakpoint-sm) {

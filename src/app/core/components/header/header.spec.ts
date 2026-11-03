@@ -69,7 +69,7 @@ describe('Header navigation', () => {
     expect(Array.from(page.querySelectorAll('.brand-title span')).map((line) => line.textContent))
       .toEqual(['CV', 'Builder']);
     expect(page.querySelector('.brand')?.getAttribute('href')).toBe('/');
-    expect(page.querySelector('app-dropdown')).toBeNull();
+    expect(page.querySelector('ui-dropdown')).toBeNull();
     expect(page.querySelector('[aria-label="Settings"]')).toBeNull();
     expect(Array.from(page.querySelectorAll('.header-menu .menu-item')).map((item) => item.textContent?.trim()))
       .toEqual(['Constructor', 'Import / Export', 'Experiences', 'Technologies']);

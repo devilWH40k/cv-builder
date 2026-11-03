@@ -55,7 +55,7 @@ describe('Home library tabs', () => {
     expect(page.querySelector('.folder-add')).not.toBeNull();
     expect(page.querySelector('.view-toggle')).not.toBeNull();
     expect(page.querySelector('.saved-toolbar')?.nextElementSibling?.id).toBe('home-files');
-    expect(page.querySelector('app-tabs')?.nextElementSibling?.className).toBe('view-actions');
+    expect(page.querySelector('ui-tabs')?.nextElementSibling?.className).toBe('view-actions');
     expect(page.querySelector('#saved-title')?.textContent).toBe('Your CVs');
     expect(page.querySelector('#home-files .cv-name')?.textContent).toContain('Ada CV');
     tabs[1].click();

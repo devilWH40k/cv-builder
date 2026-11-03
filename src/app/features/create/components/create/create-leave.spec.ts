@@ -34,7 +34,7 @@ describe('Leaving the CV editor', () => {
   });
 
   function button(label: string): HTMLButtonElement {
-    return Array.from(document.querySelectorAll<HTMLButtonElement>('#leave-create app-button button'))
+    return Array.from(document.querySelectorAll<HTMLButtonElement>('#leave-create ui-button button'))
       .find((element) => element.textContent?.trim() === label)!;
   }
 

@@ -1,19 +1,22 @@
 <section aria-labelledby="icon-library-title" [attr.inert]="editor.busy() ? '' : null">
   <h2 id="icon-library-title">Icon Library</h2>
   <input #search type="search" placeholder="Search icons" aria-label="Search icons"
-    [value]="query()" (input)="query.set(search.value)" />
+    [value]="query()" (input)="setQuery(search.value)" />
   @if (loading()) {
     <p role="status">Loading icons…</p>
   } @else {
-    <p class="count" role="status">{{ filtered().length }} icons</p>
+    <p class="count" role="status">{{ visibleIcons().length }} of {{ filtered().length }} icons</p>
     <div class="icons" aria-label="Available icons" [attr.aria-busy]="inserting()">
-      @for (icon of filtered(); track icon.name) {
+      @for (icon of visibleIcons(); track icon.name) {
         <button type="button" [disabled]="inserting()" (click)="add(icon)"
           [attr.aria-label]="'Add ' + icon.label + ' icon'" [title]="'Add ' + icon.label">
           <lucide-icon [img]="icon.data" [size]="20" aria-hidden="true" />
         </button>
       } @empty {
         <p>No icons found.</p>
+      }
+      @if (hasMore()) {
+        <button type="button" class="load-more" [disabled]="inserting()" (click)="loadMore()">Load more</button>
       }
     </div>
   }

@@ -1,8 +1,8 @@
+import { svgVector } from 'angular-shared-ui/svg';
 import { Circle, FabricImage, FabricObject, Gradient, Rect, Textbox, version, TextStyle, TextStyleDeclaration } from 'fabric';
 import { A4_WIDTH, ConstructorDocument } from '../interfaces/constructor-document';
 import { identifyObject } from './fabric-metadata';
 import { safeDesignLink } from './design-assets';
-import { svgVector } from './svg-vector';
 
 interface TextLine {
   page: number;

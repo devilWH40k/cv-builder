@@ -1,8 +1,8 @@
+import { ExpandPanel } from 'angular-shared-ui/expand-panel';
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, Injector, viewChildren } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ArrowLeft, LucideAngularModule } from 'lucide-angular';
-import { ExpandPanel } from '../../shared/ui/expand-panel/expand-panel';
 
 @Component({
   selector: 'app-guides',

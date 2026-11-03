@@ -1,5 +1,5 @@
 @use 'styles/tokens' as tokens;
-@use '../../../../shared/ui/button/variants' as buttons;
+@use 'angular-shared-ui/styles/button-variants' as buttons;
 
 h4 { margin: tokens.$spacing-4 0 tokens.$spacing-2; font-weight: tokens.$font-weight-medium; }
 .empty-state { margin: tokens.$spacing-2 0 0; color: tokens.$text-muted; }
@@ -29,6 +29,6 @@ summary:focus-visible { outline: 2px solid tokens.$border-color-focus; outline-o
 .error { margin: 0; min-height: tokens.$spacing-8; color: tokens.$text-danger; font-size: tokens.$font-size-xs; }
 @media (max-width: tokens.$breakpoint-sm) {
   .social-row { grid-template-columns: minmax(0, 1fr) auto; }
-  app-input { grid-column: 1; }
+  ui-input { grid-column: 1; }
   .social-actions { grid-column: 2; grid-row: 1; }
 }

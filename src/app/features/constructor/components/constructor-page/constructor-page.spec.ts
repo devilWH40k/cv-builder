@@ -1,3 +1,5 @@
+import { ToastService } from 'angular-shared-ui/toast';
+import { DeleteConfirmationService } from 'angular-shared-ui/delete-confirmation';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -5,11 +7,9 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { ConstructorPageComponent } from './constructor-page';
 import { ConstructorRepository } from '../../services/constructor-repository';
 import { blankDesign } from '../../helpers/preview-to-design';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ConstructorEditor } from '../../services/constructor-editor';
 import { ConstructorSession } from '../../services/constructor-session';
 import { Canvas, FabricObject } from 'fabric';
-import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
 import { ConstructorTour, CONSTRUCTOR_TOUR_KEY } from '../../services/constructor-tour';
 
 describe('Fullscreen constructor page', () => {
@@ -37,12 +37,12 @@ describe('Fullscreen constructor page', () => {
     initialEditor.addShape('rectangle');
     await harness.fixture.whenStable();
     const openHelp = async () => {
-      editorDialog.querySelector<HTMLButtonElement>('app-dropdown[menuId="constructor-help-menu"] button')!.click();
+      editorDialog.querySelector<HTMLButtonElement>('ui-dropdown[menuId="constructor-help-menu"] button')!.click();
       await harness.fixture.whenStable();
     };
     const choose = (label: string) => Array.from(editorDialog.querySelectorAll<HTMLButtonElement>('#constructor-help-menu [role="menuitem"]'))
       .find((button) => button.textContent?.trim() === label)!.click();
-    const headers = Array.from(editorDialog.querySelectorAll('.file-menu app-dropdown > button'));
+    const headers = Array.from(editorDialog.querySelectorAll('.file-menu ui-dropdown > button'));
     expect(headers.map((button) => button.textContent?.trim())).toEqual(['File', 'View', 'Help']);
     await openHelp();
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
@@ -253,8 +253,8 @@ describe('Fullscreen constructor page', () => {
     const titleBounds = heading.querySelector('.document-caption')!.getBoundingClientRect();
     const headerBounds = heading.getBoundingClientRect();
     expect(Math.abs(titleBounds.left + titleBounds.width / 2 - headerBounds.left - headerBounds.width / 2)).toBeLessThan(1);
-    const fileTrigger = heading.querySelector<HTMLButtonElement>('app-dropdown > button')!;
-    fileTrigger.closest('app-dropdown')!.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    const fileTrigger = heading.querySelector<HTMLButtonElement>('ui-dropdown > button')!;
+    fileTrigger.closest('ui-dropdown')!.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
     await harness.fixture.whenStable();
     expect(fileTrigger.getAttribute('aria-expanded')).toBe('true');
     const items = Array.from(dialog.querySelectorAll('#constructor-file-menu [role="menuitem"]'));
@@ -281,7 +281,7 @@ describe('Fullscreen constructor page', () => {
     dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', ctrlKey: true, shiftKey: true, bubbles: true, cancelable: true }));
     expect(download).toHaveBeenCalledTimes(1);
     const windowsMenu = dialog.querySelector('#constructor-view-menu')!;
-    const viewTrigger = windowsMenu.closest('app-dropdown')!.querySelector<HTMLButtonElement>('.trigger')!;
+    const viewTrigger = windowsMenu.closest('ui-dropdown')!.querySelector<HTMLButtonElement>('.trigger')!;
     viewTrigger.click();
     await harness.fixture.whenStable();
     const windowEntries = Array.from(windowsMenu.querySelectorAll<HTMLButtonElement>('[role="menuitemcheckbox"]'));
@@ -324,7 +324,7 @@ describe('Fullscreen constructor page', () => {
     expect(rail.getAttribute('aria-orientation')).toBe('vertical');
     expect(rail.querySelectorAll(':scope > button').length).toBe(5);
     const shapes = rail.querySelector<HTMLButtonElement>('[aria-label="Add shape"]')!;
-    shapes.closest('app-dropdown')!.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+    shapes.closest('ui-dropdown')!.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
     await harness.fixture.whenStable();
     expect(shapes.getAttribute('aria-expanded')).toBe('true');
     const star = rail.querySelector<HTMLButtonElement>('#constructor-shapes-menu button:last-child')!;
@@ -504,7 +504,7 @@ describe('Fullscreen constructor page', () => {
       harness.fixture.detectChanges();
       expect(editor.busy()).toBeTrue();
       expect(dialog.classList.contains('operation-busy')).toBeTrue();
-      expect(dialog.querySelector('app-spinner')).toBeNull();
+      expect(dialog.querySelector('ui-spinner')).toBeNull();
       expect(dialog.querySelector('.is-loading')).toBeNull();
       expect(getComputedStyle(canvas).visibility).toBe('visible');
       expect(document.activeElement).toBe(canvas);
@@ -514,7 +514,7 @@ describe('Fullscreen constructor page', () => {
       expect(editor.layers().length).toBe(shortcut.count);
       expect(editor.busy()).toBeFalse();
       expect(dialog.classList.contains('operation-busy')).toBeFalse();
-      expect(dialog.querySelector('app-spinner')).toBeNull();
+      expect(dialog.querySelector('ui-spinner')).toBeNull();
       expect(load).not.toHaveBeenCalled();
       expect(document.activeElement).toBe(canvas);
     });
@@ -572,14 +572,14 @@ describe('Fullscreen constructor page', () => {
     Array.from(dialog.querySelectorAll<HTMLButtonElement>('.page-tabs button'))
       .find((button) => button.textContent?.trim() === 'Page 2')!.click();
     harness.fixture.detectChanges();
-    expect(dialog.querySelectorAll('.is-loading app-spinner').length).toBe(2);
-    expect(dialog.querySelector('.icon-library-panel app-spinner')).toBeNull();
-    expect(dialog.querySelector('.canvas-viewport app-spinner')).toBeNull();
+    expect(dialog.querySelectorAll('.is-loading ui-spinner').length).toBe(2);
+    expect(dialog.querySelector('.icon-library-panel ui-spinner')).toBeNull();
+    expect(dialog.querySelector('.canvas-viewport ui-spinner')).toBeNull();
     expect(dialog.querySelectorAll('[aria-busy="true"]').length).toBe(2);
     expect(toasts.messages().length).toBe(0);
     release();
     await harness.fixture.whenStable();
-    expect(dialog.querySelector('app-spinner')).toBeNull();
+    expect(dialog.querySelector('ui-spinner')).toBeNull();
     expect(load).toHaveBeenCalledTimes(1);
     expect(dialog.querySelector('.page-tabs [aria-current="page"]')?.textContent).toContain('Page 2');
     editor.addShape('rectangle');
@@ -636,7 +636,7 @@ describe('Fullscreen constructor page', () => {
     source.dispatchEvent(new Event('load'));
     await harness.fixture.whenStable();
     const insert = spyOn(editor, 'addImage').and.callThrough();
-    document.querySelector<HTMLButtonElement>('.photo-preview-dialog app-button button')!.click();
+    document.querySelector<HTMLButtonElement>('.photo-preview-dialog ui-button button')!.click();
     await harness.fixture.whenStable();
     expect(insert).toHaveBeenCalledOnceWith(image);
     expect(editor.layers().some((layer) => layer.kind === 'image')).toBeTrue();

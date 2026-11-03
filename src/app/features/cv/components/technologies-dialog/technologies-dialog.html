@@ -1,4 +1,4 @@
-<dialog appDialogOverlay aria-labelledby="technologies-title" (cancel)="$event.preventDefault(); close()">
+<dialog uiDialogOverlay aria-labelledby="technologies-title" (cancel)="$event.preventDefault(); close()">
   <header>
     <h2 id="technologies-title">Technologies</h2>
     <button #closeButton class="close" type="button" aria-label="Close technologies" autofocus (click)="close()">
@@ -30,13 +30,13 @@
     }
   </div>
   <footer>
-    <app-button #addButton [disabled]="loading() || loadFailed()" (click)="add()">
+    <ui-button #addButton [disabled]="loading() || loadFailed()" (click)="add()">
       <lucide-icon [img]="AddIcon" [size]="20" aria-hidden="true" />
       Add
-    </app-button>
+    </ui-button>
   </footer>
 </dialog>
 @if (adding()) {
-  <app-custom-entry-dialog inputId="saved-technology-custom" [saveEntry]="saveEntry" [saveOnApply]="true"
+  <ui-custom-entry-dialog inputId="saved-technology-custom" [saveEntry]="saveEntry" [saveOnApply]="true"
     (applied)="finishAdding()" (cancelled)="finishAdding()" />
 }

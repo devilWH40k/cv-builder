@@ -1,13 +1,19 @@
-import { Joyride } from '../../../../shared/ui/joyride/joyride';
-import { JoyrideTarget } from '../../../../shared/ui/joyride/joyride-target';
+import { Joyride, JoyrideTarget } from 'angular-shared-ui/joyride';
+import { Dropdown, DropdownItem } from 'angular-shared-ui/dropdown';
+import { DebouncedColor } from 'angular-shared-ui/directives';
+import { PhotoPreview, PhotoCropShape } from 'angular-shared-ui/photo-preview';
+import { ToastService } from 'angular-shared-ui/toast';
+import { Button } from 'angular-shared-ui/button';
+import { DeleteConfirmationService } from 'angular-shared-ui/delete-confirmation';
+import { DialogOverlay } from 'angular-shared-ui/dialog';
+import { ResizeHandle } from 'angular-shared-ui/resize-handle';
+import { Spinner } from 'angular-shared-ui/spinner';
+import { UnsavedChangesDialog, UnsavedChangesDecision } from 'angular-shared-ui/unsaved-changes-dialog';
 import { ConstructorTour } from '../../services/constructor-tour';
 import { ConstructorShortcuts } from '../constructor-shortcuts/constructor-shortcuts';
 import { ConstructorRulers } from '../constructor-rulers/constructor-rulers';
 import { DESIGN_SHAPES } from '../../helpers/design-shapes';
-import { Dropdown, DropdownItem } from '../../../../shared/ui/dropdown/dropdown';
 import { ConstructorTypography } from '../constructor-typography/constructor-typography';
-import { DebouncedColor } from '../../../../shared/directives/debounced-color';
-import { PhotoPreview, PhotoCropShape } from '../../../../shared/ui/photo-preview/photo-preview';
 import {
   afterNextRender,
   afterRenderEffect,
@@ -50,9 +56,6 @@ import {
 import { CvDraft } from '../../../cv/services/cv-draft';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { Preview } from '../../../preview/components/preview/preview';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
-import { Button } from '../../../../shared/ui/button/button';
-import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
 import { ConstructorEditor } from '../../services/constructor-editor';
 import { ConstructorRepository } from '../../services/constructor-repository';
 import { ConstructorSession } from '../../services/constructor-session';
@@ -61,15 +64,11 @@ import { DesignSummary } from '../../interfaces/constructor-document';
 import { downloadDesignFile, loadDesignFonts } from '../../helpers/design-assets';
 import { blankDesign, preparePreview, previewToDesign } from '../../helpers/preview-to-design';
 import { parseDesign } from '../../helpers/design-validation';
-import { DialogOverlay } from '../../../../shared/ui/dialog/dialog-overlay';
 import { ConstructorLayers } from '../constructor-layers/constructor-layers';
 import { ConstructorPageProperties } from '../constructor-page-properties/constructor-page-properties';
-import { ResizeHandle } from '../../../../shared/ui/resize-handle/resize-handle';
 import { DesignList } from '../design-list/design-list';
 import { A4_HEIGHT, A4_WIDTH } from '../../interfaces/constructor-document';
 import { ConstructorObjectMenu } from '../constructor-object-menu/constructor-object-menu';
-import { Spinner } from '../../../../shared/ui/spinner/spinner';
-import { UnsavedChangesDialog, UnsavedChangesDecision } from '../../../../shared/ui/unsaved-changes-dialog/unsaved-changes-dialog';
 import { ConstructorSvgAssets } from '../../services/constructor-svg-assets';
 import { environment } from '../../../../../environments/environment';
 import { ConstructorIconLibrary } from '../constructor-icon-library/constructor-icon-library';

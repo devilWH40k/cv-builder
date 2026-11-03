@@ -1,3 +1,4 @@
+import { svgVector } from 'angular-shared-ui/svg';
 import { GOOGLE_DESIGN_FONTS } from './design-fonts';
 import { FabricImage, Gradient, Group, Rect, Textbox } from 'fabric';
 import { buildDesignPdf, designPdfBlob } from './design-pdf';
@@ -7,7 +8,6 @@ import { EffectCircle, EffectRect } from './effect-shapes';
 import { A4_HEIGHT, A4_WIDTH } from '../interfaces/constructor-document';
 import { Mail } from 'lucide-angular';
 import { iconSvg } from '../services/constructor-icons';
-import { svgVector } from './svg-vector';
 
 describe('Constructor vector PDF', () => {
   for (const family of GOOGLE_DESIGN_FONTS) {

@@ -30,7 +30,7 @@ describe('Experience details dialog', () => {
     const { fixture, dialog, save, saved } = await setup();
     expect(dialog.textContent).not.toContain('Experience 1');
     const label = dialog.querySelector<HTMLElement>('#experience-updated-label')!;
-    const radios = dialog.querySelectorAll<HTMLElement>('.updated app-radio');
+    const radios = dialog.querySelectorAll<HTMLElement>('.updated ui-radio');
     const center = (element: HTMLElement) => {
       const bounds = element.getBoundingClientRect();
       return bounds.top + bounds.height / 2;
@@ -46,7 +46,7 @@ describe('Experience details dialog', () => {
     responsibilities.value = 'Develop the CRM frontend';
     responsibilities.dispatchEvent(new Event('input'));
     dialog.querySelector<HTMLInputElement>('input[type="radio"][value="false"]')!.click();
-    dialog.querySelector<HTMLButtonElement>('[dialogActions] app-button:last-child button')!.click();
+    dialog.querySelector<HTMLButtonElement>('[dialogActions] ui-button:last-child button')!.click();
     await fixture.whenStable();
     expect(save).toHaveBeenCalledOnceWith(jasmine.objectContaining({
       company: 'Replique', savedExperienceId: record.id, alternativeNames: 'Modelize',
@@ -61,7 +61,7 @@ describe('Experience details dialog', () => {
     const input = dialog.querySelector<HTMLInputElement>('#experience-developer')!;
     input.value = 'Ada';
     input.dispatchEvent(new Event('input'));
-    const button = dialog.querySelector<HTMLButtonElement>('[dialogActions] app-button:last-child button')!;
+    const button = dialog.querySelector<HTMLButtonElement>('[dialogActions] ui-button:last-child button')!;
     button.click();
     await fixture.whenStable();
     expect(saved).not.toHaveBeenCalled();

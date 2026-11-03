@@ -29,7 +29,7 @@ describe('CV form', () => {
   });
 
   it('selects the bundled Usense logo from inside the upload and supports removing it', async () => {
-    const field = page.querySelector('#company-logo')!.closest('app-file-upload')!;
+    const field = page.querySelector('#company-logo')!.closest('ui-file-upload')!;
     const button = field.querySelector<HTMLButtonElement>('.upload-action')!;
     expect(button.textContent?.trim()).toBe('Use Usense logo');
     button.click();
@@ -51,7 +51,7 @@ describe('CV form', () => {
     const original = new File(['logo'], 'original.png', { type: 'image/png' });
     fixture.componentInstance.form.controls.companyLogo.setValue(original);
     spyOn(TestBed.inject(CompanyLogoPresets), 'usense').and.rejectWith(new Error('Unavailable'));
-    page.querySelector<HTMLButtonElement>('app-file-upload .upload-action')!.click();
+    page.querySelector<HTMLButtonElement>('ui-file-upload .upload-action')!.click();
     await fixture.whenStable();
     expect(fixture.componentInstance.form.controls.companyLogo.value).toBe(original);
     expect(page.querySelector<HTMLButtonElement>('.upload-action')!.disabled).toBeFalse();
@@ -76,7 +76,7 @@ describe('CV form', () => {
     expect(control.value).toBe(logo);
     expect(control.dirty).toBeTrue();
     expect(TestBed.inject(CvDraft).current()?.companyLogo).toBe(logo);
-    expect(page.querySelector('#company-logo')!.closest('app-file-upload')!.querySelector('img')).not.toBeNull();
+    expect(page.querySelector('#company-logo')!.closest('ui-file-upload')!.querySelector('img')).not.toBeNull();
     const header = page.querySelector('.cv-header')!;
     expect(header.lastElementChild?.classList.contains('logo-resizer')).toBeTrue();
     const remove = Array.from(page.querySelectorAll<HTMLButtonElement>('button'))
@@ -91,16 +91,16 @@ describe('CV form', () => {
 
   it('adds general technologies to Custom and prevents blank or duplicate entries', async () => {
     for (const name of ['  Internal SDK  ', 'internal sdk', ' vue ', '   ']) {
-      page.querySelector<HTMLButtonElement>('#technologies')!.closest('app-multi-select')!.querySelector<HTMLButtonElement>('.add-custom')!.click();
+      page.querySelector<HTMLButtonElement>('#technologies')!.closest('ui-multi-select')!.querySelector<HTMLButtonElement>('.add-custom')!.click();
       await fixture.whenStable();
       const input = document.querySelector<HTMLInputElement>('#technologies-custom-name')!;
       input.value = name;
       input.dispatchEvent(new Event('input'));
       await fixture.whenStable();
-      document.querySelector<HTMLButtonElement>('dialog app-button button')!.click();
+      document.querySelector<HTMLButtonElement>('dialog ui-button button')!.click();
       await fixture.whenStable();
       if (!name.trim()) {
-        expect(document.querySelector<HTMLButtonElement>('dialog app-button button')!.disabled).toBeTrue();
+        expect(document.querySelector<HTMLButtonElement>('dialog ui-button button')!.disabled).toBeTrue();
         document.querySelector<HTMLButtonElement>('dialog .cancel')!.click();
         await fixture.whenStable();
       }
@@ -208,7 +208,7 @@ describe('CV form', () => {
   });
 
   it('searches tools, groups selected chips in the parent, and synchronizes removal', async () => {
-    const selector = page.querySelector<HTMLElement>('app-multi-select')!;
+    const selector = page.querySelector<HTMLElement>('ui-multi-select')!;
     selector.querySelector('summary')!.click();
     const search = selector.querySelector<HTMLInputElement>('input[type="search"]')!;
     function filter(query: string): void {
@@ -257,12 +257,12 @@ describe('CV form', () => {
     control.setValue(['Vue']);
     fixture.componentInstance.form.disable();
     await fixture.whenStable();
-    expect(page.querySelector<HTMLInputElement>('app-multi-select input[type="search"]')!.disabled).toBeTrue();
-    expect(page.querySelector<HTMLFieldSetElement>('app-multi-select fieldset')!.disabled).toBeTrue();
+    expect(page.querySelector<HTMLInputElement>('ui-multi-select input[type="search"]')!.disabled).toBeTrue();
+    expect(page.querySelector<HTMLFieldSetElement>('ui-multi-select fieldset')!.disabled).toBeTrue();
     fixture.componentInstance.form.enable();
     fixture.componentInstance.form.reset();
     await fixture.whenStable();
-    expect(page.querySelectorAll('app-multi-select input:checked').length).toBe(0);
+    expect(page.querySelectorAll('ui-multi-select input:checked').length).toBe(0);
     expect(page.querySelectorAll('.skill-chip').length).toBe(0);
   });
 
@@ -274,12 +274,12 @@ describe('CV form', () => {
     add.click();
     await fixture.whenStable();
     expect(page.querySelectorAll('select').length).toBe(2);
-    expect(page.querySelectorAll('app-select .invalid').length).toBe(0);
+    expect(page.querySelectorAll('ui-select .invalid').length).toBe(0);
 
     submit();
     await fixture.whenStable();
     expect(TestBed.inject(Router).navigate).not.toHaveBeenCalled();
-    expect(page.querySelectorAll('app-select .invalid').length).toBe(2);
+    expect(page.querySelectorAll('ui-select .invalid').length).toBe(2);
 
     const language = page.querySelector<HTMLSelectElement>('#language-0')!;
     language.value = 'Ukrainian';
@@ -354,7 +354,7 @@ describe('CV form', () => {
     document.querySelector<HTMLButtonElement>('.dialog-overlay .cancel')!.click();
     await fixture.whenStable();
     expect(control.value).toBe(oldPhoto);
-    expect(page.querySelector('app-photo-preview')).toBeNull();
+    expect(page.querySelector('ui-photo-preview')).toBeNull();
 
     selectFile(newPhoto);
     await fixture.whenStable();
@@ -368,21 +368,21 @@ describe('CV form', () => {
         resolve(value);
       });
     });
-    document.querySelector<HTMLButtonElement>('.dialog-overlay app-button button')!.click();
+    document.querySelector<HTMLButtonElement>('.dialog-overlay ui-button button')!.click();
     const cropped = await changed;
     await fixture.whenStable();
     expect(cropped?.name).toBe('new.png');
     expect(cropped).not.toBe(newPhoto);
     expect(control.dirty).toBeTrue();
     expect(control.touched).toBeTrue();
-    expect(page.querySelector('app-photo-preview')).toBeNull();
+    expect(page.querySelector('ui-photo-preview')).toBeNull();
     const bitmap = await createImageBitmap(cropped!);
     expect(bitmap.width).toBe(80);
     expect(bitmap.height).toBe(80);
     bitmap.close();
   });
   it('rejects unsupported files without shifting the upload and recovers on replacement', async () => {
-    const upload = page.querySelector<HTMLElement>('app-file-upload')!;
+    const upload = page.querySelector<HTMLElement>('ui-file-upload')!;
     const height = upload.getBoundingClientRect().height;
     selectFile(new File(['image'], 'photo.gif', { type: 'image/gif' }));
     await fixture.whenStable();
@@ -405,7 +405,7 @@ describe('CV form', () => {
         resolve();
       });
     });
-    document.querySelector<HTMLButtonElement>('.dialog-overlay app-button button')!.click();
+    document.querySelector<HTMLButtonElement>('.dialog-overlay ui-button button')!.click();
     await applied;
     await fixture.whenStable();
     expect(page.querySelector('#photo-error')?.textContent?.trim()).toBe('');
@@ -442,7 +442,7 @@ describe('CV form', () => {
     );
     const file = new File([bytes], 'portrait.png', { type: 'image/png' });
     const revoke = spyOn(URL, 'revokeObjectURL').and.callThrough();
-    const upload = page.querySelector<HTMLElement>('app-file-upload')!;
+    const upload = page.querySelector<HTMLElement>('ui-file-upload')!;
     const height = upload.getBoundingClientRect().height;
     expect(page.querySelector('.photo-preview img')).toBeNull();
 
@@ -531,7 +531,7 @@ describe('Combined CV editor', () => {
     const page: HTMLElement = fixture.nativeElement;
     const download = spyOn(TestBed.inject(CvPdf), 'download').and.resolveTo();
     await fixture.whenStable();
-    const exportButton = page.querySelector<HTMLButtonElement>('.actions > app-button button')!;
+    const exportButton = page.querySelector<HTMLButtonElement>('.actions > ui-button button')!;
     expect(exportButton.disabled).toBeFalse();
     fixture.componentInstance.form.controls.name.setValue('Live name');
     await fixture.whenStable();

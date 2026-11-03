@@ -1,5 +1,5 @@
 @use 'styles/tokens' as tokens;
-@use '../../shared/ui/button/variants' as buttons;
+@use 'angular-shared-ui/styles/button-variants' as buttons;
 
 :host { display: block; min-width: 0; }
 .experiences-page { padding: tokens.$spacing-12 tokens.$spacing-6; max-width: tokens.$content-max-width; margin-inline: auto; }

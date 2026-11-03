@@ -1,11 +1,11 @@
+import { Dialog } from 'angular-shared-ui/dialog';
+import { DragItem } from 'angular-shared-ui/draggable';
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
-import { Dialog } from '../../../../shared/ui/dialog/dialog';
 import { CvFolder } from '../../../cv/interfaces/cv-folder';
 import { SavedCv } from '../../../cv/services/saved-cvs';
 import { CvReorder } from '../../../cv/interfaces/cv-reorder';
 import { CvDragStore, CV_DRAG_TYPE } from '../../state/cv-drag-store';
 import { CvCollection, CvMove } from '../cv-collection/cv-collection';
-import { DragItem } from '../../../../shared/ui/draggable/drag-drop';
 
 @Component({
   selector: 'app-folder-dialog',

@@ -1,3 +1,4 @@
+import { svgVector } from 'angular-shared-ui/svg';
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { ConstructorEditor } from './constructor-editor';
@@ -6,7 +7,6 @@ import { parseDesign } from '../helpers/design-validation';
 import { loadDesignFonts } from '../helpers/design-assets';
 import { ActiveSelection, Canvas, controlsUtils, FabricImage, Group, IText, Point, Rect, Transform, util } from 'fabric';
 import { A4_WIDTH } from '../interfaces/constructor-document';
-import { svgVector } from '../helpers/svg-vector';
 import { Mail } from 'lucide-angular';
 
 describe('Constructor editing', () => {

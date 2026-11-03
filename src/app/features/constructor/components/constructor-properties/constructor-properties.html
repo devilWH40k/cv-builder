@@ -81,7 +81,7 @@
         <label class="border-control">Border radius (px)<input #radius type="number" min="0" step="1"
           [value]="selected.mixed?.includes('borderRadius') ? '' : selected.borderRadius" placeholder="Mixed" (change)="editor.updateRectangle({ borderRadius: radius.valueAsNumber })" /></label>
         <label class="border-control">Border color{{ selected.mixed?.includes('borderColor') ? ' (mixed)' : '' }}<input #borderColor type="color" [value]="selected.borderColor"
-          appDebouncedColor (colorCommitted)="editor.updateRectangle({ borderColor: $event })"
+          uiDebouncedColor (colorCommitted)="editor.updateRectangle({ borderColor: $event })"
  /></label>
         <label class="border-control">Border width (px)<input #borderWidth type="number" min="0" max="100" step="1"
           [value]="selected.mixed?.includes('borderWidth') ? '' : selected.borderWidth" placeholder="Mixed" (change)="editor.updateRectangle({ borderWidth: borderWidth.valueAsNumber })" /></label>
@@ -92,7 +92,7 @@
             #color
             type="color"
             [value]="selected.color"
-            appDebouncedColor (colorCommitted)="editor.setFill($event, selected.gradientEnd)"
+            uiDebouncedColor (colorCommitted)="editor.setFill($event, selected.gradientEnd)"
         /></label>
         <label class="checkbox"
           ><input
@@ -109,7 +109,7 @@
               #gradientEnd
               type="color"
               [value]="selected.gradientEnd"
-              appDebouncedColor (colorCommitted)="editor.setFill(selected.color, $event)"
+              uiDebouncedColor (colorCommitted)="editor.setFill(selected.color, $event)"
           /></label>
         }
       }

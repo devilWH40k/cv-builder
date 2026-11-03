@@ -1,9 +1,9 @@
+import { JoyrideStep } from 'angular-shared-ui/joyride';
 import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { FabricImage, FabricObject, Rect, Textbox } from 'fabric';
 import { ConstructorDocument } from '../interfaces/constructor-document';
 import { blankDesign } from '../helpers/preview-to-design';
 import { identifyObject } from '../helpers/fabric-metadata';
-import { JoyrideStep } from '../../../shared/ui/joyride/joyride';
 import { ConstructorSession } from './constructor-session';
 import { ConstructorEditor } from './constructor-editor';
 

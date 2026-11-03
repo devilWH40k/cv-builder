@@ -1,4 +1,6 @@
-import { Canvas, FabricObject, Group } from 'fabric';
+import { ActiveSelection, Canvas, FabricObject, Group } from 'fabric';
+import { canPreviewDrag, DragArtwork } from './drag-artwork';
+import { SelectionDragArtwork } from './selection-drag-artwork';
 
 interface GestureLayers {
   readonly objects: FabricObject[];
@@ -20,13 +22,25 @@ function sameTransform(first: DOMMatrix, second: DOMMatrix): boolean {
 export class ConstructorCanvas extends Canvas {
   private gestureTarget: FabricObject | null = null;
   private gestureLayers: GestureLayers | null = null;
+  private dragArtwork: DragArtwork | null = null;
+  private selectionArtwork: SelectionDragArtwork | null = null;
 
-  beginGesture(target: FabricObject): void {
+  beginGesture(target: FabricObject, action = 'drag'): void {
     this.endGesture();
     this.gestureTarget = target;
+    if (action === 'drag' && target instanceof ActiveSelection) {
+      this.selectionArtwork = new SelectionDragArtwork();
+    }
+    if (action === 'drag' && !target.group && !(target instanceof ActiveSelection) && canPreviewDrag(target)) {
+      this.dragArtwork = new DragArtwork();
+    }
   }
 
   endGesture(): void {
+    this.selectionArtwork?.dispose();
+    this.selectionArtwork = null;
+    this.dragArtwork?.dispose();
+    this.dragArtwork = null;
     for (const layer of [this.gestureLayers?.before, this.gestureLayers?.after]) {
       if (layer) { layer.width = 0; layer.height = 0; }
     }
@@ -41,7 +55,13 @@ export class ConstructorCanvas extends Canvas {
 
   override _renderObjects(context: CanvasRenderingContext2D, objects: FabricObject[]): void {
     const target = this.gestureTarget;
-    if (!target || objects.length < 2) { super._renderObjects(context, objects); return; }
+    if (!target) { super._renderObjects(context, objects); return; }
+    if (target instanceof ActiveSelection && this.selectionArtwork?.render(context, target, objects)) return;
+    if (objects.length === 1 && objects[0] === target && this.dragArtwork) {
+      this.dragArtwork.render(context, target);
+      return;
+    }
+    if (objects.length < 2) { super._renderObjects(context, objects); return; }
     const transform = context.getTransform();
     const width = context.canvas.width;
     const height = context.canvas.height;
@@ -55,7 +75,7 @@ export class ConstructorCanvas extends Canvas {
     if (layers && (layers.objects !== objects || layers.count !== objects.length ||
       layers.width !== width || layers.height !== height ||
       !sameTransform(layers.transform, transform))) {
-      this.beginGesture(target);
+      this.beginGesture(target, this.dragArtwork ? 'drag' : '');
       layers = null;
     }
     if (!layers) {
@@ -102,7 +122,8 @@ export class ConstructorCanvas extends Canvas {
       context.restore();
     };
     drawLayer(layers.before);
-    layers.moving.render(context);
+    if (this.dragArtwork && layers.moving === target) this.dragArtwork.render(context, target);
+    else layers.moving.render(context);
     drawLayer(layers.after);
   }
 }

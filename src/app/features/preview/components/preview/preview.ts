@@ -1,20 +1,20 @@
+import { Resizable } from 'angular-shared-ui/resizable';
+import { entryIcon } from 'angular-shared-ui/custom-entry-dialog';
+import { Button } from 'angular-shared-ui/button';
+import { ResponsiveDrawer } from 'angular-shared-ui/responsive-drawer';
+import { formatCalendarDate } from 'angular-shared-ui/date-picker';
 import { cvLogoSizeMm } from '../../../cv/helpers/cv-logo-size';
-import { Resizable } from '../../../../shared/ui/resizable/resizable';
 import { contactLinks } from '../../../cv/helpers/cv-contact';
 import { ExperienceDescription } from '../../pipes/experience-description';
 import { CSS_PIXELS_PER_MM, CV_PHOTO_MIN_MM, CV_PHOTO_MAX_MM, cvPhotoSizeMm } from '../../../cv/helpers/cv-photo-size';
 import { CvPdf } from '../../../cv/services/cv-pdf';
 import { SaveCvButton } from '../../../cv/components/save-cv-button/save-cv-button';
 import { usedTechnologyIcon, usedTechnologiesView } from '../../../cv/helpers/used-technologies';
-import { entryIcon } from '../../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 import { afterNextRender, afterRenderEffect, ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, input, signal, viewChild, viewChildren } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Download, Mail, Phone, LucideAngularModule } from 'lucide-angular';
-import { Button } from '../../../../shared/ui/button/button';
 import { CvDraft, DEFAULT_CV_STRUCTURE } from '../../../cv/services/cv-draft';
-import { ResponsiveDrawer } from '../../../../shared/ui/responsive-drawer/responsive-drawer';
 import { StructureOptions } from '../structure-options/structure-options';
-import { formatCalendarDate } from '../../../../shared/ui/date-picker/date-value';
 
 @Component({
   selector: 'app-preview',
