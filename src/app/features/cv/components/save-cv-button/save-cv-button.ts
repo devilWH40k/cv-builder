@@ -1,6 +1,6 @@
+import { Button } from 'angular-shared-ui/button';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { LucideAngularModule, LoaderCircle, Save } from 'lucide-angular';
-import { Button } from '../../../../shared/ui/button/button';
 import { CvInfo } from '../../services/cv-draft';
 import { SaveCv } from '../../services/save-cv';
 

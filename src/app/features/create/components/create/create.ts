@@ -1,8 +1,16 @@
+import { ToastService } from 'angular-shared-ui/toast';
+import { Input } from 'angular-shared-ui/input';
+import { Textarea } from 'angular-shared-ui/textarea';
+import { FileUpload } from 'angular-shared-ui/file-upload';
+import { Button } from 'angular-shared-ui/button';
+import { ExpandPanel } from 'angular-shared-ui/expand-panel';
+import { Tabs } from 'angular-shared-ui/tabs';
+import { Select } from 'angular-shared-ui/select';
+import { entryIcon } from 'angular-shared-ui/custom-entry-dialog';
 import { CompanyLogoPresets } from '../../../cv/services/company-logo-presets';
 import { CvPdf } from '../../../cv/services/cv-pdf';
 import { ExperiencesDialog } from '../experiences-dialog/experiences-dialog';
 import { SavedExperience } from '../../../cv/interfaces/experience';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { SaveCvButton } from '../../../cv/components/save-cv-button/save-cv-button';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, DestroyRef, ElementRef, inject, Injector, PendingTasks, signal, viewChild, viewChildren } from '@angular/core';
@@ -10,10 +18,6 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { startWith } from 'rxjs';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Input } from '../../../../shared/ui/input/input';
-import { Textarea } from '../../../../shared/ui/textarea/textarea';
-import { FileUpload } from '../../../../shared/ui/file-upload/file-upload';
-import { Button } from '../../../../shared/ui/button/button';
 import { createCvForm, createEducationForm, createExperienceForm, createLanguageForm, createSocialForm } from '../../helpers/cv-form';
 import { appliedExperienceDescription } from '../../helpers/applied-experience-description';
 import { ContactInfo } from '../contact-info/contact-info';
@@ -22,16 +26,12 @@ import { EducationEntry } from '../education-entry/education-entry';
 import { CvDraft, CvInfo, DEFAULT_CV_STRUCTURE } from '../../../cv/services/cv-draft';
 import { Preview } from '../../../preview/components/preview/preview';
 import { StructureOptions } from '../../../preview/components/structure-options/structure-options';
-import { ExpandPanel } from '../../../../shared/ui/expand-panel/expand-panel';
-import { Tabs } from '../../../../shared/ui/tabs/tabs';
 import { LANGUAGES, LANGUAGE_LEVELS } from '../../../cv/constants/languages';
-import { Select } from '../../../../shared/ui/select/select';
 import { ArrowLeft, Download, Eye, Pencil, LucideAngularModule, X } from 'lucide-angular';
 import { TechnologySelect } from '../../../cv/components/technology-select/technology-select';
 import { TECHNOLOGY_GROUPS } from '../../../cv/constants/technologies';
 import { SaveCv } from '../../../cv/services/save-cv';
 import { LeaveCreateDecision, LeaveCreateDialog } from '../leave-create-dialog/leave-create-dialog';
-import { entryIcon } from '../../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 
 @Component({
   selector: 'app-create',

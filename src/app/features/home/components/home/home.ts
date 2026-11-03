@@ -1,3 +1,5 @@
+import { DeleteConfirmationService } from 'angular-shared-ui/delete-confirmation';
+import { Tabs, Tab } from 'angular-shared-ui/tabs';
 import { afterRenderEffect, ChangeDetectionStrategy, Component, computed, DestroyRef, effect, ElementRef, inject, linkedSignal, PendingTasks, signal, untracked, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -14,8 +16,6 @@ import { CvClipboard } from '../../state/cv-clipboard';
 import { CvCollection, CvMove } from '../cv-collection/cv-collection';
 import { CreateFolderDialog } from '../create-folder-dialog/create-folder-dialog';
 import { FolderDialog } from '../folder-dialog/folder-dialog';
-import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
-import { Tabs, Tab } from '../../../../shared/ui/tabs/tabs';
 import { DesignList } from '../../../constructor/components/design-list/design-list';
 import { ConstructorRepository } from '../../../constructor/services/constructor-repository';
 import { DesignSummary } from '../../../constructor/interfaces/constructor-document';

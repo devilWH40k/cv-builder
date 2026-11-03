@@ -1,16 +1,16 @@
+import { Input } from 'angular-shared-ui/input';
+import { Button } from 'angular-shared-ui/button';
+import { DialogOverlay } from 'angular-shared-ui/dialog';
+import { ToastService } from 'angular-shared-ui/toast';
+import { Tooltip } from 'angular-shared-ui/directives';
 import { FormControl } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { tap } from 'rxjs';
-import { Input } from '../../../../shared/ui/input/input';
 import { afterNextRender, ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, output, signal, viewChild } from '@angular/core';
-import { Button } from '../../../../shared/ui/button/button';
-import { DialogOverlay } from '../../../../shared/ui/dialog/dialog-overlay';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { SavedExperience } from '../../../cv/interfaces/experience';
 import { Eye, LucideAngularModule, TriangleAlert } from 'lucide-angular';
 import { ExperienceDialog } from '../../../experiences/components/experience-dialog/experience-dialog';
-import { Tooltip } from '../../../../shared/directories/tooltip';
 
 @Component({
   selector: 'app-experiences-dialog',

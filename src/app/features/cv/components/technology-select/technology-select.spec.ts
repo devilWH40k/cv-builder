@@ -1,9 +1,9 @@
+import { MultiSelect } from 'angular-shared-ui/multi-select';
+import { CustomEntryIcons } from 'angular-shared-ui/custom-entry-dialog';
 import { Component, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormControl } from '@angular/forms';
 import { TechnologySelect } from './technology-select';
-import { MultiSelect } from '../../../../shared/ui/multi-select/multi-select';
-import { CustomEntryIcons } from '../../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 import { CV_DATABASE_NAME, SavedCvs } from '../../services/saved-cvs';
 
 @Component({

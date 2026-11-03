@@ -1,5 +1,5 @@
 @use 'styles/tokens' as tokens;
-@use '../../../../shared/ui/button/variants' as buttons;
+@use 'angular-shared-ui/styles/button-variants' as buttons;
 :host { display: block; min-width: 0; }
 h2 { font-size: tokens.$font-size-md; margin: 0 0 tokens.$spacing-3; }
 button { @include buttons.secondary; }

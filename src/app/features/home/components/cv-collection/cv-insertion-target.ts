@@ -1,5 +1,5 @@
+import { DragDrop } from 'angular-shared-ui/draggable';
 import { computed, Directive, ElementRef, inject, input } from '@angular/core';
-import { DragDrop } from '../../../../shared/ui/draggable/drag-drop';
 import { CvReorder } from '../../../cv/interfaces/cv-reorder';
 
 export type CvInsertion = Pick<CvReorder, 'targetId' | 'position'>;

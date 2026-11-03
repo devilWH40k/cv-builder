@@ -3,10 +3,14 @@
   "version": "3.0.0b",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "start": "node scripts/start.mjs",
+    "build": "npm run build:lib && ng build cv-builder",
+    "build:lib": "ng build angular-shared-ui",
+    "watch": "npm run build:lib && ng build cv-builder --watch --configuration development",
+    "watch:lib": "ng build angular-shared-ui --watch --configuration development",
+    "test": "npm run build:lib && ng test",
+    "test:app": "npm run build:lib && ng test cv-builder",
+    "test:lib": "ng test angular-shared-ui"
   },
   "prettier": {
     "printWidth": 100,
@@ -50,6 +54,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "ng-packagr": "^20.3.2",
     "typescript": "~5.9.2"
   }
 }

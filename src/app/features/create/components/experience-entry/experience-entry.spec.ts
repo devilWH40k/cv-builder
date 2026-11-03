@@ -1,3 +1,4 @@
+import { ToastService } from 'angular-shared-ui/toast';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -6,7 +7,6 @@ import { Guides } from '../../../guides/guides';
 import { ExperienceEntry } from './experience-entry';
 import { createExperienceForm } from '../../helpers/cv-form';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ThemeStore } from '../../../../core/theme/theme-store';
 import { CvDraft } from '../../../cv/services/cv-draft';
 

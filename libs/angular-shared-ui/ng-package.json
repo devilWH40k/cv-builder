@@ -1,0 +1,19 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "dest": "../../dist/angular-shared-ui",
+  "deleteDestPath": false,
+  "lib": {
+    "entryFile": "src/public-api.ts",
+    "styleIncludePaths": [
+      "styles"
+    ]
+  },
+  "assets": [
+    "styles",
+    "docs",
+    "icons/src/LUCIDE-LICENSE.txt"
+  ],
+  "allowedNonPeerDependencies": [
+    "tslib"
+  ]
+}

@@ -1,0 +1,52 @@
+@use 'tokens' as tokens;
+@use 'button-variants' as buttons;
+
+dialog.joyride {
+  position: fixed;
+  margin: 0;
+  width: min(22rem, calc(100vw - #{tokens.$spacing-8}));
+  max-height: calc(100dvh - #{tokens.$spacing-8});
+  padding: 0;
+  border: 0;
+  overflow: visible;
+  background: transparent;
+  color: tokens.$text-primary;
+}
+.spotlight {
+  position: fixed;
+  pointer-events: none;
+  border: 2px solid tokens.$border-color-focus;
+  border-radius: tokens.$radius-md;
+  box-shadow: 0 0 0 200vmax rgb(0 0 0 / 0.35);
+}
+.content {
+  position: relative;
+  max-height: calc(100dvh - #{tokens.$spacing-8});
+  overflow-y: auto;
+  padding: tokens.$spacing-5;
+  background: tokens.$background-surface;
+  border: 1px solid tokens.$border-color;
+  border-radius: tokens.$radius-lg;
+  box-shadow: tokens.$shadow-lg;
+}
+h2 { margin: tokens.$spacing-2 0; font-size: tokens.$font-size-lg; }
+p { font-size: tokens.$font-size-sm; line-height: tokens.$line-height-normal; }
+.progress { margin: 0; color: tokens.$text-secondary; font-size: tokens.$font-size-xs; }
+footer, .navigation { display: flex; align-items: center; gap: tokens.$spacing-2; }
+footer {
+  --button-min-height: #{tokens.$button-height-sm};
+  --button-padding: #{tokens.$spacing-1} #{tokens.$spacing-3};
+  justify-content: space-between;
+  margin-top: tokens.$spacing-5;
+}
+.secondary-button {
+  @include buttons.secondary;
+  & {
+    min-height: tokens.$button-height-sm;
+    padding: tokens.$spacing-1 tokens.$spacing-3;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}

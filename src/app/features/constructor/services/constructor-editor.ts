@@ -1,3 +1,4 @@
+import { svgVector } from 'angular-shared-ui/svg';
 import { createDesignShape, DesignShape } from '../helpers/design-shapes';
 import { DESIGN_FONTS, loadSceneFonts, normalizeDesignFonts } from '../helpers/design-fonts';
 import { computed, inject, Injectable, signal } from '@angular/core';
@@ -42,7 +43,6 @@ import { applyVisualStyle, captureVisualStyle, VisualStyle } from '../helpers/vi
 import { restoreDesignScene } from '../helpers/restore-design-scene';
 import type { LucideIconData } from 'lucide-angular';
 import { iconSvg } from './constructor-icons';
-import { svgVector } from '../helpers/svg-vector';
 import { ConstructorCanvas } from '../helpers/constructor-canvas';
 
 type ObjectLockState = Pick<FabricObject, 'lockMovementX' | 'lockMovementY' | 'lockScalingX' | 'lockScalingY' | 'lockRotation' | 'hasControls'> & { editable?: boolean };

@@ -1,4 +1,4 @@
-import { Toasts } from './shared/ui/toast/toast';
+import { Toasts } from 'angular-shared-ui/toast';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Footer } from './core/components/footer/footer';

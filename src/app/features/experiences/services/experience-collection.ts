@@ -1,9 +1,9 @@
+import { ToastService } from 'angular-shared-ui/toast';
 import { computed, DestroyRef, effect, inject, Injectable, PendingTasks, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime, Subject } from 'rxjs';
 import { SavedExperience } from '../../cv/interfaces/experience';
 import { SavedCvs } from '../../cv/services/saved-cvs';
-import { ToastService } from '../../../shared/ui/toast/toast.service';
 import { ExperienceSearch, ExperiencesApi } from './experiences-api';
 
 @Injectable()

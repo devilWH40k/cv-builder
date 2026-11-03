@@ -1,7 +1,7 @@
+import { Dialog } from 'angular-shared-ui/dialog';
 import { ChangeDetectionStrategy, Component, effect, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule, Pencil, PenTool } from 'lucide-angular';
-import { Dialog } from '../../../../shared/ui/dialog/dialog';
 import { CvDraft } from '../../../cv/services/cv-draft';
 import { SavedCv } from '../../../cv/services/saved-cvs';
 import { Preview } from '../../../preview/components/preview/preview';
