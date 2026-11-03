@@ -1,8 +1,8 @@
-import { DebouncedColor } from '../../../../shared/directives/debounced-color';
+import { DebouncedColor } from 'angular-shared-ui/directives';
+import { Button } from 'angular-shared-ui/button';
+import { ToastService } from 'angular-shared-ui/toast';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { LucideAngularModule, ImagePlus, Trash2 } from 'lucide-angular';
-import { Button } from '../../../../shared/ui/button/button';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ConstructorEditor } from '../../services/constructor-editor';
 
 @Component({

@@ -1,5 +1,5 @@
 @use 'styles/tokens' as tokens;
-@use '../../../../shared/ui/button/variants' as buttons;
+@use 'angular-shared-ui/styles/button-variants' as buttons;
 
 .toolbar.main-toolbar {
   display: grid;

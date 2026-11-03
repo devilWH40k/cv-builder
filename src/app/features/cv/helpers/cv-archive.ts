@@ -1,3 +1,4 @@
+import { CustomEntryIcons } from 'angular-shared-ui/custom-entry-dialog';
 import { AsyncUnzipInflate, strFromU8, strToU8, Unzip, zip } from 'fflate';
 import type { AsyncZippable, UnzipFile } from 'fflate';
 import type { CvInfo, CvStructure } from '../services/cv-draft';
@@ -5,7 +6,6 @@ import type { CvExperience, SavedExperience } from '../interfaces/experience';
 import type { CvEducation } from '../interfaces/education';
 import type { CvDatabaseSnapshot, SavedCv } from '../services/saved-cvs';
 import { CV_THEMES } from '../constants/cv-themes';
-import { CustomEntryIcons } from '../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 import { SavedTechnology, technologyId } from './saved-technology';
 import type { CvFolder } from '../interfaces/cv-folder';
 import { CvContactInfo, SOCIAL_NETWORKS } from './cv-contact';

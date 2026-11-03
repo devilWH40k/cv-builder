@@ -1,4 +1,4 @@
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
+import { ToastService } from 'angular-shared-ui/toast';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { Bold, Italic, Underline, ChevronDown, LucideAngularModule, LucideIconData } from 'lucide-angular';
 import { ConstructorEditor } from '../../services/constructor-editor';

@@ -1,5 +1,5 @@
 @use 'styles/tokens' as tokens;
-@use '../../../../shared/ui/button/variants' as buttons;
+@use 'angular-shared-ui/styles/button-variants' as buttons;
 
 h4 { margin: tokens.$spacing-4 0 tokens.$spacing-2; font-weight: tokens.$font-weight-medium; }
 .empty-state { margin: tokens.$spacing-2 0 0; color: tokens.$text-muted; }

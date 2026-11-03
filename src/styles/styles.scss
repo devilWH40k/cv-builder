@@ -1,8 +1,7 @@
 @use './tokens' as tokens;
-@use '../app/shared/directories/tooltip';
-@use '../app/shared/ui/draggable/drag-preview';
 @use './reset';
-@use './app-theme';
+@use 'angular-shared-ui/styles';
+@use 'angular-shared-ui/styles/theme' as theme;
 @use './themes/basic';
 @use './themes/dark-blue';
 @use './themes/dark';
@@ -27,6 +26,12 @@ body {
   }
 }
 
+// Document themes remain independent of the application's appearance.
+.cv-document {
+  @include theme.light;
+  color-scheme: light;
+}
+
 .cv-document .project-description {
   p + p, ul, ol { margin-top: 3mm; }
   li + li { margin-top: 2mm; }
@@ -35,30 +40,3 @@ body {
   > :first-child { margin-top: 0; }
   > :last-child { margin-bottom: 0; }
 }
-
-@media screen {
-  body:has(> .dialog-overlay) {
-    overflow: hidden;
-  }
-}
-
-.dialog-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: tokens.$z-modal;
-  display: grid;
-  place-items: center;
-  background: rgba(tokens.$color-gray-900, 0.4);
-}
-
-.dialog-overlay > dialog {
-  position: relative;
-  inset: auto;
-  margin: auto;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.dialog-overlay.drop-target { background: rgba(tokens.$color-primary, 0.2); }
-
-@media print { .dialog-overlay { display: none; } }

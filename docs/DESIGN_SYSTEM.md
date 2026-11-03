@@ -6,13 +6,14 @@ This document defines the visual design system for the CV Builder application.
 
 All UI implementation should follow this document and the design tokens defined in:
 
-`src/styles/_tokens.scss`
+`libs/angular-shared-ui/styles/_tokens.scss` (forwarded by `src/styles/_tokens.scss`)
 
 Before creating or modifying UI:
 
 1. Read this document.
 2. Check the existing design tokens.
-3. Check existing reusable components in `src/app/shared/ui/`.
+3. Check existing reusable components in `libs/angular-shared-ui/<entry-point>/src/`
+   and their [component reference](../libs/angular-shared-ui/docs/README.md).
 4. Reuse existing patterns before creating new ones.
 
 The goal is a consistent, professional, accessible interface rather than individually styled screens.
@@ -53,14 +54,14 @@ Prefer clear hierarchy, generous whitespace, subtle borders, restrained color, a
 
 # 3. Design Tokens
 
-The source of truth for design values is:
+The source of truth for design values is the library token file, forwarded for application styles by:
 
 `src/styles/_tokens.scss`
 
 Do not duplicate token values inside component styles.
 
 Application colors resolve through CSS custom properties so shared controls support
-light and dark appearance. `_app-theme.scss` defines both palettes; use semantic
+light and dark appearance. `libs/angular-shared-ui/styles/_theme.scss` defines both palettes; use semantic
 tokens such as `$text-primary` and `$background-surface` instead of fixed neutrals.
 CV document themes keep their own colors independently of the application theme.
 
@@ -1071,12 +1072,12 @@ Respect reduced-motion preferences when implementing substantial motion.
 
 Reusable design-system components should live under:
 
-`src/app/shared/ui/`
+`libs/angular-shared-ui/<entry-point>/src/`
 
 Expected components may include:
 
 ```text id="hkwgv8"
-shared/ui/
+libs/angular-shared-ui/
 ├── button/
 ├── icon-button/
 ├── input/
@@ -1169,7 +1170,7 @@ When implementing UI:
 
 1. Read this document.
 2. Inspect `_tokens.scss`.
-3. Inspect existing components under `shared/ui`.
+3. Inspect existing components under `libs/angular-shared-ui`.
 4. Reuse existing components.
 5. Reuse existing design tokens.
 6. Follow existing layout patterns.
@@ -1261,7 +1262,7 @@ Import / Export and Technologies keep their dialogs; Experiences is a route link
 On smaller screens, navigation wraps onto a centered second row. The footer uses
 `$background-footer: #11214d` and white text. Both header and footer hide in print.
 
-Shared dropdowns use `shared/ui/dropdown`. Pass a unique `menuId`, an
+Shared dropdowns use `angular-shared-ui/dropdown`. Pass a unique `menuId`, an
 accessible `label`, and an `items` array of `{ id, label, disabled? }` entries.
 Project trigger content inside `app-dropdown` and handle its `selected` output.
 Menus open on hover or click, support arrow/Home/End navigation and Escape, and
@@ -1284,7 +1285,7 @@ to the list; cancellation leaves the library unchanged.
 
 ## Tooltips
 
-Import `Tooltip` from `src/app/shared/directories/tooltip` and add
+Import `Tooltip` from `angular-shared-ui/directives` and add
 `appTooltip="Hint text"` (or `[appTooltip]="hint"`) to a focusable control.
 The directive opens a plain-text hint on hover, focus, or tap and dismisses it
 on Escape, blur, or resize. On scroll, focused hints reposition and other hints
@@ -1372,7 +1373,7 @@ description text is escaped before conversion to rich text. Formula cells are
 reported as errors and are never evaluated. The fflate parser and template
 generator load on demand. Import limits are 10 MB compressed and 1,000 records.
 
-`shared/ui/table` keeps each component's source, styles and tests in its own named subfolder. The
+`libs/angular-shared-ui/table/src` keeps each component's source, styles and tests in its own named subfolder. The
 `table-wrapper/` folder contains the managed table, `models/` contains column and
 settings types, `directives/` contains typed cell templates, and `utils/` contains
 URL synchronization and its tests. `Table`, `TableHeader`, `TableRow`, and `TableCell` provide
@@ -1562,7 +1563,7 @@ signal and persists `list` or `card` under `cv-builder.home-view` in local stora
 The preference survives navigation and reloads. Missing or invalid preferences
 default to List; if browser storage is blocked, switches still work for the session.
 
-New dialogs can use `shared/ui/dialog/dialog` (`app-dialog`). Supply a unique
+New dialogs can use `angular-shared-ui/dialog` (`app-dialog`). Supply a unique
 `dialogId` and `title`, project the body normally, and project actions with
 `dialogActions`. Optional `wide`, `minHeight`, `busy`, and `showClose` inputs control the shell;
 project optional header actions with `dialogHeaderActions` to place them before Close.
@@ -1622,7 +1623,7 @@ the selection for retry. The move uses existing IndexedDB folder persistence.
 
 ## Shared pointer dragging
 
-Wrap draggable content in `shared/ui/draggable/draggable` (`app-draggable`) and
+Wrap draggable content in `angular-shared-ui/draggable` (`app-draggable`) and
 provide `dragId`, `dragType`, and an optional `disabled` input. The component
 waits for pointer movement before dragging, preserving normal clicks. It hides
 the source from layout while held and creates a full-size opaque preview above
@@ -1631,7 +1632,7 @@ The preview keeps the pointer's original grab offset and cannot receive focus
 or intercept pointer events. Nested buttons, form fields, and `data-no-drag`
 elements remain independent actions.
 
-Use `DropTarget` from `shared/ui/draggable/drop-target` with
+Use `DropTarget` from `angular-shared-ui/draggable` with
 `[appDropTarget]="acceptedType"`, optional `dropDisabled`, and `(itemDropped)`.
 Accepted targets receive the `drop-target` class while hovered. The shared
 `DragDrop` service owns the active item, hit testing, and cleanup; features
@@ -1659,7 +1660,7 @@ Visibility is kept for the current constructor session.
 The constructor shows a walkthrough when the user first opens, imports, or
 creates a design, provided they have not seen it yet. Visiting the constructor
 library alone does not open the editor or consume the tutorial. It uses shared `app-joyride` and
-`[appJoyrideTarget]` from `shared/ui/joyride`. Each step supplies a target name,
+`[appJoyrideTarget]` from `angular-shared-ui/joyride`. Each step supplies a target name,
 title, and description. The overlay highlights that target, follows viewport
 changes, traps focus, and supports Escape. Buttons use the compact 32px height.
 Skip sits on the left; Prev and Next sit on the right. On the last step, Prev

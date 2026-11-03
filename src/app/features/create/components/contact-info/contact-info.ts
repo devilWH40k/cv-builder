@@ -1,9 +1,9 @@
+import { Tooltip } from 'angular-shared-ui/directives';
+import { Input } from 'angular-shared-ui/input';
+import { Button } from 'angular-shared-ui/button';
+import { ToastService } from 'angular-shared-ui/toast';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { LucideAngularModule, Mail, Phone, Copy, X, ChevronDown } from 'lucide-angular';
-import { Tooltip } from '../../../../shared/directories/tooltip';
-import { Input } from '../../../../shared/ui/input/input';
-import { Button } from '../../../../shared/ui/button/button';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ContactForm, createSocialForm } from '../../helpers/cv-form';
 import { SOCIAL_NETWORKS, socialLink, SocialNetwork } from '../../../cv/helpers/cv-contact';
 

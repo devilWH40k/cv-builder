@@ -1,11 +1,11 @@
+import { Dialog } from 'angular-shared-ui/dialog';
+import { Button } from 'angular-shared-ui/button';
+import { Input } from 'angular-shared-ui/input';
+import { Textarea } from 'angular-shared-ui/textarea';
+import { Radio } from 'angular-shared-ui/radio';
+import { ToastService } from 'angular-shared-ui/toast';
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Dialog } from '../../../../shared/ui/dialog/dialog';
-import { Button } from '../../../../shared/ui/button/button';
-import { Input } from '../../../../shared/ui/input/input';
-import { Textarea } from '../../../../shared/ui/textarea/textarea';
-import { Radio } from '../../../../shared/ui/radio/radio';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ExperienceEntry } from '../../../create/components/experience-entry/experience-entry';
 import { createExperienceForm } from '../../../create/helpers/cv-form';
 import { SavedExperience } from '../../../cv/interfaces/experience';

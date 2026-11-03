@@ -1,5 +1,5 @@
+import { UnsavedChangesDialog, UnsavedChangesDecision } from 'angular-shared-ui/unsaved-changes-dialog';
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { UnsavedChangesDialog, UnsavedChangesDecision } from '../../../../shared/ui/unsaved-changes-dialog/unsaved-changes-dialog';
 
 export type LeaveCreateDecision = UnsavedChangesDecision;
 

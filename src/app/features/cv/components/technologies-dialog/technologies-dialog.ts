@@ -1,10 +1,10 @@
+import { CustomEntry, CustomEntryDialog } from 'angular-shared-ui/custom-entry-dialog';
+import { Button } from 'angular-shared-ui/button';
+import { DialogOverlay } from 'angular-shared-ui/dialog';
+import { DeleteConfirmationService } from 'angular-shared-ui/delete-confirmation';
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { LucideAngularModule, Plus, Trash2, X } from 'lucide-angular';
-import { CustomEntry, CustomEntryDialog } from '../../../../core/dialogs/custom-entry-dialog/custom-entry-dialog';
-import { Button } from '../../../../shared/ui/button/button';
-import { DialogOverlay } from '../../../../shared/ui/dialog/dialog-overlay';
 import { SavedCvs } from '../../services/saved-cvs';
-import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
 
 @Component({
   selector: 'app-technologies-dialog',

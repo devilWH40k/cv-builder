@@ -1,9 +1,9 @@
+import { Toasts } from 'angular-shared-ui/toast';
 import { Component, provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ExperiencesDialog } from './experiences-dialog';
 import { SavedCvs } from '../../../cv/services/saved-cvs';
 import { SavedExperience } from '../../../cv/interfaces/experience';
-import { Toasts } from '../../../../shared/ui/toast/toast';
 
 @Component({ imports: [Toasts], template: '<app-toasts />' })
 class ToastHost {}

@@ -1,3 +1,5 @@
+import { ToastService } from 'angular-shared-ui/toast';
+import { DeleteConfirmationService } from 'angular-shared-ui/delete-confirmation';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -5,11 +7,9 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { ConstructorPageComponent } from './constructor-page';
 import { ConstructorRepository } from '../../services/constructor-repository';
 import { blankDesign } from '../../helpers/preview-to-design';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ConstructorEditor } from '../../services/constructor-editor';
 import { ConstructorSession } from '../../services/constructor-session';
 import { Canvas, FabricObject } from 'fabric';
-import { DeleteConfirmationService } from '../../../../shared/ui/delete-confirmation/delete-confirmation.service';
 import { ConstructorTour, CONSTRUCTOR_TOUR_KEY } from '../../services/constructor-tour';
 
 describe('Fullscreen constructor page', () => {

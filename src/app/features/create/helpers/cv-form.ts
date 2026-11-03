@@ -1,10 +1,10 @@
+import { companyLogoFileValidator, imageFileValidator } from 'angular-shared-ui/file-upload';
+import { parseCalendarDate } from 'angular-shared-ui/date-picker';
+import { CustomEntryIcons } from 'angular-shared-ui/custom-entry-dialog';
 import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
 import { CvSocialLink, emailValidator, phoneValidator, socialLink, SOCIAL_NETWORKS } from '../../cv/helpers/cv-contact';
-import { companyLogoFileValidator, imageFileValidator } from '../../../shared/ui/file-upload/image-file.validator';
 import { CvLanguage } from '../../cv/constants/languages';
 import { CvExperience } from '../../cv/interfaces/experience';
-import { parseCalendarDate } from '../../../shared/ui/date-picker/date-value';
-import { CustomEntryIcons } from '../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 import { CvEducation } from '../../cv/interfaces/education';
 
 export function createEducationForm(education?: CvEducation) {

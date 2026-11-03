@@ -1,8 +1,7 @@
+import { MultiSelect, MultiSelectGroup } from 'angular-shared-ui/multi-select';
+import { CustomEntry, CustomEntryIcons } from 'angular-shared-ui/custom-entry-dialog';
 import { afterNextRender, ChangeDetectionStrategy, Component, inject, input, PendingTasks, signal } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { MultiSelect, MultiSelectGroup } from '../../../../shared/ui/multi-select/multi-select';
-import { CustomEntry } from '../../../../core/dialogs/custom-entry-dialog/custom-entry-dialog';
-import { CustomEntryIcons } from '../../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 import { SavedCvs } from '../../services/saved-cvs';
 
 @Component({

@@ -1,12 +1,10 @@
+import { TableWrapper, TableCellTemplate, TableSettings } from 'angular-shared-ui/table';
+import { Button } from 'angular-shared-ui/button';
+import { DeleteConfirmationService } from 'angular-shared-ui/delete-confirmation';
+import { Tooltip } from 'angular-shared-ui/directives';
+import { ToastService } from 'angular-shared-ui/toast';
 import { afterRenderEffect, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { LucideAngularModule, Pencil, Plus, Trash2, Upload } from 'lucide-angular';
-import { TableWrapper } from '../../shared/ui/table/table-wrapper/table-wrapper';
-import { TableCellTemplate } from '../../shared/ui/table/directives/table-cell-template';
-import { TableSettings } from '../../shared/ui/table/models/table-column';
-import { Button } from '../../shared/ui/button/button';
-import { DeleteConfirmationService } from '../../shared/ui/delete-confirmation/delete-confirmation.service';
-import { Tooltip } from '../../shared/directories/tooltip';
-import { ToastService } from '../../shared/ui/toast/toast.service';
 import { SavedExperience } from '../cv/interfaces/experience';
 import { SavedCvs } from '../cv/services/saved-cvs';
 import { ExperienceDialog } from './components/experience-dialog/experience-dialog';

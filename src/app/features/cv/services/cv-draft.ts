@@ -1,3 +1,4 @@
+import { CustomEntryIcons } from 'angular-shared-ui/custom-entry-dialog';
 import { computed, Injectable, signal } from '@angular/core';
 import { cvInfoEqual } from '../helpers/cv-info-equal';
 import { CvContactInfo } from '../helpers/cv-contact';
@@ -5,7 +6,6 @@ import { CvLanguage } from '../constants/languages';
 import { CvExperience } from '../interfaces/experience';
 import { CvEducation } from '../interfaces/education';
 import { CvTheme } from '../constants/cv-themes';
-import { CustomEntryIcons } from '../../../core/dialogs/custom-entry-dialog/custom-entry-icon';
 
 export interface CvStructure {
   readonly theme?: CvTheme;

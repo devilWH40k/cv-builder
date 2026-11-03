@@ -1,9 +1,9 @@
+import { JoyrideTargets } from 'angular-shared-ui/joyride';
+import { LayersArrowUp, LayerArrowUp, LayerArrowDown, LayersArrowDown } from 'angular-shared-ui/icons';
+import { ContextMenu, ContextMenuItem } from 'angular-shared-ui/context-menu';
+import { ToastService } from 'angular-shared-ui/toast';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, viewChild } from '@angular/core';
-import { JoyrideTargets } from '../../../../shared/ui/joyride/joyride-target';
 import { Copy, Scissors, ClipboardPaste, Group, Ungroup } from 'lucide-angular';
-import { LayersArrowUp, LayerArrowUp, LayerArrowDown, LayersArrowDown } from '../../../../shared/ui/icons/layer-arrows';
-import { ContextMenu, ContextMenuItem } from '../../../../shared/ui/context-menu/context-menu';
-import { ToastService } from '../../../../shared/ui/toast/toast.service';
 import { ConstructorEditor } from '../../services/constructor-editor';
 
 @Component({
