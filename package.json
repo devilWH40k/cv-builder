@@ -1,6 +1,6 @@
 {
   "name": "cv-builder",
-  "version": "3.0.0b",
+  "version": "3.1.0b",
   "scripts": {
     "ng": "ng",
     "start": "node scripts/start.mjs",
