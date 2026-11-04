@@ -5,12 +5,16 @@
     "ng": "ng",
     "start": "node scripts/start.mjs",
     "build": "npm run build:lib && ng build cv-builder",
-    "build:lib": "ng build angular-shared-ui",
+    "build:lib": "npm run build:shared-ui && npm run build:constructor",
+    "build:shared-ui": "ng build angular-shared-ui",
+    "build:constructor": "ng build constructor",
     "watch": "npm run build:lib && ng build cv-builder --watch --configuration development",
     "watch:lib": "ng build angular-shared-ui --watch --configuration development",
+    "watch:constructor": "ng build constructor --watch --configuration development",
     "test": "npm run build:lib && ng test",
     "test:app": "npm run build:lib && ng test cv-builder",
-    "test:lib": "ng test angular-shared-ui"
+    "test:lib": "ng test angular-shared-ui",
+    "test:constructor": "npm run build:shared-ui && ng test constructor"
   },
   "prettier": {
     "printWidth": 100,

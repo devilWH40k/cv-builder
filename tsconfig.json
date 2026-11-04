@@ -16,7 +16,9 @@
     "module": "preserve",
     "paths": {
       "angular-shared-ui": ["./dist/angular-shared-ui"],
-      "angular-shared-ui/*": ["./dist/angular-shared-ui/*"]
+      "angular-shared-ui/*": ["./dist/angular-shared-ui/*"],
+      "constructor": ["./dist/constructor"],
+      "constructor/*": ["./dist/constructor/*"]
     }
   },
   "angularCompilerOptions": {

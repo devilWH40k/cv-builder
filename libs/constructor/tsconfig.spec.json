@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../out-tsc/constructor-spec",
+    "types": ["jasmine"],
+    "paths": {
+      "constructor": ["./src/public-api.ts"],
+      "constructor/*": ["./*/public-api.ts"],
+      "angular-shared-ui": ["../../dist/angular-shared-ui"],
+      "angular-shared-ui/*": ["../../dist/angular-shared-ui/*"]
+    }
+  },
+  "include": ["**/*.spec.ts", "**/*.d.ts"]
+}

@@ -18,18 +18,18 @@ npm start
 ```
 
 `npm start` starts the library watcher and waits for its first successful build
-before starting the application server. Arguments such as `npm start -- --port 4300` are
+before starting the constructor watcher; the application server starts after both libraries build successfully. Arguments such as `npm start -- --port 4300` are
 forwarded to the server. Ctrl+C stops both processes. The watcher retains the
 previous package during rebuilds (`deleteDestPath: false`) so the server can
 continue resolving it. After deleting or renaming entry points, stop the watcher,
 remove the generated `dist/angular-shared-ui` folder, and restart to clear stale files.
 
 ```bash
-npm run build:lib                         # production package
+npm run build:shared-ui                   # this production package
 npm run watch:lib                         # development package watcher
 npm run build                            # library, then application
 npm run test:lib -- --watch=false --browsers=ChromeHeadless
-npm test -- --watch=false --browsers=ChromeHeadless  # both projects
+npm test -- --watch=false --browsers=ChromeHeadless  # all three projects
 ```
 
 The Angular CLI uses `@angular/build:ng-packagr`, following Angular's

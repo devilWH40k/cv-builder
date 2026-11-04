@@ -1,3 +1,5 @@
+import { provideConstructorIndexedDbStorage } from 'constructor/indexeddb';
+import { CvDatabase } from '../../../cv/services/cv-database';
 import { CvPdf } from '../../../cv/services/cv-pdf';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -52,7 +54,7 @@ describe('CV preview', () => {
       return media;
     });
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection(), provideRouter(routes)]
+      providers: [provideZonelessChangeDetection(), provideRouter(routes), provideConstructorIndexedDbStorage(CvDatabase)]
     });
     download = spyOn(TestBed.inject(CvPdf), 'download').and.resolveTo();
   });
