@@ -193,6 +193,7 @@ describe('CV form', () => {
       languages: [],
       experiences: [],
       education: [],
+      certificates: [],
       technologies: []
     });
   });

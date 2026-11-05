@@ -14,6 +14,25 @@ const cv: CvInfo = {
 };
 
 describe('PDF export', () => {
+  it('exports certificate links with short underlined text and skips unsafe links', async () => {
+    const definition = await buildCvPdf({ ...cv, certificates: [
+      { name: 'Shared certificate', link: 'https://example.com/certificate', date: '2025-06' },
+      { name: 'Offline certificate', link: '' },
+      { name: 'Undated certificate', link: 'https://example.com/undated-certificate' },
+      { name: 'HTTP certificate', link: 'http://example.com/insecure-certificate' },
+      { name: 'Unsafe certificate', link: 'javascript:alert(1)' }
+    ] });
+    const content = JSON.stringify(definition.content);
+    expect(content).toContain('Certificates:');
+    expect(content).toContain('June 2025');
+    expect(content).toContain('"text":"link","link":"https://example.com/certificate","decoration":"underline"');
+    expect(content).toContain('"text":"June 2025","fontSize":10,"color":"#475569","width":"auto"');
+    expect(content).toContain('"text":"link","link":"https://example.com/undated-certificate","decoration":"underline","color":"#36d4f7","width":"auto"');
+    expect(content).toContain('Offline certificate');
+    expect(content).not.toContain('javascript:');
+    expect(content).not.toContain('http://example.com/insecure-certificate');
+    expect((await pdfMake.createPdf(definition).getBuffer()).length).toBeGreaterThan(0);
+  });
   it('exports education after experience and supports education without work experience', async () => {
     const education = [{ university: 'Independent University', degree: 'Bachelor', field: 'Cybersecurity',
       startDate: '2018-09', endDate: '2022-06' }];

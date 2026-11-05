@@ -4,6 +4,20 @@ import { defaultBackupName } from '../services/cv-backup';
 import { SavedCv } from '../services/saved-cvs';
 
 describe('CV ZIP backups', () => {
+  it('round trips certificates and accepts older backups without them', async () => {
+    const certificates = [{ name: 'Certificate', link: 'https://example.com/certificate', date: '2025-06-15' }, { name: 'Offline', link: '' }];
+    const restored = await readArchive(await createArchive([{ ...record, info: { ...record.info, certificates } }]));
+    expect(restored.cvs[0].info.certificates).toEqual(certificates);
+    const legacy = await readArchive(archive([{ ...record, info: { ...record.info, photo: null } }]));
+    expect(legacy.cvs[0].info.certificates).toBeUndefined();
+  });
+
+  it('rejects malformed certificates in backups', async () => {
+    for (const certificates of [null, {}, [null], [{ name: 123, link: '' }], [{ name: 'Certificate', link: [] }], [{ name: 'Certificate', link: '', date: 123 }]]) {
+      await expectAsync(readArchive(archive([{ ...record, info: { ...record.info, photo: null, certificates } }])))
+        .toBeRejected();
+    }
+  });
   it('round trips education while accepting older backups without education', async () => {
     const education = [{ university: 'University', degree: 'Master', field: 'Cybersecurity',
       startDate: '2019-09', endDate: '2021-06' }];

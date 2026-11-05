@@ -86,6 +86,16 @@
       <ui-button class="add-entry" variant="outline" aria-label="Add education" (click)="addEducation()">Add education</ui-button>
     </ui-expand-panel>
 
+    <ui-expand-panel heading="Certificates" panelId="certificates-panel"
+      [count]="form.controls.certificates.length">
+      @for (row of form.controls.certificates.controls; track row; let index = $index) {
+        <app-certificate-entry [form]="row" [index]="index" (remove)="removeCertificate(index)" />
+      } @empty {
+        <p class="empty-state">Add certificates to highlight your qualifications</p>
+      }
+      <ui-button class="add-entry" variant="outline" aria-label="Add certificate" (click)="addCertificate()">Add certificate</ui-button>
+    </ui-expand-panel>
+
     <ui-expand-panel heading="Languages" panelId="languages-panel"
       [count]="form.controls.languages.length">
       @for (row of form.controls.languages.controls; track row; let index = $index) {

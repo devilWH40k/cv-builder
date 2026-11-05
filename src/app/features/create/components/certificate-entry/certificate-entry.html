@@ -1,0 +1,26 @@
+<div class="entry">
+  <div class="heading">
+    <h4>Certificate {{ index() + 1 }}</h4>
+    <button class="remove" type="button" [attr.aria-label]="'Remove certificate ' + (index() + 1)"
+      (click)="remove.emit()">
+      <lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" />
+    </button>
+  </div>
+  <ui-input [inputId]="'certificate-name-' + index()" label="Certificate name"
+    [control]="form().controls.name" [required]="true">
+    @if (form().controls.name.touched && form().controls.name.invalid) {
+      <span>Please enter a certificate name.</span>
+    }
+  </ui-input>
+  <ui-date-picker [inputId]="'certificate-date-' + index()" label="Date issued (optional)"
+    [control]="form().controls.date" mode="day-month-year" />
+  @if (form().controls.date.touched && form().controls.date.invalid) {
+    <p class="error" role="alert">Please select a valid date.</p>
+  }
+  <ui-input [inputId]="'certificate-link-' + index()" label="Link (optional)" type="url"
+    [control]="form().controls.link" helpText="A shared certificate URL starting with https://">
+    @if (form().controls.link.touched && form().controls.link.invalid) {
+      <span>Please enter a valid HTTPS link.</span>
+    }
+  </ui-input>
+</div>

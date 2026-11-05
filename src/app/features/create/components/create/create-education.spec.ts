@@ -19,7 +19,7 @@ describe('CV education section', () => {
     const page: HTMLElement = fixture.nativeElement;
     await fixture.whenStable();
     const panels = Array.from(page.querySelectorAll('ui-expand-panel')).map((panel) => panel.getAttribute('panelId'));
-    expect(panels.slice(0, 3)).toEqual(['experience-panel', 'education-panel', 'languages-panel']);
+    expect(panels.slice(0, 4)).toEqual(['experience-panel', 'education-panel', 'certificates-panel', 'languages-panel']);
     page.querySelector<HTMLButtonElement>('[aria-label="Add education"] button')!.click();
     await fixture.whenStable();
     const education = { university: 'Independent University', degree: 'Bachelor', field: 'Cybersecurity',
