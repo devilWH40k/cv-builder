@@ -21,7 +21,7 @@ import { StructureOptions } from '../structure-options/structure-options';
   selector: 'app-preview',
   imports: [ExperienceDescription, Resizable, SaveCvButton, RouterLink, Button, LucideAngularModule, StructureOptions, ResponsiveDrawer],
   templateUrl: './preview.html',
-  styleUrls: ['./preview.scss', './preview-pages.scss', './preview-technologies.scss', './preview-contacts.scss', './preview-certificates.scss'],
+  styleUrls: ['./preview.scss', './preview-pages.scss', './preview-technologies.scss', './preview-contacts.scss', './preview-certificates.scss', './preview-custom-blocks.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Preview {

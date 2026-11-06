@@ -6,6 +6,7 @@ import { CvLanguage } from '../constants/languages';
 import { CvExperience } from '../interfaces/experience';
 import { CvEducation } from '../interfaces/education';
 import { CvCertificate } from '../interfaces/certificate';
+import { CvCustomBlock } from '../interfaces/custom-block';
 import { CvTheme } from '../constants/cv-themes';
 
 export interface CvStructure {
@@ -37,6 +38,7 @@ export interface CvInfo {
   readonly experiences: readonly CvExperience[];
   readonly education?: readonly CvEducation[];
   readonly certificates?: readonly CvCertificate[];
+  readonly customBlocks?: readonly CvCustomBlock[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -94,6 +96,7 @@ export class CvDraft {
       languages: info.languages.map((language) => ({ ...language })),
       ...(info.education ? { education: info.education.map((entry) => ({ ...entry })) } : {}),
       ...(info.certificates ? { certificates: info.certificates.map((entry) => ({ ...entry })) } : {}),
+      ...(info.customBlocks ? { customBlocks: info.customBlocks.map((entry) => ({ ...entry })) } : {}),
       technologies: [...info.technologies],
       experiences: info.experiences.map((experience) => ({
         ...experience, technologies: [...experience.technologies],

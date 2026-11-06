@@ -342,6 +342,10 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
         return { name: string(entry['name']), link: string(entry['link']),
           ...(entry['date'] !== undefined ? { date: string(entry['date']) } : {}) };
       }) } : {}),
+      ...(info['customBlocks'] !== undefined ? { customBlocks: array(info['customBlocks']).map((value) => {
+        const block = object(value);
+        return { title: string(block['title']), content: string(block['content']) };
+      }) } : {}),
       ...(layout ? { structure: layout } : {})
     };
     return { id, updatedAt: number(record['updatedAt']), info: restored };

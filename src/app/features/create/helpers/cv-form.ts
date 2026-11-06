@@ -8,6 +8,16 @@ import { CvExperience } from '../../cv/interfaces/experience';
 import { CvEducation } from '../../cv/interfaces/education';
 import { CvCertificate } from '../../cv/interfaces/certificate';
 import { certificateLink } from '../../cv/helpers/certificate-link';
+import { CvCustomBlock } from '../../cv/interfaces/custom-block';
+
+export function createCustomBlockForm(block?: CvCustomBlock) {
+  return new FormGroup({
+    title: new FormControl(block?.title ?? '', {
+      nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)]
+    }),
+    content: new FormControl(block?.content ?? '', { nonNullable: true })
+  });
+}
 
 export function createCertificateForm(certificate?: CvCertificate) {
   return new FormGroup({
@@ -123,6 +133,7 @@ export function createCvForm() {
     experiences: new FormArray<ReturnType<typeof createExperienceForm>>([]),
     education: new FormArray<ReturnType<typeof createEducationForm>>([]),
     certificates: new FormArray<ReturnType<typeof createCertificateForm>>([]),
+    customBlocks: new FormArray<ReturnType<typeof createCustomBlockForm>>([]),
     technologies: new FormControl<readonly string[]>([], { nonNullable: true })
   });
 }

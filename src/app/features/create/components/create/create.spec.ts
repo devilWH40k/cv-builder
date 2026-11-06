@@ -194,6 +194,7 @@ describe('CV form', () => {
       experiences: [],
       education: [],
       certificates: [],
+      customBlocks: [],
       technologies: []
     });
   });

@@ -224,6 +224,12 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
     }
   }
 
+  for (const block of cv.customBlocks ?? []) {
+    main.push({ text: block.title, fontSize: 13, bold: true,
+      margin: [0, main.length ? 23 : 0, 0, 9], headlineLevel: 1 });
+    main.push(pdfRichText(block.content));
+  }
+
   const contacts = await Promise.all(contactLinks(cv.contact).map(async (link): Promise<Content> => ({
     columns: [
       link.icon

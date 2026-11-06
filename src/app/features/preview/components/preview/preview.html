@@ -122,6 +122,12 @@
               }
             </section>
             }
+            @for (block of cv.customBlocks ?? []; track $index; let blockIndex = $index) {
+              <section class="cv-custom-block" [attr.aria-labelledby]="'cv-custom-block-title-' + page + '-' + blockIndex">
+                <h3 [id]="'cv-custom-block-title-' + page + '-' + blockIndex">{{ block.title }}</h3>
+                <div class="project-description" [innerHTML]="block.content | experienceDescription"></div>
+              </section>
+            }
           </div>
           <aside class="cv-sidebar">
             @if (contacts().length) {

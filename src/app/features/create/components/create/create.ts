@@ -18,7 +18,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { startWith } from 'rxjs';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
-import { createCertificateForm, createCvForm, createEducationForm, createExperienceForm, createLanguageForm, createSocialForm } from '../../helpers/cv-form';
+import { createCertificateForm, createCustomBlockForm, createCvForm, createEducationForm, createExperienceForm, createLanguageForm, createSocialForm } from '../../helpers/cv-form';
 import { appliedExperienceDescription } from '../../helpers/applied-experience-description';
 import { ContactInfo } from '../contact-info/contact-info';
 import { ExperienceEntry } from '../experience-entry/experience-entry';
@@ -33,10 +33,11 @@ import { TECHNOLOGY_GROUPS } from '../../../cv/constants/technologies';
 import { SaveCv } from '../../../cv/services/save-cv';
 import { LeaveCreateDecision, LeaveCreateDialog } from '../leave-create-dialog/leave-create-dialog';
 import { CertificateEntry } from '../certificate-entry/certificate-entry';
+import { CustomBlockEntry } from '../custom-block-entry/custom-block-entry';
 
 @Component({
   selector: 'app-create',
-  imports: [ContactInfo, ExperiencesDialog, LeaveCreateDialog, ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, TechnologySelect, LucideAngularModule, ExperienceEntry, EducationEntry, CertificateEntry],
+  imports: [ContactInfo, ExperiencesDialog, LeaveCreateDialog, ExpandPanel, Tabs, Preview, StructureOptions, SaveCvButton, RouterLink, ReactiveFormsModule, Input, Textarea, FileUpload, Button, Select, TechnologySelect, LucideAngularModule, ExperienceEntry, EducationEntry, CertificateEntry, CustomBlockEntry],
   templateUrl: './create.html',
   styleUrl: './create.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -189,7 +190,10 @@ export class Create {
     for (const certificate of info.certificates ?? []) {
       this.form.controls.certificates.push(createCertificateForm(certificate));
     }
-    this.form.patchValue({ ...fields, ...(contact ? { contact: { ...contact, socials: this.form.controls.contact.controls.socials.getRawValue() } } : {}), languages: [...info.languages], experiences: [...info.experiences], education: [...(info.education ?? [])], certificates: [...(info.certificates ?? [])] });
+    for (const block of info.customBlocks ?? []) {
+      this.form.controls.customBlocks.push(createCustomBlockForm(block));
+    }
+    this.form.patchValue({ ...fields, ...(contact ? { contact: { ...contact, socials: this.form.controls.contact.controls.socials.getRawValue() } } : {}), languages: [...info.languages], experiences: [...info.experiences], education: [...(info.education ?? [])], certificates: [...(info.certificates ?? [])], customBlocks: [...(info.customBlocks ?? [])] });
   }
 
   protected readonly experiencesOpen = signal(false);
@@ -276,6 +280,16 @@ export class Create {
     this.form.markAsDirty();
   }
 
+  protected addCustomBlock(): void {
+    this.form.controls.customBlocks.push(createCustomBlockForm());
+    this.form.markAsDirty();
+  }
+
+  protected removeCustomBlock(index: number): void {
+    this.form.controls.customBlocks.removeAt(index);
+    this.form.markAsDirty();
+  }
+
   protected removeLanguage(index: number): void {
     this.form.controls.languages.removeAt(index);
   }
@@ -298,6 +312,7 @@ export class Create {
         if ((panel.panelId() === 'experience-panel' && this.form.controls.experiences.invalid) ||
           (panel.panelId() === 'education-panel' && this.form.controls.education.invalid) ||
           (panel.panelId() === 'certificates-panel' && this.form.controls.certificates.invalid) ||
+          (panel.panelId() === 'custom-blocks-panel' && this.form.controls.customBlocks.invalid) ||
           (panel.panelId() === 'languages-panel' && this.form.controls.languages.invalid)) {
           panel.expand();
         }

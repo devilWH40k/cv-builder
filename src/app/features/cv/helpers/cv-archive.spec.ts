@@ -4,6 +4,20 @@ import { defaultBackupName } from '../services/cv-backup';
 import { SavedCv } from '../services/saved-cvs';
 
 describe('CV ZIP backups', () => {
+  it('round trips custom blocks and accepts older CVs without them', async () => {
+    const customBlocks = [{ title: 'Achievements', content: '<p><strong>Award winner</strong></p>' }];
+    const restored = await readArchive(await createArchive([{ ...record, info: { ...record.info, customBlocks } }]));
+    expect(restored.cvs[0].info.customBlocks).toEqual(customBlocks);
+    const legacy = await readArchive(archive([{ ...record, info: { ...record.info, photo: null } }]));
+    expect(legacy.cvs[0].info.customBlocks).toBeUndefined();
+  });
+
+  it('rejects malformed custom blocks in backups', async () => {
+    for (const customBlocks of [null, {}, [null], [{ title: 123, content: '' }], [{ title: 'Title', content: [] }]]) {
+      await expectAsync(readArchive(archive([{ ...record, info: { ...record.info, photo: null, customBlocks } }])))
+        .toBeRejected();
+    }
+  });
   it('round trips certificates and accepts older backups without them', async () => {
     const certificates = [{ name: 'Certificate', link: 'https://example.com/certificate', date: '2025-06-15' }, { name: 'Offline', link: '' }];
     const restored = await readArchive(await createArchive([{ ...record, info: { ...record.info, certificates } }]));

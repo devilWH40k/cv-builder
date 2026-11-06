@@ -14,6 +14,22 @@ const cv: CvInfo = {
 };
 
 describe('PDF export', () => {
+  it('exports custom section titles and formatted text without unsafe markup', async () => {
+    const definition = await buildCvPdf({ ...cv, customBlocks: [
+      { title: 'Achievements', content: '<p><strong>Award winner</strong></p><ul><li>Community work</li></ul><script>alert(1)</script>' },
+      { title: 'Interests', content: '<p><em>Hiking</em></p>' }
+    ] });
+    const content = JSON.stringify(definition.content);
+    expect(content).toContain('Achievements');
+    expect(content).toContain('Award winner');
+    expect(content).toContain('"bold":true');
+    expect(content).toContain('Community work');
+    expect(content).toContain('Interests');
+    expect(content).toContain('"italics":true');
+    expect(content).not.toContain('alert(1)');
+    expect(content.indexOf('Interests')).toBeGreaterThan(content.indexOf('Achievements'));
+    expect((await pdfMake.createPdf(definition).getBuffer()).length).toBeGreaterThan(0);
+  });
   it('exports certificate links with short underlined text and skips unsafe links', async () => {
     const definition = await buildCvPdf({ ...cv, certificates: [
       { name: 'Shared certificate', link: 'https://example.com/certificate', date: '2025-06' },
