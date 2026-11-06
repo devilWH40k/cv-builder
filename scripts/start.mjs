@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 const workspace = fileURLToPath(new URL('../', import.meta.url));
 const cli = fileURLToPath(new URL('../node_modules/@angular/cli/bin/ng.js', import.meta.url));
 const children = new Set();
+const restarting = new WeakSet();
 let stopping = false;
 
 function stop(code) {
@@ -30,17 +31,45 @@ function run(args, captureOutput = false) {
 process.on('SIGINT', () => stop(130));
 process.on('SIGTERM', () => stop(143));
 
-const watcher = run(['build', 'angular-shared-ui', '--watch', '--configuration', 'development'], true);
-let output = '';
+function watchLibrary(project, ready, changing = () => {}) {
+  const watcher = run(['build', project, '--watch', '--configuration', 'development'], true);
+  let output = '';
+  watcher.stdout.on('data', (chunk) => {
+    process.stdout.write(chunk);
+    output += chunk.toString();
+    let newline;
+    while ((newline = output.indexOf('\n')) !== -1) {
+      const line = output.slice(0, newline).replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').trim();
+      output = output.slice(newline + 1);
+      if (stopping || restarting.has(watcher)) continue;
+      if (line.startsWith('File change detected.')) changing();
+      // ng-packagr emits this only after every entry point has built successfully.
+      if (line === 'Built Angular Package') ready();
+    }
+  });
+  watcher.stderr.pipe(process.stderr);
+  watcher.on('exit', (code) => {
+    if (!restarting.has(watcher)) stop(code ?? 1);
+  });
+  return watcher;
+}
+
+let constructorWatcher;
 let serverStarted = false;
-watcher.stdout.on('data', (chunk) => {
-  process.stdout.write(chunk);
-  output = (output + chunk.toString()).slice(-2048);
-  // ng-packagr emits this only after every entry point has built successfully.
-  if (stopping || serverStarted || !output.includes('Built Angular Package')) return;
-  serverStarted = true;
-  run(['serve', 'cv-builder', ...process.argv.slice(2)])
-    .on('exit', (code) => stop(code ?? 1));
-});
-watcher.stderr.pipe(process.stderr);
-watcher.on('exit', (code) => stop(code ?? 1));
+
+function pauseConstructor() {
+  if (!constructorWatcher) return;
+  restarting.add(constructorWatcher);
+  constructorWatcher.kill();
+  constructorWatcher = undefined;
+}
+
+watchLibrary('angular-shared-ui', () => {
+  pauseConstructor();
+  constructorWatcher = watchLibrary('constructor', () => {
+    if (serverStarted) return;
+    serverStarted = true;
+    run(['serve', 'cv-builder', ...process.argv.slice(2)])
+      .on('exit', (code) => stop(code ?? 1));
+  });
+}, pauseConstructor);

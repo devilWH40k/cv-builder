@@ -6,6 +6,34 @@ import { CvSocialLink, emailValidator, phoneValidator, socialLink, SOCIAL_NETWOR
 import { CvLanguage } from '../../cv/constants/languages';
 import { CvExperience } from '../../cv/interfaces/experience';
 import { CvEducation } from '../../cv/interfaces/education';
+import { CvCertificate } from '../../cv/interfaces/certificate';
+import { certificateLink } from '../../cv/helpers/certificate-link';
+import { CvCustomBlock } from '../../cv/interfaces/custom-block';
+
+export function createCustomBlockForm(block?: CvCustomBlock) {
+  return new FormGroup({
+    title: new FormControl(block?.title ?? '', {
+      nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)]
+    }),
+    content: new FormControl(block?.content ?? '', { nonNullable: true })
+  });
+}
+
+export function createCertificateForm(certificate?: CvCertificate) {
+  return new FormGroup({
+    date: new FormControl(certificate?.date ?? '', {
+      nonNullable: true,
+      validators: [(control) => !control.value || parseCalendarDate(control.value) ? null : { invalidDate: true }]
+    }),
+    name: new FormControl(certificate?.name ?? '', {
+      nonNullable: true, validators: [Validators.required, Validators.pattern(/\S/)]
+    }),
+    link: new FormControl(certificate?.link ?? '', {
+      nonNullable: true,
+      validators: [(control) => !control.value.trim() || certificateLink(control.value) ? null : { url: true }]
+    })
+  });
+}
 
 export function createEducationForm(education?: CvEducation) {
   const form = new FormGroup({
@@ -104,6 +132,8 @@ export function createCvForm() {
     languages: new FormArray<ReturnType<typeof createLanguageForm>>([]),
     experiences: new FormArray<ReturnType<typeof createExperienceForm>>([]),
     education: new FormArray<ReturnType<typeof createEducationForm>>([]),
+    certificates: new FormArray<ReturnType<typeof createCertificateForm>>([]),
+    customBlocks: new FormArray<ReturnType<typeof createCustomBlockForm>>([]),
     technologies: new FormControl<readonly string[]>([], { nonNullable: true })
   });
 }

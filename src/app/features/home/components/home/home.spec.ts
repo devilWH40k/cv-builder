@@ -1,3 +1,5 @@
+import { provideConstructorIndexedDbStorage } from 'constructor/indexeddb';
+import { CvDatabase } from '../../../cv/services/cv-database';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -16,7 +18,7 @@ describe('Saved CV navigation', () => {
     spyOn(Storage.prototype, 'getItem').and.callFake((key) => entries.get(key) ?? null);
     spyOn(Storage.prototype, 'setItem').and.callFake((key, value) => { entries.set(key, value); });
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection(), provideRouter(routes), { provide: CV_DATABASE_NAME, useValue: databaseName }]
+      providers: [provideZonelessChangeDetection(), provideRouter(routes), provideConstructorIndexedDbStorage(CvDatabase), { provide: CV_DATABASE_NAME, useValue: databaseName }]
     });
   });
 

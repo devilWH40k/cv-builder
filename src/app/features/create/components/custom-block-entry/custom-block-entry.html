@@ -1,0 +1,28 @@
+<div class="entry">
+  <div class="heading">
+    <h4>Custom block {{ index() + 1 }}</h4>
+    <button class="remove" type="button" [attr.aria-label]="'Remove custom block ' + (index() + 1)"
+      (click)="remove.emit()">
+      <lucide-icon [img]="XIcon" [size]="16" aria-hidden="true" />
+    </button>
+  </div>
+  <ui-input [inputId]="'custom-block-title-' + index()" label="Title"
+    [control]="form().controls.title" [required]="true">
+    @if (form().controls.title.touched && form().controls.title.invalid) {
+      <span>Please enter a title.</span>
+    }
+  </ui-input>
+  <div class="editor-field">
+    <p>Content</p>
+    <div class="formatting" role="group" [attr.aria-label]="'Custom block ' + (index() + 1) + ' formatting'">
+      @for (action of formatting; track action.command) {
+        <button type="button" [attr.aria-label]="action.label" [title]="action.label"
+          [disabled]="form().controls.content.disabled" (click)="format(action.command)">
+          <lucide-icon [img]="action.icon" [size]="18" aria-hidden="true" />
+        </button>
+      }
+    </div>
+    <angular-tiptap-editor [formControl]="form().controls.content" [config]="editorConfig()"
+      (editorUpdate)="updateContent()" />
+  </div>
+</div>

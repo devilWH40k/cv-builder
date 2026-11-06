@@ -103,6 +103,31 @@
               }
             </section>
             }
+            @if (cv.certificates?.length) {
+            <section class="cv-certificates" [attr.aria-labelledby]="'cv-certificates-title-' + page">
+              <h3 [id]="'cv-certificates-title-' + page">Certificates:</h3>
+              @for (certificate of cv.certificates; track $index) {
+              <article class="certificate-entry">
+                <h4>{{ certificate.name }}</h4>
+                <div class="certificate-details">
+                  @if (certificate.date) {
+                    <p class="period">{{ formatDate(certificate.date) }}</p>
+                  }
+                  @if (certificateLink(certificate.link); as href) {
+                    <a [href]="href" target="_blank" rel="noopener noreferrer"
+                      [attr.aria-label]="certificate.name + ' certificate link'">link</a>
+                  }
+                </div>
+              </article>
+              }
+            </section>
+            }
+            @for (block of cv.customBlocks ?? []; track $index; let blockIndex = $index) {
+              <section class="cv-custom-block" [attr.aria-labelledby]="'cv-custom-block-title-' + page + '-' + blockIndex">
+                <h3 [id]="'cv-custom-block-title-' + page + '-' + blockIndex">{{ block.title }}</h3>
+                <div class="project-description" [innerHTML]="block.content | experienceDescription"></div>
+              </section>
+            }
           </div>
           <aside class="cv-sidebar">
             @if (contacts().length) {

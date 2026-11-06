@@ -44,11 +44,22 @@ Reusable components, directives, and their supporting services live in
 from entry points such as `angular-shared-ui/button`. Each component has input, output, and usage documentation
 in the [library reference](libs/angular-shared-ui/docs/README.md).
 
-`npm start` builds the library before starting its watcher and the app dev server.
-`npm run build` builds the production library and application in order. `npm test`
-builds the library and runs both projects' tests. Use `npm run test:lib` or
+`npm start` builds and watches shared UI, then constructor, before starting the app dev server.
+`npm run build` builds both production libraries and the application in dependency order. `npm test`
+builds both libraries and runs all three projects' tests. Use `npm run test:lib` or
 `npm run test:app` to test one project; add `-- --watch=false --browsers=ChromeHeadless`
 for a single headless run.
+
+### Constructor library
+
+The visual editor, design collection, rendering and PDF APIs live in
+[`libs/constructor`](libs/constructor/README.md), with `lib-*` selectors. The app
+keeps the CV preview adapter in `src/app/features/constructor/` and selects the
+optional `constructor/indexeddb` storage adapter in its application providers.
+The [storage contract](libs/constructor/docs/storage.md) supports a future remote
+adapter without changing editor code.
+Use `npm run test:constructor` for its isolated test target. Font and tutorial
+assets ship with the library and are served by the app from the built package.
 
 ### App version
 

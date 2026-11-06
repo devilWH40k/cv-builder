@@ -9,6 +9,20 @@ describe('Unsaved CV changes', () => {
 
   beforeEach(() => { draft = new CvDraft(); });
 
+  it('copies custom blocks and tracks their edits and removal', () => {
+    const block = { title: 'Interests', content: '<p>Hiking</p>' };
+    const initial = { ...info, customBlocks: [block] };
+    draft.beginEditing(initial);
+    expect(draft.hasUnsavedChanges()).toBeFalse();
+    block.content = '<p>Changed outside the draft</p>';
+    expect(draft.current()?.customBlocks?.[0].content).toBe('<p>Hiking</p>');
+    draft.save({ ...info, customBlocks: [{ title: 'Interests', content: '<p>Running</p>' }] });
+    expect(draft.hasUnsavedChanges()).toBeTrue();
+    draft.save({ ...info, customBlocks: [] });
+    expect(draft.current()?.customBlocks).toEqual([]);
+    expect(draft.hasUnsavedChanges()).toBeTrue();
+  });
+
   it('starts clean and detects edits and their reversal regardless of property order', () => {
     expect(draft.hasUnsavedChanges()).toBeFalse();
     draft.beginEditing(info);

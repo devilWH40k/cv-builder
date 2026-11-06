@@ -1,3 +1,5 @@
+import { provideConstructorIndexedDbStorage } from 'constructor/indexeddb';
+import { CvDatabase } from '../../../cv/services/cv-database';
 ﻿import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -21,7 +23,7 @@ describe('CV themes', () => {
   beforeEach(() => {
     spyOn(window, 'print');
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection(), provideRouter(routes)]
+      providers: [provideZonelessChangeDetection(), provideRouter(routes), provideConstructorIndexedDbStorage(CvDatabase)]
     });
   });
 

@@ -1,4 +1,5 @@
 import { formatCalendarDate } from 'angular-shared-ui/date-picker';
+import { certificateLink } from './certificate-link';
 import { cvLogoSizeMm } from './cv-logo-size';
 import { cvPhotoSizeMm } from './cv-photo-size';
 import { contactLinks } from './cv-contact';
@@ -205,6 +206,28 @@ export async function buildCvPdf(cv: CvInfo): Promise<TDocumentDefinitions> {
         ...(period ? [{ text: period, fontSize: 10, color: muted } satisfies Content] : [])
       ], unbreakable: true, margin: [0, 0, 0, 20] });
     }
+  }
+
+  if (cv.certificates?.length) {
+    main.push({ text: 'Certificates:', fontSize: 13, bold: true,
+      margin: [0, main.length ? 12 : 0, 0, 9], headlineLevel: 1 });
+    for (const entry of cv.certificates) {
+      const link = certificateLink(entry.link);
+      const date = formatCalendarDate(entry.date ?? '');
+      main.push({ stack: [
+        { text: entry.name, fontSize: 14, bold: true, margin: [0, 0, 0, 6] },
+        ...(date || link ? [{ columns: [
+          ...(date ? [{ text: date, fontSize: 10, color: muted, width: 'auto' } satisfies Column] : []),
+          ...(link ? [{ text: 'link', link, decoration: 'underline', color: '#36d4f7', width: 'auto' } satisfies Column] : [])
+        ], columnGap: 9 } satisfies Content] : [])
+      ], unbreakable: true, margin: [0, 0, 0, 10] });
+    }
+  }
+
+  for (const block of cv.customBlocks ?? []) {
+    main.push({ text: block.title, fontSize: 13, bold: true,
+      margin: [0, main.length ? 23 : 0, 0, 9], headlineLevel: 1 });
+    main.push(pdfRichText(block.content));
   }
 
   const contacts = await Promise.all(contactLinks(cv.contact).map(async (link): Promise<Content> => ({

@@ -25,6 +25,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "dist/constructor/assets",
+                "output": "/"
               }
             ],
             "styles": [
@@ -98,11 +103,46 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "dist/constructor/assets",
+                "output": "/"
               }
             ],
             "styles": [
               "src/styles/styles.scss"
             ]
+          }
+        }
+      }
+    },
+    "constructor": {
+      "projectType": "library",
+      "root": "libs/constructor",
+      "sourceRoot": "libs/constructor",
+      "prefix": "lib",
+      "schematics": {
+        "@schematics/angular:component": { "style": "scss" }
+      },
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": { "project": "libs/constructor/ng-package.json" },
+          "configurations": {
+            "production": { "tsConfig": "libs/constructor/tsconfig.lib.prod.json" },
+            "development": { "tsConfig": "libs/constructor/tsconfig.lib.json" }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "libs/constructor/tsconfig.spec.json",
+            "inlineStyleLanguage": "scss",
+            "stylePreprocessorOptions": { "includePaths": ["dist"] },
+            "assets": [{ "glob": "**/*", "input": "libs/constructor/assets", "output": "/" }],
+            "styles": ["libs/angular-shared-ui/src/test.scss"]
           }
         }
       }

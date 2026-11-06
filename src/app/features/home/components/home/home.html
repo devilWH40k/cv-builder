@@ -65,7 +65,7 @@
         <p role="alert">{{ designsError() }}</p>
         <button class="load-retry" type="button" (click)="loadDesigns()">Try again</button>
       }
-      <app-design-list [designs]="designs()" returnTab="designs" [deletingIds]="deletingDesignIds()" (deleteRequested)="deleteDesign($event)" />
+      <lib-design-list [designs]="designs()" returnTab="designs" [deletingIds]="deletingDesignIds()" (deleteRequested)="deleteDesign($event)" />
     </section>
   </section>
 </main>

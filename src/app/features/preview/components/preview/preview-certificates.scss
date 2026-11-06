@@ -1,0 +1,21 @@
+@use 'styles/tokens' as tokens;
+
+.cv-certificates {
+  margin-top: 8mm;
+  overflow-wrap: anywhere;
+  h3 { margin: 0 0 3mm; font-size: 13pt; break-after: avoid; }
+  h4 { margin: 0 0 2mm; font-size: 14pt; break-after: avoid; }
+}
+
+.certificate-details {
+  display: flex;
+  align-items: baseline;
+  gap: tokens.$spacing-3;
+  .period { margin: 0; }
+}
+
+.certificate-entry {
+  margin-bottom: 3.5mm;
+  break-inside: avoid;
+  a { color: tokens.$color-primary; text-decoration: underline; }
+}
