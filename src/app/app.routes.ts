@@ -28,7 +28,7 @@ export const routes: Routes = [
     path: 'constructor',
     title: 'CV Constructor | CV Builder',
     canDeactivate: [(component: { canDeactivate(): boolean | Promise<boolean> }) => component.canDeactivate()],
-    loadComponent: () => import('./features/constructor/components/constructor-page/constructor-page').then((m) => m.ConstructorPageComponent)
+    loadComponent: () => import('./features/constructor/constructor-route').then((m) => m.ConstructorRoute)
   },
   {
     path: 'preview',

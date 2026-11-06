@@ -14,7 +14,8 @@ pages. Page deletion requires confirmation.
 Home's **Files** tab contains the existing CV and folder collection. **Designs**
 lists all saved visual designs and opens them in the constructor. The constructor
 landing page shows the six most recently visited saved designs under **Recently**.
-Visit timestamps are stored separately in IndexedDB metadata, so opening a design
+Visit timestamps are stored separately from document content (currently in
+IndexedDB metadata), so opening a design
 does not change its content modification time. Unsaved designs enter this list
 after their first save; deleting a design also removes its visit history.
 
@@ -31,28 +32,33 @@ File properties above Page properties contains Status and the editable File name
 
 ## Code boundaries
 
-All code lives under `src/app/features/constructor/`:
+Implementation lives in [`libs/constructor`](../libs/constructor/README.md). The app keeps only its route/CV-source adapters and integration tests under `src/app/features/constructor/`:
 
-- `interfaces/constructor-document.ts` defines versioned saved documents, page
+- `core/src/lib/interfaces/constructor-document.ts` defines versioned saved documents, page
   coordinates and UI snapshots. Page coordinates use CSS pixels at 96 DPI.
-- `helpers/preview-to-design.ts` measures an isolated, off-screen `Preview`,
+- `canvas/src/utils/scene/preview-to-design.ts` measures an isolated, off-screen `Preview`,
   including its CSS column fragments, and converts the first flow into native
   Fabric text, images and decorations. It normalizes fonts before measuring.
   Text is imported as visual lines and style runs, preserving inline links as
   separate objects. Free positioning does not automatically reflow later pages.
-- `services/constructor-editor.ts` owns the mutable Fabric canvas. Its commands
+- `editor/src/services/constructor-editor.ts` owns the mutable Fabric canvas. Its commands
   and readonly selection/layer snapshots form the boundary used by components.
   Add editing operations here rather than accessing Fabric objects in templates.
-- `services/constructor-session.ts` owns document metadata, page snapshots,
+- `editor/src/services/constructor-session.ts` owns document metadata, page snapshots,
   dirty state and saves. Its state is scoped to the constructor route.
-- `services/constructor-repository.ts` stores documents in IndexedDB's
-  `constructor-designs` store using the existing `CvDatabase` connection.
-- `helpers/design-validation.ts` checks documents before Fabric loads them.
+- `core/src/lib/services/constructor-repository.ts` validates documents and delegates
+  persistence through the backend-independent `ConstructorStorage` contract.
+- `indexeddb/` implements the current storage adapter using `constructor-designs`
+  and `metadata` stores. The application selects it with
+  `provideConstructorIndexedDbStorage(CvDatabase)`. A remote adapter replaces this
+  provider without changing editor or session code; see the
+  [storage contract](../libs/constructor/docs/storage.md).
+- `core/src/lib/utils/documents/design-validation.ts` checks documents before Fabric loads them.
   Portable files accept known object classes, embedded PNG/JPEG/WebP images and
   permitted URL schemes. They do not load remote image resources.
-- `helpers/fabric-metadata.ts` registers persistent object identity, labels and
+- `canvas/src/utils/objects/fabric-metadata.ts` registers persistent object identity, labels and
   hyperlinks. Extend this adapter when adding persisted object metadata.
-- `helpers/design-pdf.ts` exports page objects as SVG with native text and explicit
+- `pdf/src/utils/design-pdf.ts` exports page objects as SVG with native text and explicit
   hyperlink wrappers, then uses the existing pdfmake dependency to create PDFs.
   Pages are never flattened into screenshots for PDF export.
 - `components/` contains page orchestration, the reusable property/layer panel,
@@ -166,7 +172,7 @@ when changing block typography. Letter spacing is entered in em.
 
 The menu offers bundled Roboto and thirteen locally hosted
 Google Font families. Each local family has regular, bold, italic and bold-italic
-static TTFs under `public/fonts/`, with its license alongside them. The editor loads
+static TTFs under `libs/constructor/assets/fonts/`, with its license alongside them. The editor loads
 only selected families and reloads saved scene fonts before measuring text. PDF
 export registers the same files with pdfmake and embeds the selected families.
 No Google Fonts CDN requests are made. Generic browser families are no longer offered. Older scenes map sans-serif to
@@ -219,7 +225,7 @@ continue to use editable vector objects.
 ## Validation
 
 ```sh
-npm test -- --watch=false --browsers=ChromeHeadless --include="src/app/features/constructor/**/*.spec.ts"
+npm run test:constructor -- --watch=false --browsers=ChromeHeadless
 npm run build
 ```
 

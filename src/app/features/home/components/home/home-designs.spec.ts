@@ -1,18 +1,20 @@
+import { provideConstructorIndexedDbStorage } from 'constructor/indexeddb';
+import { CvDatabase } from '../../../cv/services/cv-database';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Home } from './home';
 import { CV_DATABASE_NAME, SavedCvs } from '../../../cv/services/saved-cvs';
-import { ConstructorRepository } from '../../../constructor/services/constructor-repository';
-import { blankDesign } from '../../../constructor/helpers/preview-to-design';
+import { ConstructorRepository } from 'constructor/core';
+import { blankDesign } from 'constructor/canvas';
 
 describe('Home library tabs', () => {
   let databaseName: string;
   beforeEach(() => {
     databaseName = 'home-design-tabs-' + crypto.randomUUID();
     TestBed.configureTestingModule({
-      providers: [
+      providers: [provideConstructorIndexedDbStorage(CvDatabase),
         provideZonelessChangeDetection(),
         provideRouter([{ path: '', component: Home }]),
         { provide: CV_DATABASE_NAME, useValue: databaseName },

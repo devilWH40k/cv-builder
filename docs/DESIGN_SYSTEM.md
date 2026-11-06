@@ -1506,6 +1506,14 @@ five seconds, and show at most ten unique display names. A failed request or no
 matches leaves manual entry available, with an inline hint. No credentials are
 required. See [ROR API documentation](https://ror.readme.io/docs/rest-api).
 
+## Custom CV blocks
+
+Custom blocks follow Certificates in the editor and document. Users can add
+multiple blocks with a required title and optional rich text content. Their
+formatting controls and theme follow the Experience editor. Blocks are preserved
+in saved CVs and ZIP backups and included in preview, print, and PDF export.
+Older CVs start with no custom blocks.
+
 ## Visual constructor
 
 `/constructor` uses the existing application palette, shared buttons and Lucide

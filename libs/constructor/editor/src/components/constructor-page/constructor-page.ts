@@ -1,0 +1,674 @@
+import { Joyride, JoyrideTarget } from 'angular-shared-ui/joyride';
+import { Dropdown, DropdownItem } from 'angular-shared-ui/dropdown';
+import { DebouncedColor } from 'angular-shared-ui/directives';
+import { PhotoPreview, PhotoCropShape } from 'angular-shared-ui/photo-preview';
+import { ToastService } from 'angular-shared-ui/toast';
+import { Button } from 'angular-shared-ui/button';
+import { DeleteConfirmationService } from 'angular-shared-ui/delete-confirmation';
+import { DialogOverlay } from 'angular-shared-ui/dialog';
+import { ResizeHandle } from 'angular-shared-ui/resize-handle';
+import { Spinner } from 'angular-shared-ui/spinner';
+import { UnsavedChangesDialog, UnsavedChangesDecision } from 'angular-shared-ui/unsaved-changes-dialog';
+import { ConstructorTour } from '../../services/constructor-tour';
+import { ConstructorShortcuts } from '../constructor-shortcuts/constructor-shortcuts';
+import { ConstructorRulers } from '../constructor-rulers/constructor-rulers';
+import { DESIGN_SHAPES } from 'constructor/canvas';
+import { ConstructorTypography } from '../constructor-typography/constructor-typography';
+import {
+  afterNextRender,
+  afterRenderEffect,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  inject,
+  PendingTasks,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  LucideAngularModule,
+  Save,
+  Search,
+  Download,
+  MousePointer2,
+  Paintbrush,
+  Pencil,
+  Type,
+  ImagePlus,
+  RectangleHorizontal, Triangle, Ellipse, Diamond, Pentagon, Hexagon, Star,
+  Shapes,
+  Square,
+  Circle,
+  Minus,
+  Undo2,
+  Redo2,
+  Plus,
+  FileJson,
+  FolderOpen,
+  ArrowLeft,
+  Trash2,
+  X,
+} from 'lucide-angular';
+import { CONSTRUCTOR_SOURCE, CONSTRUCTOR_VERSION } from 'constructor/core';
+import { ConstructorEditor } from '../../services/constructor-editor';
+import { ConstructorRepository } from 'constructor/core';
+import { ConstructorSession } from '../../services/constructor-session';
+import { ConstructorProperties } from '../constructor-properties/constructor-properties';
+import { DesignSummary } from 'constructor/core';
+import { downloadDesignFile, loadDesignFonts } from 'constructor/resources';
+import { blankDesign, preparePreview, previewToDesign } from 'constructor/canvas';
+import { parseDesign } from 'constructor/core';
+import { ConstructorLayers } from '../constructor-layers/constructor-layers';
+import { ConstructorPageProperties } from '../constructor-page-properties/constructor-page-properties';
+import { DesignList } from 'constructor/core';
+import { A4_HEIGHT, A4_WIDTH } from 'constructor/core';
+import { ConstructorObjectMenu } from '../constructor-object-menu/constructor-object-menu';
+import { ConstructorSvgAssets } from '../../services/constructor-svg-assets';
+import { ConstructorIconLibrary } from '../constructor-icon-library/constructor-icon-library';
+
+@Component({
+  selector: 'lib-constructor-page',
+  imports: [ConstructorShortcuts, Joyride, JoyrideTarget, ConstructorRulers, Dropdown, ConstructorTypography, DebouncedColor,
+    PhotoPreview,
+    RouterLink,
+    LucideAngularModule,
+    Button,
+    ConstructorProperties,
+    DialogOverlay,
+    DesignList,
+    ConstructorLayers,
+    ConstructorPageProperties,
+    ConstructorIconLibrary,
+    ResizeHandle,
+    ConstructorObjectMenu,
+    Spinner,
+    UnsavedChangesDialog,
+  ],
+  providers: [ConstructorEditor, ConstructorSession, ConstructorTour],
+  templateUrl: './constructor-page.html',
+  styleUrls: ['./constructor-page.scss', './constructor-editor.scss', './constructor-panels.scss', './constructor-toolbars.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(window:beforeunload)': 'beforeUnload($event)' },
+})
+export class ConstructorPageComponent {
+  protected readonly shortcutsOpen = signal(false);
+  protected readonly helpMenuItems = computed<readonly DropdownItem[]>(() => [
+    { id: 'shortcuts', label: 'Shortcuts' },
+    { id: 'tour', label: 'Start guide tour again', disabled: this.workspaceLoading() || this.session.saving() || this.tour.active() },
+  ]);
+  private restoreTourLayout: (() => void) | null = null;
+
+  protected async helpAction(item: DropdownItem): Promise<void> {
+    if (this.helpMenuItems().find((entry) => entry.id === item.id)?.disabled) return;
+    if (item.id === 'shortcuts') {
+      this.shortcutsOpen.set(true);
+    } else if (item.id === 'tour') {
+      const panels = this.visiblePanels();
+      const fit = this.fitPage();
+      this.restoreTourLayout = () => { this.visiblePanels.set(panels); this.fitPage.set(fit); };
+      this.visiblePanels.set({ main: true, icons: true, properties: true, layers: true });
+      this.fitPage.set(true);
+      await this.run(() => this.startTour(true));
+      if (!this.tour.active()) {
+        this.restoreTourLayout?.();
+        this.restoreTourLayout = null;
+      }
+    }
+  }
+  protected readonly visiblePanels = signal({ main: true, icons: true, properties: true, layers: true });
+  protected readonly hasLeftPanels = computed(() => this.visiblePanels().main || this.visiblePanels().icons);
+  protected readonly hasRightPanels = computed(() => this.visiblePanels().properties || this.visiblePanels().layers);
+  protected readonly windowMenuItems = computed<readonly DropdownItem[]>(() => [
+    { id: 'main', label: 'Main properties', checked: this.visiblePanels().main },
+    { id: 'icons', label: 'Icon library', checked: this.visiblePanels().icons },
+    { id: 'properties', label: 'Properties', checked: this.visiblePanels().properties },
+    { id: 'layers', label: 'Layers', checked: this.visiblePanels().layers },
+  ]);
+
+  protected toggleWindow(item: DropdownItem): void {
+    const id = item.id;
+    if (id === 'main' || id === 'icons' || id === 'properties' || id === 'layers') {
+      this.visiblePanels.update((panels) => ({ ...panels, [id]: !panels[id] }));
+    }
+  }
+
+  private readonly designFileInput = viewChild.required<ElementRef<HTMLInputElement>>('designFile');
+  protected readonly fileMenuItems = computed<readonly DropdownItem[]>(() => {
+    const busy = this.workspaceLoading() || this.editor.busy() || this.session.saving();
+    return [
+      { id: 'new', label: 'New Design', disabled: busy },
+      { id: 'cv', label: 'Open From CV', disabled: busy },
+      { id: 'save', label: 'Save', shortcut: 'Ctrl+S', disabled: busy },
+      { id: 'import', label: 'Import Design File', shortcut: 'Ctrl+I', disabled: busy },
+      { id: 'pdf', label: 'Export PDF', shortcut: 'Ctrl+E', disabled: busy || this.exporting() },
+      { id: 'design', label: 'Export Design File', shortcut: 'Ctrl+Shift+E', disabled: busy },
+    ];
+  });
+
+  protected fileAction(item: DropdownItem): void {
+    if (this.fileMenuItems().find((entry) => entry.id === item.id)?.disabled) return;
+    switch (item.id) {
+      case 'new': void this.newBlank(); break;
+      case 'cv': void this.openFromCv(); break;
+      case 'save': void this.save(); break;
+      case 'import': this.designFileInput().nativeElement.click(); break;
+      case 'pdf': void this.exportPdf(); break;
+      case 'design': this.exportDesign(); break;
+    }
+  }
+
+  private async openFromCv(): Promise<void> {
+    if (!(await this.canDeactivate())) return;
+    this.session.close();
+    await this.router.navigate(['/']);
+  }
+
+  protected readonly tour = inject(ConstructorTour);
+  protected readonly appVersion = inject(CONSTRUCTOR_VERSION);
+  protected readonly editor = inject(ConstructorEditor);
+  protected readonly session = inject(ConstructorSession);
+  private readonly source = inject(CONSTRUCTOR_SOURCE);
+  private readonly repository = inject(ConstructorRepository);
+  private readonly svgAssets = inject(ConstructorSvgAssets);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly pendingTasks = inject(PendingTasks);
+  private readonly confirmation = inject(DeleteConfirmationService);
+  private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
+  private readonly preview = viewChild.required<ElementRef<HTMLElement>>('previewSource');
+  private readonly overlay = viewChild.required(DialogOverlay);
+  private readonly canvasViewport = viewChild.required<ElementRef<HTMLElement>>('canvasViewport');
+  private readonly objectMenu = viewChild.required(ConstructorObjectMenu);
+  private readonly returnTab = this.route.snapshot.queryParamMap.get('returnTab');
+  private resizeObserver: ResizeObserver | null = null;
+  private resizeFrame: number | null = null;
+  protected readonly propertiesHeight = signal(400);
+  protected readonly pagePropertiesHeight = signal(400);
+  protected readonly leftWidth = signal(240);
+  protected readonly rightWidth = signal(280);
+  protected readonly fitPage = signal(true);
+  protected readonly designs = signal<readonly DesignSummary[]>([]);
+  protected readonly loading = signal(true);
+  protected readonly workspaceLoading = computed(() =>
+    this.loading() || (this.editor.busy() && !this.editor.restoringHistory() && !this.editor.clipboardBusy() && !this.editor.replacingImage() && !this.session.switchingPage()),
+  );
+  protected readonly pagePanelsLoading = computed(() => this.workspaceLoading() || this.session.switchingPage());
+  protected readonly exporting = signal(false);
+  protected readonly pendingImage = signal<File | null>(null);
+  protected readonly imageShapes: readonly PhotoCropShape[] = ['full', 'circle', 'rectangle'];
+  private readonly toasts = inject(ToastService);
+  protected readonly icons = {
+    Save,
+    Search,
+    Download,
+    MousePointer2,
+    Paintbrush,
+    Pencil,
+    Type,
+    ImagePlus,
+    Shapes,
+    Square,
+    Circle,
+    Minus,
+    Undo2,
+    Redo2,
+    Plus,
+    FileJson,
+    FolderOpen,
+    ArrowLeft,
+    Trash2,
+    X,
+  };
+  protected readonly shapeItems: readonly DropdownItem[] = DESIGN_SHAPES.map((shape) => ({
+    icon: ({ rectangle: RectangleHorizontal, circle: Circle, line: Minus, triangle: Triangle, ellipse: Ellipse, diamond: Diamond, pentagon: Pentagon, hexagon: Hexagon, star: Star })[shape],
+    id: shape, label: shape[0].toUpperCase() + shape.slice(1),
+  }));
+  protected addShape(item: DropdownItem): void {
+    const shape = DESIGN_SHAPES.find((shape) => shape === item.id);
+    if (shape) this.editor.addShape(shape);
+  }
+  protected readonly leaveOpen = signal(false);
+  protected readonly leaveSaving = signal(false);
+  private leaveDecision: Promise<boolean> | null = null;
+  private resolveLeave: ((leave: boolean) => void) | null = null;
+  private routeRun = 0;
+
+  constructor() {
+    afterNextRender(() => {
+      this.editor.attach(this.canvas().nativeElement, () => {
+        this.session.markChanged();
+      });
+      this.resizeObserver = new ResizeObserver(() => {
+        if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
+        this.resizeFrame = requestAnimationFrame(() => {
+          this.resizeFrame = null;
+          this.fitCanvas();
+        });
+      });
+      this.resizeObserver.observe(this.canvasViewport().nativeElement);
+      void this.pendingTasks.run(() => this.initialize());
+    });
+    afterRenderEffect(() => {
+      if (this.session.document()) {
+        if (this.loading() || this.editor.busy() || this.session.saving()) return;
+        this.overlay().open();
+        this.fitCanvas();
+      } else this.overlay().close();
+    });
+    this.destroyRef.onDestroy(() => {
+      this.finishLeaving(false);
+      this.routeRun++;
+      this.resizeObserver?.disconnect();
+      if (this.resizeFrame !== null) cancelAnimationFrame(this.resizeFrame);
+      void this.editor.dispose();
+    });
+  }
+
+  private async initialize(): Promise<void> {
+    try {
+      await loadDesignFonts();
+      if (this.destroyRef.destroyed) return;
+      await this.refreshLibrary();
+      this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+        void this.pendingTasks.run(() => this.loadRoute(params));
+      });
+    } catch {
+      this.toasts.show('danger', 'The constructor could not start. Reload the page to try again.');
+      this.loading.set(false);
+    }
+  }
+
+  private async loadRoute(params: ParamMap): Promise<void> {
+    const id = params.get('design');
+    if (id && id === this.session.document()?.id) return;
+    if (params.get('new') === this.session.document()?.id) return;
+    if (this.session.document() && !(await this.canDeactivate())) {
+      await this.setDesignUrl(this.session.document()!.id);
+      return;
+    }
+    const run = ++this.routeRun;
+    this.loading.set(true);
+    try {
+      if (id) {
+        const design = await this.repository.load(id);
+        if (run !== this.routeRun || this.destroyRef.destroyed) return;
+        if (!design) throw new Error('This saved design could not be found.');
+        await this.session.open(design);
+        await this.repository.recordVisit(id);
+      } else if (params.get('cv') || params.get('from') === 'draft') {
+        const cvId = params.get('cv');
+        const info = await this.source?.load(cvId);
+        if (run !== this.routeRun || this.destroyRef.destroyed) return;
+        if (!info) throw new Error('Choose a CV from Home and open it in the constructor.');
+        info.render();
+        // Let Angular render the isolated preview before measuring its layout.
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        );
+        await preparePreview(this.preview().nativeElement);
+        const design = await previewToDesign(
+          this.preview().nativeElement,
+          info.title,
+          info.sourceCvId,
+          (source) => this.svgAssets.read(source),
+        );
+        if (run !== this.routeRun || this.destroyRef.destroyed) return;
+        await this.session.open(design, true);
+        this.toasts.show('success', 'Design created from your CV. Your original CV is unchanged.');
+      } else if (this.session.document()) {
+        this.session.close();
+      }
+    } catch (error: unknown) {
+      this.toasts.show(
+        'danger',
+        error instanceof Error
+          ? error.message
+          : 'The design could not be opened. Please try again.',
+      );
+    } finally {
+      if (run === this.routeRun && !this.destroyRef.destroyed) {
+        this.source?.reset();
+        try {
+          await this.startTour();
+        } finally {
+          this.loading.set(false);
+        }
+      }
+    }
+  }
+
+  protected async newBlank(): Promise<void> {
+    if (!(await this.canDeactivate())) return;
+    await this.run(async () => {
+      await this.session.open(blankDesign(), true);
+      await this.router.navigate(['/constructor'], {
+        queryParams: { new: this.session.document()!.id },
+        replaceUrl: true,
+      });
+      await this.startTour();
+    });
+  }
+
+  private async startTour(restart = false): Promise<void> {
+    try {
+      await this.tour.start(restart);
+    } catch {
+      this.toasts.show('danger', 'The tutorial could not start. You can continue using the constructor.');
+    }
+  }
+
+  protected tourStep(index: number): void {
+    this.objectMenu().closePreview();
+    this.tour.selectStep(index);
+    if (this.tour.steps[index]?.previewContextMenu) {
+      const bounds = this.editor.selectionClientBounds();
+      if (bounds) this.objectMenu().showPreview(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2);
+    }
+  }
+
+  protected async finishTour(): Promise<void> {
+    this.objectMenu().closePreview();
+    try {
+      await this.tour.finish();
+      this.restoreTourLayout?.();
+      this.restoreTourLayout = null;
+    } catch {
+      this.toasts.show('danger', 'Your design could not be restored. Try Finish again.');
+    }
+  }
+
+  protected async library(): Promise<void> {
+    if (!(await this.canDeactivate())) return;
+    this.session.close();
+    await this.router.navigate(['/constructor']);
+    await this.refreshLibrary();
+  }
+
+  protected async closeEditor(event?: Event): Promise<void> {
+    event?.preventDefault();
+    if (this.returnTab === 'files' || this.returnTab === 'designs') {
+      if (!(await this.canDeactivate())) return;
+      // The explicit confirmation above also covers same-route closing; avoid asking twice.
+      this.session.close();
+      await this.router.navigate(['/'], {
+        queryParams: { tab: this.returnTab === 'designs' ? 'designs' : null },
+      });
+    } else await this.library();
+  }
+
+  protected changeZoom(value: string): void {
+    this.fitPage.set(value === 'fit');
+    if (value === 'fit') this.fitCanvas();
+    else this.editor.setZoom(Number(value));
+  }
+
+  private fitCanvas(): void {
+    if (!this.fitPage() || !this.session.document()) return;
+    const viewport = this.canvasViewport().nativeElement;
+    const style = getComputedStyle(viewport);
+    const width =
+      viewport.clientWidth - 20 - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    const height =
+      viewport.clientHeight - 20 - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+    if (width > 0 && height > 0)
+      this.editor.setZoom(Math.min(width / A4_WIDTH, height / A4_HEIGHT, 1));
+  }
+
+  protected async save(): Promise<void> {
+    await this.run(async () => {
+      const id = await this.session.save();
+      if (!id) return;
+      await this.repository.recordVisit(id);
+      await this.setDesignUrl(id);
+      await this.refreshLibrary();
+      this.toasts.show('success', 'Design saved in this browser.');
+    }, false);
+  }
+
+  protected async exportPdf(): Promise<void> {
+    if (this.exporting()) return;
+    this.exporting.set(true);
+    try {
+      const snapshot = this.session.snapshot();
+      if (!snapshot) return;
+      const { designPdfBlob } = await import('constructor/pdf');
+      downloadDesignFile(await designPdfBlob(snapshot), `${snapshot.title || 'CV design'}.pdf`);
+      this.toasts.show('success', 'PDF exported with text and links.');
+    } catch {
+      this.toasts.show('danger', 'Your PDF could not be exported. Please try again.');
+    } finally {
+      this.exporting.set(false);
+    }
+  }
+
+  protected exportDesign(): void {
+    const snapshot = this.session.snapshot();
+    if (!snapshot) return;
+    downloadDesignFile(
+      new Blob([JSON.stringify(snapshot)], { type: 'application/json' }),
+      `${snapshot.title || 'CV design'}.cv-design.json`,
+    );
+    this.toasts.show('success', 'Editable design downloaded, including its images.');
+  }
+
+  protected async importDesign(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || !(await this.canDeactivate())) return;
+    await this.run(async () => {
+      if (file.size > 50 * 1024 ** 2) throw new Error('Choose a design file up to 50 MB.');
+      const design = parseDesign(JSON.parse(await file.text()));
+      // Import a copy rather than replacing an existing design with the same ID.
+      await this.session.open({ ...design, id: crypto.randomUUID(), updatedAt: Date.now() }, true);
+      await this.router.navigate(['/constructor'], {
+        queryParams: { new: this.session.document()!.id },
+        replaceUrl: true,
+      });
+      await this.startTour();
+    });
+  }
+
+  protected async insertImage(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    input.value = '';
+    if (file) this.pendingImage.set(file);
+  }
+
+  protected async applyImage(file: File): Promise<void> {
+    this.pendingImage.set(null);
+    await this.run(() => this.editor.addImage(file));
+  }
+
+  protected async deleteDesign(design: DesignSummary): Promise<void> {
+    if (
+      !(await this.confirmation.confirm(
+        { title: 'Delete design', itemName: design.title },
+        this.destroyRef,
+      ))
+    )
+      return;
+    await this.run(async () => {
+      await this.repository.delete(design.id);
+      await this.refreshLibrary();
+    });
+  }
+
+  protected async removePage(index: number): Promise<void> {
+    const page = this.session.document()?.pages[index];
+    if (!page || (this.session.document()?.pages.length ?? 0) <= 1) return;
+    if (
+      !(await this.confirmation.confirm(
+        {
+          title: 'Delete page',
+          itemName: `Page ${index + 1}`,
+          message: 'All objects on this page will be removed.',
+        },
+        this.destroyRef,
+      ))
+    )
+      return;
+    await this.run(() => this.session.removePage(
+      this.session.document()?.pages.findIndex((item) => item.id === page.id) ?? -1,
+    ));
+  }
+
+  protected async page(index: number): Promise<void> {
+    await this.run(() => this.session.switchPage(index), false);
+  }
+  protected async addPage(): Promise<void> {
+    await this.run(() => this.session.addPage());
+  }
+
+  protected keyboard(event: KeyboardEvent): void {
+    if (this.tour.active() || this.shortcutsOpen()) return;
+    const command = event.ctrlKey || event.metaKey;
+    const commandKey = /^Key[A-Z]$/.test(event.code) ? event.code.slice(3).toLowerCase() : event.key.toLowerCase();
+    if (command && !event.altKey && ['s', 'i', 'e'].includes(commandKey)) {
+      event.preventDefault();
+      if (event.repeat) return;
+      const id = commandKey === 's' ? 'save' : commandKey === 'i' ? 'import' : event.shiftKey ? 'design' : 'pdf';
+      this.fileAction({ id, label: '' });
+      return;
+    }
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest('input, textarea, select, [contenteditable="true"]')
+    )
+      return;
+    if (this.loading() || this.editor.busy()) return;
+    if (event.key === 'Escape' && this.editor.tool() === 'style') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.editor.setTool('select');
+      return;
+    }
+    const modifier = event.ctrlKey || event.metaKey;
+    const key = /^Key[A-Z]$/.test(event.code) ? event.code.slice(3).toLowerCase() : event.key.toLowerCase();
+    if (modifier && key === 's') {
+      event.preventDefault();
+      void this.save();
+      } else if (modifier && key === 'a') {
+        event.preventDefault();
+        this.editor.selectAll();
+      } else if (modifier && ['c', 'x', 'v'].includes(key)) {
+        if ((key === 'v' && !this.editor.canPaste()) || (key !== 'v' && !this.editor.selectionCount())) return;
+        event.preventDefault();
+        const action = key === 'c' ? 'copy' : key === 'x' ? 'cut' : 'paste';
+        void this.run(() => this.editor[action](), false);
+      } else if (modifier && key === 'g') {
+        event.preventDefault();
+        if (event.shiftKey) this.editor.ungroup();
+        else this.editor.group();
+      } else if (modifier && key === 'z') {
+      event.preventDefault();
+      void this.run(() => (event.shiftKey ? this.editor.redo() : this.editor.undo()), false);
+    } else if (modifier && key === 'd') {
+      event.preventDefault();
+      void this.run(() => this.editor.duplicate(), false);
+    } else if (['Delete', 'Backspace'].includes(event.key)) {
+      event.preventDefault();
+      this.editor.remove();
+    } else if (event.key.startsWith('Arrow')) {
+      event.preventDefault();
+      const distance = event.shiftKey ? 10 : 1;
+      this.editor.nudge(
+        event.key === 'ArrowLeft' ? -distance : event.key === 'ArrowRight' ? distance : 0,
+        event.key === 'ArrowUp' ? -distance : event.key === 'ArrowDown' ? distance : 0,
+      );
+    }
+  }
+
+  canDeactivate(): boolean | Promise<boolean> {
+    if (this.tour.active()) return false;
+    this.editor.finishEditing();
+    if (this.leaveDecision) return this.leaveDecision;
+    if (this.session.saving() || this.editor.busy() || (this.loading() && !!this.session.document())) return false;
+    if (!this.session.dirty()) return true;
+    this.leaveOpen.set(true);
+    this.leaveDecision = new Promise((resolve) => { this.resolveLeave = resolve; });
+    return this.leaveDecision;
+  }
+
+  protected async handleLeaveDecision(decision: UnsavedChangesDecision): Promise<void> {
+    if (this.leaveSaving() || this.session.saving()) return;
+    if (decision !== 'save') {
+      this.finishLeaving(decision === 'leave');
+      return;
+    }
+    this.leaveSaving.set(true);
+    try {
+      const id = await this.session.save();
+      if (this.destroyRef.destroyed) return;
+      if (!id || this.session.dirty()) {
+        this.toasts.show('danger', 'Your design has newer changes. Save again before leaving.');
+        return;
+      }
+      await this.repository.recordVisit(id);
+      if (!this.destroyRef.destroyed) this.finishLeaving(true);
+    } catch {
+      if (!this.destroyRef.destroyed)
+        this.toasts.show('danger', 'Your design could not be saved. Try again, leave without saving, or cancel.');
+    } finally {
+      this.leaveSaving.set(false);
+    }
+  }
+
+  private finishLeaving(leave: boolean): void {
+    this.leaveOpen.set(false);
+    this.resolveLeave?.(leave);
+    this.resolveLeave = null;
+    this.leaveDecision = null;
+  }
+
+  protected beforeUnload(event: BeforeUnloadEvent): void {
+    if (this.tour.active()) {
+      if (this.tour.hasUnsavedOriginal()) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+      return;
+    }
+    this.editor.finishEditing();
+    if (this.session.dirty() || this.session.saving() || this.leaveSaving()) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+  }
+
+  protected async history(action: 'undo' | 'redo'): Promise<void> {
+    await this.run(() => (action === 'undo' ? this.editor.undo() : this.editor.redo()), false);
+  }
+
+  private async refreshLibrary(): Promise<void> {
+    this.designs.set(await this.repository.recentlyVisited());
+  }
+  private setDesignUrl(id: string): Promise<boolean> {
+    return this.router.navigate(['/constructor'], {
+      queryParams: { design: id, returnTab: this.returnTab },
+      replaceUrl: true,
+    });
+  }
+
+  private async run(action: () => Promise<unknown>, block = true): Promise<void> {
+    await this.pendingTasks.run(async () => {
+      if (block) this.loading.set(true);
+      try {
+        await action();
+      } catch (error: unknown) {
+        this.toasts.show(
+          'danger',
+          error instanceof Error
+            ? error.message
+            : 'The action could not be completed. Please try again.',
+        );
+      } finally {
+        if (block) this.loading.set(false);
+      }
+    });
+  }
+}

@@ -14,6 +14,41 @@ const cv: CvInfo = {
 };
 
 describe('PDF export', () => {
+  it('exports custom section titles and formatted text without unsafe markup', async () => {
+    const definition = await buildCvPdf({ ...cv, customBlocks: [
+      { title: 'Achievements', content: '<p><strong>Award winner</strong></p><ul><li>Community work</li></ul><script>alert(1)</script>' },
+      { title: 'Interests', content: '<p><em>Hiking</em></p>' }
+    ] });
+    const content = JSON.stringify(definition.content);
+    expect(content).toContain('Achievements');
+    expect(content).toContain('Award winner');
+    expect(content).toContain('"bold":true');
+    expect(content).toContain('Community work');
+    expect(content).toContain('Interests');
+    expect(content).toContain('"italics":true');
+    expect(content).not.toContain('alert(1)');
+    expect(content.indexOf('Interests')).toBeGreaterThan(content.indexOf('Achievements'));
+    expect((await pdfMake.createPdf(definition).getBuffer()).length).toBeGreaterThan(0);
+  });
+  it('exports certificate links with short underlined text and skips unsafe links', async () => {
+    const definition = await buildCvPdf({ ...cv, certificates: [
+      { name: 'Shared certificate', link: 'https://example.com/certificate', date: '2025-06' },
+      { name: 'Offline certificate', link: '' },
+      { name: 'Undated certificate', link: 'https://example.com/undated-certificate' },
+      { name: 'HTTP certificate', link: 'http://example.com/insecure-certificate' },
+      { name: 'Unsafe certificate', link: 'javascript:alert(1)' }
+    ] });
+    const content = JSON.stringify(definition.content);
+    expect(content).toContain('Certificates:');
+    expect(content).toContain('June 2025');
+    expect(content).toContain('"text":"link","link":"https://example.com/certificate","decoration":"underline"');
+    expect(content).toContain('"text":"June 2025","fontSize":10,"color":"#475569","width":"auto"');
+    expect(content).toContain('"text":"link","link":"https://example.com/undated-certificate","decoration":"underline","color":"#36d4f7","width":"auto"');
+    expect(content).toContain('Offline certificate');
+    expect(content).not.toContain('javascript:');
+    expect(content).not.toContain('http://example.com/insecure-certificate');
+    expect((await pdfMake.createPdf(definition).getBuffer()).length).toBeGreaterThan(0);
+  });
   it('exports education after experience and supports education without work experience', async () => {
     const education = [{ university: 'Independent University', degree: 'Bachelor', field: 'Cybersecurity',
       startDate: '2018-09', endDate: '2022-06' }];

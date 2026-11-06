@@ -1,3 +1,5 @@
+import { provideConstructorIndexedDbStorage } from 'constructor/indexeddb';
+import { CvDatabase } from '../../../cv/services/cv-database';
 import { provideZonelessChangeDetection, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -31,7 +33,7 @@ describe('Main collection scroll batches', () => {
 
   beforeEach(() => {
     observers = [];
-    TestBed.configureTestingModule({ providers: [provideZonelessChangeDetection(), provideRouter([])] });
+    TestBed.configureTestingModule({ providers: [provideConstructorIndexedDbStorage(CvDatabase), provideZonelessChangeDetection(), provideRouter([])] });
     spyOn(Storage.prototype, 'getItem').and.returnValue('list');
     spyOn(Storage.prototype, 'setItem').and.stub();
     spyOn(window, 'IntersectionObserver').and.callFake(function (callback) {

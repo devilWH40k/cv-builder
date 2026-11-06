@@ -5,6 +5,7 @@ import { ResponsiveDrawer } from 'angular-shared-ui/responsive-drawer';
 import { formatCalendarDate } from 'angular-shared-ui/date-picker';
 import { cvLogoSizeMm } from '../../../cv/helpers/cv-logo-size';
 import { contactLinks } from '../../../cv/helpers/cv-contact';
+import { certificateLink } from '../../../cv/helpers/certificate-link';
 import { ExperienceDescription } from '../../pipes/experience-description';
 import { CSS_PIXELS_PER_MM, CV_PHOTO_MIN_MM, CV_PHOTO_MAX_MM, cvPhotoSizeMm } from '../../../cv/helpers/cv-photo-size';
 import { CvPdf } from '../../../cv/services/cv-pdf';
@@ -20,7 +21,7 @@ import { StructureOptions } from '../structure-options/structure-options';
   selector: 'app-preview',
   imports: [ExperienceDescription, Resizable, SaveCvButton, RouterLink, Button, LucideAngularModule, StructureOptions, ResponsiveDrawer],
   templateUrl: './preview.html',
-  styleUrls: ['./preview.scss', './preview-pages.scss', './preview-technologies.scss', './preview-contacts.scss'],
+  styleUrls: ['./preview.scss', './preview-pages.scss', './preview-technologies.scss', './preview-contacts.scss', './preview-certificates.scss', './preview-custom-blocks.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Preview {
@@ -55,6 +56,7 @@ export class Preview {
   protected readonly PhoneIcon = Phone;
   protected readonly MailIcon = Mail;
   protected readonly formatDate = formatCalendarDate;
+  protected readonly certificateLink = certificateLink;
 
   constructor() {
     effect((onCleanup) => {

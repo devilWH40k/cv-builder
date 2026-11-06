@@ -1,3 +1,5 @@
+import { provideConstructorIndexedDbStorage } from 'constructor/indexeddb';
+import { CvDatabase } from '../../../cv/services/cv-database';
 import { CvPdf } from '../../../cv/services/cv-pdf';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -52,7 +54,7 @@ describe('CV preview', () => {
       return media;
     });
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection(), provideRouter(routes)]
+      providers: [provideZonelessChangeDetection(), provideRouter(routes), provideConstructorIndexedDbStorage(CvDatabase)]
     });
     download = spyOn(TestBed.inject(CvPdf), 'download').and.resolveTo();
   });
@@ -215,7 +217,7 @@ describe('CV preview', () => {
   it('shows live information in the editor and downloads a PDF on Export without navigating', async () => {
     const harness = await RouterTestingHarness.create();
     const create = await harness.navigateByUrl('/create', Create);
-    create.form.setValue({ ...info, companyLogo: null, education: [], customTechnologyIcons: {}, contact: { phone: '', email: '', socials: [] } });
+    create.form.setValue({ ...info, companyLogo: null, education: [], certificates: [], customBlocks: [], customTechnologyIcons: {}, contact: { phone: '', email: '', socials: [] } });
     await harness.fixture.whenStable();
     const page = harness.routeNativeElement!;
     expect(TestBed.inject(Router).url).toBe('/create');

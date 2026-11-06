@@ -16,9 +16,9 @@ import { CvClipboard } from '../../state/cv-clipboard';
 import { CvCollection, CvMove } from '../cv-collection/cv-collection';
 import { CreateFolderDialog } from '../create-folder-dialog/create-folder-dialog';
 import { FolderDialog } from '../folder-dialog/folder-dialog';
-import { DesignList } from '../../../constructor/components/design-list/design-list';
-import { ConstructorRepository } from '../../../constructor/services/constructor-repository';
-import { DesignSummary } from '../../../constructor/interfaces/constructor-document';
+import { DesignList } from 'constructor/core';
+import { ConstructorRepository } from 'constructor/core';
+import { DesignSummary } from 'constructor/core';
 
 @Component({
   selector: 'app-home',

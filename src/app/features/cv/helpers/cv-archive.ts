@@ -337,6 +337,15 @@ export async function readArchive(file: Blob): Promise<CvDatabaseSnapshot> {
       }),
       experiences: array(info['experiences']).map(experience),
       ...(info['education'] !== undefined ? { education: array(info['education']).map(education) } : {}),
+      ...(info['certificates'] !== undefined ? { certificates: array(info['certificates']).map((value) => {
+        const entry = object(value);
+        return { name: string(entry['name']), link: string(entry['link']),
+          ...(entry['date'] !== undefined ? { date: string(entry['date']) } : {}) };
+      }) } : {}),
+      ...(info['customBlocks'] !== undefined ? { customBlocks: array(info['customBlocks']).map((value) => {
+        const block = object(value);
+        return { title: string(block['title']), content: string(block['content']) };
+      }) } : {}),
       ...(layout ? { structure: layout } : {})
     };
     return { id, updatedAt: number(record['updatedAt']), info: restored };
